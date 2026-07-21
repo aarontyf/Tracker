@@ -22,7 +22,10 @@
   --r:16px;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{height:100%}
+/* iOS: keine automatische Schriftvergrößerung + kein waagerechter Überlauf,
+   sonst rendert Safari einzelne Screens in anderem Maßstab */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+html,body{height:100%;max-width:100%;overflow-x:hidden}
 body{background:radial-gradient(1100px 460px at 50% -12%, #0a1730 0%, var(--bg) 58%) fixed var(--bg);color:var(--txt);font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-size:15px;line-height:1.45;overscroll-behavior-y:none}
 button{font-family:inherit;color:inherit;background:none;border:none;cursor:pointer}
 input,select,textarea{font-family:inherit;font-size:16px;color:var(--txt);background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:9px 12px;outline:none;width:100%}
@@ -47,8 +50,10 @@ h3{font-size:14px;font-weight:700}
 .screen.on{display:block}
 @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 .card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:12px}
-.row{display:flex;align-items:center;gap:10px}
-.grow{flex:1}
+.row{display:flex;align-items:center;gap:10px;min-width:0}
+.grow{flex:1;min-width:0}
+.card,.item,.excard{max-width:100%}
+.item .ttl,.item .meta,.excard b{overflow-wrap:anywhere}
 .hd{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:14px}
 
 /* ---------- buttons ---------- */
@@ -63,7 +68,7 @@ h3{font-size:14px;font-weight:700}
 
 /* ---------- chips / segments ---------- */
 .chips{display:flex;gap:7px;flex-wrap:wrap}
-.chips.scroll{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.chips.scroll{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;max-width:100%;-webkit-overflow-scrolling:touch}
 .chips.scroll::-webkit-scrollbar{display:none}
 .chip{background:var(--card2);border:1px solid var(--border2);border-radius:999px;padding:6px 13px;font-size:13px;font-weight:600;color:var(--txt2);white-space:nowrap;flex:none}
 .chip.on{background:var(--accdark);border-color:var(--acc);color:#cfe0ff}
@@ -89,6 +94,10 @@ path[data-m]{fill:var(--m0);stroke:#2e3542;stroke-width:.8;transition:fill .4s}
 path[data-m].m1{fill:var(--m1);stroke:#c3d9ff}
 path[data-m].m2{fill:var(--m2);stroke:#6a9bff}
 path[data-m].m3{fill:var(--m3);stroke:#3d7dff;filter:drop-shadow(0 0 5px rgba(61,125,255,.6))}
+path[data-m].r0,path[data-m]:not(.r1):not(.r2):not(.r3).r0{fill:#8d2130;stroke:#c03246}
+path[data-m].r1{fill:#b06a1d;stroke:#d9932f}
+path[data-m].r2{fill:#2e7d4f;stroke:#3ea768}
+path[data-m].r3{fill:#3ddc84;stroke:#7af0ac}
 .deco{fill:none;stroke:rgba(0,0,0,.42);stroke-width:1.2;pointer-events:none;stroke-linecap:round}
 .legend{display:flex;gap:12px;justify-content:center;margin-top:10px;flex-wrap:wrap}
 .legend span{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--txt2)}
@@ -118,6 +127,11 @@ path[data-m].m3{fill:var(--m3);stroke:#3d7dff;filter:drop-shadow(0 0 5px rgba(61
 .prevpill:active{border-color:var(--acc);color:var(--acc2)}
 .setrow input{text-align:center;padding:9px 4px;font-weight:700}
 .setrow.filled input{border-color:#1e3a75;background:#0c1526}
+.setrow.warm .idx{background:#3a2f10;border-color:#6b5619;color:var(--gold)}
+.setrow.warm input{opacity:.75}
+.setrow.drop .idx{background:#2b1436;border-color:#6a2f86;color:#d9a6ff}
+.riri{width:100%;text-align:center;padding:9px 2px;font-weight:700;font-size:15px !important}
+.sethead.rir,.setrow.rir{grid-template-columns:26px 1fr 70px 58px 52px}
 .addset{width:100%;margin-top:4px;padding:8px;border:1px dashed var(--border2);border-radius:10px;color:var(--txt2);font-weight:600;font-size:13px}
 .progbox{display:flex;align-items:center;gap:10px;background:linear-gradient(120deg,#0a1730,#080d18);border:1px solid #1d3f7a;border-radius:12px;padding:9px 11px;margin:8px 0 2px}
 
@@ -134,7 +148,8 @@ path[data-m].m3{fill:var(--m3);stroke:#3d7dff;filter:drop-shadow(0 0 5px rgba(61
 
 /* ---------- muscle distribution bars ---------- */
 .mbar{display:grid;grid-template-columns:110px 1fr 46px;gap:8px;align-items:center;margin-bottom:7px;font-size:12.5px}
-.mbar .bar{height:9px;background:var(--bg2);border-radius:5px;overflow:hidden}
+.mbar .bar{height:9px;background:var(--bg2);border-radius:5px;overflow:hidden;position:relative}
+.mbar .zone{position:absolute;top:0;bottom:0;background:rgba(255,255,255,.10);border-left:1px solid rgba(255,255,255,.22);border-right:1px solid rgba(255,255,255,.22);pointer-events:none}
 .mbar .bar i{display:block;height:100%;background:linear-gradient(90deg,#2f6bff,#7aa8ff);border-radius:5px}
 .mbar.big{grid-template-columns:96px 1fr 52px;margin-bottom:9px;font-size:13px}
 .mbar.big .bar{height:12px;border-radius:6px}
@@ -280,20 +295,17 @@ path[data-m].m3{fill:var(--m3);stroke:#3d7dff;filter:drop-shadow(0 0 5px rgba(61
     <div id="home-resume"></div>
 
     <div class="card">
-      <div class="row" style="justify-content:space-between;margin-bottom:8px">
-        <h2 style="margin:0">Diese Woche trainiert</h2>
-        <span class="tiny">Reset: Mo 00:00</span>
+      <div class="seg" style="margin-bottom:12px">
+        <button id="bm-week" class="on">Diese Woche</button>
+        <button id="bm-rec">Erholung</button>
       </div>
+      <div class="tiny" id="body-sub" style="text-align:center;margin:-6px 0 8px"></div>
       <div class="bodywrap">
         <div style="flex:1"><div id="bodyFront"></div><div class="lbl">Vorne</div></div>
         <div style="flex:1"><div id="bodyBack"></div><div class="lbl">Hinten</div></div>
       </div>
-      <div class="legend">
-        <span><i class="dot" style="background:var(--m0)"></i>0 Sätze</span>
-        <span><i class="dot" style="background:var(--m1)"></i>1–3</span>
-        <span><i class="dot" style="background:var(--m2)"></i>4–8</span>
-        <span><i class="dot" style="background:var(--m3);box-shadow:0 0 6px rgba(61,125,255,.7)"></i>9+ <span class="tiny">(dunkler = mehr)</span></span>
-      </div>
+      <div class="legend" id="body-legend"></div>
+      <div id="body-reclist"></div>
     </div>
 
     <div class="kpis" id="home-kpis" style="margin-bottom:12px"></div>
@@ -403,6 +415,27 @@ path[data-m].m3{fill:var(--m3);stroke:#3d7dff;filter:drop-shadow(0 0 5px rgba(61
   <button class="btn btn-acc btn-block" id="cx-save">Speichern</button>
 </div></div>
 
+<div class="mback" id="modal-calc"><div class="modal">
+  <div class="grab"></div>
+  <div class="mhd"><h2>🧮 Rechner</h2><button class="iconbtn" data-close>✕</button></div>
+  <div class="card">
+    <h3 style="margin-bottom:8px">Scheiben pro Seite</h3>
+    <div class="row">
+      <input type="text" inputmode="decimal" id="pc-total" placeholder="Gesamtgewicht z.B. 82,5" style="flex:1">
+      <select id="pc-bar" style="width:120px">
+        <option value="20">Stange 20 kg</option><option value="15">Stange 15 kg</option>
+        <option value="10">Stange 10 kg</option><option value="7">SZ 7 kg</option><option value="0">ohne Stange</option>
+      </select>
+    </div>
+    <div id="pc-out" style="margin-top:12px"></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-bottom:8px">Aufwärmsätze</h3>
+    <p class="tiny" style="margin-bottom:8px">Vorschlag auf Basis deines Arbeitsgewichts (40 % / 60 % / 80 %).</p>
+    <div id="wu-out"></div>
+  </div>
+</div></div>
+
 <div class="mback" id="modal-exopt"><div class="modal">
   <div class="grab"></div>
   <div class="mhd"><h2 id="xo-title">Übung einstellen</h2><button class="iconbtn" data-close>✕</button></div>
@@ -424,6 +457,11 @@ path[data-m].m3{fill:var(--m3);stroke:#3d7dff;filter:drop-shadow(0 0 5px rgba(61
     <div class="row"><input type="number" id="xo-step" min="0.25" max="20" step="0.25" style="width:90px"><span class="sub">kg pro Steigerung</span></div>
     <p class="tiny" style="margin-top:8px">Kurzhanteln meist 2 kg (nächstes Paar), Langhantel 2,5 kg, schwere Übungen 5 kg.</p>
   </div>
+  <div class="card">
+    <h3 style="margin-bottom:8px">Pause für diese Übung</h3>
+    <div class="row"><input type="number" id="xo-rest" min="0" max="600" step="15" style="width:90px"><span class="sub">Sek. (0 = globale Vorgabe)</span></div>
+  </div>
+  <div class="card" id="xo-alt"></div>
   <button class="btn btn-ghost btn-block btn-sm" id="xo-reset">Auf Standard zurücksetzen</button>
 </div></div>
 
@@ -440,6 +478,13 @@ path[data-m].m3{fill:var(--m3);stroke:#3d7dff;filter:drop-shadow(0 0 5px rgba(61
   </div>
   <div id="bw-chartcard"></div>
   <div class="card" id="bw-list" style="padding:2px 14px"></div>
+  <h3 style="margin:16px 2px 8px">📏 Körpermaße <span class="tiny">(cm)</span></h3>
+  <div class="card">
+    <div id="ms-inputs"></div>
+    <button class="btn btn-acc btn-block btn-sm" id="ms-save" style="margin-top:10px">Maße speichern</button>
+    <p class="tiny" style="margin-top:8px">Leere Felder werden ignoriert. Arm/Oberschenkel im angespannten Zustand messen — Hauptsache immer gleich.</p>
+  </div>
+  <div id="ms-out"></div>
 </div></div>
 
 <div class="mback" id="modal-ach"><div class="modal">
@@ -471,7 +516,27 @@ path[data-m].m3{fill:var(--m3);stroke:#3d7dff;filter:drop-shadow(0 0 5px rgba(61
   </div>
   <div class="card">
     <h3 style="margin-bottom:6px">Pausen-Timer</h3>
-    <div class="row"><input type="number" id="set-rest" min="15" max="600" step="15" style="width:90px"><span class="sub">Sekunden Pause zwischen Sätzen</span></div>
+    <div class="row"><input type="number" id="set-rest" min="15" max="600" step="15" style="width:90px"><span class="sub">Sekunden (pro Übung überschreibbar)</span></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-bottom:8px">Trainingsstil</h3>
+    <div class="row" style="margin-bottom:8px"><input type="number" id="set-replo" min="1" max="30" style="width:70px"><span class="sub">bis</span>
+      <input type="number" id="set-rephi" min="1" max="40" style="width:70px"><span class="sub">Wdh (Standard)</span></div>
+    <div class="row"><input type="number" id="set-defsets" min="1" max="10" style="width:70px"><span class="sub">Sätze pro Übung (Vorgabe)</span></div>
+    <p class="tiny" style="margin-top:8px">Gilt für neue Übungen. Bauch/Waden und Isolation liegen automatisch etwas höher, schwere Grundübungen etwas tiefer.</p>
+  </div>
+  <div class="card">
+    <div class="row" style="justify-content:space-between">
+      <div class="grow"><b style="font-size:14px">RIR erfassen</b>
+        <div class="tiny">„Reps in Reserve" — wie viele Wdh wären noch gegangen? Steuert den Progressionsvorschlag genauer (0–1 = am Limit).</div></div>
+      <button class="chip" id="set-rir">Aus</button>
+    </div>
+  </div>
+  <div class="card">
+    <h3 style="margin-bottom:8px">Wochenziel pro Muskelgruppe</h3>
+    <div class="row"><input type="number" id="set-goallo" min="1" max="40" style="width:70px"><span class="sub">bis</span>
+      <input type="number" id="set-goalhi" min="1" max="60" style="width:70px"><span class="sub">Sätze/Woche</span></div>
+    <p class="tiny" style="margin-top:8px">Forschungsrichtwert für Muskelaufbau: etwa 10–20 harte Sätze pro Muskelgruppe und Woche.</p>
   </div>
   <div class="card">
     <h3 style="margin-bottom:6px">Backup</h3>
@@ -480,12 +545,14 @@ path[data-m].m3{fill:var(--m3);stroke:#3d7dff;filter:drop-shadow(0 0 5px rgba(61
     <button class="btn btn-acc btn-block" id="btn-vault" style="margin-bottom:8px">📤 An Vault senden (mailen)</button>
     <div class="row">
       <button class="btn btn-ghost btn-sm grow" id="btn-export">⬇ Als Datei</button>
+      <button class="btn btn-ghost btn-sm grow" id="btn-csv">⬇ CSV</button>
       <button class="btn btn-ghost btn-sm grow" id="btn-import">⬆ Import</button>
       <input type="file" id="import-file" accept=".json" style="display:none">
     </div>
+    <p class="tiny" style="margin-top:8px">CSV lässt sich in Excel öffnen — eine Zeile pro Satz.</p>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:14px">Fitness Tracker V7 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:14px">Fitness Tracker V8 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast"></div>
@@ -639,6 +706,39 @@ const RADAR_AXES = [
   ['Schultern',['front_delt','side_delt','rear_delt']]
 ];
 function sumGroups(m, defs){ return defs.map(([label,keys])=>[label, keys.reduce((a,k)=>a+(m[k]||0),0)]); }
+
+/* ================= MUSKEL-ERHOLUNG (Prinzip wie bei Fitbod, dort kostenpflichtig) =================
+   Jeder Satz erzeugt Ermüdung, die über ~72 h (leichte Belastung) bis 120 h (harte Belastung)
+   linear abklingt. 100 % = frisch/vollständig erholt. */
+function recoveryMap(now){
+  now = now || Date.now();
+  const fatigue = {};
+  state.workouts.forEach(w=>{
+    const ageH = (now - new Date(w.date).getTime())/3600000;
+    if(ageH < 0 || ageH > 168) return;
+    w.exercises.forEach(e=>{
+      const ex = getEx(e.exId); if(!ex) return;
+      const n = validSets(e).length; if(!n) return;
+      const add = (k, factor)=>{
+        const load = n * factor;                       // Sätze gewichtet
+        const full = 48 + Math.min(72, load*12);       // Erholdauer: 48–120 h je nach Umfang
+        const left = Math.max(0, 1 - ageH/full);       // linear abklingend
+        fatigue[k] = (fatigue[k]||0) + left * Math.min(1, load/6);
+      };
+      ex.p.forEach(k=>add(k,1));
+      ex.s.forEach(k=>add(k,0.5));
+    });
+  });
+  const rec = {};
+  Object.keys(MUSCLES).forEach(k=>{ rec[k] = Math.max(0, Math.min(100, Math.round(100 - (fatigue[k]||0)*100))); });
+  return rec;
+}
+function recoveryGroups(rec){
+  return sumGroups({}, RADAR_AXES).map(([label])=>{
+    const keys = RADAR_AXES.find(a=>a[0]===label)[1];
+    return [label, Math.round(keys.reduce((a,k)=>a+rec[k],0)/keys.length)];
+  });
+}
 /* ================= ÜBUNGSDATENBANK ================= */
 /* [Name, Gruppe, Gerät, primäre Muskeln, sekundäre Muskeln, Alias/Suchbegriffe] */
 const EQUIPS = ['Langhantel','Kurzhantel','Maschine','Kabel','Multipresse','Körpergewicht','SZ-Stange','Trap-Stange','Kettlebell','Widerstandsband','Hantelscheibe','Sonstiges'];
@@ -774,10 +874,10 @@ const EXDB_RAW = [
 ['Hammer-Curls (quer zum Körper)','Arme','Kurzhantel',['biceps','forearms'],[],'cross-body hammer-curls'],
 ['Schrägbank-Curls','Arme','Kurzhantel',['biceps'],[],'incline curl'],
 ['Konzentrations-Curls','Arme','Kurzhantel',['biceps'],[],'concentration curl',1],
-['Scottcurls (SZ-Stange)','Arme','SZ-Stange',['biceps'],[],'scott curl preacher ez bar curls (sz-stange)'],
-['Scottcurls (Kurzhantel)','Arme','Kurzhantel',['biceps'],[],'preacher curls (kurzhantel)'],
-['Hammer-Scottcurls','Arme','Kurzhantel',['biceps','forearms'],[],'hammer preachercurl neutral preacher curls'],
-['Scottcurl-Maschine','Arme','Maschine',['biceps'],[],'machine preacher curl maschine'],
+['Preacher Curls (SZ-Stange)','Arme','SZ-Stange',['biceps'],[],'scott curl preacher ez bar curls (sz-stange) scottcurl scottcurls'],
+['Preacher Curls (Kurzhantel)','Arme','Kurzhantel',['biceps'],[],'preacher curls (kurzhantel) scottcurl scottcurls scott'],
+['Hammer Preacher Curls','Arme','Kurzhantel',['biceps','forearms'],[],'hammer preachercurl neutral preacher curls scottcurl scottcurls scott'],
+['Preacher Curl Maschine','Arme','Maschine',['biceps'],[],'machine preacher curl maschine scottcurl scottcurls scott'],
 ['Bizeps-Curl-Maschine','Arme','Maschine',['biceps'],[],'bicep machine bizeps curl maschine'],
 ['Kabel-Curls (Stange)','Arme','Kabel',['biceps'],['forearms'],'cable curl'],
 ['Kabel-Curls (Seil, Hammer)','Arme','Kabel',['biceps','forearms'],[],'rope hammer curl'],
@@ -958,19 +1058,24 @@ let state = {
   active: null,        // laufendes Workout
   ach: {},             // freigeschaltete Achievements {id:{d,xp}}
   bodyweight: [],      // [{d:'YYYY-MM-DD', kg}]
-  exOpt: {},           // Einstellungen pro Übung {exId:{uni:bool, lo:number, hi:number, step:number}}
-  settings: { goal: 5, rest: 90, lastBackup: null }
+  exOpt: {},           // Einstellungen pro Übung {exId:{uni,lo,hi,step,rest}}
+  measures: [],        // Körpermaße [{d, key:cm}]
+  settings: { goal: 5, rest: 90, lastBackup: null, repLo: 6, repHi: 9, defSets: 2, setGoalLo: 10, setGoalHi: 20 }
 };
 
 function loadState(){
   try{
     const raw = localStorage.getItem(LS_KEY);
-    if(raw){ const s = JSON.parse(raw); state = Object.assign(state, s); state.settings = Object.assign({goal:5,rest:90,lastBackup:null}, s.settings||{}); if(!state.bodyweight) state.bodyweight=[]; }
+    if(raw){ const s = JSON.parse(raw); state = Object.assign(state, s);
+      state.settings = Object.assign({goal:5,rest:90,lastBackup:null,repLo:6,repHi:9,defSets:2,setGoalLo:10,setGoalHi:20}, s.settings||{});
+      if(!state.bodyweight) state.bodyweight=[];
+      if(!state.measures) state.measures=[];
+      if(!state.exOpt) state.exOpt={}; }
   }catch(e){ console.warn('load fail', e); }
   migrateState();
   saveState();
 }
-const RENAME_MAP = {"x-chest-press-maschine":"x-brustpresse-maschine","x-incline-chest-press-maschine":"x-schrägbank-brustpresse-maschine","x-decline-chest-press-maschine":"x-negativ-brustpresse-maschine","x-chest-press-kabel-sitzend":"x-brustpresse-kabel-sitzend","x-bankdrücken-smith-machine":"x-bankdrücken-multipresse","x-schrägbankdrücken-smith-machine":"x-schrägbankdrücken-multipresse","x-butterfly-pec-deck-maschine":"x-butterfly-maschine","x-cable-fly-hoch-tief":"x-kabelzug-fliegende-hoch-tief","x-cable-fly-mitte":"x-kabelzug-fliegende-mitte","x-cable-fly-tief-hoch":"x-kabelzug-fliegende-tief-hoch","x-cable-fly-einarmig":"x-kabelzug-fliegende-einarmig","x-dip-maschine":"x-dip-maschine","x-svend-press-platte":"x-plattendrücken-vor-der-brust","x-floor-press-langhantel":"x-bodendrücken-langhantel","x-floor-press-kurzhantel":"x-bodendrücken-kurzhantel","x-landmine-press-brust":"x-landmine-drücken-brust","x-guillotine-press":"x-guillotine-bankdrücken","x-squeeze-press-kurzhantel":"x-enges-kurzhanteldrücken","x-squeeze-press-schrägbank":"x-enges-kurzhanteldrücken-schrägbank","x-chest-press-band":"x-brustdrücken-band","x-band-fly":"x-fliegende-band","x-pullover-kurzhantel":"x-überzüge-kurzhantel","x-chin-ups-untergriff":"x-klimmzüge-untergriff","x-chin-ups-mit-gewicht":"x-klimmzüge-untergriff-mit-gewicht","x-pulldown-maschine-plate-loaded":"x-latzug-maschine-scheiben","x-straight-arm-pulldown-kabel":"x-überzüge-am-kabel-gestreckte-arme","x-rope-pullover-kabel":"x-seilzug-überzüge","x-pendlay-row":"x-pendlay-rudern","x-t-bar-rudern":"x-t-stangen-rudern","x-t-bar-rudern-brustauflage":"x-t-stangen-rudern-brustauflage","x-seal-row":"x-rudern-in-bauchlage","x-rudermaschine-plate-loaded":"x-rudermaschine-scheiben","x-high-row-maschine":"x-rudern-von-oben-maschine","x-low-row-maschine":"x-rudern-von-unten-maschine","x-rudern-smith-machine":"x-rudern-multipresse","x-inverted-row":"x-umgekehrtes-rudern","x-meadows-row":"x-meadows-rudern","x-landmine-row":"x-landmine-rudern","x-kroc-row":"x-kroc-rudern","x-kreuzheben-trap-bar":"x-kreuzheben-trap-stange","x-kreuzheben-snatch-grip":"x-kreuzheben-reißgriff","x-rack-pulls":"x-teilkreuzheben-aus-dem-rack","x-reverse-hyperextension":"x-umgekehrter-rückenstrecker","x-superman":"x-superman-bauchlage","x-shrugs-langhantel":"x-schulterheben-langhantel","x-shrugs-kurzhantel":"x-schulterheben-kurzhantel","x-shrugs-smith-machine":"x-schulterheben-multipresse","x-shrugs-trap-bar":"x-schulterheben-trap-stange","x-shrugs-kabel":"x-schulterheben-kabel","x-arnold-press":"x-arnold-drücken","x-shoulder-press-maschine":"x-schulterpresse-maschine","x-schulterdrücken-smith-machine":"x-schulterdrücken-multipresse","x-push-press":"x-schulterdrücken-mit-schwung","x-landmine-press-schulter":"x-landmine-drücken-schulter","x-landmine-press-einarmig":"x-landmine-drücken-einarmig","x-z-press":"x-z-drücken-am-boden-sitzend","x-viking-press":"x-viking-drücken","x-lean-in-seitheben":"x-seitheben-angelehnt","x-reverse-flys-kurzhantel":"x-umgekehrte-fliegende-kurzhantel","x-reverse-pec-deck-maschine":"x-umgekehrtes-butterfly-maschine","x-reverse-cable-fly":"x-umgekehrte-fliegende-kabel","x-face-pulls-kabel":"x-gesichtsziehen-kabel","x-face-pulls-band":"x-gesichtsziehen-band","x-band-pull-aparts":"x-band-auseinanderziehen","x-cuban-rotation":"x-kubanische-rotation","x-bus-driver":"x-lenkrad-drehen-scheibe","x-bradford-press":"x-bradford-drücken","x-preacher-curls-sz-stange":"x-scottcurls-sz-stange","x-preacher-curls-kurzhantel":"x-scottcurls-kurzhantel","x-hammer-preacher-curls":"x-hammer-scottcurls","x-preacher-curl-maschine":"x-scottcurl-maschine","x-high-cable-curls":"x-kabel-curls-von-oben","x-bayesian-curls-kabel":"x-kabel-curls-hinter-dem-körper","x-spider-curls":"x-spider-curls-vorgebeugt","x-drag-curls":"x-zieh-curls-am-körper-entlang","x-zottman-curls":"x-zottman-curls","x-21s-langhantel":"x-21er-curls-langhantel","x-waiter-curls":"x-kellner-curls","x-jm-press":"x-jm-drücken","x-skull-crushers-sz-stange":"x-stirndrücken-sz-stange","x-skull-crushers-kurzhantel":"x-stirndrücken-kurzhantel","x-overhead-extension-kabel-seil":"x-trizepsdrücken-über-kopf-kabel-seil","x-kickbacks-kabel":"x-trizeps-rückdrücken-kabel","x-kickbacks-kurzhantel":"x-trizeps-rückdrücken-kurzhantel","x-bench-dips":"x-bank-dips","x-trizeps-maschine":"x-trizeps-maschine","x-overhead-triceps-extension-maschine":"x-trizepsdrücken-über-kopf-maschine","x-seated-dip-maschine":"x-dip-maschine-sitzend","x-tate-press":"x-tate-drücken","x-french-press-sitzend-sz":"x-französisches-drücken-sitzend-sz","x-enges-bankdrücken-smith":"x-enges-bankdrücken-multipresse","x-wrist-curls-langhantel":"x-handgelenk-curls-langhantel","x-reverse-wrist-curls":"x-handgelenk-curls-obergriff","x-wrist-curls-kurzhantel":"x-handgelenk-curls-kurzhantel","x-wrist-curls-hinter-rücken":"x-handgelenk-curls-hinter-dem-rücken","x-farmer-s-walk":"x-gewichte-tragen-farmers-walk","x-plate-pinch":"x-scheiben-kneifgriff","x-dead-hang":"x-hängen-an-der-stange","x-wrist-roller":"x-unterarm-roller","x-kniebeugen-low-bar":"x-kniebeugen-tiefe-auflage","x-box-squats":"x-kniebeugen-auf-box","x-pause-squats":"x-kniebeugen-mit-pause","x-goblet-squats":"x-kelch-kniebeugen","x-kniebeugen-smith-machine":"x-kniebeugen-multipresse","x-hack-squat-maschine":"x-hackenschmidt-maschine","x-pendulum-squat-maschine":"x-pendel-kniebeugenmaschine","x-v-squat-maschine":"x-v-kniebeugenmaschine","x-bulgarian-split-squats":"x-bulgarische-kniebeugen","x-split-squats":"x-geteilte-kniebeugen","x-curtsy-lunges":"x-überkreuz-ausfallschritte","x-step-ups":"x-aufsteiger-auf-box","x-sissy-squats":"x-sissy-kniebeugen","x-belt-squats":"x-gürtel-kniebeugen","x-zercher-squats":"x-zercher-kniebeugen","x-pistol-squats":"x-einbeinige-kniebeugen-pistol","x-stiff-leg-deadlift":"x-gestrecktes-kreuzheben","x-einbeiniges-rdl":"x-einbeiniges-rumänisches-kreuzheben","x-nordic-curls":"x-nordische-beinbeuger","x-glute-ham-raise":"x-beinbeuger-rückenstrecker-ghr","x-good-mornings":"x-guten-morgen-beugen","x-rdl-smith-machine":"x-rumänisches-kreuzheben-multipresse","x-beincurl-gymnastikball":"x-beinbeuger-gymnastikball","x-beincurl-slider":"x-beinbeuger-slider","x-hip-thrust-langhantel":"x-hüftstoß-langhantel","x-hip-thrust-maschine":"x-hüftstoß-maschine","x-hip-thrust-smith-machine":"x-hüftstoß-multipresse","x-glute-bridge":"x-beckenheben","x-glute-bridge-einbeinig":"x-beckenheben-einbeinig","x-b-stance-hip-thrust":"x-hüftstoß-versetzter-stand","x-kickbacks-kabel-glute":"x-beinrückheben-kabel","x-kickback-maschine":"x-beinrückheben-maschine","x-donkey-kicks":"x-eselstritte","x-fire-hydrants":"x-beinabspreizen-vierfüßler","x-frog-pumps":"x-frosch-beckenheben","x-sumo-squats":"x-sumo-kniebeugen","x-cable-pull-throughs":"x-durchziehen-am-kabel","x-band-side-walks":"x-seitschritte-mit-band","x-clamshells":"x-muschel-öffnen-seitlich-liegend","x-copenhagen-plank":"x-kopenhagener-seitstütz","x-wadenheben-smith-machine":"x-wadenheben-multipresse","x-donkey-calf-raises":"x-esel-wadenheben","x-tibialis-raises":"x-schienbeinheben","x-crunches":"x-crunches-bauchpressen","x-hanging-leg-raises":"x-beinheben-hängend","x-hanging-knee-raises":"x-knieheben-hängend","x-beinheben-captain-s-chair":"x-beinheben-beinhebemaschine","x-reverse-crunches":"x-umgekehrte-crunches","x-v-ups":"x-v-aufrichter","x-toes-to-bar":"x-zehen-zur-stange","x-ab-wheel-rollouts":"x-bauchroller-ab-wheel","x-plank-sek-als-wdh":"x-unterarmstütz-sek-als-wdh","x-plank-mit-gewicht":"x-unterarmstütz-mit-gewicht","x-side-plank-sek-als-wdh":"x-seitstütz-sek-als-wdh","x-russian-twists":"x-russische-drehungen","x-woodchopper-kabel-hoch-tief":"x-holzhacker-kabel-hoch-tief","x-woodchopper-kabel-tief-hoch":"x-holzhacker-kabel-tief-hoch","x-pallof-press":"x-pallof-drücken-anti-rotation","x-dead-bugs":"x-toter-käfer","x-bird-dogs":"x-vierfüßler-diagonal","x-mountain-climbers":"x-bergsteiger","x-dragon-flags":"x-drachenfahne","x-hollow-hold-sek-als-wdh":"x-hohlkörper-halten-sek-als-wdh","x-l-sit-sek-als-wdh":"x-l-sitz-sek-als-wdh","x-suitcase-carry":"x-koffertragen-einseitig","x-power-cleans":"x-umsetzen-power-clean","x-hang-cleans":"x-umsetzen-aus-dem-hang","x-clean-jerk":"x-umsetzen-stoßen","x-snatch":"x-reißen","x-kettlebell-swings":"x-kettlebell-schwünge","x-kettlebell-clean-press":"x-kettlebell-umsetzen-drücken","x-thrusters":"x-kniebeuge-mit-drücken-thruster","x-sled-push":"x-schlitten-schieben","x-sled-pull":"x-schlitten-ziehen","x-battle-ropes":"x-schwungseile","x-turkish-get-ups":"x-türkisches-aufstehen","x-cross-body-hammer-curls":"x-hammer-curls-quer-zum-körper","x-reverse-curls-sz-stange":"x-umgekehrte-curls-sz-stange","x-reverse-curls-langhantel":"x-umgekehrte-curls-langhantel","x-bizeps-curl-maschine":"x-bizeps-curl-maschine","x-crunch-maschine":"x-crunch-maschine","x-thruster-kniebeuge-drücken":"x-kniebeuge-mit-drücken-thruster"};
+const RENAME_MAP = {"x-chest-press-maschine":"x-brustpresse-maschine","x-incline-chest-press-maschine":"x-schrägbank-brustpresse-maschine","x-decline-chest-press-maschine":"x-negativ-brustpresse-maschine","x-chest-press-kabel-sitzend":"x-brustpresse-kabel-sitzend","x-bankdrücken-smith-machine":"x-bankdrücken-multipresse","x-schrägbankdrücken-smith-machine":"x-schrägbankdrücken-multipresse","x-butterfly-pec-deck-maschine":"x-butterfly-maschine","x-cable-fly-hoch-tief":"x-kabelzug-fliegende-hoch-tief","x-cable-fly-mitte":"x-kabelzug-fliegende-mitte","x-cable-fly-tief-hoch":"x-kabelzug-fliegende-tief-hoch","x-cable-fly-einarmig":"x-kabelzug-fliegende-einarmig","x-dip-maschine":"x-dip-maschine","x-svend-press-platte":"x-plattendrücken-vor-der-brust","x-floor-press-langhantel":"x-bodendrücken-langhantel","x-floor-press-kurzhantel":"x-bodendrücken-kurzhantel","x-landmine-press-brust":"x-landmine-drücken-brust","x-guillotine-press":"x-guillotine-bankdrücken","x-squeeze-press-kurzhantel":"x-enges-kurzhanteldrücken","x-squeeze-press-schrägbank":"x-enges-kurzhanteldrücken-schrägbank","x-chest-press-band":"x-brustdrücken-band","x-band-fly":"x-fliegende-band","x-pullover-kurzhantel":"x-überzüge-kurzhantel","x-chin-ups-untergriff":"x-klimmzüge-untergriff","x-chin-ups-mit-gewicht":"x-klimmzüge-untergriff-mit-gewicht","x-pulldown-maschine-plate-loaded":"x-latzug-maschine-scheiben","x-straight-arm-pulldown-kabel":"x-überzüge-am-kabel-gestreckte-arme","x-rope-pullover-kabel":"x-seilzug-überzüge","x-pendlay-row":"x-pendlay-rudern","x-t-bar-rudern":"x-t-stangen-rudern","x-t-bar-rudern-brustauflage":"x-t-stangen-rudern-brustauflage","x-seal-row":"x-rudern-in-bauchlage","x-rudermaschine-plate-loaded":"x-rudermaschine-scheiben","x-high-row-maschine":"x-rudern-von-oben-maschine","x-low-row-maschine":"x-rudern-von-unten-maschine","x-rudern-smith-machine":"x-rudern-multipresse","x-inverted-row":"x-umgekehrtes-rudern","x-meadows-row":"x-meadows-rudern","x-landmine-row":"x-landmine-rudern","x-kroc-row":"x-kroc-rudern","x-kreuzheben-trap-bar":"x-kreuzheben-trap-stange","x-kreuzheben-snatch-grip":"x-kreuzheben-reißgriff","x-rack-pulls":"x-teilkreuzheben-aus-dem-rack","x-reverse-hyperextension":"x-umgekehrter-rückenstrecker","x-superman":"x-superman-bauchlage","x-shrugs-langhantel":"x-schulterheben-langhantel","x-shrugs-kurzhantel":"x-schulterheben-kurzhantel","x-shrugs-smith-machine":"x-schulterheben-multipresse","x-shrugs-trap-bar":"x-schulterheben-trap-stange","x-shrugs-kabel":"x-schulterheben-kabel","x-arnold-press":"x-arnold-drücken","x-shoulder-press-maschine":"x-schulterpresse-maschine","x-schulterdrücken-smith-machine":"x-schulterdrücken-multipresse","x-push-press":"x-schulterdrücken-mit-schwung","x-landmine-press-schulter":"x-landmine-drücken-schulter","x-landmine-press-einarmig":"x-landmine-drücken-einarmig","x-z-press":"x-z-drücken-am-boden-sitzend","x-viking-press":"x-viking-drücken","x-lean-in-seitheben":"x-seitheben-angelehnt","x-reverse-flys-kurzhantel":"x-umgekehrte-fliegende-kurzhantel","x-reverse-pec-deck-maschine":"x-umgekehrtes-butterfly-maschine","x-reverse-cable-fly":"x-umgekehrte-fliegende-kabel","x-face-pulls-kabel":"x-gesichtsziehen-kabel","x-face-pulls-band":"x-gesichtsziehen-band","x-band-pull-aparts":"x-band-auseinanderziehen","x-cuban-rotation":"x-kubanische-rotation","x-bus-driver":"x-lenkrad-drehen-scheibe","x-bradford-press":"x-bradford-drücken","x-preacher-curls-sz-stange":"x-preacher-curls-sz-stange","x-preacher-curls-kurzhantel":"x-preacher-curls-kurzhantel","x-hammer-preacher-curls":"x-hammer-preacher-curls","x-preacher-curl-maschine":"x-preacher-curl-maschine","x-high-cable-curls":"x-kabel-curls-von-oben","x-bayesian-curls-kabel":"x-kabel-curls-hinter-dem-körper","x-spider-curls":"x-spider-curls-vorgebeugt","x-drag-curls":"x-zieh-curls-am-körper-entlang","x-zottman-curls":"x-zottman-curls","x-21s-langhantel":"x-21er-curls-langhantel","x-waiter-curls":"x-kellner-curls","x-jm-press":"x-jm-drücken","x-skull-crushers-sz-stange":"x-stirndrücken-sz-stange","x-skull-crushers-kurzhantel":"x-stirndrücken-kurzhantel","x-overhead-extension-kabel-seil":"x-trizepsdrücken-über-kopf-kabel-seil","x-kickbacks-kabel":"x-trizeps-rückdrücken-kabel","x-kickbacks-kurzhantel":"x-trizeps-rückdrücken-kurzhantel","x-bench-dips":"x-bank-dips","x-trizeps-maschine":"x-trizeps-maschine","x-overhead-triceps-extension-maschine":"x-trizepsdrücken-über-kopf-maschine","x-seated-dip-maschine":"x-dip-maschine-sitzend","x-tate-press":"x-tate-drücken","x-french-press-sitzend-sz":"x-französisches-drücken-sitzend-sz","x-enges-bankdrücken-smith":"x-enges-bankdrücken-multipresse","x-wrist-curls-langhantel":"x-handgelenk-curls-langhantel","x-reverse-wrist-curls":"x-handgelenk-curls-obergriff","x-wrist-curls-kurzhantel":"x-handgelenk-curls-kurzhantel","x-wrist-curls-hinter-rücken":"x-handgelenk-curls-hinter-dem-rücken","x-farmer-s-walk":"x-gewichte-tragen-farmers-walk","x-plate-pinch":"x-scheiben-kneifgriff","x-dead-hang":"x-hängen-an-der-stange","x-wrist-roller":"x-unterarm-roller","x-kniebeugen-low-bar":"x-kniebeugen-tiefe-auflage","x-box-squats":"x-kniebeugen-auf-box","x-pause-squats":"x-kniebeugen-mit-pause","x-goblet-squats":"x-kelch-kniebeugen","x-kniebeugen-smith-machine":"x-kniebeugen-multipresse","x-hack-squat-maschine":"x-hackenschmidt-maschine","x-pendulum-squat-maschine":"x-pendel-kniebeugenmaschine","x-v-squat-maschine":"x-v-kniebeugenmaschine","x-bulgarian-split-squats":"x-bulgarische-kniebeugen","x-split-squats":"x-geteilte-kniebeugen","x-curtsy-lunges":"x-überkreuz-ausfallschritte","x-step-ups":"x-aufsteiger-auf-box","x-sissy-squats":"x-sissy-kniebeugen","x-belt-squats":"x-gürtel-kniebeugen","x-zercher-squats":"x-zercher-kniebeugen","x-pistol-squats":"x-einbeinige-kniebeugen-pistol","x-stiff-leg-deadlift":"x-gestrecktes-kreuzheben","x-einbeiniges-rdl":"x-einbeiniges-rumänisches-kreuzheben","x-nordic-curls":"x-nordische-beinbeuger","x-glute-ham-raise":"x-beinbeuger-rückenstrecker-ghr","x-good-mornings":"x-guten-morgen-beugen","x-rdl-smith-machine":"x-rumänisches-kreuzheben-multipresse","x-beincurl-gymnastikball":"x-beinbeuger-gymnastikball","x-beincurl-slider":"x-beinbeuger-slider","x-hip-thrust-langhantel":"x-hüftstoß-langhantel","x-hip-thrust-maschine":"x-hüftstoß-maschine","x-hip-thrust-smith-machine":"x-hüftstoß-multipresse","x-glute-bridge":"x-beckenheben","x-glute-bridge-einbeinig":"x-beckenheben-einbeinig","x-b-stance-hip-thrust":"x-hüftstoß-versetzter-stand","x-kickbacks-kabel-glute":"x-beinrückheben-kabel","x-kickback-maschine":"x-beinrückheben-maschine","x-donkey-kicks":"x-eselstritte","x-fire-hydrants":"x-beinabspreizen-vierfüßler","x-frog-pumps":"x-frosch-beckenheben","x-sumo-squats":"x-sumo-kniebeugen","x-cable-pull-throughs":"x-durchziehen-am-kabel","x-band-side-walks":"x-seitschritte-mit-band","x-clamshells":"x-muschel-öffnen-seitlich-liegend","x-copenhagen-plank":"x-kopenhagener-seitstütz","x-wadenheben-smith-machine":"x-wadenheben-multipresse","x-donkey-calf-raises":"x-esel-wadenheben","x-tibialis-raises":"x-schienbeinheben","x-crunches":"x-crunches-bauchpressen","x-hanging-leg-raises":"x-beinheben-hängend","x-hanging-knee-raises":"x-knieheben-hängend","x-beinheben-captain-s-chair":"x-beinheben-beinhebemaschine","x-reverse-crunches":"x-umgekehrte-crunches","x-v-ups":"x-v-aufrichter","x-toes-to-bar":"x-zehen-zur-stange","x-ab-wheel-rollouts":"x-bauchroller-ab-wheel","x-plank-sek-als-wdh":"x-unterarmstütz-sek-als-wdh","x-plank-mit-gewicht":"x-unterarmstütz-mit-gewicht","x-side-plank-sek-als-wdh":"x-seitstütz-sek-als-wdh","x-russian-twists":"x-russische-drehungen","x-woodchopper-kabel-hoch-tief":"x-holzhacker-kabel-hoch-tief","x-woodchopper-kabel-tief-hoch":"x-holzhacker-kabel-tief-hoch","x-pallof-press":"x-pallof-drücken-anti-rotation","x-dead-bugs":"x-toter-käfer","x-bird-dogs":"x-vierfüßler-diagonal","x-mountain-climbers":"x-bergsteiger","x-dragon-flags":"x-drachenfahne","x-hollow-hold-sek-als-wdh":"x-hohlkörper-halten-sek-als-wdh","x-l-sit-sek-als-wdh":"x-l-sitz-sek-als-wdh","x-suitcase-carry":"x-koffertragen-einseitig","x-power-cleans":"x-umsetzen-power-clean","x-hang-cleans":"x-umsetzen-aus-dem-hang","x-clean-jerk":"x-umsetzen-stoßen","x-snatch":"x-reißen","x-kettlebell-swings":"x-kettlebell-schwünge","x-kettlebell-clean-press":"x-kettlebell-umsetzen-drücken","x-thrusters":"x-kniebeuge-mit-drücken-thruster","x-sled-push":"x-schlitten-schieben","x-sled-pull":"x-schlitten-ziehen","x-battle-ropes":"x-schwungseile","x-turkish-get-ups":"x-türkisches-aufstehen","x-cross-body-hammer-curls":"x-hammer-curls-quer-zum-körper","x-reverse-curls-sz-stange":"x-umgekehrte-curls-sz-stange","x-reverse-curls-langhantel":"x-umgekehrte-curls-langhantel","x-bizeps-curl-maschine":"x-bizeps-curl-maschine","x-crunch-maschine":"x-crunch-maschine","x-thruster-kniebeuge-drücken":"x-kniebeuge-mit-drücken-thruster","x-scottcurls-sz-stange":"x-preacher-curls-sz-stange","x-scottcurls-kurzhantel":"x-preacher-curls-kurzhantel","x-hammer-scottcurls":"x-hammer-preacher-curls","x-scottcurl-maschine":"x-preacher-curl-maschine"};
 /* Migration: alte Positions-IDs (e12) → Namens-IDs; V7: englische → deutsche Übungsnamen */
 function migrateState(){
   const remap = id=>{
@@ -1042,18 +1147,18 @@ function bwLatest(){ const a=bwSorted(); return a.length? a[a.length-1] : null; 
 function exIsBW(exId){ const ex=getEx(exId); return !!ex && ex.eq==='Körpergewicht'; }
 
 /* ---------- Übungs-Einstellungen (unilateral, Wdh-Zielbereich, Gewichtssprung) ---------- */
-/* Wdh-Zielbereiche: schwere Grundübungen niedriger, Isolation höher (Hypertrophie-Fokus).
+/* Wdh-Zielbereiche. Basis = deine Voreinstellung (Standard 6–9);
+   nur Übungen, bei denen ein anderer Bereich sinnvoll ist, weichen ab.
    Pro Übung jederzeit über das Zahnrad änderbar. */
 function defaultRepRange(ex){
   const n=(ex.name||'').toLowerCase(), g=ex.grp;
+  const S=state.settings||{}, lo=S.repLo||6, hi=S.repHi||9;
   if(/sek\. als wdh|hängen an der stange|wandsitz/.test(n)) return [20,45];
-  if(/waden|schienbein/.test(n)) return [10,15];
-  if(g==='Bauch') return [10,20];
-  if(/kreuzheben|kniebeugen/.test(n) && !/sissy|kelch|geteilte|bulgarische|einbeinige/.test(n)) return [5,8];
-  if(/bankdrücken|schulterdrücken(?!.*maschine)/.test(n)) return [6,9];
-  if(/rudern|klimmzüge|latzug|beinpresse|hüftstoß|dips|brustpresse|schulterpresse|hackenschmidt|umsetzen|reißen/.test(n)) return [6,10];
-  if(g==='Arme' || /heben|fliegende|curl|butterfly|abduktion|adduktion|beinstrecker|beinbeuger|überzüge|gesichtsziehen/.test(n)) return [8,12];
-  return [8,12];
+  if(/waden|schienbein/.test(n)) return [Math.max(lo,10), Math.max(hi,15)];
+  if(g==='Bauch') return [Math.max(lo,10), Math.max(hi,20)];
+  if(/kreuzheben|kniebeugen/.test(n) && !/sissy|kelch|geteilte|bulgarische|einbeinige/.test(n)) return [Math.max(3,lo-1), Math.max(4,hi-1)];
+  if(g==='Arme' || /heben|fliegende|curl|butterfly|abduktion|adduktion|beinstrecker|beinbeuger|überzüge|gesichtsziehen|muschel/.test(n)) return [lo+2, hi+3];
+  return [lo, hi];
 }
 function defaultStep(ex){
   const n=(ex.name||'').toLowerCase();
@@ -1077,8 +1182,12 @@ function setExOpt(exId, patch){
 }
 function exIsUni(exId){ return !!exOpt(exId).uni; }
 
-/* ---------- Kennzahlen ---------- */
-function validSets(ex){ return ex.sets.filter(s=>(+s.r||0)>0); }
+/* ---------- Kennzahlen ----------
+   Satz-Typen:  (leer)=Arbeitssatz · 'w'=Aufwärmen · 'd'=Dropset
+   Aufwärmsätze zählen NICHT in Volumen, PRs, Muskelsätze und Progression. */
+function validSets(ex){ return ex.sets.filter(s=>(+s.r||0)>0 && s.t!=='w'); }
+function allLoggedSets(ex){ return ex.sets.filter(s=>(+s.r||0)>0); }
+const SETTYPE = {w:['A','Aufwärmsatz'], d:['D','Dropset']};
 /* Volumen einer Übung im Workout:
    - Körpergewichtsübungen: (Körpergewicht + Zusatz) × Wdh
    - einseitige Übungen: ×2, weil der Satz pro Seite geloggt wird
@@ -1172,6 +1281,15 @@ function detectPRs(w){
    Regel: Erreichen ALLE Arbeitssätze das obere Ende des Wdh-Bereichs → Gewicht rauf,
    Wdh zurück auf das untere Ende. Sonst gleiches Gewicht, eine Wdh mehr.
    Bei Körpergewichtsübungen ohne Zusatzgewicht: erst Wdh steigern, dann Zusatz.  */
+/* Plateau: seit N Sessions kein neuer Bestwert (e1RM) → Zahl der Stagnations-Sessions */
+function plateauCount(exId, beforeTs){
+  const h = exHistory(exId, beforeTs);
+  if(h.length < 3) return 0;
+  let best = 0, since = 0;
+  h.forEach(x=>{ const v = x.bestE>0? x.bestE : x.maxReps;
+    if(v > best + 0.01){ best = v; since = 0; } else since++; });
+  return since;
+}
 function progressionFor(exId, beforeTs){
   const o = exOpt(exId);
   const h = exHistory(exId, beforeTs);
@@ -1183,22 +1301,58 @@ function progressionFor(exId, beforeTs){
   const w = Math.max(...sets.map(s=>+s.w||0));
   const atTop = sets.every(s=>(+s.r||0) >= o.hi) && sets.every(s=>(+s.w||0) >= w - 0.001);
   const minR = Math.min(...sets.map(s=>+s.r||0));
-  const prevBest = h.length>1? h[h.length-2] : null;
-  const stalled = prevBest && prevBest.bestW===last.bestW && prevBest.maxReps>=last.maxReps && h.length>=3;
+  const stall = plateauCount(exId, beforeTs);
+  /* RIR: waren noch ≥3 Wdh im Tank, war der Satz zu leicht → schneller steigern */
+  const rirs = sets.map(s=>s.rir).filter(v=>v!==undefined&&v!==null&&v!=='');
+  const avgRir = rirs.length? rirs.reduce((a,b)=>a+ +b,0)/rirs.length : null;
+  const kg = v=>`${isBW&&v>0?'+':''}${fmtW(v)}${isBW&&v===0?'':' kg'}`;
 
-  if(atTop){
-    const nw = Math.round((w + o.step)*4)/4;
+  /* Deload nach 3 Sessions Stillstand */
+  if(stall >= 3){
+    const dw = Math.round((w*0.9)*4)/4;
+    return {kind:'deload', w:dw, r:o.lo, sets:nSets,
+      txt:`Deload: ${nSets}×${o.lo} @ ${kg(dw)}`,
+      why:`${stall} Einheiten ohne neuen Bestwert. Eine Woche 10 % leichter und sauber ausführen — danach greift die Progression meist wieder.`};
+  }
+  if(atTop || (avgRir!==null && avgRir>=3)){
+    const bigJump = (avgRir!==null && avgRir>=4);
+    const nw = Math.round((w + o.step*(bigJump?2:1))*4)/4;
     return {kind:'up', w:nw, r:o.lo, sets:nSets,
-      txt:`${nSets}×${o.lo} @ ${isBW&&nw>0?'+':''}${fmtW(nw)} kg`,
-      why:`Letztes Mal alle Sätze auf ${o.hi} Wdh — Gewicht rauf (+${fmtW(o.step)} kg).`};
+      txt:`${nSets}×${o.lo} @ ${kg(nw)}`,
+      why: bigJump? `Zuletzt im Schnitt ${avgRir.toFixed(1)} Wdh im Tank — das war deutlich zu leicht, größerer Sprung (+${fmtW(o.step*2)} kg).`
+         : atTop? `Letztes Mal alle Sätze auf ${o.hi} Wdh — Gewicht rauf (+${fmtW(o.step)} kg).`
+                : `Noch ${avgRir.toFixed(1)} Wdh im Tank — Gewicht rauf (+${fmtW(o.step)} kg).`};
   }
   const targetR = Math.min(o.hi, minR + 1);
   return {kind:'reps', w:w, r:targetR, sets:nSets,
-    txt:`${nSets}×${targetR} @ ${isBW&&w>0?'+':''}${fmtW(w)}${isBW&&w===0?' (nur Körpergewicht)':' kg'}`,
-    why: stalled? `Seit 2 Einheiten kein Fortschritt — heute mindestens ${targetR} Wdh anpeilen.`
-                : `Ziel: ${o.lo}–${o.hi} Wdh. Noch nicht am oberen Ende → gleiches Gewicht, eine Wdh mehr.`};
+    txt:`${nSets}×${targetR} @ ${kg(w)}`,
+    why: stall>=2? `Seit ${stall} Einheiten kein neuer Bestwert — heute mindestens ${targetR} Wdh anpeilen, sonst nächste Woche Deload.`
+                : `Ziel ${o.lo}–${o.hi} Wdh: noch nicht am oberen Ende → gleiches Gewicht, eine Wdh mehr.`};
 }
 function fmtW(v){ v=+v||0; return (Math.round(v*100)/100).toString().replace('.',','); }
+
+/* ---------- Scheiben-Rechner (bei Strong/Hevy Premium) ---------- */
+const PLATES = [25,20,15,10,5,2.5,1.25];
+function plateCalc(total, bar){
+  bar = bar==null? 20 : bar;
+  let side = (total - bar)/2;
+  if(side < 0) return {ok:false, msg:`Weniger als die Stange (${fmtW(bar)} kg)`};
+  const out = [];
+  PLATES.forEach(p=>{ let n=0; while(side >= p-0.001){ side-=p; n++; } if(n) out.push([p,n]); });
+  const rest = Math.round(side*100)/100;
+  return {ok:true, plates:out, rest, bar,
+    txt: out.length? out.map(([p,n])=>`${n}×${fmtW(p)}`).join('  +  ') : 'nur die Stange'};
+}
+/* ---------- Aufwärmsätze (bei Strong Premium) ---------- */
+function warmupSets(work, bar){
+  bar = bar==null? 20 : bar;
+  if(!work || work<=bar) return [];
+  const steps = [[0.4,8],[0.6,5],[0.8,3]];
+  const round = v=>Math.max(bar, Math.round(v/2.5)*2.5);
+  const out = [];
+  steps.forEach(([f,r])=>{ const w=round(work*f); if(!out.some(x=>x.w===w)) out.push({w, r}); });
+  return out;
+}
 
 /* ---------- Split-Vorschlag: Position = Workouts diese Woche ---------- */
 function suggestType(){
@@ -1393,7 +1547,7 @@ function renderHome(){
   const wk = workoutsIn([a,b]);
 
   weekMuscleMap = muscleSets(wk);
-  paintBodies(weekMuscleMap);
+  paintBody();
 
   const vol = wk.reduce((x,w)=>x+wVolume(w),0);
   const sets = wk.reduce((x,w)=>x+wSets(w),0);
@@ -1425,21 +1579,71 @@ function renderHome(){
   $('#btn-start-home').innerHTML = state.active? '▶️ Weiter trainieren' : `💪 Training starten <span style="opacity:.7;font-weight:600;font-size:14px">· heute: ${suggestType()}</span>`;
   renderHomeBW();
 }
-/* Muskel antippen → Sätze anzeigen */
-let weekMuscleMap = {};
+/* Figur: Wochensätze oder Erholung */
+let weekMuscleMap = {}, recMap = {}, bodyMode = 'week';
+function paintBody(){
+  if(bodyMode==='rec'){
+    recMap = recoveryMap();
+    document.querySelectorAll('path[data-m]').forEach(p=>{
+      const v = recMap[p.dataset.m]; p.classList.remove('m1','m2','m3','r1','r2','r3');
+      p.classList.add(v>=85? 'r3' : v>=60? 'r2' : v>=35? 'r1' : 'r0');
+    });
+    const g = recoveryGroups(recMap).sort((a,b)=>b[1]-a[1]);
+    const fresh = g.filter(x=>x[1]>=80).map(x=>x[0]);
+    $('#body-sub').innerHTML = fresh.length? `Frisch und bereit: <b style="color:var(--green)">${fresh.join(', ')}</b>` : 'Alles noch in Erholung — heute leichter oder Pausentag.';
+    $('#body-legend').innerHTML = `<span><i class="dot" style="background:#8d2130"></i>&lt;35 %</span>
+      <span><i class="dot" style="background:#b06a1d"></i>35–60 %</span>
+      <span><i class="dot" style="background:#2e7d4f"></i>60–85 %</span>
+      <span><i class="dot" style="background:#3ddc84"></i>85 %+ erholt</span>`;
+    $('#body-reclist').innerHTML = `<div style="margin-top:10px">` + g.map(([n,v])=>`
+      <div class="mbar"><span>${n}</span><span class="bar"><i style="width:${v}%;background:${v>=85?'#3ddc84':v>=60?'#2e7d4f':v>=35?'#b06a1d':'#8d2130'}"></i></span><span class="val">${v}%</span></div>`).join('') + `</div>
+      <p class="tiny" style="margin-top:8px">Erholung sinkt mit jedem Satz und steigt über 2–5 Tage zurück auf 100 % — je nach Umfang.</p>`;
+  } else {
+    document.querySelectorAll('path[data-m]').forEach(p=>p.classList.remove('r0','r1','r2','r3'));
+    paintBodies(weekMuscleMap);
+    $('#body-sub').textContent = 'Reset: Montag 00:00';
+    $('#body-legend').innerHTML = `<span><i class="dot" style="background:var(--m0)"></i>0 Sätze</span>
+      <span><i class="dot" style="background:var(--m1)"></i>1–3</span>
+      <span><i class="dot" style="background:var(--m2)"></i>4–8</span>
+      <span><i class="dot" style="background:var(--m3);box-shadow:0 0 6px rgba(61,125,255,.7)"></i>9+ <span class="tiny">(dunkler = mehr)</span></span>`;
+    $('#body-reclist').innerHTML = '';
+  }
+}
+$('#bm-week').addEventListener('click',()=>{ bodyMode='week'; $('#bm-week').classList.add('on'); $('#bm-rec').classList.remove('on'); paintBody(); });
+$('#bm-rec').addEventListener('click',()=>{ bodyMode='rec'; $('#bm-rec').classList.add('on'); $('#bm-week').classList.remove('on'); paintBody(); });
 $('#scr-home').addEventListener('click', e=>{
   const p = e.target.closest('path[data-m]'); if(!p) return;
-  const v = weekMuscleMap[p.dataset.m]||0;
-  toast(`${MUSCLES[p.dataset.m]}: ${v%1? v.toFixed(1).replace('.',','):v} Sätze diese Woche`);
+  const k = p.dataset.m;
+  if(bodyMode==='rec') toast(`${MUSCLES[k]}: ${recMap[k]} % erholt`);
+  else { const v = weekMuscleMap[k]||0; toast(`${MUSCLES[k]}: ${v%1? v.toFixed(1).replace('.',','):v} Sätze diese Woche`); }
 });
 $('#btn-start-home').addEventListener('click',()=>showScreen('scr-train'));
 $('#btn-settings').addEventListener('click',()=>{
   $('#set-goal').value = state.settings.goal;
   $('#set-rest').value = state.settings.rest||90;
+  $('#set-replo').value = state.settings.repLo||6; $('#set-rephi').value = state.settings.repHi||9;
+  $('#set-defsets').value = state.settings.defSets||2;
+  $('#set-goallo').value = state.settings.setGoalLo||10; $('#set-goalhi').value = state.settings.setGoalHi||20;
+  $('#set-rir').textContent = state.settings.rir? 'An':'Aus'; $('#set-rir').classList.toggle('on', !!state.settings.rir);
   $('#set-lastbackup').textContent = 'Letztes Backup: ' + (state.settings.lastBackup? fmtDate(new Date(state.settings.lastBackup).toISOString()) : 'noch nie');
   openModal('#modal-settings');
 });
+$('#set-rir').addEventListener('click',()=>{
+  state.settings.rir = !state.settings.rir; saveState();
+  $('#set-rir').textContent = state.settings.rir?'An':'Aus'; $('#set-rir').classList.toggle('on', !!state.settings.rir);
+  if(state.active) renderActive();
+});
 $('#set-rest').addEventListener('change',()=>{ const v=Math.max(15,Math.min(600,+$('#set-rest').value||90)); state.settings.rest=v; $('#set-rest').value=v; saveState(); toast('Pause: '+v+' Sek.'); });
+['replo','rephi','defsets','goallo','goalhi'].forEach(k=>$('#set-'+k).addEventListener('change',()=>{
+  let lo=Math.max(1,Math.min(30,+$('#set-replo').value||6)), hi=Math.max(1,Math.min(40,+$('#set-rephi').value||9));
+  if(hi<lo) hi=lo;
+  let glo=Math.max(1,Math.min(40,+$('#set-goallo').value||10)), ghi=Math.max(1,Math.min(60,+$('#set-goalhi').value||20));
+  if(ghi<glo) ghi=glo;
+  const ds=Math.max(1,Math.min(10,+$('#set-defsets').value||2));
+  Object.assign(state.settings,{repLo:lo,repHi:hi,defSets:ds,setGoalLo:glo,setGoalHi:ghi});
+  $('#set-replo').value=lo; $('#set-rephi').value=hi; $('#set-defsets').value=ds; $('#set-goallo').value=glo; $('#set-goalhi').value=ghi;
+  saveState(); renderStats(); if(state.active) renderActive();
+}));
 
 /* ================= TRAINING: START ================= */
 function renderTrain(){
@@ -1508,7 +1712,8 @@ $('#rt-save').addEventListener('click',()=>{
 function startWorkout(type, tplId){
   let exs = [], t = type;
   if(tplId){ const tpl = state.templates.find(x=>x.id===tplId); if(!tpl) return;
-    t = tpl.type; exs = tpl.exIds.map(id=>{ const ex=getEx(id); return ex? {exId:id,name:ex.name,sets:[{w:'',r:''}]} : null; }).filter(Boolean);
+    const dn = Math.max(1, Math.min(10, state.settings.defSets||2));
+    t = tpl.type; exs = tpl.exIds.map(id=>{ const ex=getEx(id); return ex? {exId:id,name:ex.name,sets:Array.from({length:dn},()=>({w:'',r:''}))} : null; }).filter(Boolean);
   }
   state.active = { id:uid(), date:new Date().toISOString(), start:Date.now(), type:t, exercises:exs };
   saveState(); renderTrain();
@@ -1541,6 +1746,7 @@ function renderActive(){
   $('#tw-type').textContent = a.type+'-Workout';
   const total = a.exercises.reduce((x,e)=>x+validSets(e).length,0);
   $('#tw-setcount').textContent = total+' Sätze';
+  const useRir = !!state.settings.rir;
   $('#tw-exlist').innerHTML = a.exercises.map((e,ei)=>{
     const ex = getEx(e.exId);
     const isBW = exIsBW(e.exId);
@@ -1552,21 +1758,25 @@ function renderActive(){
     const prog = progressionFor(e.exId, new Date(a.date).getTime());
     return `<div class="excard" data-ei="${ei}">
       <div class="exhd"><div class="grow"><b>${esc(e.name)}</b><div class="musctags">${ex?esc(exMuscleLabel(ex)):''}${isBW?' · <b style="color:var(--acc2)">„+kg" = Zusatzgewicht</b>':''}${o.uni?' · <b style="color:var(--acc2)">einseitig — Eingabe gilt pro Seite</b>':''}</div></div>
+        <button class="iconbtn" data-calc="${ei}" style="width:32px;height:32px;font-size:14px">🧮</button>
         <button class="iconbtn" data-exopt="${ei}" style="width:32px;height:32px">${ICO.gear}</button>
         <button class="iconbtn" data-rmex="${ei}" style="width:32px;height:32px">${ICO.trash}</button></div>
       ${prog? `<div class="progbox"><div class="grow"><div class="tiny up" style="color:var(--acc2);letter-spacing:1px">Heute empfohlen</div>
           <b style="font-size:15px">${prog.txt}</b><div class="tiny" style="margin-top:2px">${esc(prog.why)}</div></div>
           <button class="btn btn-acc btn-sm" data-applyprog="${ei}">Übernehmen</button></div>`:''}
       ${prevTxt? `<div class="prevline">Letztes Mal: ${prevTxt}${bests&&bests.maxW>0? ` &nbsp;·&nbsp; Best: <b>${isBW?'+':''}${bests.maxW} kg</b>`:''}</div>`:`<div class="prevline">Erstes Mal — such dir ein Gewicht, mit dem ${o.lo}–${o.hi} Wdh sauber gehen 🚀</div>`}
-      <div class="sethead"><span>#</span><span>Letztes Mal · Tippen = übernehmen</span><span>${isBW?'+kg':'kg'}</span><span>Wdh</span></div>
+      <div class="sethead ${useRir?'rir':''}"><span>#</span><span>Letztes Mal · Tippen = übernehmen</span><span>${isBW?'+kg':'kg'}</span><span>Wdh</span>${useRir?'<span title="Reps in Reserve">RIR</span>':''}</div>
       ${e.sets.map((s,si)=>{
         const ps = prev && prev.sets[si];
         const filled = (+s.r||0)>0;
-        return `<div class="setrow ${filled?'filled':''}" data-ei="${ei}" data-si="${si}">
-          <span class="idx">${si+1}</span>
+        const tcls = s.t==='w'?'warm':s.t==='d'?'drop':'';
+        const lbl = s.t? SETTYPE[s.t][0] : (si+1);
+        return `<div class="setrow ${useRir?'rir':''} ${filled?'filled':''} ${tcls}" data-ei="${ei}" data-si="${si}">
+          <button class="idx" data-settype title="Satz-Typ wechseln">${lbl}</button>
           ${ps? `<button class="prevpill" data-pf data-w="${+ps.w||0}" data-r="${ps.r}">${fmtS(ps).replace('×',' kg × ').replace('BW kg','BW')}</button>` : `<span class="prevpill none">—</span>`}
           <input type="number" inputmode="decimal" step="0.5" min="0" placeholder="${ps? +ps.w||0 : (isBW?'+kg':'kg')}" value="${s.w!==''&&s.w!=null? s.w:''}" data-f="w">
           <input type="number" inputmode="numeric" step="1" min="0" placeholder="${e.target||(ps? ps.r : 'Wdh')}" value="${s.r!==''&&s.r!=null? s.r:''}" data-f="r">
+          ${useRir? `<input class="riri" type="number" inputmode="numeric" step="1" min="0" max="10" placeholder="–" value="${s.rir!==''&&s.rir!=null&&s.rir!==undefined? s.rir:''}" data-f="rir">`:''}
         </div>`;
       }).join('')}
       <button class="addset" data-addset="${ei}">＋ Satz</button>
@@ -1583,8 +1793,18 @@ function renderActive(){
     saveState();
     const t = state.active.exercises.reduce((x,e)=>x+validSets(e).length,0);
     $('#tw-setcount').textContent = t+' Sätze';
-    /* Satz gilt als erledigt, sobald Wdh stehen → Pause startet automatisch */
-    if(inp.dataset.f==='r' && !wasDone && isDone && !restEnd){ restEnd = Date.now() + (state.settings.rest||90)*1000; tick(); }
+    /* Satz gilt als erledigt, sobald Wdh stehen → Pause startet automatisch (Aufwärmsätze kürzer) */
+    if(inp.dataset.f==='r' && !wasDone && isDone && !restEnd){
+      const base = exOpt(state.active.exercises[+row.dataset.ei].exId).rest || state.settings.rest || 90;
+      restEnd = Date.now() + (set.t==='w'? Math.round(base/2) : base)*1000; tick();
+    }
+  }));
+  $$('#tw-exlist [data-settype]').forEach(b=>b.addEventListener('click',()=>{
+    const row = b.closest('.setrow');
+    const set = state.active.exercises[+row.dataset.ei].sets[+row.dataset.si];
+    set.t = set.t==='w'? 'd' : set.t==='d'? undefined : 'w';
+    saveState(); renderActive();
+    toast(set.t? SETTYPE[set.t][1] : 'Arbeitssatz');
   }));
   $$('#tw-exlist [data-pf]').forEach(b=>b.addEventListener('click',()=>{
     const row = b.closest('.setrow');
@@ -1614,11 +1834,18 @@ function renderActive(){
     saveState(); renderActive(); toast(`Ziel: ${p.sets}×${p.r} Wdh`);
   }));
   $$('[data-exopt]').forEach(b=>b.addEventListener('click',()=>openExOpt(state.active.exercises[+b.dataset.exopt].exId)));
+  $$('[data-calc]').forEach(b=>b.addEventListener('click',()=>{
+    const e = state.active.exercises[+b.dataset.calc];
+    const entered = Math.max(...e.sets.map(s=>+s.w||0));
+    const p = progressionFor(e.exId, new Date(state.active.date).getTime());
+    openCalc(entered>0? entered : (p? p.w : ''));
+  }));
 }
 $('#btn-add-ex').addEventListener('click',()=>openPicker(id=>{
   const ex = getEx(id);
-  state.active.exercises.push({exId:id, name:ex.name, sets:[{w:'',r:''}]});
-  saveState(); renderActive(); closeModals();
+  const n = Math.max(1, Math.min(10, state.settings.defSets||2));
+  state.active.exercises.push({exId:id, name:ex.name, sets:Array.from({length:n},()=>({w:'',r:''}))});
+  saveState(); renderActive(); $('#modal-picker').classList.remove('on');
 }));
 $('#btn-cancel-w').addEventListener('click',()=>{
   if(confirm('Training wirklich verwerfen? Alle Eingaben gehen verloren.')){ state.active=null; saveState(); stopTicker(); renderTrain(); }
@@ -1628,7 +1855,12 @@ $('#btn-finish').addEventListener('click',finishWorkout);
 function finishWorkout(){
   const a = state.active;
   const cleaned = a.exercises.map(e=>{
-    const o = {exId:e.exId, name:e.name, sets:validSets(e).map(s=>({w:+s.w||0, r:+s.r||0}))};
+    const o = {exId:e.exId, name:e.name, sets:allLoggedSets(e).map(s=>{
+      const x = {w:+s.w||0, r:+s.r||0};
+      if(s.t) x.t = s.t;
+      if(s.rir!==''&&s.rir!=null&&s.rir!==undefined) x.rir = +s.rir;
+      return x;
+    })};
     if(exIsBW(e.exId)){ o.bw = true; const b = bwAt(a.date); if(b) o.bwkg = b; }   // fürs Vault-Protokoll
     if(exIsUni(e.exId)) o.uni = true;                                              // Satz gilt pro Seite
     return o;
@@ -1742,6 +1974,30 @@ $('#cx-save').addEventListener('click',()=>{
   saveState(); closeModals(); toast('Übung gespeichert ✓'); renderLib();
 });
 
+/* ================= RECHNER (Scheiben + Aufwärmen) ================= */
+function renderCalc(){
+  const total = parseFloat(String($('#pc-total').value).replace(',','.'));
+  const bar = +$('#pc-bar').value;
+  if(!total){ $('#pc-out').innerHTML = '<div class="tiny">Gewicht eingeben…</div>'; $('#wu-out').innerHTML=''; return; }
+  const r = plateCalc(total, bar);
+  $('#pc-out').innerHTML = r.ok? `
+    <div class="row" style="flex-wrap:wrap;gap:7px">${r.plates.length? r.plates.map(([p,n])=>
+      `<span class="chip on" style="font-size:14px">${n}× ${fmtW(p)} kg</span>`).join('') : '<span class="chip">nur die Stange</span>'}</div>
+    <div class="tiny" style="margin-top:8px">pro Seite · Stange ${fmtW(bar)} kg${r.rest>0? ` · <b style="color:var(--gold)">${fmtW(r.rest)} kg nicht darstellbar</b>`:''}</div>`
+    : `<div class="tiny" style="color:var(--red)">${r.msg}</div>`;
+  const wu = warmupSets(total, bar);
+  $('#wu-out').innerHTML = wu.length? `<table class="htable"><tr><th>Satz</th><th>Gewicht</th><th>Wdh</th></tr>
+    ${wu.map((s,i)=>`<tr><td>A${i+1}</td><td><b>${fmtW(s.w)} kg</b></td><td>${s.r}</td></tr>`).join('')}
+    <tr><td>Arbeit</td><td><b style="color:var(--acc2)">${fmtW(total)} kg</b></td><td>—</td></tr></table>`
+    : '<div class="tiny">Für dieses Gewicht sind keine Aufwärmsätze nötig.</div>';
+}
+$('#pc-total').addEventListener('input',renderCalc);
+$('#pc-bar').addEventListener('change',renderCalc);
+function openCalc(prefill){
+  if(prefill) $('#pc-total').value = String(prefill).replace('.',',');
+  renderCalc(); openModal('#modal-calc');
+}
+
 /* ================= ÜBUNGS-EINSTELLUNGEN ================= */
 let xoId = null;
 function openExOpt(exId){
@@ -1751,8 +2007,27 @@ function openExOpt(exId){
   $('#xo-uni').textContent = o.uni? 'An' : 'Aus';
   $('#xo-uni').classList.toggle('on', o.uni);
   $('#xo-lo').value = o.lo; $('#xo-hi').value = o.hi; $('#xo-step').value = o.step;
+  $('#xo-rest').value = (state.exOpt[exId]||{}).rest || 0;
+  /* Alternativen: gleiche primäre Muskeln, anderes Gerät */
+  const alts = allExercises().filter(x=>x.id!==exId && x.p[0]===ex.p[0] && x.eq!==ex.eq).slice(0,6);
+  $('#xo-alt').innerHTML = `<h3 style="margin-bottom:8px">Alternativen <span class="tiny">(gleicher Zielmuskel, anderes Gerät)</span></h3>
+    ${alts.length? alts.map(a=>`<div class="item"><div class="grow"><div class="ttl" style="font-size:13.5px">${esc(a.name)}</div>
+      <div class="meta">${esc(a.eq)}</div></div><button class="btn btn-ghost btn-sm" data-swap="${a.id}">Tauschen</button></div>`).join('')
+      : '<div class="tiny">Keine passende Alternative gefunden.</div>'}`;
+  $$('#xo-alt [data-swap]').forEach(b=>b.addEventListener('click',()=>{
+    if(!state.active){ toast('Nur während eines Trainings'); return; }
+    const i = state.active.exercises.findIndex(e=>e.exId===xoId);
+    if(i<0){ toast('Übung ist nicht im aktuellen Training'); return; }
+    const nx = getEx(b.dataset.swap);
+    state.active.exercises[i] = {exId:nx.id, name:nx.name, sets:Array.from({length:state.settings.defSets||2},()=>({w:'',r:''}))};
+    saveState(); closeModals(); renderActive(); toast('Getauscht: '+nx.name);
+  }));
   openModal('#modal-exopt');
 }
+$('#xo-rest').addEventListener('change',()=>{
+  const v = Math.max(0, Math.min(600, +$('#xo-rest').value||0));
+  setExOpt(xoId, {rest:v}); $('#xo-rest').value=v;
+});
 $('#xo-uni').addEventListener('click',()=>{
   const cur = exOpt(xoId).uni;
   setExOpt(xoId, {uni:!cur});
@@ -1799,7 +2074,7 @@ function renderHomeBW(){
       <div style="text-align:right">${trTxt}<div class="tiny">${tr!==null?'Trend (21 Tage)':''}</div></div>
     </div></div>`;
 }
-function openBW(){ renderBWModal(); openModal('#modal-bw'); }
+function openBW(){ renderBWModal(); renderMeasures(); openModal('#modal-bw'); }
 function renderBWModal(){
   const arr = bwSorted();
   const last = bwLatest();
@@ -1818,6 +2093,38 @@ function renderBWModal(){
     saveState(); renderBWModal(); renderHomeBW();
   }));
 }
+/* ---------- Körpermaße (bei Strong Premium) ---------- */
+const MEASURES = [['chest','Brust'],['arm','Oberarm'],['waist','Taille'],['thigh','Oberschenkel'],['shoulder','Schultern'],['calf','Wade'],['neck','Nacken']];
+function renderMeasures(){
+  const arr = (state.measures||[]).slice().sort((a,b)=>a.d<b.d?-1:1);
+  const last = arr[arr.length-1]||{};
+  $('#ms-inputs').innerHTML = MEASURES.map(([k,l])=>`
+    <div class="row" style="margin-bottom:7px"><span class="sub" style="width:110px">${l}</span>
+      <input type="text" inputmode="decimal" data-ms="${k}" placeholder="${last[k]!=null? String(last[k]).replace('.',','):'–'}" style="flex:1"></div>`).join('');
+  const withVals = MEASURES.filter(([k])=>arr.some(e=>e[k]!=null));
+  $('#ms-out').innerHTML = withVals.length? `<div class="card"><h3 style="margin-bottom:8px">Entwicklung</h3>
+    <table class="htable"><tr><th>Maß</th><th>Erster</th><th>Aktuell</th><th>Diff.</th></tr>
+    ${withVals.map(([k,l])=>{
+      const vals = arr.filter(e=>e[k]!=null);
+      const f=+vals[0][k], c=+vals[vals.length-1][k], d=c-f;
+      return `<tr><td>${l}</td><td>${fmtW(f)}</td><td><b>${fmtW(c)}</b></td>
+        <td style="color:${d>0?'var(--green)':d<0?'var(--red)':'var(--txt3)'}">${d>0?'+':''}${fmtW(d)} cm</td></tr>`;
+    }).join('')}</table>
+    <div class="tiny" style="margin-top:8px">${arr.length} Messungen · zuletzt ${fmtDate(arr[arr.length-1].d)}</div></div>` : '';
+}
+$('#ms-save').addEventListener('click',()=>{
+  const today = new Date().toISOString().slice(0,10);
+  const entry = {d:today};
+  let any=false;
+  $$('#ms-inputs [data-ms]').forEach(i=>{
+    const v = parseFloat(String(i.value).replace(',','.'));
+    if(v>0 && v<300){ entry[i.dataset.ms]=Math.round(v*10)/10; any=true; }
+  });
+  if(!any){ toast('Nichts eingetragen'); return; }
+  const prev = (state.measures||[]).find(e=>e.d===today);
+  if(prev) Object.assign(prev, entry); else (state.measures=state.measures||[]).push(entry);
+  saveState(); renderMeasures(); toast('Maße gespeichert ✓');
+});
 $('#bw-save').addEventListener('click',()=>{
   const v = parseFloat(String($('#bw-input').value).replace(',','.'));
   if(!v || v<30 || v>250){ toast('Bitte realistisches Gewicht eingeben'); return; }
@@ -1898,6 +2205,30 @@ function doExport(){
 }
 $('#btn-export').addEventListener('click',doExport);
 $('#btn-vault').addEventListener('click',sendToVault);
+/* CSV-Export (bei Strong hinter Premium) */
+$('#btn-csv').addEventListener('click',()=>{
+  const rows = [['Datum','Uhrzeit','Typ','Übung','Satz','Satztyp','Gewicht_kg','Wdh','RIR','Volumen_kg','Körpergewicht_kg']];
+  state.workouts.slice().sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach(w=>{
+    const d = new Date(w.date);
+    w.exercises.forEach(e=>{
+      const bwk = e.bw? (e.bwkg!=null? +e.bwkg : bwAt(w.date)) : 0;
+      const side = (e.uni!==undefined? e.uni : exIsUni(e.exId))? 2 : 1;
+      e.sets.forEach((s,i)=>{
+        const vol = s.t==='w'? 0 : ((+s.w||0)+bwk)*(+s.r||0)*side;
+        rows.push([d.toLocaleDateString('de-DE'), d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),
+          w.type, e.name, i+1, s.t==='w'?'Aufwärmen':s.t==='d'?'Dropset':'Arbeitssatz',
+          String(+s.w||0).replace('.',','), +s.r||0, s.rir!=null? s.rir:'',
+          String(Math.round(vol)).replace('.',','), bwk? String(bwk).replace('.',','):'']);
+      });
+    });
+  });
+  const csv = '﻿' + rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(';')).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download = 'fitnesstracker-'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click(); URL.revokeObjectURL(a.href);
+  toast(`CSV mit ${rows.length-1} Sätzen ✓`);
+});
 $('#btn-import').addEventListener('click',()=>$('#import-file').click());
 $('#import-file').addEventListener('change',e=>{
   const f = e.target.files[0]; if(!f) return;
@@ -2000,20 +2331,78 @@ function muscleBars(m){
   const max = entries[0][1];
   return entries.map(([k,v])=>`<div class="mbar"><span>${MUSCLES[k]}</span><span class="bar"><i style="width:${Math.round(v/max*100)}%"></i></span><span class="val">${v%1? v.toFixed(1).replace('.',','):v}</span></div>`).join('');
 }
-function groupBars(m){
-  const entries = sumGroups(m, SETGROUPS).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+/* Gruppen-Balken mit Wochenziel-Ampel; antippen öffnet die Übungs-Aufschlüsselung */
+function groupBars(m, ws, weeks){
+  const all = sumGroups(m, SETGROUPS);
+  const entries = all.filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
   if(!entries.length) return '<div class="empty">Keine Sätze in diesem Zeitraum</div>';
-  const max = entries[0][1];
-  return entries.map(([g,v])=>`<div class="mbar big"><span>${g}</span><span class="bar"><i style="width:${Math.round(v/max*100)}%"></i></span><span class="val"><b>${v%1? v.toFixed(1).replace('.',','):v}</b></span></div>`).join('');
+  const S = state.settings, lo=(S.setGoalLo||10)*(weeks||1), hi=(S.setGoalHi||20)*(weeks||1);
+  const max = Math.max(entries[0][1], hi);
+  const col = v=> v>=lo && v<=hi? 'var(--green)' : v<lo? 'var(--gold)' : 'var(--red)';
+  const mark = v=> v>=lo && v<=hi? '✓' : v<lo? '↓' : '↑';
+  const rows = entries.map(([g,v])=>`
+    <div class="mbar big goal" data-grp="${esc(g)}" style="cursor:pointer">
+      <span>${g}</span>
+      <span class="bar"><i style="width:${Math.round(Math.min(1,v/max)*100)}%;background:${col(v)}"></i>
+        <b class="zone" style="left:${Math.round(lo/max*100)}%;width:${Math.round((hi-lo)/max*100)}%"></b></span>
+      <span class="val" style="color:${col(v)}"><b>${v%1? v.toFixed(1).replace('.',','):v}</b> ${mark(v)}</span>
+    </div>`).join('');
+  const missing = all.filter(([,v])=>v===0).map(([g])=>g);
+  return rows + `<p class="tiny" style="margin-top:8px">Zielkorridor ${lo}–${hi} Sätze${weeks>1?` (${weeks} Wochen)`:''} · <span style="color:var(--gold)">↓ zu wenig</span> · <span style="color:var(--green)">✓ im Ziel</span> · <span style="color:var(--red)">↑ viel</span>${missing.length? ' · <b>gar nicht trainiert:</b> '+missing.join(', '):''}<br>Gruppe antippen zeigt die Übungen.</p>`;
+}
+/* Welche Übungen haben eine Muskelgruppe im Zeitraum trainiert? */
+function groupDetail(groupName, ws){
+  const keys = (SETGROUPS.find(g=>g[0]===groupName)||[null,[]])[1];
+  const acc = {};
+  ws.forEach(w=>w.exercises.forEach(e=>{
+    const ex = getEx(e.exId); if(!ex) return;
+    const n = validSets(e).length; if(!n) return;
+    let f = 0;
+    ex.p.forEach(k=>{ if(keys.includes(k)) f += 1; });
+    ex.s.forEach(k=>{ if(keys.includes(k)) f += 0.5; });
+    if(!f) return;
+    const cur = acc[e.exId] || (acc[e.exId] = {name:ex.name, sets:0, vol:0, sessions:0, prim:ex.p.some(k=>keys.includes(k))});
+    cur.sets += n * Math.min(1,f);
+    cur.vol  += exVol(e, w.date);
+    cur.sessions++;
+  }));
+  const list = Object.values(acc).sort((a,b)=>b.sets-a.sets);
+  const total = list.reduce((a,x)=>a+x.sets,0);
+  return {list, total};
 }
 /* Karten: Radar + Gruppen-Balken + Details pro Muskel */
-function muscleSection(ws){
+function muscleSection(ws, weeks){
   const m = muscleSets(ws);
   const radar = sumGroups(m, RADAR_AXES);
   return `<div class="card"><h3>Muskel-Balance</h3>${svgRadar(radar)}</div>
-    <div class="card"><h3 style="margin-bottom:10px">Sätze pro Muskelgruppe</h3>${groupBars(m)}
-    ${Object.keys(m).length? `<details style="margin-top:10px"><summary class="tiny" style="cursor:pointer">Details pro Muskel anzeigen</summary><div style="margin-top:10px">${muscleBars(m)}</div></details>`:''}</div>`;
+    <div class="card"><h3 style="margin-bottom:10px">Sätze pro Muskelgruppe</h3>${groupBars(m, ws, weeks)}
+    ${Object.keys(m).length? `<details style="margin-top:10px"><summary class="tiny" style="cursor:pointer">Details pro Einzelmuskel anzeigen</summary><div style="margin-top:10px">${muscleBars(m)}</div></details>`:''}</div>`;
 }
+/* Klick auf eine Muskelgruppe → Modal mit allen Übungen */
+let lastStatsWs = [];
+document.addEventListener('click', e=>{
+  const el = e.target.closest('.mbar.goal'); if(!el) return;
+  const g = el.dataset.grp;
+  const {list,total} = groupDetail(g, lastStatsWs);
+  $('#detail-body').innerHTML = `
+    <div class="grab"></div>
+    <div class="mhd"><div><h2>${esc(g)}</h2><div class="sub">${total%1? total.toFixed(1).replace('.',','):total} Sätze im Zeitraum · ${list.length} Übungen</div></div>
+      <button class="iconbtn" data-close>${ICO.close}</button></div>
+    ${list.length? `<div class="card" style="padding:2px 14px">${list.map(x=>`
+      <div class="item" data-godetail="${esc(x.name)}" style="cursor:pointer">
+        <div class="grow"><div class="ttl" style="font-size:13.5px">${esc(x.name)} ${x.prim?'':'<span class="tiny">(indirekt)</span>'}</div>
+          <div class="meta">${x.sets%1? x.sets.toFixed(1).replace('.',','):x.sets} Sätze · ${x.sessions}× trainiert · ${fmtVol(x.vol)}</div></div>
+        <span style="color:var(--txt3)">›</span></div>`).join('')}</div>`
+      : '<div class="empty">Keine Übung hat diese Gruppe trainiert</div>'}
+    <p class="tiny" style="text-align:center">„(indirekt)" = die Gruppe ist nur Hilfsmuskel und zählt halb.</p>`;
+  openModal('#modal-detail');
+  $$('#detail-body [data-godetail]').forEach(b=>b.addEventListener('click',()=>{
+    const ex = allExercises().find(x=>x.name===b.dataset.godetail); if(!ex) return;
+    closeModals(); exStatId = ex.id; statsPanel='ex';
+    $$('#stats-seg button').forEach(x=>x.classList.toggle('on',x.dataset.p==='ex'));
+    renderStats(); showScreen('scr-stats');
+  }));
+});
 function delta(cur, prev){
   if(!prev) return '';
   const p = Math.round((cur-prev)/prev*100);
@@ -2038,6 +2427,34 @@ function prListHtml(ws){
   return `<div class="card"><h3 style="margin-bottom:8px">🏆 PRs im Zeitraum (${prs.length})</h3>${
     prs.slice().reverse().slice(0,20).map(p=>`<div class="item"><div class="grow"><div class="ttl" style="font-size:13.5px">${esc(p.name)}</div>
     <div class="meta">${p.kind}-PR: <b style="color:var(--gold)">${p.val}</b> · ${fmtDate(p.date)}</div></div></div>`).join('')}</div>`;
+}
+
+/* ---------- Jahres-Heatmap (bei Hevy Pro) ---------- */
+function yearHeatmap(year){
+  const byDay = {};
+  state.workouts.forEach(w=>{ const d=new Date(w.date); if(d.getFullYear()!==year) return;
+    const k=w.date.slice(0,10); byDay[k]=(byDay[k]||0)+wSets(w); });
+  const start = mondayOf(new Date(year,0,1));
+  const cell=9, gap=2, cols=53;
+  const W = cols*(cell+gap), H = 7*(cell+gap)+16;
+  let s = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">`;
+  const months = {};
+  for(let c=0;c<cols;c++) for(let r=0;r<7;r++){
+    const d = new Date(start.getTime() + ((c*7+r)*86400000));
+    if(d.getFullYear()>year) continue;
+    const k = d.toISOString().slice(0,10);
+    const v = byDay[k]||0;
+    const col = v===0? '#151a23' : v<8? '#1b3a72' : v<14? '#2f6bff' : '#7aa8ff';
+    if(d.getFullYear()===year && d.getDate()<=7 && r===0) months[d.getMonth()] = c*(cell+gap);
+    s += `<rect x="${c*(cell+gap)}" y="${r*(cell+gap)+14}" width="${cell}" height="${cell}" rx="2" fill="${col}">`
+       + `<title>${d.toLocaleDateString('de-DE')}${v? ': '+v+' Sätze':''}</title></rect>`;
+  }
+  ['J','F','M','A','M','J','J','A','S','O','N','D'].forEach((m,i)=>{
+    if(months[i]!==undefined) s += `<text x="${months[i]}" y="9" font-size="8" fill="#5c6577">${m}</text>`;
+  });
+  s += '</svg>';
+  const days = Object.keys(byDay).length;
+  return `<div class="chart">${s}</div><div class="tiny" style="margin-top:6px">${days} Trainingstage in ${year} · dunkler = mehr Sätze</div>`;
 }
 
 /* ================= STATISTIK-PANELS ================= */
@@ -2069,8 +2486,9 @@ function renderWeekStats(){
   const prevWs = workoutsIn(weekRange(prevA));
   const nav = navRow(`KW ${isoWeek(a)} · ${a.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})}–${bEnd.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})}${weekOff===0?' (aktuell)':''}`, d=>{ if(weekOff+d<=0){ weekOff+=d; renderWeekStats(); }});
   const el = $('#stats-week');
+  lastStatsWs = ws;
   el.innerHTML = nav.html + kpiRow(ws, prevWs) + `<div class="tiny" style="margin:-8px 2px 10px">Vergleich zur Vorwoche</div>`
-    + muscleSection(ws)
+    + muscleSection(ws, 1)
     + `<div class="card"><h3>Volumen pro Tag</h3>${svgBars(days,dayVol,v=>fmtVol(v))}</div>`
     + prListHtml(ws);
   nav.wire(el);
@@ -2084,8 +2502,9 @@ function renderMonthStats(){
   const prevWs = workoutsIn(monthRange(new Date(anchor.getFullYear(), anchor.getMonth()-1, 1)));
   const nav = navRow(anchor.toLocaleDateString('de-DE',{month:'long',year:'numeric'})+(monthOff===0?' (aktuell)':''), d=>{ if(monthOff+d<=0){ monthOff+=d; renderMonthStats(); }});
   const el=$('#stats-month');
+  lastStatsWs = ws;
   el.innerHTML = nav.html + kpiRow(ws, prevWs) + `<div class="tiny" style="margin:-8px 2px 10px">Vergleich zum Vormonat</div>`
-    + muscleSection(ws)
+    + muscleSection(ws, 4.3)
     + `<div class="card"><h3>Volumen pro Woche</h3>${svgBars(wkLabels,wkVals,v=>fmtVol(v))}</div>`
     + prListHtml(ws);
   nav.wire(el);
@@ -2100,8 +2519,10 @@ function renderYearStats(){
     return workoutsIn([m0,m1]).length; });
   const nav = navRow(anchor.getFullYear()+(yearOff===0?' (aktuell)':''), d=>{ if(yearOff+d<=0){ yearOff+=d; renderYearStats(); }});
   const el=$('#stats-year');
+  lastStatsWs = ws;
   el.innerHTML = nav.html + kpiRow(ws)
-    + muscleSection(ws)
+    + `<div class="card"><h3 style="margin-bottom:8px">Trainings-Kalender</h3>${yearHeatmap(anchor.getFullYear())}</div>`
+    + muscleSection(ws, 52)
     + `<div class="card"><h3>Volumen pro Monat</h3>${svgBars(mLabels,mVol,v=>Math.round(v/1000)+'t')}</div>`
     + `<div class="card"><h3>Workouts pro Monat</h3>${svgBars(mLabels,mCnt,v=>v)}</div>`;
   nav.wire(el);
