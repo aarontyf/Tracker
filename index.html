@@ -50,7 +50,10 @@
   --teal:#40cbe0;
   --blue:#4c8dff;
   /* Muskel-Heatmap */
-  --m0:#1c212b; --m1:#9dc2ff; --m2:#4c8dff; --m3:#1b4fd8;
+  --m0:#3f4857;
+  --fig-body:#2b2b2b; --fig-line:#3d3d3d;
+  --fig-1:#2f6b38; --fig-2:#47a850; --fig-3:#67e86b;
+  --fig-r0:#e2564f; --fig-r1:#e0973f; --m1:#9dc2ff; --m2:#4c8dff; --m3:#1b4fd8;
   /* Erholung */
   --r-low:#c8323c; --r-mid:#d98324; --r-ok:#2a9d5c; --r-full:#30d158;
   /* Abstände (4er-Raster) */
@@ -250,22 +253,26 @@ h3{font-size:15px;font-weight:650;letter-spacing:-.012em}
   background:radial-gradient(120% 90% at 50% 35%, transparent 52%, rgba(0,0,0,.55) 100%);
 }
 @keyframes breathe{0%,100%{opacity:.75;transform:translateX(-50%) scale(1)}50%{opacity:1;transform:translateX(-50%) scale(1.06)}}
-.bodywrap{position:relative;z-index:1;display:flex;gap:var(--sp2);justify-content:center;perspective:900px}
-.bodywrap>div{flex:1;transition:transform var(--dur-4) var(--ease)}
-.bodywrap svg{width:100%;max-width:196px;height:auto;display:block;margin:0 auto;filter:drop-shadow(0 18px 28px rgba(0,0,0,.6))}
+.bodywrap{position:relative;z-index:1;display:flex;gap:var(--sp1);justify-content:center;align-items:flex-start;perspective:900px}
+.bodywrap>div{flex:1 1 0;min-width:0;max-width:270px;transition:transform var(--dur-4) var(--ease)}
+.bodywrap svg{width:100%;height:auto;display:block;margin:0 auto}
 .bodywrap .lbl{text-align:center;font-size:10px;color:var(--txt3);margin-top:var(--sp1);text-transform:uppercase;letter-spacing:.1em;font-weight:600}
-.base{fill:#161a22;stroke:rgba(255,255,255,.07);stroke-width:1}
-path[data-m]{fill:var(--m0);stroke:rgba(255,255,255,.06);stroke-width:.8;
-  transition:fill var(--dur-4) var(--ease), filter var(--dur-4) var(--ease);
+/* Vorlage: Körper und Muskeln in derselben Farbe, getrennt durch dünne, etwas
+   hellere Konturlinien — nicht durch dunkle Lücken. Das erzeugt die feine
+   Anatomiezeichnung statt einer Flächenoptik. */
+.base{fill:var(--fig-body);stroke:var(--fig-line);stroke-width:.6;stroke-linejoin:round}
+path[data-m]{fill:var(--fig-body);stroke:var(--fig-line);stroke-width:.6;stroke-linejoin:round;
+  transition:fill var(--dur-4) var(--ease);
   transition-delay:calc(var(--md,0) * 26ms)}
-path[data-m].m1{fill:var(--m1);stroke:rgba(157,194,255,.5)}
-path[data-m].m2{fill:var(--m2);stroke:rgba(76,141,255,.6);filter:drop-shadow(0 0 3px rgba(76,141,255,.4))}
-path[data-m].m3{fill:var(--m3);stroke:var(--acc);filter:drop-shadow(0 0 7px rgba(76,141,255,.75))}
-path[data-m].r0{fill:var(--r-low);stroke:rgba(255,120,120,.45)}
-path[data-m].r1{fill:var(--r-mid);stroke:rgba(255,190,110,.4)}
-path[data-m].r2{fill:var(--r-ok);stroke:rgba(90,220,150,.4)}
-path[data-m].r3{fill:var(--r-full);stroke:rgba(120,255,180,.55);filter:drop-shadow(0 0 6px rgba(48,209,88,.45))}
-.deco{fill:none;stroke:rgba(0,0,0,.5);stroke-width:1.2;pointer-events:none;stroke-linecap:round}
+path[data-m].m1{fill:var(--fig-1);stroke:rgba(0,0,0,.40)}
+path[data-m].m2{fill:var(--fig-2);stroke:rgba(0,0,0,.40)}
+path[data-m].m3{fill:var(--fig-3);stroke:rgba(0,0,0,.40)}
+path[data-m].r0{fill:var(--fig-r0);stroke:rgba(0,0,0,.40)}
+path[data-m].r1{fill:var(--fig-r1);stroke:rgba(0,0,0,.40)}
+path[data-m].r2{fill:var(--fig-2);stroke:rgba(0,0,0,.40)}
+path[data-m].r3{fill:var(--fig-3);stroke:rgba(0,0,0,.40)}
+.deco{fill:none;stroke:var(--fig-line);stroke-width:.7;pointer-events:none;stroke-linecap:round}
+.deco2{display:none}
 .legend{display:flex;gap:var(--sp3);justify-content:center;margin-top:var(--sp3);flex-wrap:wrap}
 .legend span{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--txt2)}
 .dot{width:10px;height:10px;border-radius:3px;display:inline-block}
@@ -510,11 +517,149 @@ path[data-m].r3{fill:var(--r-full);stroke:rgba(120,255,180,.55);filter:drop-shad
   .statspanel{column-count:2;column-gap:var(--sp3)}
   .statspanel>.card{break-inside:avoid}
   .statspanel>.cnav,.statspanel>.kpis,.statspanel>.tiny{column-span:all}
-  .bodywrap svg{max-width:250px}
+  .bodywrap>div{max-width:340px}
   h1{font-size:30px}
   .nav{background:rgba(10,12,17,.9)}
 }
 @media(min-width:1400px){ .app{max-width:1120px} }
+
+/* ═══ Muskelatlas ═══ */
+#modal-muscle .modal{max-width:640px}
+.mhead{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp2);margin-bottom:var(--sp2)}
+.mhead h3{font-size:21px;margin:0 0 2px}
+.mhead .ic{background:var(--s2);border:1px solid var(--line);color:var(--txt2);width:34px;height:34px;
+  border-radius:var(--r-full);font-size:15px;cursor:pointer;flex:0 0 auto}
+.mfig{display:flex;gap:var(--sp2);justify-content:center;margin:var(--sp1) 0 var(--sp3)}
+.mfig>div{flex:1 1 0;max-width:118px}
+.mfig svg{width:100%;height:auto;display:block}
+.mfig path[data-m]{fill:var(--fig-body);stroke:var(--fig-line);stroke-width:.6}
+.mfig path[data-m].sel{fill:var(--fig-3);stroke:rgba(0,0,0,.4)}
+.mkpi{display:flex;gap:var(--sp2);margin-bottom:var(--sp3)}
+.mkpi>div{flex:1;background:var(--s2);border:1px solid var(--line);border-radius:var(--r-md);
+  padding:var(--sp2);text-align:center}
+.mkpi b{display:block;font-size:18px;font-variant-numeric:tabular-nums}
+.mkpi span{font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em}
+.msec{margin-bottom:var(--sp3)}
+.msec h5,.exsec h5{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin:0 0 6px}
+.msec p,.msec li,.exsec li{font-size:13.5px;line-height:1.55;color:var(--txt2)}
+.msec ul,.exsec ul,.exsec ol{margin:0;padding-left:18px}
+.msec li,.exsec li{margin-bottom:4px}
+.msearch input{width:100%;background:var(--s2);border:1px solid var(--line);border-radius:var(--r-md);
+  color:var(--txt1);padding:11px 13px;font-size:15px;-webkit-appearance:none}
+.mfilters{display:flex;flex-wrap:wrap;gap:6px;margin:var(--sp2) 0 var(--sp3)}
+.mfilters .chip{background:var(--s2);border:1px solid var(--line);color:var(--txt2);border-radius:var(--r-full);
+  padding:7px 13px;font-size:12.5px;cursor:pointer;transition:all var(--dur-2) var(--ease)}
+.mfilters .chip.on{background:var(--acc);border-color:var(--acc);color:#04070f;font-weight:600}
+.atcat{margin-bottom:var(--sp4)}
+.atcat h4{font-size:14px;margin:0 0 2px;display:flex;align-items:center;gap:7px}
+.atcat h4 span{background:var(--s2);border:1px solid var(--line);border-radius:var(--r-full);
+  padding:1px 8px;font-size:11px;color:var(--txt3);font-weight:500}
+.atcat>.tiny{margin:0 0 10px}
+.excard{border:1px solid var(--line);border-radius:var(--r-md);margin-bottom:7px;overflow:hidden;
+  background:var(--s2);transition:border-color var(--dur-2) var(--ease)}
+.excard.open{border-color:var(--acc)}
+.exhead{width:100%;display:flex;align-items:center;gap:11px;padding:11px 12px;background:none;border:0;
+  color:var(--txt1);text-align:left;cursor:pointer;min-height:44px}
+.exic{flex:0 0 auto;color:var(--acc);display:flex}
+.exmain{flex:1;min-width:0}
+.exmain b{display:block;font-size:14px;font-weight:600}
+.exmain small{display:block;font-size:11.5px;color:var(--txt3);margin-top:1px}
+.exact{flex:0 0 auto;font-size:13px;font-weight:700;color:var(--acc);font-variant-numeric:tabular-nums}
+.exbody{padding:0 12px 13px;animation:slideDown var(--dur-3) var(--ease)}
+@keyframes slideDown{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.exsec{margin-bottom:12px}
+.exsec h5 i{text-transform:none;letter-spacing:0;font-style:normal;opacity:.75}
+.rbars{margin:0 0 13px}
+.rbar{display:flex;align-items:center;gap:9px;margin-bottom:5px;font-size:12px;color:var(--txt2)}
+.rbar span{flex:0 0 118px}
+.rbar i{flex:1;height:6px;background:var(--s3,rgba(255,255,255,.07));border-radius:var(--r-full);overflow:hidden}
+.rbar b{display:block;height:100%;border-radius:var(--r-full);transition:width var(--dur-4) var(--ease)}
+.rbar b.ta{background:#4c8dff} .rbar b.tb{background:#30d158}
+.rbar b.tc{background:#9d7dff} .rbar b.td{background:#d98324}
+.rbar em{flex:0 0 34px;text-align:right;font-style:normal;font-variant-numeric:tabular-nums;color:var(--txt3)}
+.exmeta{display:flex;flex-wrap:wrap;gap:5px}
+.exmeta span{font-size:10.5px;color:var(--txt3);background:var(--s1);border:1px solid var(--line);
+  border-radius:var(--r-full);padding:2px 8px}
+.mnote{margin-top:var(--sp3);border-top:1px solid var(--line);padding-top:var(--sp2)}
+.mnote summary{font-size:12.5px;color:var(--txt3);cursor:pointer}
+.mnote p{font-size:12px;line-height:1.5;color:var(--txt3);margin:8px 0 0}
+path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
+.bodywrap path[data-m]{cursor:pointer}
+
+/* ═══ Coach ═══ */
+.coachstart{display:flex;align-items:center;gap:var(--sp3);justify-content:space-between;flex-wrap:wrap}
+.coachstart p{margin:4px 0 0;max-width:40ch}
+.coachcard .cchead{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp2)}
+.ccbig{display:block;font-size:34px;font-weight:700;line-height:1.05;font-variant-numeric:tabular-nums;margin-top:2px}
+.ccbig i{font-size:14px;font-weight:500;color:var(--txt3);font-style:normal;margin-left:6px}
+.ccmac{display:flex;gap:var(--sp2);margin:var(--sp3) 0 var(--sp2)}
+.ccmac>div{flex:1;min-width:0}
+.ccmac i{display:block;height:5px;border-radius:var(--r-full);background:var(--acc);width:var(--w);
+  min-width:8px;margin-bottom:7px;transition:width var(--dur-4) var(--ease)}
+.ccmac>div:nth-child(2) i{background:#9d7dff} .ccmac>div:nth-child(3) i{background:#d98324}
+.ccmac b{display:block;font-size:16px;font-variant-numeric:tabular-nums}
+.ccmac span{font-size:10.5px;color:var(--txt3)}
+/* ═══ Onboarding ═══ */
+#modal-onboard .modal{max-width:560px}
+.obtop{margin-bottom:var(--sp4)}
+.obprog{height:4px;background:var(--s2);border-radius:var(--r-full);overflow:hidden}
+.obprog i{display:block;height:100%;background:var(--acc);border-radius:var(--r-full);
+  transition:width var(--dur-4) var(--ease)}
+.obmeta{display:flex;justify-content:space-between;margin-top:7px;font-size:11px;color:var(--txt3);
+  text-transform:uppercase;letter-spacing:.06em}
+.obcontent{animation:obIn var(--dur-3) var(--ease)}
+@keyframes obIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
+.obcontent h2{font-size:23px;margin:0 0 4px}
+.obsub{font-size:13.5px;color:var(--txt2);margin:0 0 var(--sp3);line-height:1.5}
+.obgrid{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp2)}
+.obgrid label{display:block;font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;position:relative}
+.obgrid label i{font-style:normal;text-transform:none;letter-spacing:0;opacity:.7}
+.obgrid input{width:100%;margin-top:5px;background:var(--s2);border:1px solid var(--line);
+  border-radius:var(--r-md);color:var(--txt1);padding:13px 44px 13px 13px;font-size:19px;
+  font-variant-numeric:tabular-nums;-webkit-appearance:none}
+.obgrid label>span{position:absolute;right:13px;bottom:14px;font-size:12px;color:var(--txt3);text-transform:none}
+.obsex{display:flex;gap:7px;margin-top:var(--sp3)}
+.obsex .chip{flex:1;background:var(--s2);border:1px solid var(--line);color:var(--txt2);
+  border-radius:var(--r-md);padding:11px;font-size:13px;cursor:pointer}
+.obsex .chip.on{background:var(--acc);border-color:var(--acc);color:#04070f;font-weight:600}
+.linkbtn{background:none;border:0;color:var(--acc);font-size:12.5px;cursor:pointer;padding:10px 0;text-decoration:underline}
+.pcards{display:flex;flex-direction:column;gap:9px}
+.pcard{display:flex;align-items:center;gap:13px;width:100%;text-align:left;cursor:pointer;
+  background:var(--s2);border:1px solid var(--line);border-radius:var(--r-lg);padding:15px;
+  color:var(--txt1);transition:all var(--dur-2) var(--ease);min-height:44px}
+.pcard:active{transform:scale(.985)}
+.pcard.on{border-color:var(--acc);background:color-mix(in srgb, var(--acc) 12%, var(--s2))}
+.pico{font-size:23px;flex:0 0 auto;line-height:1}
+.ptxt{flex:1;min-width:0}
+.ptxt b{display:block;font-size:15px}
+.ptxt small{display:block;font-size:12px;color:var(--txt3);margin-top:2px;line-height:1.45}
+.pmark{flex:0 0 auto;width:22px;height:22px;border-radius:var(--r-full);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;font-size:11px;color:transparent}
+.pcard.on .pmark{background:var(--acc);border-color:var(--acc);color:#04070f}
+.obdays{margin-top:var(--sp3)}
+.obdays>span{font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em}
+.daypick{display:flex;gap:7px;margin-top:7px}
+.daypick .chip{flex:1;background:var(--s2);border:1px solid var(--line);color:var(--txt2);
+  border-radius:var(--r-md);padding:13px;font-size:16px;font-weight:600;cursor:pointer}
+.daypick .chip.on{background:var(--acc);border-color:var(--acc);color:#04070f}
+.obnav{display:flex;gap:var(--sp2);justify-content:space-between;margin-top:var(--sp4);align-items:center}
+.obnav .btn{min-width:130px}
+.obnav .btn:disabled{opacity:.4;pointer-events:none}
+.kcalcard{background:var(--s2);border:1px solid var(--line);border-radius:var(--r-lg);padding:var(--sp3);margin-bottom:var(--sp3)}
+.kcalbig{text-align:center;margin-bottom:var(--sp3)}
+.kcalbig b{display:block;font-size:44px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.kcalbig span{font-size:12px;color:var(--txt3)}
+.macros{display:flex;gap:var(--sp2);text-align:center}
+.macros>div{flex:1;background:var(--s1);border:1px solid var(--line);border-radius:var(--r-md);padding:11px 5px}
+.macros b{display:block;font-size:19px;font-variant-numeric:tabular-nums}
+.macros b+span{display:block;font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.05em}
+.macros i{font-size:10px;color:var(--txt3);font-style:normal}
+.obsecs{margin-bottom:var(--sp3)}
+.obsecs h5{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin:0 0 7px}
+.obsecs p{font-size:13.5px;line-height:1.55;color:var(--txt2);margin:0 0 7px}
+.plday{background:var(--s2);border:1px solid var(--line);border-radius:var(--r-md);padding:11px 13px;margin-bottom:6px}
+.plday b{font-size:14px} .plday span{font-size:11px;color:var(--txt3);margin-left:7px}
+.plday small{display:block;font-size:11.5px;color:var(--txt3);margin-top:4px;line-height:1.5}
 
 </style>
 </head>
@@ -560,7 +705,8 @@ path[data-m].r3{fill:var(--r-full);stroke:rgba(120,255,180,.55);filter:drop-shad
     <div id="home-resume"></div>
 
     <!-- HERO: die Figur ist die Identität der App -->
-    <section class="hero" aria-label="Muskelübersicht">
+    <div id="coach-card"></div>
+      <section class="hero" aria-label="Muskelübersicht">
       <div class="seg" style="margin-bottom:14px">
         <button id="bm-week" class="on">Diese Woche</button>
         <button id="bm-rec">Erholung</button>
@@ -668,6 +814,8 @@ path[data-m].r3{fill:var(--r-full);stroke:rgba(120,255,180,.55);filter:drop-shad
 
 <div class="mback" id="modal-summary"><div class="modal" id="summary-body"></div></div>
 
+<div class="mback" id="modal-onboard"><div class="modal" id="ob-body"></div></div>
+<div class="mback" id="modal-muscle"><div class="modal" id="muscle-body"></div></div>
 <div class="mback" id="modal-detail"><div class="modal" id="detail-body"></div></div>
 
 <div class="mback" id="modal-custom"><div class="modal">
@@ -682,6 +830,22 @@ path[data-m].r3{fill:var(--r-full);stroke:rgba(120,255,180,.55);filter:drop-shad
   <label class="tiny up">Sekundäre Muskeln (halb gezählt)</label>
   <div class="chips" id="cx-sec" style="margin:6px 0 16px"></div>
   <button class="btn btn-acc btn-block" id="cx-save">Speichern</button>
+</div></div>
+
+<div class="mback" id="modal-backup"><div class="modal" style="max-width:460px">
+  <div class="grab"></div>
+  <div style="text-align:center;padding:4px 0 6px">
+    <span style="font-size:44px;display:block" aria-hidden="true">🛟</span>
+    <h2 id="bk-title" style="margin:10px 0 6px">Zeit für eine Sicherung</h2>
+    <p class="sub" id="bk-text" style="line-height:1.55"></p>
+    <p class="tiny" id="bk-sub" style="margin-top:8px"></p>
+  </div>
+  <button class="btn btn-acc btn-block btn-lg" id="bk-now" style="margin:14px 0 8px">Jetzt sichern</button>
+  <div class="row">
+    <button class="btn btn-ghost btn-sm grow" id="bk-file">Als Datei laden</button>
+    <button class="btn btn-ghost btn-sm grow" id="bk-later">In 2 Tagen erinnern</button>
+  </div>
+  <p class="tiny" style="text-align:center;margin-top:12px">Die App legt zusätzlich automatisch Sicherungspunkte auf dem Gerät an — die helfen aber nicht, wenn Safari die Website-Daten löscht.</p>
 </div></div>
 
 <div class="mback" id="modal-calc"><div class="modal">
@@ -821,6 +985,11 @@ path[data-m].r3{fill:var(--r-full);stroke:rgba(120,255,180,.55);filter:drop-shad
     <p class="tiny" style="margin-top:8px">CSV lässt sich in Excel öffnen — eine Zeile pro Satz.</p>
   </div>
   <div class="card">
+    <h3 style="margin-bottom:6px">Sicherungspunkte auf dem Gerät</h3>
+    <p class="tiny" style="margin-bottom:10px">Die App legt automatisch Stände an — nach jedem Training, höchstens einer pro Tag. Hilft bei Bedienfehlern, <b>nicht</b> wenn Safari die Website-Daten löscht.</p>
+    <div id="snap-list"></div>
+  </div>
+  <div class="card">
     <h3 style="margin-bottom:6px">App-Version</h3>
     <p class="tiny" style="margin-bottom:10px">Zeigt die App eine alte Version, hier erzwingen. <b>Deine Trainingsdaten bleiben dabei immer erhalten.</b></p>
     <div class="row">
@@ -829,7 +998,7 @@ path[data-m].r3{fill:var(--r-full);stroke:rgba(120,255,180,.55);filter:drop-shad
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:14px">Fitness Tracker V10.3 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:14px">Fitness Tracker V24 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -852,111 +1021,728 @@ const MGROUPS = {
   'Beine':['quads','hamstrings','glutes','calves','adductors','abductors'], 'Bauch':['abs','obliques']
 };
 
-/* ===== Anatomische Figur V3 (organisch, Trennlinien immer sichtbar) =====
-   Koordinaten: 260×560, Mitte x=130. Linke Seite definiert, rechte gespiegelt. */
-const SIL_ARM  = 'M76,106 C62,110 54,120 52,132 C48,158 48,184 49,208 C46,234 44,258 45,278 C44,288 44,298 45,306 L59,308 C61,298 62,288 62,280 C66,258 68,236 67,214 C70,192 74,168 80,148 L86,144 Z';
-const SIL_HAND = [
-  'M44,306 C42,314 42,322 45,328 C48,333 55,334 58,329 C60,323 60,314 59,307 Z',
-  'M44,329 C43,337 43,344 45,349 L48,348 C47,342 47,335 48,330 Z',
-  'M49,331 C48,340 48,347 50,352 L53,351 C52,344 52,337 53,331 Z',
-  'M54,331 C54,339 54,346 56,351 L59,350 C58,343 58,336 58,331 Z',
-  'M59,329 C60,336 61,342 63,346 L66,344 C64,339 63,333 62,328 Z',
-  'M59,306 C64,310 67,316 67,322 L64,324 C62,318 60,312 57,308 Z'
-];
-const SIL_LEG  = 'M90,258 C82,274 78,296 78,322 C78,356 82,386 90,406 C88,428 87,452 89,474 C91,498 96,516 100,528 C97,538 98,547 104,552 C114,556 125,553 126,545 C126,538 124,532 120,527 C122,506 122,482 120,460 C122,438 122,416 120,400 C124,376 124,348 122,322 C122,304 118,290 112,282 Z';
-const SIL_FRONT = [
-  'M130,14 C117,14 107,26 107,43 C107,55 112,66 119,72 L120,88 C120,93 125,96 130,96 C135,96 140,93 140,88 L141,72 C148,66 153,55 153,43 C153,26 143,14 130,14 Z',
-  'M120,90 C104,95 88,100 74,108 L88,142 C86,170 85,200 97,228 C93,244 91,256 90,264 L130,290 L170,264 C169,256 167,244 163,228 C175,200 174,170 172,142 L186,108 C172,100 156,95 140,90 Z',
-  SIL_ARM, SIL_LEG, ...SIL_HAND
-];
-const SIL_BACK = [
-  'M130,14 C117,14 107,26 107,43 C107,55 112,66 119,72 L120,88 C120,93 125,96 130,96 C135,96 140,93 140,88 L141,72 C148,66 153,55 153,43 C153,26 143,14 130,14 Z',
-  'M120,90 C104,95 88,100 74,108 L88,142 C86,170 85,200 97,228 C93,244 91,256 90,264 L130,290 L170,264 C169,256 167,244 163,228 C175,200 174,170 172,142 L186,108 C172,100 156,95 140,90 Z',
-  SIL_ARM, SIL_LEG, ...SIL_HAND
+/* ═══ MUSKELATLAS ═══════════════════════════════════════════════════════
+   Pro Muskelgruppe: Fachname, Funktion, Bewegungen, typische Trainingsfehler. */
+const MUSCLE_INFO = {
+  chest_up:{lat:'Pectoralis major, Pars clavicularis',
+    fn:'Oberer Anteil der Brustmuskulatur. Zieht den Oberarm nach vorne-oben zur Körpermitte.',
+    mv:['Arm nach vorne und oben führen (Schrägdrücken)','Arm zur Körpermitte führen','Innenrotation des Oberarms'],
+    err:['Schrägbank zu steil (über 45°) — dann übernimmt die vordere Schulter','Ellbogen bis zum Anschlag nach hinten, statt bei leichter Dehnung zu stoppen','Nur flach gedrückt und erwartet, dass die obere Brust mitwächst']},
+  chest:{lat:'Pectoralis major, Pars sternocostalis',
+    fn:'Größter Anteil der Brust. Führt den Oberarm horizontal zur Körpermitte.',
+    mv:['Horizontales Drücken (Bankdrücken)','Arme vor der Brust zusammenführen (Fliegende)','Oberarm an den Körper heranziehen'],
+    err:['Schulterblätter nicht fixiert — die Brust bekommt keine stabile Basis','Zu weiter Griff, dadurch kurzer Bewegungsweg und Belastung im Schultergelenk','Zu schweres Gewicht bei Fliegenden, Ellbogen knicken ein und es wird ein halbes Drücken']},
+  chest_low:{lat:'Pectoralis major, Pars abdominalis',
+    fn:'Unterer Anteil. Zieht den Oberarm nach vorne-unten.',
+    mv:['Drücken in Negativ-Schräglage','Dips mit Vorlage','Arm von oben nach unten-innen führen'],
+    err:['Bei Dips aufrecht bleiben — dann arbeitet fast nur der Trizeps','Zu tiefe Dips ohne Schulterstabilität','Negativbank sehr steil, dadurch Druck im Kopf und kaum mehr Reiz']},
+  front_delt:{lat:'Deltoideus, Pars clavicularis',
+    fn:'Vorderer Schulterkopf. Hebt den Arm nach vorne.',
+    mv:['Arm nach vorne heben (Frontheben)','Überkopfdrücken','Unterstützt jedes Brustdrücken'],
+    err:['Zusätzliches Frontheben, obwohl die vordere Schulter beim Drücken schon reichlich Volumen bekommt','Beim Frontheben mit Schwung aus der Hüfte gearbeitet','Vernachlässigte hintere Schulter — führt zu Ungleichgewicht und vorgezogenen Schultern']},
+  side_delt:{lat:'Deltoideus, Pars acromialis',
+    fn:'Seitlicher Schulterkopf. Hebt den Arm zur Seite. Verantwortlich für die Schulterbreite.',
+    mv:['Arm seitlich abspreizen (Seitheben)','Stabilisiert bei Überkopfbewegungen'],
+    err:['Zu schwer und mit Schwung — der Trapez übernimmt','Über Schulterhöhe gehoben, ab da arbeitet der Trapez','Daumen nach oben gedreht statt kleiner Finger leicht führend']},
+  rear_delt:{lat:'Deltoideus, Pars spinalis',
+    fn:'Hinterer Schulterkopf. Zieht den Arm nach hinten-außen.',
+    mv:['Arm horizontal nach hinten führen (Reverse Fly)','Unterstützt bei jedem Rudern'],
+    err:['Zu schwer, dadurch übernimmt der obere Rücken statt der Schulter','Ellbogen zu weit gebeugt, dann wird es ein Rudern','Meistens komplett vergessen — die hintere Schulter ist der am häufigsten unterentwickelte Kopf']},
+  traps:{lat:'Trapezius',
+    fn:'Großer Rautenmuskel vom Nacken bis zur mittleren Brustwirbelsäule. Hebt, senkt und zieht die Schulterblätter zusammen.',
+    mv:['Schultern heben (Shrugs)','Schulterblätter zusammenziehen','Schulterblätter nach unten ziehen'],
+    err:['Bei Shrugs kreisende Bewegungen — belastet das Schultergelenk ohne Zusatznutzen','Nur der obere Anteil trainiert, mittlerer und unterer Trapez vernachlässigt','Kein Halten am obersten Punkt']},
+  lats:{lat:'Latissimus dorsi',
+    fn:'Breitester Rückenmuskel. Zieht den Oberarm nach unten und hinten an den Körper. Verantwortlich für die V-Form.',
+    mv:['Arm von oben nach unten ziehen (Klimmzug, Latzug)','Arm von vorne nach hinten ziehen (Rudern)','Oberarm an den Rumpf heranziehen'],
+    err:['Nur mit den Armen gezogen statt die Ellbogen nach hinten-unten zu führen','Zu weiter Griff verkürzt den Weg, ohne den Lat stärker zu treffen','Oben nicht ausgehängt — der Lat braucht die volle Dehnung']},
+  upper_back:{lat:'Rhomboidei, Trapezius pars transversa',
+    fn:'Muskeln zwischen den Schulterblättern. Ziehen die Schulterblätter zur Wirbelsäule.',
+    mv:['Schulterblätter zusammenziehen','Horizontales Ziehen mit engem Griff'],
+    err:['Nur gezogen, ohne die Schulterblätter bewusst zusammenzuführen','Zu schweres Gewicht, der Lat übernimmt komplett','Oberkörper schwingt mit']},
+  lower_back:{lat:'Erector spinae',
+    fn:'Rückenstrecker entlang der Wirbelsäule. Streckt und stabilisiert den Rumpf.',
+    mv:['Oberkörper aufrichten (Hyperextension)','Stabilisiert bei Kreuzheben und Kniebeugen'],
+    err:['Im Hyperextension-Gerät überstreckt statt in neutraler Position gestoppt','Beim Kreuzheben runder Rücken — hier entstehen die meisten Verletzungen','Isoliert überlastet, obwohl er bei jedem schweren Satz mitarbeitet']},
+  biceps:{lat:'Biceps brachii, Brachialis',
+    fn:'Beugt den Ellbogen und dreht den Unterarm auswärts. Der lange Kopf wird zusätzlich durch Schulterstellung beeinflusst.',
+    mv:['Ellbogen beugen','Unterarm auswärts drehen (Supination)','Arm nach vorne heben (langer Kopf)'],
+    err:['Ellbogen wandern nach vorne — dann macht die vordere Schulter die Arbeit','Mit Schwung aus dem Rücken gearbeitet','Nur eine Curl-Variante, dadurch bleibt der lange Kopf oder der Brachialis unterentwickelt']},
+  triceps:{lat:'Triceps brachii',
+    fn:'Streckt den Ellbogen. Etwa zwei Drittel des Oberarmumfangs. Der lange Kopf wird nur bei Überkopfposition voll gedehnt.',
+    mv:['Ellbogen strecken','Arm nach hinten führen (langer Kopf)'],
+    err:['Nur Pushdowns — der lange Kopf braucht Überkopfarbeit','Ellbogen flattern seitlich weg','Handgelenk knickt ab, dadurch Schmerz statt Reiz']},
+  forearms:{lat:'Unterarmbeuger und -strecker',
+    fn:'Beugen und strecken das Handgelenk, halten den Griff.',
+    mv:['Handgelenk beugen und strecken','Griffkraft halten','Unterarm drehen'],
+    err:['Immer Zughilfen benutzt — der Griff bleibt dauerhaft schwach','Nur Beuger trainiert, Strecker vergessen','Zu hohe Wiederholungszahl ohne Spannung']},
+  abs:{lat:'Rectus abdominis',
+    fn:'Gerade Bauchmuskulatur. Beugt den Rumpf nach vorne und stabilisiert das Becken.',
+    mv:['Oberkörper zum Becken beugen (Crunch)','Becken zum Oberkörper ziehen (Beinheben)','Stabilisieren gegen Streckung (Plank, Ausrollen)'],
+    err:['Am Hals gezogen statt den Oberkörper einzurollen','Nur Beinheben mit gestreckten Beinen — arbeitet größtenteils der Hüftbeuger','Nie mit Zusatzgewicht gearbeitet, obwohl der Bauch wie jeder Muskel Progression braucht']},
+  obliques:{lat:'Obliquus externus und internus',
+    fn:'Schräge Bauchmuskulatur. Dreht und neigt den Rumpf seitlich.',
+    mv:['Rumpf drehen','Seitlich neigen','Rotation abbremsen (Pallof Press)'],
+    err:['Seitneigen mit schwerer Hantel — macht die Taille breiter, selten das Ziel','Rotation aus der Lendenwirbelsäule statt aus der Brustwirbelsäule','Zu schnell und mit Schwung']},
+  quads:{lat:'Quadriceps femoris',
+    fn:'Vierköpfiger Oberschenkelstrecker. Streckt das Knie, der gerade Kopf beugt zusätzlich die Hüfte.',
+    mv:['Knie strecken','Aus der Hocke aufrichten','Hüfte beugen (Rectus femoris)'],
+    err:['Nicht tief genug gebeugt — der Quadrizeps wächst vor allem im gedehnten Bereich','Knie fallen nach innen','Nur Beinpresse, nie freie Kniebeuge oder Ausfallschritt']},
+  hamstrings:{lat:'Ischiocrurale Muskulatur',
+    fn:'Beugt das Knie und streckt die Hüfte. Braucht beide Funktionen im Training.',
+    mv:['Knie beugen (Beinbeuger)','Hüfte strecken (Rumänisches Kreuzheben)'],
+    err:['Nur Beinbeuger-Maschine, keine Hüftstreckung','Beim Rumänischen Kreuzheben aus dem unteren Rücken gearbeitet statt aus der Hüfte','Knie zu stark gebeugt, dann macht es der Rücken']},
+  glutes:{lat:'Gluteus maximus, medius, minimus',
+    fn:'Stärkster Hüftstrecker. Streckt, spreizt und dreht das Bein auswärts.',
+    mv:['Hüfte strecken (Hip Thrust, Kreuzheben)','Bein zur Seite abspreizen','Bein nach hinten führen'],
+    err:['Bei Hip Thrusts ins Hohlkreuz gedrückt statt das Becken aufzurichten','Zu wenig Bewegungsumfang bei Kniebeugen','Kein direktes Gesäßtraining — Kniebeugen allein reichen für die meisten nicht']},
+  calves:{lat:'Gastrocnemius, Soleus',
+    fn:'Streckt das Sprunggelenk. Der Zwillingswadenmuskel arbeitet bei gestrecktem Knie, der Schollenmuskel bei gebeugtem.',
+    mv:['Auf die Zehenspitzen drücken (stehend und sitzend)'],
+    err:['Nur stehend trainiert — der Schollenmuskel braucht die sitzende Variante','Gewippt statt kontrolliert bewegt','Ferse nicht abgesenkt, dadurch fehlt die Dehnung']},
+  adductors:{lat:'Adduktorengruppe',
+    fn:'Zieht das Bein zur Körpermitte, unterstützt die Hüftstreckung.',
+    mv:['Bein zur Mitte führen','Stabilisieren bei breiter Kniebeuge'],
+    err:['Nur an der Maschine, nie über breite Kniebeugen oder Ausfallschritte','Ohne Aufwärmen sehr weit gedehnt — häufige Zerrungsstelle']},
+  abductors:{lat:'Gluteus medius, Tensor fasciae latae',
+    fn:'Spreizt das Bein ab und stabilisiert das Becken beim Gehen und bei einbeinigen Übungen.',
+    mv:['Bein seitlich abspreizen','Becken beim Einbeinstand stabilisieren'],
+    err:['Vernachlässigt — schwache Abduktoren zeigen sich als einknickende Knie','Zu schwer, dadurch Ausweichbewegung aus dem Rumpf']}
+};
+
+/* ═══ Einordnung und Bewertung der Übungen ══════════════════════════════
+   Alles wird aus der Datenbank berechnet, nichts ist von Hand gesetzt.
+   Die Regeln stehen unten und werden in der App offengelegt — es sind
+   nachvollziehbare Schätzungen, keine Messwerte aus Studien. */
+
+/* Kategorie: 1 = isoliert, 2 = teilisoliert, 3 = Grundübung */
+const STAB = new Set(['forearms','abs','obliques','lower_back']);
+function exCat(e){
+  const n=(e.p||[]).length, m=(e.s||[]).length;
+  const nurStab = (e.s||[]).every(k=>STAB.has(k));
+  if(n===1 && (m===0 || (m<=2 && nurStab))) return 1;
+  if(n>=3 || n+m>=5) return 3;
+  if(n>=2 && m>=2) return 3;
+  return 2;
+}
+const CAT_NAME = {1:'Isoliert', 2:'Teilisoliert', 3:'Grundübung'};
+const CAT_DESC = {
+  1:'Trifft den Muskel gezielt, kaum Hilfsmuskulatur. Gut für gezielten Reiz und zum Nachbelasten.',
+  2:'Zielmuskel arbeitet stark, andere unterstützen deutlich. Gute Mischung aus Reiz und Last.',
+  3:'Mehrere Muskeln gleichzeitig. Höchste Last, bester Reiz für Kraft und Gesamtmasse.'};
+
+/* Anfängerfreundlichkeit: Ausgangswert nach Gerät, Abzug für Komplexität */
+const EQ_EASY = {'Maschine':95,'Kabel':86,'Multipresse':84,'Widerstandsband':86,'Hantelscheibe':80,
+  'Körpergewicht':72,'Kurzhantel':70,'SZ-Stange':72,'Trap-Stange':66,'Langhantel':56,'Kettlebell':54,'Sonstiges':70};
+const EQ_RISK = {'Maschine':10,'Kabel':14,'Multipresse':20,'Widerstandsband':10,'Hantelscheibe':20,
+  'Körpergewicht':18,'Kurzhantel':28,'SZ-Stange':26,'Trap-Stange':34,'Langhantel':42,'Kettlebell':40,'Sonstiges':25};
+const TECHNISCH = /kreuzheben|umsetzen|reißen|snatch|clean|overhead squat|nackendrücken|hinter dem nacken|aufrechtes rudern|good morning|pistol/i;
+const EQ_HOME = new Set(['Körpergewicht','Widerstandsband','Kurzhantel','Kettlebell','Hantelscheibe']);
+
+/* Muskelaktivierung in Prozent — Anteil des Muskels an der Gesamtarbeit.
+   Je mehr andere Muskeln beteiligt sind, desto kleiner der Anteil. */
+function exRate(e, key){
+  const n=(e.p||[]).length, m=(e.s||[]).length, cat=exCat(e);
+  const prim=(e.p||[]).includes(key);
+  let act = prim ? 100 - 13*(n-1) - 4*m : 55 - 8*(n-1) - 4*m;
+  if(e.eq==='Kabel'||e.eq==='Maschine') act += 3;          // konstante Spannung
+  act = Math.max(20, Math.min(100, Math.round(act)));
+
+  let beg = EQ_EASY[e.eq] ?? 70;
+  if(cat===3) beg -= 12; else if(cat===2) beg -= 5;
+  if(TECHNISCH.test(e.name)) beg -= 18;
+  if(e.uni) beg -= 4;
+  beg = Math.max(10, Math.min(99, Math.round(beg)));
+
+  /* Hypertrophie: Aktivierung mal Lastpotenzial. Grundübungen tragen mehr Gewicht,
+     Kabel und Maschine bieten dafür gleichmäßigere Spannung. */
+  const last = cat===3 ? 100 : cat===2 ? 84 : 70;
+  let hyp = Math.round(.58*act + .42*last);
+  if(e.eq==='Kabel') hyp += 4;
+  if(e.eq==='Widerstandsband') hyp -= 8;
+  hyp = Math.max(20, Math.min(100, hyp));
+
+  let risk = EQ_RISK[e.eq] ?? 25;
+  if(cat===3) risk += 14; else if(cat===2) risk += 6;
+  if(TECHNISCH.test(e.name)) risk += 16;
+  if((e.p||[]).includes('lower_back')) risk += 8;
+  risk = Math.max(5, Math.min(95, Math.round(risk)));
+
+  return {act, beg, hyp, risk, cat};
+}
+const RATE_ERKLAERUNG = [
+  ['Muskelaktivierung','Anteil dieses Muskels an der Gesamtarbeit. Startwert 100 % wenn er der einzige Zielmuskel ist, minus 13 je weiterem Zielmuskel und minus 4 je Hilfsmuskel. Kabel und Maschine bekommen 3 Punkte für die gleichmäßigere Spannung.'],
+  ['Anfängerfreundlich','Startwert nach Gerät (Maschine 95, Langhantel 56), Abzug für Grundübungen und technisch anspruchsvolle Bewegungen wie Kreuzheben oder Umsetzen.'],
+  ['Hypertrophie','58 % Aktivierung plus 42 % Lastpotenzial. Grundübungen tragen mehr Gewicht, Kabelzüge bieten gleichmäßigere Spannung.'],
+  ['Verletzungsrisiko','Startwert nach Gerät (Maschine 10, Langhantel 42), Aufschlag für Grundübungen, technische Bewegungen und direkte Belastung des unteren Rückens.']
 ];
 
-/* [muskelKey, pfad, 'C'=Mitte (nicht spiegeln)] */
+/* ═══ Bewegungs-Piktogramme ═════════════════════════════════════════════
+   Kein Bildmaterial (die App muss offline aus einer Datei laufen), sondern
+   Strichzeichnungen für das Bewegungsmuster. Erkennungsregeln unten. */
+const MOVE_ICON = {
+  press_h:  ['Horizontales Drücken','<path d="M4 15h16"/><path d="M8 15V9"/><path d="M16 15V9"/><path d="M8 9l-2 2M8 9l2 2M16 9l-2 2M16 9l2 2"/>'],
+  press_inc:['Schrägdrücken',      '<path d="M4 17L20 9"/><path d="M9 14l-2-4"/><path d="M17 10l-2-4"/><path d="M7 10l-1 2M7 10l2 1M15 6l-1 2M15 6l2 1"/>'],
+  press_ovh:['Überkopfdrücken',    '<circle cx="12" cy="17" r="2.5"/><path d="M5 8h14"/><path d="M9 12V9M15 12V9"/><path d="M12 5.5V2M12 2l-2 2M12 2l2 2"/>'],
+  fly:      ['Zusammenführen',     '<path d="M12 4v16"/><path d="M6 8c-2 3-2 5 0 8"/><path d="M18 8c2 3 2 5 0 8"/><path d="M8 12h2M8 12l1-1M8 12l1 1M16 12h-2M16 12l-1-1M16 12l-1 1"/>'],
+  pulldown: ['Ziehen von oben',    '<path d="M4 6h16"/><path d="M9 6v6M15 6v6"/><path d="M12 12v8"/><path d="M12 20l-2-2M12 20l2-2"/>'],
+  row:      ['Horizontales Ziehen','<path d="M4 12h9"/><circle cx="16" cy="12" r="2"/><path d="M18 12h3"/><path d="M9 12l2-2M9 12l2 2"/>'],
+  pullover: ['Überzug',            '<path d="M12 18a7 7 0 0 1 0-12"/><path d="M12 6l2 2M12 6l-1 2.5"/><path d="M4 18h16"/>'],
+  curl:     ['Ellbogen beugen',    '<path d="M8 20V9a4 4 0 0 1 8 0"/><circle cx="16" cy="9" r="2.2"/><path d="M14.5 5.5A5 5 0 0 1 19 8"/><path d="M19 8l-2.5.3M19 8l-.6-2.4"/>'],
+  tri_ext:  ['Ellbogen strecken',  '<path d="M8 4v7a4 4 0 0 0 8 0"/><path d="M16 11v7"/><path d="M16 18l-2-2M16 18l2-2"/>'],
+  lateral:  ['Seitlich abspreizen','<circle cx="12" cy="7" r="2.2"/><path d="M12 10v8"/><path d="M12 12H6M12 12h6"/><path d="M6 12l2-2M6 12l2 2M18 12l-2-2M18 12l-2 2"/>'],
+  front_r:  ['Nach vorne heben',   '<circle cx="8" cy="7" r="2.2"/><path d="M8 10v9"/><path d="M8 12h9"/><path d="M17 12l-2-2M17 12l-2 2"/>'],
+  rear_fly: ['Nach hinten führen', '<path d="M12 5v14"/><path d="M12 11H5M12 11h7"/><path d="M5 11l2-2M5 11l2 2M19 11l-2-2M19 11l-2 2"/><circle cx="12" cy="8" r="1.6"/>'],
+  shrug:    ['Schultern heben',    '<circle cx="12" cy="6" r="2.2"/><path d="M7 12h10"/><path d="M7 12v7M17 12v7"/><path d="M7 12V9M7 9l-1.5 1.5M7 9l1.5 1.5M17 12V9M17 9l-1.5 1.5M17 9l1.5 1.5"/>'],
+  squat:    ['Kniebeuge',          '<path d="M4 7h16"/><circle cx="12" cy="11" r="2"/><path d="M12 13v3l-3 4M12 16l3 4"/><path d="M21 9v6M21 15l-1.5-1.5M21 15l1.5-1.5"/>'],
+  hinge:    ['Hüftstreckung',      '<circle cx="7" cy="8" r="2"/><path d="M9 9l5 3v7"/><path d="M14 12h6"/><path d="M20 12l-2-2M20 12l-2 2"/>'],
+  lunge:    ['Ausfallschritt',     '<circle cx="12" cy="6" r="2"/><path d="M12 8v5"/><path d="M12 13l-4 6M12 13l4 3v3"/>'],
+  leg_ext:  ['Knie strecken',      '<path d="M5 8h6v6"/><path d="M11 14l7 1"/><path d="M18 15l-2.5-1.5M18 15l-2 2"/>'],
+  leg_curl: ['Knie beugen',        '<path d="M5 16h7"/><path d="M12 16l4-6"/><path d="M16 10l-1 3M16 10l3 1"/>'],
+  calf:     ['Wadenheben',         '<path d="M9 4v10l-4 4h11"/><path d="M13 9V4M13 4l-2 2M13 4l2 2"/>'],
+  crunch:   ['Rumpf beugen',       '<path d="M5 18h8a6 6 0 0 0 5-9"/><path d="M18 9l-2.5.6M18 9l-.6-2.6"/>'],
+  leg_raise:['Beine heben',        '<path d="M6 5v14"/><path d="M6 16h9"/><path d="M15 16l3-5"/><path d="M18 11l-2.5.6M18 11l.6 2.5"/>'],
+  plank:    ['Halten und stützen', '<path d="M4 15h16"/><circle cx="6" cy="12" r="1.6"/><path d="M8 13l6-2 5 3"/><path d="M9 15v-2M17 15v-2"/>'],
+  rotate:   ['Rumpf drehen',       '<circle cx="12" cy="12" r="7"/><path d="M12 5a7 7 0 0 1 6 3.5"/><path d="M18 8.5l-2.6.2M18 8.5l-.8-2.5"/><path d="M12 9v6"/>'],
+  abduct:   ['Bein abspreizen',    '<circle cx="12" cy="6" r="2"/><path d="M12 8v5"/><path d="M12 13l-4 6M12 13l4 6"/><path d="M4 15l2-1.5M4 15l2 1.5M20 15l-2-1.5M20 15l2 1.5"/>'],
+  carry:    ['Halten und tragen',  '<circle cx="12" cy="5" r="2"/><path d="M12 7v8"/><path d="M6 9h12"/><path d="M6 9v5M18 9v5"/>'],
+  wrist:    ['Handgelenk',         '<path d="M5 14h8"/><path d="M13 14a4 4 0 0 0 4-4"/><path d="M17 10l-2 .8M17 10l1 2"/>'],
+  other:    ['Allgemein',          '<circle cx="12" cy="12" r="7"/><path d="M12 8v5M12 16h.01"/>']
+};
+/* Zuordnung über den Namen. Reihenfolge ist wichtig: spezifisch vor allgemein. */
+const MOVE_RULES = [
+  [/wadenheb|calf/i,'calf'],
+  [/beinstrecker|leg ?extension|sissy/i,'leg_ext'],
+  [/beinbeuger|leg ?curl|nordic/i,'leg_curl'],
+  [/kniebeug|squat|beinpresse|hackenschmidt|wandsitz/i,'squat'],
+  [/ausfallschritt|lunge|split ?squat|step ?up|aufsteig/i,'lunge'],
+  [/kreuzheb|hüftstoß|hip ?thrust|good ?morning|guten-?morgen|beckenheb|glute ?bridge|rückenstrecker|hyperext|superman|beinrückheb|eselstritt|umsetzen|reißen|schwünge|kettlebell-schw/i,'hinge'],
+  [/abdukt|abspreiz|addukt|seitliches beinheben|seitschritte|muschel|kopenhagener/i,'abduct'],
+  [/crunch|sit-?up|bauchpresse|käfer|russian/i,'crunch'],
+  [/beinheben|knieheben|toes ?to|zehen zur|v-aufrichter|hanging/i,'leg_raise'],
+  [/plank|unterarmstütz|seitstütz|ausroll|bauchroller|ab[- ]?wheel|hollow|hohlkörper|l-sitz|dead ?bug|vierfüßler|bergsteiger|drachenfahne/i,'plank'],
+  [/kubanische|außenrotation|innenrotation/i,'rear_fly'],
+  [/rotation|drehung|russisch|holzhack|pallof|seitbeug|windmill|lenkrad/i,'rotate'],
+  [/überz[uü]g|pullover|durchziehen/i,'pullover'],
+  [/latzug|klimmz[uü]g|pull-?up|chin-?up/i,'pulldown'],
+  [/gesichtszieh|face ?pull|band auseinander|reverse|hint.*schulter/i,'rear_fly'],
+  [/ruder|row/i,'row'],
+  [/fliegende|butterfly|fly|kabelzug-fliegende/i,'fly'],
+  [/seitheben|lateral raise/i,'lateral'],
+  [/frontheben|front raise/i,'front_r'],
+  [/shrug|schulterheben|nackenzieh/i,'shrug'],
+  [/curl/i,'curl'],
+  [/trizeps|stirndrück|pushdown|dip|french|kickback/i,'tri_ext'],
+  [/schulterdrück|schulterpresse|overhead|arnold|nackendrück|handstand|bradford|viking|z-drücken|militär/i,'press_ovh'],
+  [/schräg|incline/i,'press_inc'],
+  [/drücken|press|bankdrück|liegestütz|push-?up/i,'press_h'],
+  [/handgelenk|unterarm|wrist|griff|hängen an/i,'wrist'],
+  [/tragen|carry|koffer|farmer|schlitten|schwungseile|burpee|türkisches|seilspringen/i,'carry']
+];
+function movePattern(e){
+  for(const [re,k] of MOVE_RULES) if(re.test(e.name)) return k;
+  return 'other';
+}
+function moveIcon(e, size){
+  const k = movePattern(e), [ , d] = MOVE_ICON[k] || MOVE_ICON.other;
+  return `<svg class="mvicon" viewBox="0 0 24 24" width="${size||26}" height="${size||26}" fill="none"
+    stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+}
+
+/* ═══ Ausführung und typische Fehler ════════════════════════════════════
+   Grundlage ist das Bewegungsmuster. Wichtige Übungen haben darüber hinaus
+   einen eigenen Eintrag in HOWTO, der die Vorlage ersetzt. */
+const HOWTO_PATTERN = {
+  press_h:{s:['Schulterblätter zusammenziehen und nach unten fixieren, Brustkorb anheben.',
+    'Gewicht kontrolliert senken, bis die Ellbogen etwa auf Rumpfhöhe sind.',
+    'Kurz die Spannung halten, dann über die Brust nach oben drücken.',
+    'Oben die Ellbogen nicht komplett durchdrücken, Spannung halten.'],
+   e:['Schulterblätter lösen sich — die Brust verliert ihre Basis.','Ellbogen zu weit abgespreizt (90°), das belastet die Schulter.','Abfälschen mit der Hüfte, um die letzten Wiederholungen zu schaffen.']},
+  press_inc:{s:['Bank auf 30 bis 40 Grad stellen, steiler verlagert die Arbeit zur Schulter.',
+    'Schulterblätter fixieren, Gewicht auf Höhe der oberen Brust senken.',
+    'Nach oben-innen drücken, nicht senkrecht.'],
+   e:['Bank zu steil, dadurch wird es ein Schulterdrücken.','Gewicht zu tief Richtung Hals gesenkt.','Gesäß hebt von der Bank ab.']},
+  press_ovh:{s:['Stand hüftbreit, Rumpf fest, Gesäß und Bauch anspannen.',
+    'Stange oder Hanteln auf Schulterhöhe, Ellbogen leicht vor dem Körper.',
+    'Nach oben drücken und den Kopf leicht durchschieben, sobald die Stange vorbei ist.',
+    'Kontrolliert bis auf Schulterhöhe zurückführen.'],
+   e:['Ins Hohlkreuz gedrückt statt den Rumpf zu stabilisieren.','Zu weiter Griff, dadurch kurzer Weg und Druck auf die Schulter.','Hinter dem Nacken gedrückt — unnötiges Risiko ohne Zusatznutzen.']},
+  fly:{s:['Leicht gebeugte Ellbogen, dieser Winkel bleibt die ganze Bewegung über gleich.',
+    'Arme kontrolliert öffnen, bis in der Brust eine deutliche Dehnung spürbar ist.',
+    'Über einen weiten Bogen zusammenführen und in der Mitte kurz halten.'],
+   e:['Ellbogen beugen sich beim Hochführen — daraus wird ein Drücken.','Zu tief geöffnet, das belastet die Schultervorderseite.','Zu schweres Gewicht, dadurch bleibt vom Bogen nichts übrig.']},
+  pulldown:{s:['Griff etwas weiter als schulterbreit, Brust anheben, leichte Rücklage.',
+    'Die Ellbogen nach unten-hinten ziehen, nicht die Hände zum Körper.',
+    'Unten die Schulterblätter zusammenführen, kurz halten.',
+    'Kontrolliert bis zur vollen Streckung zurücklassen.'],
+   e:['Mit dem Oberkörper geschwungen statt mit dem Rücken gezogen.','Hinter den Nacken gezogen.','Oben nicht ausgehängt, dadurch fehlt die Dehnung des Lat.']},
+  row:{s:['Rumpf fest, Rücken gerade, Brustkorb angehoben.',
+    'Ellbogen eng am Körper nach hinten ziehen, Schulterblätter zusammenführen.',
+    'Am hinteren Punkt kurz halten.',
+    'Kontrolliert zurückführen, Schulterblätter dabei nach vorne laufen lassen.'],
+   e:['Oberkörper schwingt mit, das Gewicht wird hochgerissen.','Nur mit den Armen gezogen, Schulterblätter bleiben starr.','Runder Rücken bei vorgebeugten Varianten.']},
+  pullover:{s:['Arme fast gestreckt, leichter Ellbogenwinkel bleibt konstant.',
+    'Über den Kopf nach hinten führen, bis der Lat gedehnt ist.',
+    'Über einen weiten Bogen zurück zur Hüfte ziehen.'],
+   e:['Ellbogen beugen sich, daraus wird ein Trizepsdrücken.','Zu weit nach hinten mit Hohlkreuz.','Zu schnell, dadurch geht die Spannung im Lat verloren.']},
+  curl:{s:['Ellbogen bleiben am Rumpf und wandern nicht nach vorne.',
+    'Gewicht kontrolliert nach oben führen, oben kurz die Spannung halten.',
+    'Langsam absenken, unten nicht komplett entspannen.'],
+   e:['Ellbogen wandern nach vorne, die vordere Schulter übernimmt.','Schwung aus dem Rücken.','Nur der obere Teil der Bewegung ausgeführt.']},
+  tri_ext:{s:['Oberarme fixieren, nur der Unterarm bewegt sich.',
+    'Ellbogen vollständig strecken und am Endpunkt kurz halten.',
+    'Kontrolliert zurück, bis eine Dehnung im Trizeps spürbar ist.'],
+   e:['Ellbogen flattern seitlich weg.','Mit dem Oberkörper nachgedrückt.','Handgelenk knickt ab.']},
+  lateral:{s:['Leichte Vorlage, Ellbogen minimal gebeugt.',
+    'Arme seitlich bis Schulterhöhe heben, Ellbogen führt vor der Hand.',
+    'Oben kurz halten, dann langsam absenken.'],
+   e:['Zu schwer, dadurch übernimmt der Trapez.','Über Schulterhöhe gehoben.','Aus der Hüfte geschwungen.']},
+  front_r:{s:['Rumpf fest, Arme fast gestreckt.','Bis Schulterhöhe nach vorne heben.','Kontrolliert absenken.'],
+   e:['Schwung aus der Hüfte.','Zu hoch gehoben, der Trapez übernimmt.','Zusätzlich gemacht, obwohl Drücken die vordere Schulter schon abdeckt.']},
+  rear_fly:{s:['Oberkörper vorbeugen oder Brust an die Bank legen.',
+    'Arme mit leicht gebeugten Ellbogen nach außen-hinten führen.',
+    'Am Endpunkt kurz halten, Schulterblätter dabei nicht stark zusammenziehen.'],
+   e:['Zu schwer, der obere Rücken übernimmt.','Ellbogen zu stark gebeugt, daraus wird ein Rudern.','Schwung aus dem Oberkörper.']},
+  shrug:{s:['Aufrecht stehen, Arme lang, Gewicht hängen lassen.',
+    'Schultern gerade nach oben ziehen, oben ein bis zwei Sekunden halten.',
+    'Kontrolliert absenken bis zur vollen Dehnung.'],
+   e:['Kreisende Bewegungen der Schultern.','Mitgezogen mit den Armen.','Kein Halten oben, dadurch kaum Reiz.']},
+  squat:{s:['Stand etwa schulterbreit, Füße leicht nach außen.',
+    'Rumpf anspannen, Hüfte und Knie gleichzeitig beugen.',
+    'So tief wie es die Beweglichkeit ohne runden Rücken zulässt.',
+    'Über die ganze Fußfläche nach oben drücken, Knie nach außen führen.'],
+   e:['Knie fallen nach innen.','Fersen heben ab.','Nicht tief genug — der Quadrizeps braucht den gedehnten Bereich.']},
+  hinge:{s:['Rumpf fest, Rücken neutral, Brustkorb angehoben.',
+    'Hüfte nach hinten schieben, Knie nur leicht beugen.',
+    'Senken, bis die Beinrückseite deutlich dehnt.',
+    'Hüfte nach vorne schieben und oben Gesäß fest anspannen.'],
+   e:['Runder Rücken — hier passieren die meisten Verletzungen.','Aus den Knien gearbeitet statt aus der Hüfte.','Oben ins Hohlkreuz überstreckt.']},
+  lunge:{s:['Großer Schritt nach vorne, Oberkörper aufrecht.',
+    'Hinteres Knie Richtung Boden senken, vorderes Knie über dem Fuß.',
+    'Über die vordere Ferse zurückdrücken.'],
+   e:['Schritt zu kurz, dadurch Belastung im vorderen Knie.','Oberkörper kippt nach vorne.','Ohne Gleichgewicht gearbeitet, Wackeln kostet Reiz.']},
+  leg_ext:{s:['Rückenlehne so einstellen, dass das Kniegelenk auf der Drehachse liegt.',
+    'Beine strecken und oben kurz halten.',
+    'Langsam absenken, unten nicht ablegen.'],
+   e:['Schwungvoll hochgeschleudert.','Gesäß hebt vom Sitz ab.','Kein Halten am Endpunkt.']},
+  leg_curl:{s:['Position so, dass das Kniegelenk auf der Drehachse liegt.',
+    'Fersen kontrolliert zum Gesäß ziehen.',
+    'Langsam zurückführen, unten nicht komplett entspannen.'],
+   e:['Hüfte hebt ab, um mehr Gewicht zu bewegen.','Zu schnell abgelassen.','Nur halber Bewegungsumfang.']},
+  calf:{s:['Fußballen auf der Kante, Fersen frei.',
+    'Fersen tief absenken bis zur deutlichen Dehnung.',
+    'Bis auf die Zehenspitzen drücken und oben ein bis zwei Sekunden halten.'],
+   e:['Gewippt statt kontrolliert bewegt.','Fersen nicht abgesenkt.','Nur stehend trainiert — der Schollenmuskel braucht die sitzende Variante.']},
+  crunch:{s:['Unterer Rücken bleibt am Boden oder an der Lehne.',
+    'Oberkörper einrollen, Rippen Richtung Becken ziehen.',
+    'Oben kurz halten, kontrolliert zurück.'],
+   e:['Am Hals gezogen.','Aus der Hüfte gearbeitet statt eingerollt.','Zu schnell und mit Schwung.']},
+  leg_raise:{s:['Rumpf fest, Becken bewusst nach hinten kippen.',
+    'Beine oder Knie anheben, dabei das Becken einrollen.',
+    'Kontrolliert absenken ohne zu schwingen.'],
+   e:['Nur die Beine gehoben, das Becken bleibt starr — dann arbeitet der Hüftbeuger.','Schwung aus dem Oberkörper.','Hohlkreuz beim Absenken.']},
+  plank:{s:['Rumpf, Gesäß und Beine bilden eine Linie.',
+    'Bauch aktiv anspannen, Becken leicht aufrichten.',
+    'Ruhig weiteratmen und die Position halten.'],
+   e:['Hüfte sackt ab.','Gesäß zu hoch.','Luft angehalten.']},
+  rotate:{s:['Rumpf fest, Bewegung kommt aus der Brustwirbelsäule.',
+    'Kontrolliert drehen, Becken bleibt möglichst stabil.',
+    'Langsam zurückführen.'],
+   e:['Rotation aus dem unteren Rücken.','Zu schnell und mit Schwung.','Zu schweres Gewicht, dadurch Ausweichbewegung.']},
+  abduct:{s:['Aufrechte Position, Rumpf fest.',
+    'Bein kontrolliert zur Seite führen, ohne den Oberkörper mitzunehmen.',
+    'Am Endpunkt kurz halten, langsam zurück.'],
+   e:['Oberkörper kippt zur Gegenseite.','Zu schwer, dadurch Ausweichbewegung.','Zu schnell ohne Spannung.']},
+  carry:{s:['Gewicht aufnehmen, Schultern nach hinten-unten, Rumpf fest.',
+    'Kontrolliert gehen oder halten, Position nicht verlieren.',
+    'Kontrolliert ablegen.'],
+   e:['Schultern hängen nach vorne.','Luft angehalten.','Gewicht fallen gelassen statt abgesetzt.']},
+  wrist:{s:['Unterarme auflegen, nur das Handgelenk bewegt sich.',
+    'Volle Beugung und Streckung, oben kurz halten.',
+    'Langsam ablassen.'],
+   e:['Aus dem Ellbogen gearbeitet.','Zu schweres Gewicht, dadurch minimaler Bewegungsumfang.','Zu hohe Wiederholungszahl ohne Spannung.']},
+  other:{s:['Kontrolliert und mit vollem Bewegungsumfang ausführen.',
+    'Rumpf während der gesamten Bewegung stabil halten.',
+    'Am Endpunkt kurz halten, langsam zurückführen.'],
+   e:['Schwung statt Muskelarbeit.','Halber Bewegungsumfang.','Zu schweres Gewicht auf Kosten der Ausführung.']}
+};
+
+/* Eigene Texte für die wichtigsten Übungen — ersetzen die Vorlage. */
+const HOWTO = {
+ 'x-bankdrücken-langhantel':{s:['Augen unter der Stange, Schulterblätter zusammenziehen und nach unten fixieren.',
+   'Füße fest am Boden, leichte Brücke im oberen Rücken, Gesäß bleibt auf der Bank.',
+   'Stange auf die untere Brust senken, Ellbogen etwa 45 bis 60 Grad zum Rumpf.',
+   'Kurz auflegen ohne abzufedern, dann schräg nach oben-hinten Richtung Schultern drücken.'],
+  e:['Ellbogen im rechten Winkel abgespreizt — die häufigste Ursache für Schulterprobleme.','Stange abgefedert von der Brust.','Gesäß hebt ab, um mehr Gewicht zu bewegen.']},
+ 'x-schrägbankdrücken-kurzhantel':{s:['Bank auf 30 bis 40 Grad, Hanteln mit den Knien nach oben helfen.',
+   'Schulterblätter fixieren, Hanteln auf Höhe der oberen Brust.',
+   'Senken bis zur deutlichen Dehnung, Handgelenke bleiben gerade über den Ellbogen.',
+   'Nach oben-innen drücken, oben ohne aneinander zu stoßen.'],
+  e:['Bank zu steil — ab etwa 45 Grad wird es ein Schulterdrücken.','Hanteln oben zusammengeschlagen, dadurch fällt die Spannung ab.','Zu tief gesenkt bei schwerem Gewicht.']},
+ 'x-butterfly-maschine':{s:['Sitzhöhe so einstellen, dass die Griffe auf Brusthöhe liegen.',
+   'Rücken fest an die Lehne, Schulterblätter zusammen und unten.',
+   'Arme über einen weiten Bogen zusammenführen, in der Mitte ein bis zwei Sekunden halten.',
+   'Langsam öffnen bis zur Dehnung, ohne die Spannung zu verlieren.'],
+  e:['Zu weit geöffnet, dadurch Zug an der Schultervorderseite.','Schultern rollen nach vorne.','Zu schnell, kein Halten in der Mitte.']},
+ 'x-kabelzug-fliegende-mitte':{s:['Züge auf Brusthöhe, einen Schritt nach vorne für konstante Spannung.',
+   'Leichte Vorlage, Ellbogen minimal gebeugt und diesen Winkel halten.',
+   'Über einen weiten Bogen vor der Brust zusammenführen, kurz halten.',
+   'Kontrolliert öffnen bis zur Dehnung.'],
+  e:['Ellbogen beugen sich — daraus wird ein Drücken.','Zu aufrecht gestanden, dadurch fehlt die Spannung am Endpunkt.','Zu schwer, der Bogen verschwindet.']},
+ 'x-dips-brust-fokus':{s:['Griffe etwas weiter als schulterbreit, Oberkörper deutlich nach vorne neigen.',
+   'Beine leicht nach hinten, Rumpf fest.','Kontrolliert senken, bis die Oberarme etwa waagerecht sind.',
+   'Über die Brust nach oben drücken, Vorlage beibehalten.'],
+  e:['Aufrecht geblieben — dann arbeitet fast nur der Trizeps.','Zu tief gesenkt ohne Schulterstabilität.','Ins Hohlkreuz gefallen.']},
+ 'x-klimmzüge-obergriff':{s:['Griff etwas weiter als schulterbreit, Daumen mit um die Stange oder daneben.',
+   'Aus der vollen Streckung starten, Schulterblätter zuerst nach unten ziehen.',
+   'Ellbogen nach unten-hinten führen, bis das Kinn über der Stange ist.',
+   'Kontrolliert ablassen bis zur vollen Streckung.'],
+  e:['Nur den halben Weg gemacht, unten nicht ausgehängt.','Mit Schwung aus der Hüfte gearbeitet.','Schultern hochgezogen statt Schulterblätter nach unten.']},
+ 'x-latzug-breiter-griff':{s:['Oberschenkel fixieren, Brust anheben, leichte Rücklage von etwa 15 Grad.',
+   'Schulterblätter nach unten ziehen, dann die Ellbogen nach unten-hinten führen.',
+   'Stange bis zur oberen Brust, unten kurz halten.',
+   'Kontrolliert nach oben lassen, Arme voll strecken.'],
+  e:['Zu weit zurückgelehnt, daraus wird ein Rudern.','Hinter den Nacken gezogen.','Mit den Händen gezogen statt mit den Ellbogen.']},
+ 'x-langhantelrudern-obergriff':{s:['Hüfte nach hinten, Oberkörper etwa 45 Grad vorgebeugt, Rücken neutral.',
+   'Stange hängen lassen, Rumpf fest anspannen.',
+   'Zum unteren Brustkorb ziehen, Ellbogen nah am Körper.',
+   'Oben kurz halten, kontrolliert ablassen.'],
+  e:['Rücken rundet sich — hier passieren die meisten Verletzungen.','Oberkörper richtet sich beim Ziehen auf.','Zum Bauchnabel gezogen statt zum Brustkorb.']},
+ 'x-kabelrudern-v-griff':{s:['Füße auf der Platte, Knie leicht gebeugt, Rücken gerade.',
+   'Aus der Streckung starten, Schulterblätter bewusst nach vorne laufen lassen.',
+   'Griff zum Bauch ziehen, Ellbogen am Körper, Schulterblätter zusammen.',
+   'Kontrolliert zurück bis zur vollen Streckung.'],
+  e:['Oberkörper schwingt vor und zurück.','Nur mit den Armen gezogen.','Vorne nicht ausgestreckt, dadurch fehlt die Dehnung.']},
+ 'x-kreuzheben-konventionell':{s:['Stange über der Mitte des Fußes, Schienbeine fast an der Stange.',
+   'Hüfte nach hinten, Brust raus, Rücken neutral, Lat anspannen.',
+   'Beine wegdrücken statt die Stange zu ziehen, Stange bleibt am Körper.',
+   'Oben Hüfte durchstrecken ohne Überstreckung, kontrolliert ablegen.'],
+  e:['Runder Rücken — das größte Risiko dieser Übung.','Hüfte schießt zuerst hoch, der Rücken macht den Rest.','Oben ins Hohlkreuz gelehnt.']},
+ 'x-rumänisches-kreuzheben-langhantel':{s:['Stand hüftbreit, Knie leicht gebeugt und dieser Winkel bleibt.',
+   'Hüfte nach hinten schieben, Stange am Bein entlangführen.',
+   'Senken bis zur deutlichen Dehnung der Beinrückseite, meist etwa Kniehöhe.',
+   'Hüfte nach vorne schieben, oben Gesäß fest anspannen.'],
+  e:['Aus den Knien gearbeitet statt aus der Hüfte.','Stange wandert vom Körper weg.','Tiefer gegangen als die Beweglichkeit erlaubt, der Rücken rundet.']},
+ 'x-schulterdrücken-kurzhantel-sitzend':{s:['Lehne fast senkrecht, Rücken fest anlegen, Rumpf anspannen.',
+   'Hanteln auf Ohrhöhe, Ellbogen leicht vor der Körperlinie.',
+   'Nach oben-innen drücken, oben ohne zusammenzuschlagen.',
+   'Kontrolliert bis Ohrhöhe senken.'],
+  e:['Ins Hohlkreuz gedrückt.','Ellbogen weit nach hinten, das belastet die Schulter.','Nur den halben Weg gesenkt.']},
+ 'x-seitheben-kurzhantel':{s:['Leichte Vorlage, Ellbogen minimal gebeugt und fixiert.',
+   'Arme seitlich heben, der Ellbogen führt vor der Hand.',
+   'Bis Schulterhöhe, oben kurz halten.',
+   'Langsam absenken, unten nicht komplett ablegen.'],
+  e:['Zu schwer, der Trapez übernimmt und die Schultern ziehen hoch.','Über Schulterhöhe gehoben.','Schwung aus der Hüfte.']},
+ 'x-gesichtsziehen-kabel':{s:['Seil auf Gesichtshöhe, Griff im Obergriff.',
+   'Zum Gesicht ziehen, Ellbogen bleiben hoch auf Schulterhöhe.',
+   'Am Endpunkt die Hände auseinanderziehen und außenrotieren, kurz halten.',
+   'Kontrolliert zurückführen.'],
+  e:['Ellbogen sinken ab, daraus wird ein Rudern.','Zu schwer, dadurch fällt die Außenrotation weg.','Mit dem Oberkörper zurückgelehnt.']},
+ 'x-preacher-curls-sz-stange':{s:['Achseln fest auf das Pult, Oberarme liegen vollflächig auf.',
+   'Aus der fast gestreckten Position starten.',
+   'Kontrolliert beugen, oben kurz halten.',
+   'Langsam ablassen, unten nicht komplett entspannen.'],
+  e:['Unten komplett abgelegt, dadurch reißt die Spannung ab.','Oberarme heben vom Pult ab.','Zu schnell abgelassen — der gedehnte Bereich ist hier der wertvollste.']},
+ 'x-stirndrücken-sz-stange':{s:['Oberarme leicht schräg nach hinten geneigt statt senkrecht.',
+   'Nur die Unterarme bewegen sich, Ellbogen bleiben eng.',
+   'Zur Stirn oder knapp dahinter senken.',
+   'Strecken ohne die Ellbogen zu verriegeln.'],
+  e:['Ellbogen flattern nach außen.','Oberarme senkrecht, dadurch fällt oben die Spannung ab.','Zu schwer, dadurch Druck aus der Schulter.']},
+ 'x-trizepsdrücken-kabel-seil':{s:['Aufrecht stehen, leichte Vorlage, Ellbogen am Rumpf fixiert.',
+   'Nach unten strecken und am Endpunkt das Seil auseinanderziehen.',
+   'Ein bis zwei Sekunden halten.','Kontrolliert zurück bis zur Dehnung.'],
+  e:['Ellbogen wandern nach vorne.','Mit dem Oberkörper nachgedrückt.','Kein Auseinanderziehen am Endpunkt.']},
+ 'x-kniebeugen-langhantel':{s:['Stange auf dem Trapez ablegen, Ellbogen unter der Stange, Brust raus.',
+   'Stand schulterbreit, Füße leicht nach außen, Rumpf fest.',
+   'Hüfte und Knie gleichzeitig beugen, Knie folgen der Fußrichtung.',
+   'So tief wie ohne runden Rücken möglich, dann über die ganze Fußfläche hochdrücken.'],
+  e:['Knie fallen nach innen.','Hüfte schießt zuerst hoch, daraus wird ein Good Morning.','Nicht tief genug — der halbe Reiz bleibt liegen.']},
+ 'x-beinpresse':{s:['Rücken und Gesäß vollflächig an die Lehne, Füße schulterbreit auf der Platte.',
+   'Knie kontrolliert Richtung Brust beugen, Becken bleibt an der Lehne.',
+   'Bis etwa 90 Grad oder tiefer, solange das Becken nicht abkippt.',
+   'Über die ganze Fußfläche drücken, Knie oben nicht verriegeln.'],
+  e:['Becken hebt unten ab — die häufigste Ursache für Rückenschmerzen an der Beinpresse.','Knie durchgestreckt und verriegelt.','Mit den Händen an den Knien nachgedrückt.']},
+ 'x-beinstrecker-maschine':{s:['Rückenlehne so, dass das Kniegelenk auf der Drehachse liegt.',
+   'Polster knapp über dem Sprunggelenk.',
+   'Beine strecken, oben ein bis zwei Sekunden halten.',
+   'Langsam absenken, unten das Gewicht nicht ablegen.'],
+  e:['Hochgeschleudert und fallen gelassen.','Gesäß hebt vom Sitz ab.','Kein Halten am Endpunkt, dadurch fehlt der beste Teil.']},
+ 'x-beinbeuger-liegend-maschine':{s:['Hüfte flach auf dem Polster, Kniegelenk auf der Drehachse.',
+   'Fersen kontrolliert zum Gesäß ziehen, oben kurz halten.',
+   'Langsam zurückführen, unten Spannung behalten.'],
+  e:['Hüfte hebt ab, um mehr Gewicht zu bewegen.','Zu schnell abgelassen.','Nur halber Bewegungsumfang.']},
+ 'x-hüftstoß-langhantel':{s:['Schulterblätter an der Bankkante, Füße so, dass die Schienbeine oben senkrecht stehen.',
+   'Kinn leicht zur Brust, Rippen unten halten, Becken aufrichten.',
+   'Hüfte nach oben stoßen, oben Gesäß maximal anspannen und ein bis zwei Sekunden halten.',
+   'Kontrolliert absenken.'],
+  e:['Ins Hohlkreuz gedrückt statt das Becken aufzurichten.','Füße zu weit vorne, dann arbeitet die Beinrückseite.','Kein Halten oben.']},
+ 'x-wadenheben-stehend-maschine':{s:['Fußballen auf der Kante, Fersen frei beweglich.',
+   'Fersen so tief wie möglich absenken bis zur deutlichen Dehnung.',
+   'Bis auf die Zehenspitzen drücken, oben ein bis zwei Sekunden halten.',
+   'Langsam ablassen.'],
+  e:['Gewippt, die Sehne federt statt der Muskel zu arbeiten.','Fersen nicht abgesenkt.','Nur stehend — der Schollenmuskel braucht die sitzende Variante.']},
+ 'x-beinheben-hängend':{s:['An der Stange hängen, Schulterblätter aktiv nach unten.',
+   'Becken bewusst nach hinten kippen und die Knie oder gestreckten Beine anheben.',
+   'Am obersten Punkt kurz halten.','Kontrolliert absenken ohne zu schwingen.'],
+  e:['Nur die Beine gehoben, das Becken bleibt starr — dann arbeitet der Hüftbeuger.','Mit Schwung gearbeitet.','Beim Absenken ins Hohlkreuz gefallen.']}
+};
+
+
+/* ===== Anatomische Figur V4 — Pose mit abgespreizten Armen =====
+   Koordinaten 260×560, Mitte x=130, linke Seite definiert und gespiegelt.
+   Arme hängen nicht mehr am Rumpf: Oberarm und Unterarm sitzen in eigenen
+   Gruppen und werden um Schulter- bzw. Ellbogengelenk gedreht. Dadurch liegt
+   zwischen Arm und Brustkorb freie Fläche wie auf einer Anatomietafel. */
+const ARM_PIV_Y = 107.2, FORE_PIV_Y = 199.6;   // 116 bzw. 212, durch yarm() gezogen
+const G_ARM  = `rotate(11 90 ${ARM_PIV_Y})`;
+const G_FORE = `rotate(11 90 ${ARM_PIV_Y}) rotate(12 64 ${FORE_PIV_Y})`;
+
+/* [pfad, gruppe] — Gruppe '' = fest am Rumpf */
+const SIL_HEAD = 'M130,13 C116,13 106,25 106,42 C106,51 109,59 114,65 C118,70 120,75 120,81 L120,88 C120,93 125,96 130,96 C135,96 140,93 140,88 L140,81 C140,75 142,70 146,65 C151,59 154,51 154,42 C154,25 144,13 130,13 Z';
+/* Rumpf: nur die linke Hälfte wird angegeben, die rechte wird gespiegelt erzeugt.
+   Vorher stand der ganze Pfad von Hand da — beim Ändern der Schulter blieb die
+   rechte Seite zurück und die Figur war unsymmetrisch. */
+const TORSO_L = [[120,90],[104,94],[87,98],[72,106],[72,120],[79,132],[88,142],
+                 [86,170],[85,200],[97,228],[93,244],[91,256],[90,264],
+                 [92,280],[98,296],[106,306],[112,313],[124,317],[130,317]];
+function mirrorHalf(pts){
+  const all = pts.concat(pts.slice(0,-1).reverse().map(([x,y])=>[260-x,y]));
+  let d = `M${all[0][0]},${all[0][1]}`;
+  for(let i=1;i+2<all.length;i+=3)
+    d += ` C${all[i][0]},${all[i][1]} ${all[i+1][0]},${all[i+1][1]} ${all[i+2][0]},${all[i+2][1]}`;
+  return d + ' Z';
+}
+const SIL_TORSO = mirrorHalf(TORSO_L);
+const SIL_UPARM= 'M76,104 C62,109 54,120 52,133 C49,158 49,184 51,210 L69,214 C71,192 75,168 80,148 L86,144 Z';
+const SIL_FOARM= 'M51,210 C46,234 44,258 45,278 C44,288 44,298 46,307 L60,309 C62,298 63,288 63,280 C66,258 68,236 69,214 Z';
+const SIL_HAND = [
+  'M45,306 C41,314 40,325 42,334 C45,342 53,346 60,342 C64,337 65,327 63,318 C62,312 61,308 60,307 Z',
+  'M42,332 C39,340 37,349 37,356 C37,359 40,360 41,357 C43,350 45,342 46,336 Z',
+  'M47,337 C45,346 44,356 44,363 C44,366 47,367 48,364 C49,356 51,346 51,340 Z',
+  'M52,338 C51,347 51,356 52,363 C52,366 55,366 56,363 C56,355 57,347 56,340 Z',
+  'M57,336 C57,344 58,352 59,358 C60,361 63,360 63,357 C62,350 61,343 60,335 Z',
+  'M60,307 C65,310 69,316 70,323 C70,327 67,329 65,326 C63,320 61,313 58,309 Z'
+];
+const SIL_LEG  = 'M90,258 C82,274 78,296 78,322 C78,356 82,386 90,406 C88,428 87,452 89,474 C91,498 96,516 100,527 L120,527 C122,506 122,482 120,460 C122,438 122,416 120,400 C124,376 124,348 122,322 C122,304 118,290 112,282 Z';
+const SIL_FOOT = 'M100,524 C96,532 93,540 93,546 C93,551 98,553 107,553 C115,553 122,552 124,547 C125,540 123,532 121,524 Z';
+const SIL_PARTS = [
+  [SIL_HEAD,'head','C'], [SIL_TORSO,'','C'],
+  [SIL_UPARM,'arm'], [SIL_FOARM,'fore'], ...SIL_HAND.map(d=>[d,'fore']),
+  [SIL_LEG,''], [SIL_FOOT,'']
+];
+const SIL_FRONT = SIL_PARTS, SIL_BACK = SIL_PARTS;
+
+/* [muskelKey, pfad, 'C'=Mitte (nicht spiegeln), gruppe] */
 const MUSC_FRONT = [
-  ['traps','M121,92 C117,99 110,104 100,108 L122,113 C122,106 121,98 121,92 Z'],
-  ['front_delt','M98,106 C86,106 75,112 69,122 C67,131 69,139 73,145 C79,133 88,119 98,112 Z'],
-  ['side_delt','M68,116 C60,121 56,129 56,139 C57,147 61,153 66,153 C66,144 67,131 71,123 Z'],
-  ['chest_up','M128,116 C113,113 96,113 86,119 C80,122 77,128 78,135 L79,138 C95,142 113,142 128,140 Z','L'],
-  ['chest','M128,142 C113,144 95,144 79,140 C79,147 82,153 87,157 C101,161 116,161 128,159 Z','L'],
-  ['chest_low','M128,161 C116,163 100,163 88,158 C91,166 98,172 108,175 C116,177 124,174 128,168 Z','L'],
-  ['biceps','M78,150 C68,156 62,168 60,184 C59,198 62,208 67,214 C73,206 77,192 78,178 C79,166 79,157 78,150 Z'],
-  ['forearms','M64,214 C57,224 52,240 50,258 C49,268 50,276 52,282 C60,274 64,258 66,242 C67,230 66,221 64,214 Z'],
-  ['abs','M130,196 C122,196 115,199 112,204 L112,252 C116,262 122,268 130,270 Z','L'],
-  ['obliques','M110,204 C102,202 96,206 95,212 L98,244 C102,256 106,264 112,268 L112,214 Z'],
-  ['abductors','M88,260 C81,268 78,280 80,292 C84,287 88,276 91,266 Z'],
-  ['quads','M97,264 C87,274 81,290 80,314 C79,344 83,372 90,392 C95,402 105,402 111,394 C117,380 120,356 120,328 C120,304 116,286 109,276 C105,268 100,264 97,264 Z'],
-  ['adductors','M112,270 C119,276 124,286 126,298 L126,272 C122,268 117,267 112,270 Z'],
-  ['calves','M93,416 C89,430 87,450 89,470 C91,486 95,500 99,508 C103,500 105,482 104,460 C103,440 99,424 93,416 Z']
+  ['traps','M122,92 C119,101 113,107 104,112 C99,115 94,117 92,121 C99,126 107,126 113,122 C119,117 123,109 125,100 Z'],
+  ['front_delt','M97,108 C87,105 77,110 70,120 C65,128 63,139 65,148 C70,151 74,148 76,141 C79,130 87,119 97,114 Z','','arm'],
+  ['side_delt','M67,121 C59,129 54,140 54,152 C55,161 60,167 65,166 C68,164 69,159 67,153 C65,144 65,131 68,124 Z','','arm'],
+  ['chest_up','M129,114 C117,111 104,112 96,118 C91,123 88,130 88,138 C100,141 114,142 129,140 Z','L'],
+  ['chest','M129,142 C114,144 100,143 88,140 C88,149 90,157 95,164 C106,168 118,167 129,165 Z','L'],
+  ['chest_low','M129,167 C118,169 106,168 96,165 C100,174 107,181 116,183 C122,184 127,181 129,176 Z','L'],
+  ['biceps','M76,150 C67,157 60,169 58,184 C57,196 60,205 65,210 C69,202 71,190 71,177 C72,164 74,156 76,150 Z','','arm'],
+  ['forearms','M64,213 C57,223 52,237 50,253 C49,263 51,271 54,275 C58,267 61,253 63,239 C64,229 65,219 64,213 Z','','fore'],
+  ['obliques','M93,170 C97,172 102,175 106,179 C103,182 98,182 94,179 Z'],
+  ['obliques','M92,181 C96,183 101,186 105,189 C102,192 97,192 93,189 Z'],
+  ['obliques','M92,192 C96,194 100,197 104,199 C101,202 96,202 93,199 Z'],
+  ['obliques','M109,198 C101,197 95,201 94,208 C94,222 97,238 103,250 C107,258 111,263 115,266 L115,242 C113,226 111,210 109,198 Z'],
+  ['abs','M130,190 C123,190 117,193 114,199 C113,216 114,233 116,246 C119,255 125,260 130,261 Z','L'],
+  ['abductors','M92,262 C86,270 83,280 84,292 C87,287 91,277 94,268 Z'],
+  ['quads','M96,268 C88,279 82,295 81,317 C80,339 83,359 88,375 C92,379 95,377 96,372 C94,351 93,327 95,303 C96,289 96,277 96,268 Z'],
+  ['quads','M104,270 C98,281 95,301 95,326 C95,352 98,376 103,392 C108,396 113,393 115,387 C117,364 117,338 114,312 C112,292 109,278 104,270 Z'],
+  ['quads','M114,338 C118,350 120,366 118,382 C116,390 111,394 106,392 C109,380 111,362 111,346 Z'],
+  ['adductors','M108,280 C113,289 116,299 117,310 C117,320 116,329 114,336 C112,324 110,303 106,288 Z'],
+  ['calves','M95,418 C90,433 88,451 89,469 C90,483 93,495 97,503 C100,501 101,493 100,481 C99,463 98,439 95,418 Z'],
+  ['calves','M101,420 C103,437 105,455 105,473 C105,487 103,497 100,505 C104,509 109,507 111,499 C113,483 112,457 108,433 C106,425 104,420 101,420 Z']
 ];
 const MUSC_FRONT_DECO = [
-  /* Ohr */ ['M119,50 C121,54 121,60 119,63',true],
-  /* Schlüsselbein */ ['M98,110 C110,114 122,116 130,116',true],
-  /* Delt vorn/seitlich */ ['M71,122 C68,131 68,141 71,148',true],
-  /* Brust-Zonenlinien + Sternum */ ['M79,139 C95,143 113,143 128,141',true],['M87,158 C101,162 116,162 128,160',true],['M130,116 L130,170',false],
-  /* Brust-Außenkante → Achsel */ ['M78,136 C79,146 83,154 88,159',true],
-  /* Bizeps-Kopf */ ['M70,164 C68,178 68,192 70,204',true],
-  /* Unterarm-Strang */ ['M58,228 C55,244 54,258 55,272',true],
-  /* Rippen/Serratus */ ['M98,178 L108,182',true],['M96,186 L106,190',true],['M95,194 L104,197',true],
-  /* Bauch-Raster */ ['M113,216 C124,220 136,220 147,216',false],['M113,234 C124,238 136,238 147,234',false],['M114,252 C124,256 136,256 146,252',false],['M130,196 L130,270',false],
-  /* Leisten-V */ ['M96,250 C106,270 116,280 126,284',true],
-  /* Sartorius */ ['M96,266 C104,290 112,318 116,354',true],
-  /* Quad-Köpfe */ ['M100,274 C97,304 97,336 100,368',true],['M111,362 C115,372 115,384 111,392',true],
-  /* Patella */ ['M102,398 C102,404 110,404 110,398',true],
-  /* Schienbein */ ['M96,422 C93,444 93,468 97,490',true],
-  /* Knöchel */ ['M100,520 C104,524 110,524 114,520',true]
+  ['M124,92 C122,100 120,106 118,110',true],
+  ['M99,110 C110,114 122,116 130,116',true],
+  ['M69,120 C66,130 66,142 69,151',true,'arm'],
+  ['M79,114 C72,121 67,130 65,142',true,'arm'],
+  ['M88,139 C100,142 114,143 129,141',true],['M95,164 C106,168 118,167 129,165',true],['M130,116 L130,178',false],
+  
+  ['M72,158 C68,172 66,187 68,201',true,'arm'],
+  
+  ['M130,190 L130,261',false],
+  ['M115,206 C124,209 136,209 145,206',false],['M115,221 C124,224 136,224 145,221',false],['M116,236 C125,239 135,239 144,236',false],
+  ['M96,248 C107,266 117,277 127,281',true],
+  ['M97,268 C105,292 113,320 117,356',true],
+  ['M96,278 C94,306 94,336 97,366',true],['M112,300 C115,326 116,354 114,378',true],
+  ['M103,398 C103,405 111,405 111,398',true],
+  
+  ['M100,518 C104,522 110,522 114,518',true],
+  ['M99,536 C106,539 115,539 121,536',true]
 ];
 const MUSC_BACK = [
-  ['traps','M130,74 C126,74 122,76 120,80 C112,86 104,94 96,104 C86,110 80,116 82,124 L108,142 C116,162 122,190 125,218 C127,230 133,230 135,218 C138,190 144,162 152,142 L178,124 C180,116 174,110 164,104 C156,94 148,86 140,80 C138,76 134,74 130,74 Z','C'],
-  ['rear_delt','M94,108 C82,106 72,112 66,122 C63,132 65,142 70,148 C75,138 84,124 94,114 Z'],
-  ['side_delt','M66,116 C59,121 56,130 57,140 C60,134 63,126 68,120 Z'],
-  ['upper_back','M108,146 C100,144 92,146 88,152 C86,162 88,172 94,178 C102,182 110,180 113,174 C112,164 110,154 108,146 Z'],
-  ['lats','M113,176 C104,182 94,182 88,176 C85,194 87,214 95,230 C102,242 114,250 124,252 L126,230 C124,210 120,192 113,176 Z'],
-  ['lower_back','M126,234 C119,236 114,242 112,250 C114,262 120,272 128,276 L128,236 Z'],
-  ['triceps','M78,150 C68,156 62,168 60,184 C59,198 62,208 67,214 C73,206 77,192 78,178 C79,166 79,157 78,150 Z'],
-  ['forearms','M64,214 C57,224 52,240 50,258 C49,268 50,276 52,282 C60,274 64,258 66,242 C67,230 66,221 64,214 Z'],
-  ['glutes','M128,278 C114,276 102,278 94,285 C86,293 84,308 89,321 C95,332 109,336 119,331 C127,326 131,315 130,302 Z'],
-  ['hamstrings','M96,326 C88,340 84,360 84,382 C86,402 92,416 100,424 C108,428 114,424 118,416 C122,400 122,376 120,352 C118,340 114,332 108,328 C104,326 100,326 96,326 Z'],
-  ['calves','M92,432 C88,446 86,466 88,484 C90,498 96,508 102,512 C108,508 112,496 112,480 C112,462 108,444 102,434 C99,430 95,430 92,432 Z']
+  ['traps','M130,90 C126,90 122,92 120,96 C113,101 104,105 96,110 C90,114 87,121 89,128 C97,133 105,138 111,142 C118,145 142,145 149,142 C155,138 163,133 171,128 C173,121 170,114 164,110 C156,105 147,101 140,96 C138,92 134,90 130,90 Z','C'],
+  ['traps','M130,147 C123,147 117,150 113,156 C117,176 122,198 126,219 C127,229 133,229 134,219 C138,198 143,176 147,156 C143,150 137,147 130,147 Z','C'],
+  ['upper_back','M113,141 C102,138 93,143 89,152 C86,164 87,178 92,190 C101,199 112,197 120,188 C119,172 116,155 113,141 Z'],
+  ['lats','M117,178 C106,186 96,186 90,180 C90,200 91,221 97,239 C104,253 116,263 127,265 L127,241 C125,217 122,197 117,178 Z'],
+  ['lower_back','M122,238 C116,243 113,251 113,260 C116,270 121,278 128,281 C127,268 125,252 122,238 Z'],
+  ['rear_delt','M96,108 C86,105 76,110 69,120 C64,128 62,139 64,148 C69,151 73,148 75,141 C78,130 86,119 96,114 Z','','arm'],
+  ['side_delt','M66,121 C58,129 53,140 53,152 C54,161 59,167 64,166 C67,164 68,159 66,153 C64,144 64,131 67,124 Z','','arm'],
+  ['triceps','M72,152 C62,159 55,171 53,185 C52,197 55,207 59,212 C62,204 65,191 66,179 C67,167 69,158 72,152 Z','','arm'],
+  ['triceps','M75,150 C70,161 66,175 64,189 C63,199 65,206 68,210 C69,202 70,190 70,178 C71,165 73,156 75,150 Z','','arm'],
+  ['forearms','M64,213 C57,223 52,237 50,253 C49,263 51,271 54,275 C58,267 61,253 63,239 C64,229 65,219 64,213 Z','','fore'],
+  ['glutes','M120,286 C110,282 100,284 93,291 C86,298 84,310 89,322 C95,333 107,337 115,331 C119,326 121,315 121,303 Z'],
+  ['glutes','M97,279 C90,282 85,289 84,298 C87,294 92,288 99,285 Z'],
+  ['hamstrings','M97,328 C89,342 85,362 85,382 C86,400 91,412 98,420 C101,417 102,408 101,396 C99,376 98,350 97,328 Z'],
+  ['hamstrings','M104,328 C107,344 110,364 111,384 C111,400 108,412 104,420 C109,425 116,421 118,412 C121,394 120,364 114,340 C111,331 108,327 104,328 Z'],
+  ['calves','M96,430 C90,444 88,462 89,478 C90,490 94,500 99,506 C102,502 103,492 102,480 C101,462 99,444 96,430 Z'],
+  ['calves','M104,432 C107,448 109,466 108,482 C107,496 104,506 100,512 C105,516 111,512 113,502 C115,484 113,458 108,438 C107,433 106,430 104,432 Z']
 ];
 const MUSC_BACK_DECO = [
-  /* Wirbelsäule */ ['M130,90 L130,276',false],
-  /* Nacken-Linien */ ['M122,84 C118,92 112,100 104,108',true],
-  /* Traps-Kante */ ['M108,142 C116,162 122,190 125,218',true],
-  /* Scapula */ ['M92,152 C94,162 98,170 105,176',true],
-  /* Lat-Kontur */ ['M90,180 C88,200 92,220 100,236',true],
-  /* Trizeps-Hufeisen */ ['M70,162 C68,176 68,190 71,204',true],['M64,170 C63,182 63,194 65,206',true],
-  /* Unterarm */ ['M58,228 C55,244 54,258 55,272',true],
-  /* Glute-Medius */ ['M96,288 C104,296 114,300 126,300',true],
-  /* Hamstring-Split */ ['M102,332 C100,356 100,384 104,408',true],['M112,338 C116,358 118,382 116,404',true],
-  /* Waden-Split */ ['M100,436 C98,454 98,474 101,492',true],
-  /* Achilles */ ['M101,494 C101,510 102,522 103,530',true]
+  ['M130,92 L130,280',false],
+  ['M123,88 C115,95 105,102 96,109',true],
+  ['M111,142 C118,145 142,145 149,142',false],['M113,156 C117,176 122,198 126,219',true],
+  ['M94,152 C98,161 104,168 111,173',true],
+  
+  
+  ['M70,158 C67,172 66,187 68,201',true,'arm'],
+  
+  ['M124,240 C121,254 119,268 120,278',true],
+  ['M96,288 C105,296 116,301 128,301',true],['M92,322 C102,331 113,335 121,331',true],
+  ['M102,332 C100,356 100,384 104,410',true],
+  ['M92,418 C99,424 111,424 118,418',true],
+  ['M102,436 C100,456 100,478 103,496',true],
+  ['M102,498 C102,512 103,522 104,530',true],
+  ['M99,536 C106,539 115,539 121,536',true]
 ];
 
-function buildBody(muscDefs, decoDefs, sil){
-  const T = 'transform="translate(260,0) scale(-1,1)"';
-  let s = '<svg viewBox="0 0 260 560" xmlns="http://www.w3.org/2000/svg">';
-  sil.forEach((d,i)=>{
-    s += `<path class="base" d="${d}"/>`;
-    if(i>1) s += `<path class="base" d="${d}" ${T}/>`;   // Kopf+Torso sind symmetrisch definiert
+/* ── Flache Flächen (Stil moderner Fitness-Apps: Hevy, Strong, Alpha Progression).
+      Keine Verläufe, keine Schatten, keine Konturen — nur klare Flächen.
+      Muskel im Ruhezustand ist etwas heller als der Körper, damit die Anatomie
+      auch ohne Training lesbar bleibt. ── */
+function injectGradients(){}
+
+/* ── Proportionen ────────────────────────────────────────────────────────
+   Gemessen war die Figur 6,51 Kopf hoch (Soll 7,5–8), der Schritt lag bei
+   56 % der Höhe (Soll 50 %) und der Oberschenkel war nur 2/3 so lang wie
+   der Unterschenkel. Statt jeden Pfad neu zu tippen, laufen alle
+   y-Koordinaten beim Bauen durch eine stückweise lineare Abbildung, die die
+   Landmarken auf den Kanon zieht:
+     Kinn 96→88, Schritt 315→283 (halbe Höhe), Knie 410→418, Sohle 553.      */
+const YMAP = [[13,13],[96,88],[315,283],[410,418],[553,553]];
+function ymap(y){
+  for(let i=0;i<YMAP.length-1;i++){
+    const [a,A]=YMAP[i], [b,B]=YMAP[i+1];
+    if(y<=b || i===YMAP.length-2) return A + (y-a)*(B-A)/(b-a);
+  }
+  return y;
+}
+const ARM_K = 0.962;   // Ellbogen auf Nabelhöhe, Fingerspitzen auf Oberschenkelmitte
+const yarm  = y => 88 + (y-96)*ARM_K;
+const HEAD_SY = .93, HEAD_SX = 1, HEAD_CY = 88, HEAD_CX = 130;
+const ARM_DX = 6;   // Arme näher an die Körperachse -> schmalere Schulterlinie
+function remap(d, mode){
+  return d.replace(/(-?[\d.]+),(-?[\d.]+)/g, (_,xs,ys)=>{
+    let x = +xs, y = +ys;
+    if(mode==='raw')        return xs+','+ys;
+    if(mode==='arm')      { y = yarm(y); x += ARM_DX; }
+    else if(mode==='head'){ y = HEAD_CY + (ymap(y)-HEAD_CY)*HEAD_SY; x = HEAD_CX + (x-HEAD_CX)*HEAD_SX; }
+    else                    y = ymap(y);
+    return x.toFixed(1)+','+y.toFixed(1);
   });
-  muscDefs.forEach(([m,d,c])=>{
-    s += `<path data-m="${m}" d="${d}"/>`;
-    if(c!=='C') s += `<path data-m="${m}" d="${d}" ${T}/>`;
+}
+const modeOf = g => (g==='arm'||g==='fore') ? 'arm' : (g==='head' ? 'head' : (g==='raw' ? 'raw' : 'body'));
+
+
+/* Füllflächen: aus den unbedeckten Bereichen der Silhouette berechnet und an
+   anatomischen Schnittlinien getrennt. Liegen bereits in Weltkoordinaten und
+   laufen deshalb mit Modus 'raw' an der Proportions-Umrechnung vorbei. */
+const MUSC_FRONT_FILL = [
+  ['traps','M217.5,176.1C215.5,173.6 205.5,161.8 203.8,154.9C202.0,148.0 207.8,137.0 205.9,130.2C204.0,123.5 196.5,114.7 191.1,110.0C185.7,105.3 176.7,101.4 169.8,98.9C162.8,96.4 150.0,93.8 144.8,93.4C139.5,92.9 137.4,96.5 134.9,96.0C132.4,95.5 129.5,90.7 128.1,89.8C126.7,88.8 128.2,88.9 125.6,90.0C123.0,91.1 117.0,95.2 110.8,96.9C104.5,98.5 91.2,98.4 84.2,100.9C77.3,103.4 69.3,108.3 64.5,113.6C59.7,119.0 54.1,129.6 52.4,136.5C50.7,143.4 54.6,154.9 53.2,159.9C51.9,164.8 43.8,172.4 43.1,169.5C42.5,166.6 46.8,148.7 48.9,140.2C51.0,131.8 53.3,120.2 57.1,113.5C61.0,106.8 68.0,99.8 74.5,95.9C81.0,91.9 92.2,89.1 100.8,87.1C109.3,85.1 122.2,82.5 131.2,82.6C140.3,82.7 152.8,85.5 161.2,87.6C169.7,89.7 180.9,92.5 187.2,96.6C193.6,100.8 199.9,108.5 203.5,115.4C207.1,122.3 209.4,134.0 211.4,142.5C213.4,151.0 216.0,167.0 216.9,172.0C217.8,177.0 219.5,178.7 217.5,176.1Z','C','raw'],
+  ['front_delt','M72.8,146.6C72.9,146.2 73.7,144.2 74.1,143.2C74.6,142.3 75.6,140.9 75.9,140.0C76.1,139.1 76.3,137.3 75.9,137.0C75.4,136.7 73.7,137.7 72.8,138.1C71.8,138.6 70.5,139.9 69.8,140.1C69.0,140.3 68.0,140.0 67.9,139.5C67.7,139.0 68.0,137.4 68.8,136.9C69.5,136.3 71.7,136.4 72.8,135.9C73.8,135.4 74.8,134.4 75.5,133.6C76.2,132.9 77.2,131.8 77.8,130.9C78.3,130.0 78.9,128.6 79.5,127.6C80.1,126.7 80.9,125.5 81.5,124.6C82.1,123.7 83.0,122.6 83.6,121.8C84.3,120.9 85.3,119.5 85.9,119.0C86.5,118.5 87.5,118.0 87.6,118.5C87.8,119.0 86.8,121.4 86.8,122.6C86.7,123.8 87.6,125.3 87.5,126.4C87.4,127.5 86.4,128.9 86.1,130.0C85.8,131.1 86.1,133.1 85.5,133.9C84.9,134.7 83.0,134.9 82.1,135.5C81.2,136.1 80.0,136.9 79.4,137.8C78.7,138.6 78.3,140.2 77.8,141.1C77.2,142.0 76.2,143.1 75.5,143.9C74.8,144.7 73.4,146.0 73.0,146.4C72.6,146.8 72.6,147.1 72.8,146.6Z','','raw'],
+  ['front_delt','M93.2,148.1C93.0,148.1 92.2,148.1 91.8,148.1C91.3,148.1 90.7,148.1 90.2,148.1C89.8,148.1 89.2,148.1 88.8,148.1C88.3,148.1 87.5,148.3 87.2,148.1C87.0,148.0 87.0,147.5 87.0,147.1C87.0,146.8 87.1,146.2 87.1,145.8C87.1,145.3 87.1,144.7 87.1,144.2C87.1,143.8 87.1,143.2 87.1,142.8C87.1,142.3 87.2,141.8 87.2,141.4C87.3,141.0 87.4,140.4 87.4,140.0C87.4,139.6 87.4,138.9 87.4,138.5C87.4,138.1 87.4,137.3 87.5,137.1C87.6,136.9 87.8,137.1 87.9,137.2C88.0,137.4 88.1,138.0 88.2,138.4C88.4,138.7 88.5,139.2 88.6,139.5C88.7,139.8 88.9,140.3 89.0,140.6C89.1,140.9 89.4,141.3 89.5,141.6C89.6,141.9 89.7,142.4 89.9,142.8C90.0,143.1 90.3,143.3 90.5,143.6C90.7,143.9 90.8,144.3 91.0,144.6C91.2,144.9 91.5,145.2 91.6,145.5C91.8,145.8 92.0,146.2 92.1,146.5C92.3,146.8 92.6,147.1 92.8,147.4C92.9,147.6 93.2,148.0 93.2,148.1C93.3,148.2 93.5,148.1 93.2,148.1Z','','raw'],
+  ['biceps','M66.5,168.1C66.4,168.0 66.1,167.6 66.1,167.2C66.1,166.9 66.3,166.2 66.4,165.8C66.5,165.3 66.6,164.8 66.8,164.4C66.9,164.0 67.0,163.4 67.1,163.0C67.2,162.6 67.3,161.9 67.4,161.5C67.5,161.1 67.8,160.7 67.9,160.2C68.0,159.8 68.0,159.2 68.1,158.8C68.2,158.3 68.5,157.9 68.6,157.5C68.8,157.1 68.9,156.5 69.0,156.1C69.1,155.7 69.2,155.1 69.4,154.8C69.5,154.4 69.7,153.9 69.9,153.5C70.0,153.1 70.1,152.5 70.4,152.2C70.6,152.0 71.1,151.7 71.5,151.6C71.9,151.6 73.0,151.5 73.1,151.8C73.3,152.0 72.8,152.6 72.6,153.0C72.5,153.4 72.2,153.8 72.0,154.1C71.8,154.5 71.7,155.0 71.5,155.4C71.3,155.8 71.2,156.2 71.0,156.6C70.8,157.0 70.7,157.5 70.5,157.9C70.3,158.2 70.2,158.8 70.0,159.1C69.8,159.5 69.7,160.0 69.5,160.4C69.3,160.8 69.2,161.2 69.0,161.6C68.8,162.0 68.6,162.5 68.5,162.9C68.4,163.3 68.3,163.9 68.1,164.2C68.0,164.6 67.8,165.1 67.6,165.5C67.5,165.9 67.3,166.4 67.1,166.8C67.0,167.1 66.7,167.8 66.6,168.0C66.5,168.2 66.6,168.2 66.5,168.1Z','','raw'],
+  ['chest','M91.2,178.1C90.8,178.1 88.9,177.7 88.4,177.0C87.9,176.3 87.7,174.3 87.9,173.5C88.1,172.7 89.6,172.3 89.9,171.5C90.2,170.7 90.1,168.9 89.8,168.1C89.4,167.4 87.8,167.3 87.4,166.5C87.0,165.7 87.2,163.9 87.1,162.8C87.0,161.6 86.9,160.2 86.9,159.0C86.8,157.8 86.8,156.1 86.9,155.0C87.0,153.9 86.8,152.1 87.5,151.6C88.2,151.1 90.3,151.6 91.5,151.6C92.7,151.6 94.9,151.3 95.5,151.6C96.1,151.9 95.7,153.4 95.2,153.6C94.8,153.8 93.1,152.7 92.6,153.0C92.1,153.3 91.9,154.8 91.9,155.8C91.8,156.7 92.2,158.3 92.4,159.2C92.6,160.2 93.3,161.9 93.2,162.4C93.2,162.8 92.4,162.0 92.0,162.4C91.6,162.7 91.0,163.9 90.9,164.8C90.8,165.6 91.2,167.3 91.4,168.2C91.6,169.2 91.7,170.7 92.2,171.4C92.8,172.1 94.3,172.5 94.8,172.9C95.2,173.2 95.5,173.8 95.1,173.8C94.8,173.7 93.2,172.3 92.5,172.4C91.8,172.4 90.8,173.2 90.6,174.0C90.4,174.8 91.2,176.8 91.2,177.4C91.3,178.0 91.7,178.2 91.2,178.1Z','','raw'],
+  ['chest','M150.2,178.1C149.2,177.8 145.6,176.4 143.9,175.5C142.1,174.6 140.4,172.6 138.5,171.9C136.6,171.1 133.3,170.4 131.0,170.4C128.7,170.3 125.1,170.8 123.0,171.4C120.9,172.0 118.8,173.5 117.1,174.5C115.4,175.5 113.8,177.7 111.8,178.1C109.7,178.6 105.3,178.1 103.6,177.5C102.0,176.9 100.4,174.9 100.8,173.9C101.1,172.8 105.9,171.6 105.9,170.5C105.9,169.4 100.8,167.7 100.6,166.8C100.5,165.8 103.3,164.2 104.8,163.9C106.2,163.6 108.4,164.4 110.2,164.9C112.1,165.3 115.1,166.8 117.2,166.9C119.4,166.9 122.7,166.0 124.5,165.1C126.3,164.2 127.8,161.0 129.1,160.8C130.5,160.5 131.8,162.9 133.4,163.8C134.9,164.6 137.4,166.3 139.5,166.6C141.6,166.9 145.1,166.3 147.1,165.8C149.2,165.2 151.4,163.0 153.2,162.9C155.1,162.8 159.2,164.2 159.5,165.1C159.8,166.0 155.9,167.7 155.5,168.9C155.1,170.1 156.0,171.9 156.5,173.1C157.0,174.3 159.5,176.3 158.6,177.0C157.8,177.7 152.0,177.5 150.8,177.6C149.5,177.8 151.3,178.4 150.2,178.1Z','C','raw'],
+  ['biceps','M41.0,203.1C40.1,203.1 36.0,203.4 34.8,203.1C33.5,202.8 32.7,202.0 32.8,201.1C32.8,200.2 34.4,198.4 35.1,197.2C35.9,196.1 36.9,194.6 37.6,193.5C38.4,192.4 39.7,191.2 40.2,189.9C40.8,188.5 40.8,186.0 41.1,184.5C41.5,183.0 41.4,180.4 42.5,179.6C43.6,178.9 47.7,178.8 48.8,179.6C49.8,180.4 49.3,183.5 49.6,185.0C50.0,186.5 50.5,188.5 51.1,189.8C51.7,191.0 52.9,193.3 53.8,193.4C54.6,193.4 55.9,191.2 56.8,190.1C57.6,189.1 58.5,187.5 59.1,186.2C59.8,185.0 60.8,182.5 61.1,182.0C61.5,181.5 61.6,181.9 61.4,182.8C61.2,183.6 60.3,186.1 59.9,187.5C59.4,188.9 58.9,190.9 58.4,192.2C57.9,193.6 57.3,195.9 56.4,196.2C55.4,196.6 53.3,194.9 52.0,194.4C50.7,193.8 47.9,192.4 47.6,192.5C47.4,192.6 50.2,194.1 50.2,194.9C50.3,195.6 48.8,196.7 47.9,197.5C47.0,198.3 45.3,199.3 44.2,200.1C43.2,201.0 41.5,202.7 41.0,203.1C40.5,203.6 41.9,203.1 41.0,203.1Z','','raw'],
+  ['chest','M92.8,194.6C92.7,194.5 92.5,193.8 92.4,193.5C92.3,193.2 92.1,192.7 92.0,192.4C91.9,192.0 91.7,191.6 91.6,191.2C91.5,190.9 91.5,190.4 91.4,190.0C91.3,189.6 91.1,189.2 91.0,188.9C90.9,188.5 90.7,188.1 90.6,187.8C90.5,187.4 90.5,186.9 90.4,186.5C90.3,186.1 90.2,185.6 90.1,185.2C90.0,184.9 90.0,184.4 89.9,184.0C89.8,183.6 89.7,183.1 89.6,182.8C89.6,182.4 89.3,181.8 89.5,181.6C89.7,181.5 90.5,181.6 91.0,181.6C91.5,181.6 92.0,181.6 92.5,181.6C93.0,181.6 93.6,181.6 94.0,181.6C94.4,181.7 94.9,181.9 95.0,182.1C95.1,182.3 94.8,182.7 94.6,183.0C94.5,183.3 94.2,183.6 94.0,183.9C93.8,184.1 93.5,184.4 93.4,184.8C93.2,185.1 93.1,185.5 93.0,185.9C92.9,186.2 92.7,186.6 92.6,187.0C92.6,187.4 92.6,188.1 92.6,188.5C92.6,188.9 92.6,189.6 92.6,190.0C92.6,190.4 92.6,191.1 92.6,191.5C92.7,191.9 92.8,192.3 92.9,192.8C92.9,193.2 92.9,194.0 92.9,194.2C92.9,194.5 92.8,194.7 92.8,194.6Z','','raw'],
+  ['forearms','M17.8,270.1C15.3,270.5 5.4,271.5 3.2,270.1C1.1,268.8 2.7,263.9 3.4,261.0C4.0,258.1 6.4,253.9 7.8,250.9C9.1,247.9 10.9,243.9 12.2,240.9C13.6,237.9 15.3,233.7 16.6,230.8C18.0,227.8 19.9,223.9 21.4,221.0C22.9,218.1 24.3,213.8 26.5,211.6C28.7,209.5 35.3,206.3 36.0,206.6C36.7,207.0 32.7,211.5 31.0,213.9C29.3,216.2 26.5,219.6 24.9,222.2C23.2,224.9 21.0,228.5 19.9,231.8C18.8,235.0 17.0,242.2 17.6,244.0C18.2,245.8 21.9,245.2 23.9,244.0C25.8,242.8 28.7,238.7 30.6,236.2C32.5,233.8 34.9,230.3 36.6,227.8C38.4,225.2 40.8,221.7 42.4,219.0C44.0,216.3 46.2,210.7 47.4,209.5C48.5,208.3 50.2,209.6 49.9,211.2C49.5,212.9 46.4,217.9 44.9,220.8C43.3,223.6 41.2,227.2 39.6,230.0C38.1,232.8 36.2,236.7 34.6,239.5C33.1,242.3 30.8,245.8 29.2,248.6C27.7,251.4 25.6,255.2 24.1,258.0C22.6,260.9 20.2,265.8 19.2,267.6C18.3,269.4 20.1,269.8 17.8,270.1Z','','raw'],
+  ['obliques','M104.5,230.1C104.3,230.2 103.5,230.1 103.0,230.1C102.5,230.1 102.0,230.1 101.5,230.1C101.0,230.1 100.5,230.1 100.0,230.1C99.5,230.1 98.9,230.2 98.5,230.1C98.1,230.0 97.8,229.8 97.6,229.5C97.5,229.2 97.6,228.4 97.6,228.0C97.6,227.6 97.6,226.9 97.6,226.5C97.6,226.1 97.6,225.4 97.6,225.0C97.6,224.6 97.6,223.9 97.6,223.5C97.6,223.1 97.6,222.4 97.6,222.0C97.6,221.6 97.6,220.9 97.6,220.5C97.6,220.1 97.6,219.4 97.6,219.0C97.6,218.6 97.6,217.8 97.6,217.5C97.7,217.2 97.8,216.9 97.9,217.0C98.0,217.1 98.2,217.7 98.4,218.0C98.5,218.3 98.6,218.8 98.8,219.1C98.9,219.5 99.0,219.9 99.1,220.2C99.3,220.6 99.5,220.9 99.6,221.2C99.8,221.6 100.0,221.9 100.1,222.2C100.3,222.6 100.5,222.9 100.6,223.2C100.8,223.6 101.0,224.0 101.1,224.2C101.3,224.5 101.6,224.8 101.8,225.1C101.9,225.4 102.1,225.8 102.2,226.1C102.4,226.4 102.7,226.7 102.9,227.0C103.0,227.3 103.2,227.7 103.4,228.0C103.5,228.3 103.8,228.6 104.0,228.9C104.2,229.1 104.5,229.6 104.6,229.8C104.7,229.9 104.7,230.1 104.5,230.1Z','','raw'],
+  ['obliques','M79.8,281.1C79.5,280.9 78.7,278.6 78.6,277.2C78.5,275.9 79.0,273.8 79.1,272.2C79.3,270.8 79.4,268.7 79.6,267.2C79.8,265.8 80.2,263.9 80.4,262.5C80.6,261.1 80.9,259.1 81.1,257.8C81.4,256.4 81.8,254.6 82.1,253.2C82.4,251.9 82.9,250.2 83.2,248.9C83.6,247.6 84.2,246.0 84.6,244.8C85.0,243.5 85.5,241.8 86.0,240.6C86.5,239.4 87.0,237.8 87.6,236.8C88.2,235.7 89.0,233.9 90.0,233.6C91.0,233.4 93.6,234.6 94.1,235.0C94.6,235.4 93.9,235.9 93.4,236.0C92.8,236.1 91.3,235.4 90.5,235.9C89.7,236.3 88.8,238.0 88.1,239.0C87.5,240.0 86.7,241.4 86.1,242.5C85.6,243.6 84.8,245.1 84.4,246.2C83.9,247.4 83.4,249.1 83.1,250.5C82.9,251.9 82.7,254.0 82.6,255.5C82.5,257.0 82.3,259.4 82.4,260.8C82.4,262.1 83.0,263.5 82.9,264.8C82.8,266.0 81.9,267.6 81.6,269.0C81.3,270.4 81.1,272.3 80.9,273.8C80.7,275.2 80.3,277.4 80.1,278.5C80.0,279.6 80.0,281.3 79.8,281.1Z','','raw'],
+  ['obliques','M146.2,260.1C144.5,260.4 138.6,260.1 135.2,260.1C131.9,260.1 127.5,260.1 124.2,260.1C121.0,260.1 115.5,261.1 113.4,260.0C111.2,258.9 110.9,254.8 109.9,252.5C108.8,250.2 107.7,246.1 106.5,244.9C105.3,243.7 102.8,243.4 101.6,244.5C100.4,245.6 99.0,251.8 98.4,252.2C97.8,252.7 97.7,249.7 97.6,247.2C97.5,244.8 96.4,238.3 97.6,236.2C98.9,234.2 103.8,233.3 106.0,233.6C108.2,233.9 110.7,238.1 112.2,238.4C113.8,238.6 114.2,235.9 116.1,235.2C118.0,234.6 122.5,234.1 125.0,234.1C127.5,234.1 130.4,235.2 133.0,235.1C135.6,235.1 140.6,232.9 142.5,233.6C144.4,234.3 144.6,239.5 146.0,239.6C147.4,239.7 149.2,235.2 151.6,234.2C154.0,233.3 160.4,232.1 162.0,233.6C163.6,235.2 162.1,241.4 162.1,244.5C162.1,247.6 162.3,254.2 161.9,254.5C161.4,254.8 160.1,248.1 159.0,246.4C157.9,244.7 155.6,242.6 154.4,243.2C153.1,243.9 151.7,248.3 150.6,250.5C149.5,252.7 147.8,256.6 147.1,258.0C146.5,259.4 148.0,259.8 146.2,260.1Z','C','raw'],
+  ['abs','M128.0,281.1C127.6,281.3 126.2,281.1 125.5,281.1C124.8,281.1 123.8,281.1 123.0,281.1C122.2,281.1 121.2,281.1 120.5,281.1C119.8,281.1 118.5,281.4 118.1,281.0C117.8,280.6 118.2,279.2 118.1,278.5C118.1,277.8 118.0,276.9 117.9,276.2C117.8,275.6 117.7,274.6 117.6,274.0C117.5,273.4 117.3,272.6 117.1,272.0C117.0,271.4 116.8,270.6 116.6,270.0C116.5,269.4 116.3,268.6 116.1,268.0C116.0,267.4 115.8,266.6 115.6,266.0C115.5,265.4 115.0,264.4 115.1,264.0C115.3,263.6 116.1,263.7 116.8,263.6C117.4,263.6 118.5,263.6 119.2,263.6C120.0,263.6 121.0,263.6 121.8,263.6C122.5,263.6 123.5,263.6 124.2,263.6C125.0,263.6 126.2,263.5 126.8,263.6C127.3,263.8 127.9,264.2 128.1,264.8C128.3,265.3 128.1,266.5 128.1,267.2C128.1,268.0 128.1,269.0 128.1,269.8C128.1,270.5 128.1,271.5 128.1,272.2C128.1,273.0 128.1,274.0 128.1,274.8C128.1,275.5 128.1,276.5 128.1,277.2C128.1,278.0 128.1,279.2 128.1,279.8C128.1,280.3 128.4,280.9 128.0,281.1Z','','raw'],
+  ['forearms','M12.0,279.1C11.8,279.1 11.3,278.8 11.0,278.6C10.7,278.5 10.4,278.2 10.1,278.0C9.8,277.8 9.4,277.7 9.1,277.5C8.8,277.3 8.5,277.0 8.2,276.9C8.0,276.7 7.5,276.5 7.2,276.4C7.0,276.2 6.5,276.0 6.2,275.9C6.0,275.7 5.6,275.4 5.4,275.2C5.1,275.1 4.8,274.8 4.5,274.6C4.2,274.5 3.7,274.3 3.5,274.1C3.3,274.0 3.1,273.7 3.2,273.6C3.4,273.6 4.3,273.6 4.8,273.6C5.2,273.6 5.8,273.6 6.2,273.6C6.7,273.6 7.3,273.6 7.8,273.6C8.2,273.6 8.8,273.6 9.2,273.6C9.7,273.6 10.3,273.6 10.8,273.6C11.2,273.6 11.8,273.6 12.2,273.6C12.7,273.6 13.3,273.6 13.8,273.6C14.2,273.6 15.0,273.5 15.2,273.6C15.5,273.7 15.2,274.0 15.1,274.2C15.0,274.5 14.8,275.0 14.6,275.2C14.5,275.5 14.2,275.8 14.0,276.1C13.8,276.4 13.7,276.8 13.5,277.1C13.3,277.4 13.1,277.7 12.9,278.0C12.7,278.3 12.4,278.7 12.2,278.9C12.1,279.0 12.2,279.2 12.0,279.1Z','','raw'],
+  ['abductors','M84.5,358.1C84.0,358.3 81.3,356.8 80.6,355.5C80.0,354.2 80.3,351.3 80.1,349.5C80.0,347.7 79.7,345.3 79.6,343.5C79.5,341.7 79.5,339.1 79.4,337.2C79.3,335.4 79.2,332.8 79.1,331.0C79.0,329.2 78.7,326.9 78.6,325.0C78.5,323.1 78.5,320.5 78.5,318.6C78.5,316.7 78.4,314.1 78.4,312.2C78.3,310.4 78.2,307.9 78.1,306.0C78.1,304.1 78.1,301.4 78.1,299.5C78.1,297.6 78.1,294.9 78.1,293.0C78.1,291.1 77.9,287.3 78.1,286.5C78.3,285.7 79.4,286.6 79.6,287.8C79.8,288.9 79.4,292.1 79.4,294.0C79.3,295.9 79.3,298.6 79.4,300.5C79.4,302.4 79.6,304.8 79.6,306.8C79.7,308.7 79.5,311.4 79.6,313.2C79.7,315.1 80.0,317.4 80.1,319.2C80.2,321.1 80.3,323.7 80.4,325.5C80.5,327.3 80.7,329.7 80.9,331.5C81.1,333.3 81.4,335.5 81.6,337.2C81.8,339.0 82.2,341.3 82.4,343.0C82.6,344.7 82.9,347.0 83.1,348.8C83.3,350.5 83.7,353.1 83.9,354.5C84.1,355.9 85.0,358.0 84.5,358.1Z','','raw'],
+  ['adductors','M121.8,298.1C121.5,298.2 120.7,298.1 120.2,298.1C119.8,298.1 119.2,298.1 118.8,298.1C118.3,298.1 117.5,298.3 117.2,298.1C117.0,298.0 117.4,297.4 117.4,297.0C117.4,296.6 117.3,295.9 117.4,295.5C117.4,295.1 117.6,294.7 117.6,294.2C117.7,293.8 117.6,293.2 117.6,292.8C117.6,292.3 117.7,291.8 117.8,291.4C117.8,291.0 117.9,290.4 117.9,290.0C117.9,289.6 117.9,288.9 117.9,288.5C117.9,288.1 117.8,287.4 117.9,287.0C117.9,286.6 118.0,286.1 118.1,285.8C118.2,285.4 118.2,284.8 118.5,284.6C118.8,284.5 119.6,284.6 120.0,284.6C120.4,284.6 121.2,284.5 121.4,284.8C121.6,285.0 121.3,285.8 121.4,286.2C121.4,286.7 121.6,287.1 121.6,287.5C121.7,287.9 121.6,288.6 121.6,289.0C121.6,289.4 121.6,290.1 121.6,290.5C121.6,290.9 121.6,291.6 121.6,292.0C121.6,292.4 121.6,293.1 121.6,293.5C121.7,293.9 121.8,294.3 121.9,294.8C121.9,295.2 121.9,295.8 121.9,296.2C121.9,296.7 121.9,297.5 121.9,297.8C121.9,298.0 122.0,298.1 121.8,298.1Z','','raw'],
+  ['adductors','M122.5,358.1C122.1,357.8 120.3,356.8 119.9,355.8C119.4,354.7 119.7,352.4 119.6,351.0C119.5,349.6 119.5,347.7 119.4,346.2C119.3,344.8 119.2,342.9 119.1,341.5C119.0,340.1 118.8,338.4 118.6,337.0C118.5,335.6 118.3,333.9 118.1,332.5C118.0,331.1 117.7,329.4 117.6,328.0C117.5,326.6 117.4,324.7 117.4,323.2C117.3,321.8 117.4,319.7 117.4,318.2C117.3,316.8 117.2,314.9 117.1,313.5C117.0,312.1 117.0,310.2 116.9,308.8C116.8,307.3 116.3,305.1 116.6,304.0C117.0,302.9 118.4,301.7 119.2,301.6C120.1,301.6 121.7,302.7 122.1,303.8C122.6,304.8 122.3,307.1 122.4,308.5C122.5,309.9 122.6,311.8 122.6,313.2C122.7,314.7 122.6,316.8 122.6,318.2C122.7,319.7 122.8,321.5 122.9,323.0C122.9,324.5 122.9,326.5 122.9,328.0C122.9,329.5 122.9,331.5 122.9,333.0C122.9,334.5 122.9,336.5 122.9,338.0C122.9,339.5 122.9,341.5 122.9,343.0C122.9,344.5 122.9,346.5 122.9,348.0C122.9,349.5 122.9,351.5 122.9,353.0C122.8,354.5 122.7,357.0 122.6,357.8C122.6,358.5 122.9,358.4 122.5,358.1Z','','raw'],
+  ['quads','M90.0,411.9C89.8,411.9 89.3,409.3 89.0,408.1C88.7,407.0 88.4,405.4 88.1,404.2C87.8,403.1 87.4,401.7 87.1,400.5C86.9,399.3 86.6,397.7 86.4,396.5C86.2,395.3 85.8,393.7 85.6,392.5C85.4,391.3 85.1,389.7 84.9,388.5C84.7,387.3 84.3,385.7 84.1,384.5C83.9,383.3 83.8,381.5 83.6,380.2C83.5,379.0 83.2,377.4 83.0,376.1C82.8,374.9 82.5,373.3 82.4,372.0C82.2,370.7 82.0,369.0 81.9,367.8C81.7,366.5 81.0,364.4 81.4,363.5C81.7,362.6 83.6,361.4 84.2,361.6C84.9,361.8 85.5,363.7 85.9,364.8C86.3,365.8 86.4,367.6 86.9,368.5C87.4,369.4 88.6,370.1 89.1,371.0C89.6,371.9 90.0,373.5 90.1,374.8C90.3,376.0 90.1,378.1 90.1,379.5C90.1,380.9 90.1,382.8 90.1,384.2C90.1,385.7 90.1,387.6 90.1,389.0C90.1,390.4 90.1,392.3 90.1,393.8C90.1,395.2 90.1,397.1 90.1,398.5C90.1,399.9 90.1,401.8 90.1,403.2C90.1,404.7 90.1,406.7 90.1,408.0C90.1,409.3 90.2,411.9 90.0,411.9Z','','raw'],
+  ['quads','M110.0,416.1C108.9,416.5 104.9,416.1 102.8,416.1C100.6,416.1 96.9,416.9 95.5,416.1C94.1,415.3 93.9,412.6 93.6,410.8C93.3,408.9 93.6,405.7 93.6,403.5C93.6,401.3 93.6,398.4 93.6,396.2C93.6,394.1 93.6,391.2 93.6,389.0C93.6,386.8 93.6,383.9 93.6,381.8C93.6,379.6 93.3,376.4 93.6,374.5C93.9,372.6 95.1,370.5 95.6,369.2C96.2,368.0 97.0,365.5 97.4,366.0C97.8,366.5 97.9,370.6 98.1,372.5C98.4,374.4 98.8,376.9 99.1,378.8C99.4,380.6 99.8,383.2 100.1,385.0C100.5,386.8 101.0,389.3 101.4,391.0C101.8,392.7 102.5,394.6 102.6,396.5C102.8,398.4 102.5,401.4 102.4,403.5C102.3,405.6 101.8,408.8 102.1,410.5C102.5,412.2 104.2,415.4 104.8,415.1C105.3,414.9 105.7,411.0 105.9,409.0C106.1,407.0 105.9,403.9 106.1,402.0C106.4,400.1 106.9,396.5 107.5,396.1C108.1,395.7 109.7,397.7 110.1,399.2C110.5,400.8 110.1,404.3 110.1,406.5C110.1,408.7 110.1,412.3 110.1,413.8C110.1,415.2 111.1,415.8 110.0,416.1Z','','raw'],
+  ['adductors','M120.5,416.1C119.7,416.5 116.3,416.7 115.2,416.1C114.2,415.6 113.9,413.8 113.6,412.5C113.4,411.2 113.6,408.8 113.6,407.2C113.6,405.7 113.6,403.6 113.6,402.0C113.6,400.4 113.6,398.3 113.6,396.8C113.6,395.2 113.3,392.8 113.6,391.5C113.9,390.2 115.2,389.4 115.8,388.4C116.3,387.4 116.9,385.9 117.4,384.8C117.8,383.6 118.3,382.0 118.6,380.8C118.9,379.5 119.2,377.7 119.4,376.2C119.5,374.8 119.5,372.8 119.6,371.2C119.7,369.8 119.7,367.7 119.9,366.2C120.0,364.8 120.1,361.9 120.5,361.6C120.9,361.4 122.3,363.5 122.6,364.8C122.9,366.0 122.5,368.2 122.4,369.8C122.3,371.2 122.2,373.2 122.1,374.8C122.0,376.2 122.0,378.3 121.9,379.8C121.8,381.2 121.5,383.0 121.4,384.5C121.3,386.0 121.2,388.0 121.1,389.5C121.0,391.0 120.8,392.8 120.6,394.2C120.5,395.7 120.3,397.6 120.1,399.0C120.0,400.4 119.6,402.3 119.6,403.8C119.6,405.2 120.0,407.0 120.1,408.5C120.2,410.0 120.3,412.4 120.4,413.5C120.4,414.6 121.3,415.7 120.5,416.1Z','','raw'],
+  ['calves','M120.2,518.1C117.1,518.2 101.5,519.3 99.6,518.0C97.7,516.7 105.6,512.9 107.6,509.2C109.6,505.6 112.1,499.1 112.9,493.8C113.7,488.4 113.1,479.4 112.9,473.5C112.7,467.6 112.0,459.8 111.4,454.2C110.7,448.7 110.1,440.5 108.4,436.5C106.6,432.5 100.6,426.3 99.6,427.8C98.7,429.2 101.3,440.6 101.9,446.2C102.4,451.9 103.2,459.6 103.4,465.5C103.6,471.4 103.6,481.8 103.4,485.8C103.1,489.7 102.1,494.0 101.6,492.0C101.2,490.0 100.7,478.4 100.4,472.5C100.1,466.6 100.1,458.3 99.6,452.5C99.2,446.7 98.5,437.3 97.4,434.0C96.2,430.7 93.2,428.4 91.9,430.5C90.5,432.6 88.9,447.7 88.4,447.8C87.9,447.8 87.2,435.2 88.6,431.0C90.1,426.8 93.5,421.3 98.0,419.6C102.5,417.9 115.3,416.9 118.8,419.6C122.2,422.4 120.9,432.2 121.1,438.0C121.4,443.8 120.5,452.1 120.4,458.0C120.3,463.9 120.5,471.1 120.6,477.0C120.7,482.9 121.1,491.2 121.1,497.2C121.1,503.3 120.8,514.4 120.6,517.5C120.5,520.6 123.4,518.0 120.2,518.1Z','','raw'],
+  ['calves','M96.0,516.1C95.9,516.0 95.8,515.0 95.6,514.5C95.5,514.0 95.3,513.5 95.1,513.0C95.0,512.5 94.7,512.0 94.6,511.5C94.5,511.0 94.5,510.2 94.4,509.8C94.3,509.3 94.0,508.7 93.9,508.2C93.8,507.8 93.7,507.0 93.6,506.5C93.5,506.0 93.2,505.5 93.1,505.0C93.0,504.5 93.0,503.7 92.9,503.2C92.8,502.8 92.5,502.2 92.4,501.8C92.3,501.3 92.2,500.5 92.1,500.0C92.0,499.5 92.0,498.8 91.9,498.2C91.8,497.7 91.5,497.0 91.5,496.6C91.5,496.2 91.5,495.7 91.6,495.8C91.7,495.8 92.0,496.8 92.1,497.2C92.3,497.7 92.5,498.3 92.6,498.8C92.8,499.2 93.0,499.8 93.1,500.2C93.3,500.7 93.6,501.2 93.8,501.6C93.9,502.0 94.2,502.6 94.4,503.0C94.6,503.4 94.8,504.0 95.0,504.4C95.2,504.8 95.6,505.2 95.8,505.6C95.9,506.1 96.1,506.7 96.1,507.2C96.2,507.8 96.1,508.6 96.1,509.2C96.1,509.9 96.1,510.6 96.1,511.2C96.1,511.9 96.1,512.6 96.1,513.2C96.1,513.9 96.1,514.8 96.1,515.2C96.1,515.7 96.1,516.2 96.0,516.1Z','','raw'],
+  ['calves','M119.5,528.1C119.1,528.3 117.9,528.1 117.2,528.1C116.6,528.1 115.7,528.1 115.0,528.1C114.3,528.1 113.4,528.1 112.8,528.1C112.1,528.1 111.2,528.1 110.5,528.1C109.8,528.1 108.9,528.1 108.2,528.1C107.6,528.1 106.7,528.1 106.0,528.1C105.3,528.1 104.4,528.1 103.8,528.1C103.1,528.1 102.1,528.2 101.5,528.1C100.9,528.0 100.2,527.8 99.9,527.5C99.5,527.2 99.3,526.5 99.1,526.0C98.9,525.5 98.8,524.8 98.6,524.2C98.5,523.7 98.0,523.0 98.0,522.6C98.0,522.2 98.1,521.8 98.5,521.6C98.9,521.5 100.1,521.6 100.8,521.6C101.4,521.6 102.3,521.6 103.0,521.6C103.7,521.6 104.6,521.6 105.2,521.6C105.9,521.6 106.8,521.6 107.5,521.6C108.2,521.6 109.1,521.6 109.8,521.6C110.4,521.6 111.3,521.6 112.0,521.6C112.7,521.6 113.6,521.6 114.2,521.6C114.9,521.6 115.8,521.6 116.5,521.6C117.2,521.6 118.2,521.5 118.8,521.6C119.3,521.8 119.9,522.0 120.1,522.5C120.3,523.0 120.0,524.0 120.0,524.6C120.0,525.3 120.0,526.2 119.9,526.8C119.8,527.3 119.9,527.9 119.5,528.1Z','','raw'],
+];
+const MUSC_BACK_FILL = [
+  ['traps','M43.5,176.1C43.5,174.7 43.6,168.0 44.0,164.4C44.4,160.7 45.6,155.5 46.4,151.8C47.1,148.0 48.2,143.1 49.1,139.5C50.0,135.9 51.4,131.2 52.4,127.8C53.4,124.3 54.5,119.4 55.9,116.2C57.2,113.1 59.4,109.2 61.4,106.8C63.4,104.3 66.8,101.6 69.4,99.8C72.0,97.9 75.7,95.6 78.8,94.1C81.8,92.7 86.3,91.2 89.8,90.1C93.2,89.0 97.9,87.8 101.5,86.9C105.1,86.0 110.7,84.6 113.8,84.1C116.8,83.7 122.0,83.1 121.9,84.0C121.8,84.9 116.0,88.7 113.2,90.4C110.5,92.1 106.5,94.2 103.2,95.4C100.0,96.6 95.2,97.4 91.8,98.4C88.3,99.4 83.4,100.7 80.5,102.1C77.6,103.6 74.6,106.3 72.1,108.0C69.7,109.7 66.2,111.1 64.0,113.1C61.8,115.1 58.9,118.5 57.1,121.2C55.4,124.0 53.0,128.1 52.4,131.5C51.7,134.9 52.6,141.1 52.6,144.2C52.7,147.4 53.5,150.1 52.6,152.8C51.8,155.4 48.4,159.1 47.1,162.2C45.8,165.4 44.4,171.9 43.9,174.0C43.3,176.1 43.5,177.6 43.5,176.1Z','','raw'],
+  ['rear_delt','M73.2,148.1C73.1,147.7 72.1,146.2 72.2,145.1C72.4,144.0 73.9,142.1 74.2,140.9C74.6,139.7 74.9,137.6 74.5,137.1C74.1,136.7 72.5,137.5 71.5,137.9C70.5,138.2 68.0,139.8 67.5,139.6C67.0,139.4 67.2,137.3 68.0,136.6C68.8,135.9 71.6,135.8 72.8,135.1C73.9,134.4 75.0,133.1 75.9,132.0C76.7,130.9 77.5,129.3 78.2,128.1C79.0,127.0 79.9,125.4 80.6,124.2C81.4,123.1 82.5,121.8 83.4,120.8C84.2,119.7 85.4,117.9 86.4,117.5C87.3,117.1 88.6,117.7 89.8,118.1C90.9,118.6 93.1,119.2 93.8,120.4C94.4,121.6 94.5,124.8 94.1,126.2C93.8,127.7 92.4,128.9 91.5,129.9C90.6,130.9 88.9,133.2 88.4,133.0C87.8,132.8 88.1,129.0 87.8,128.6C87.4,128.2 86.6,129.3 86.1,130.2C85.7,131.2 85.6,133.7 84.8,134.6C83.9,135.5 81.3,135.5 80.2,136.4C79.2,137.2 78.6,139.1 78.0,140.4C77.4,141.6 76.8,143.6 76.1,144.8C75.4,145.9 73.7,147.6 73.2,148.1C72.8,148.6 73.4,148.6 73.2,148.1Z','','raw'],
+  ['traps','M116.2,136.6C116.2,136.5 116.0,136.0 115.9,135.8C115.8,135.5 115.7,135.1 115.6,134.8C115.5,134.4 115.4,134.1 115.4,133.8C115.3,133.4 115.3,132.9 115.2,132.6C115.2,132.3 115.0,131.8 115.0,131.6C115.0,131.4 115.3,131.2 115.5,131.1C115.7,131.1 116.2,131.3 116.5,131.4C116.8,131.4 117.4,131.3 117.8,131.4C118.1,131.4 118.4,131.6 118.8,131.6C119.1,131.7 119.7,131.6 120.0,131.6C120.3,131.7 120.7,131.8 121.0,131.9C121.3,131.9 121.9,131.9 122.2,131.9C122.6,131.9 123.1,131.9 123.5,131.9C123.9,131.9 124.3,132.0 124.6,132.0C125.0,132.0 125.5,132.1 125.8,132.1C126.0,132.2 126.1,132.3 126.0,132.4C125.9,132.4 125.2,132.4 124.9,132.5C124.6,132.6 124.2,132.7 123.9,132.8C123.6,132.8 123.2,132.9 122.9,133.0C122.6,133.1 122.3,133.3 122.0,133.4C121.7,133.5 121.3,133.5 121.0,133.6C120.7,133.7 120.5,134.0 120.2,134.1C120.0,134.3 119.6,134.4 119.4,134.5C119.1,134.6 118.7,134.7 118.5,134.9C118.3,135.0 118.0,135.2 117.8,135.4C117.5,135.5 117.2,135.7 117.0,135.9C116.8,136.0 116.5,136.4 116.4,136.5C116.3,136.6 116.3,136.7 116.2,136.6Z','C','raw'],
+  ['triceps','M66.5,168.1C66.3,168.1 65.2,168.2 65.0,167.9C64.8,167.6 65.3,166.8 65.4,166.2C65.5,165.7 65.5,165.0 65.6,164.5C65.7,164.0 66.0,163.5 66.1,163.0C66.3,162.5 66.4,161.9 66.5,161.4C66.6,160.9 66.7,160.2 66.9,159.8C67.0,159.3 67.2,158.7 67.4,158.2C67.5,157.8 67.7,157.2 67.9,156.8C68.0,156.3 68.2,155.7 68.4,155.2C68.5,154.8 68.7,154.2 68.9,153.8C69.0,153.3 69.1,152.6 69.4,152.2C69.7,151.9 70.4,151.6 70.8,151.6C71.1,151.6 71.8,152.1 72.0,152.4C72.2,152.7 72.4,153.1 72.4,153.5C72.3,153.9 71.9,154.5 71.8,154.9C71.6,155.3 71.3,155.8 71.1,156.2C71.0,156.7 70.8,157.3 70.6,157.8C70.5,158.2 70.2,158.7 70.0,159.1C69.8,159.5 69.5,160.1 69.4,160.5C69.2,160.9 69.0,161.6 68.9,162.0C68.7,162.4 68.5,163.1 68.4,163.5C68.2,163.9 67.9,164.5 67.8,164.9C67.6,165.3 67.3,165.8 67.1,166.2C67.0,166.7 66.7,167.5 66.6,167.8C66.5,168.0 66.7,168.1 66.5,168.1Z','','raw'],
+  ['triceps','M41.0,203.1C40.3,203.3 38.5,203.1 37.5,203.1C36.5,203.1 34.8,203.2 34.0,203.1C33.2,203.0 32.1,202.8 32.0,202.4C31.9,201.9 33.0,200.9 33.4,200.2C33.8,199.6 34.2,198.6 34.6,198.0C35.0,197.4 35.7,196.6 36.1,196.0C36.6,195.4 37.1,194.5 37.5,193.9C37.9,193.2 38.4,192.4 38.9,191.8C39.3,191.1 40.1,190.5 40.4,189.8C40.7,189.0 40.8,187.7 40.9,186.8C41.0,185.8 41.0,184.4 41.1,183.5C41.2,182.6 41.2,181.0 41.6,180.5C42.0,180.0 43.3,179.8 43.6,180.2C44.0,180.7 43.8,182.5 43.9,183.5C44.0,184.5 44.1,185.7 44.2,186.6C44.4,187.5 44.6,188.7 44.9,189.5C45.1,190.3 45.5,191.3 45.9,192.0C46.3,192.7 47.0,193.5 47.5,193.9C48.0,194.2 49.1,194.1 49.5,194.4C49.9,194.7 50.5,195.4 50.2,195.9C50.0,196.3 48.7,196.8 48.1,197.2C47.5,197.7 46.7,198.3 46.1,198.8C45.5,199.2 44.7,199.8 44.1,200.2C43.5,200.7 42.7,201.4 42.2,201.9C41.8,202.3 41.7,202.9 41.0,203.1Z','','raw'],
+  ['triceps','M57.0,196.4C56.8,196.4 56.1,196.0 55.8,195.9C55.4,195.7 54.9,195.5 54.5,195.4C54.1,195.2 53.6,195.0 53.2,194.9C52.9,194.7 52.4,194.5 52.0,194.4C51.6,194.2 51.1,194.0 50.8,193.9C50.4,193.7 49.7,193.6 49.5,193.4C49.3,193.2 49.2,192.9 49.2,192.6C49.3,192.3 49.7,191.8 49.9,191.5C50.1,191.2 50.3,190.7 50.5,190.4C50.7,190.0 50.9,189.6 51.1,189.2C51.3,188.9 51.6,188.5 51.8,188.1C51.9,187.8 52.2,187.3 52.4,187.0C52.6,186.7 52.8,186.2 53.0,185.9C53.2,185.6 53.5,184.9 53.6,185.0C53.8,185.1 53.8,186.1 53.9,186.5C54.0,186.9 54.0,187.6 54.1,188.0C54.2,188.4 54.3,189.1 54.4,189.5C54.5,189.9 54.7,190.4 54.9,190.8C55.0,191.1 55.1,191.8 55.2,192.1C55.4,192.5 55.7,192.9 56.0,193.1C56.3,193.4 56.7,193.9 57.0,193.9C57.3,193.9 57.8,193.1 57.9,193.2C58.0,193.4 57.7,194.3 57.6,194.8C57.5,195.2 57.2,195.8 57.1,196.0C57.0,196.2 57.2,196.4 57.0,196.4Z','','raw'],
+  ['forearms','M17.8,270.1C15.3,270.5 5.4,271.5 3.2,270.1C1.1,268.8 2.7,263.9 3.4,261.0C4.0,258.1 6.4,253.9 7.8,250.9C9.1,247.9 10.9,243.9 12.2,240.9C13.6,237.9 15.3,233.7 16.6,230.8C18.0,227.8 19.9,223.9 21.4,221.0C22.9,218.1 24.3,213.8 26.5,211.6C28.7,209.5 35.3,206.3 36.0,206.6C36.7,207.0 32.7,211.5 31.0,213.9C29.3,216.2 26.5,219.6 24.9,222.2C23.2,224.9 21.0,228.5 19.9,231.8C18.8,235.0 17.0,242.2 17.6,244.0C18.2,245.8 21.9,245.2 23.9,244.0C25.8,242.8 28.7,238.7 30.6,236.2C32.5,233.8 34.9,230.3 36.6,227.8C38.4,225.2 40.8,221.7 42.4,219.0C44.0,216.3 46.2,210.7 47.4,209.5C48.5,208.3 50.2,209.6 49.9,211.2C49.5,212.9 46.4,217.9 44.9,220.8C43.3,223.6 41.2,227.2 39.6,230.0C38.1,232.8 36.2,236.7 34.6,239.5C33.1,242.3 30.8,245.8 29.2,248.6C27.7,251.4 25.6,255.2 24.1,258.0C22.6,260.9 20.2,265.8 19.2,267.6C18.3,269.4 20.1,269.8 17.8,270.1Z','','raw'],
+  ['upper_back','M131.5,230.1C131.1,230.4 129.8,230.3 129.2,230.1C128.7,230.0 128.3,229.5 128.1,229.0C128.0,228.5 128.1,227.4 128.1,226.8C128.1,226.1 128.1,225.2 128.1,224.5C128.1,223.8 128.1,222.9 128.1,222.2C128.1,221.6 128.1,220.7 128.1,220.0C128.1,219.3 128.1,218.4 128.1,217.8C128.1,217.1 128.2,216.1 128.1,215.5C128.1,214.9 128.0,214.1 127.9,213.5C127.8,212.9 127.7,212.1 127.6,211.5C127.5,210.9 127.4,210.1 127.4,209.5C127.3,208.9 126.9,207.9 127.2,207.6C127.6,207.3 128.8,207.6 129.5,207.6C130.2,207.6 131.3,207.5 131.8,207.6C132.2,207.8 132.3,208.3 132.4,208.8C132.4,209.2 132.2,210.1 132.1,210.8C132.1,211.4 132.2,212.4 132.1,213.0C132.1,213.6 131.9,214.4 131.9,215.0C131.8,215.6 131.7,216.4 131.6,217.0C131.6,217.6 131.6,218.6 131.6,219.2C131.6,219.9 131.6,220.8 131.6,221.5C131.6,222.2 131.6,223.1 131.6,223.8C131.6,224.4 131.6,225.3 131.6,226.0C131.6,226.7 131.6,227.6 131.6,228.2C131.6,228.9 131.9,229.8 131.5,230.1Z','C','raw'],
+  ['lats','M107.8,230.1C107.3,230.2 105.8,230.1 105.0,230.1C104.2,230.1 103.1,230.1 102.2,230.1C101.4,230.1 100.3,230.1 99.5,230.1C98.7,230.1 97.6,230.1 96.8,230.1C95.9,230.1 94.8,230.1 94.0,230.1C93.2,230.1 91.7,230.4 91.4,230.0C91.0,229.6 91.6,228.3 91.8,227.6C91.9,226.9 92.0,225.9 92.1,225.2C92.3,224.6 92.5,223.7 92.6,223.0C92.8,222.3 93.0,221.4 93.1,220.8C93.3,220.1 93.5,219.2 93.6,218.5C93.8,217.8 94.1,217.0 94.2,216.4C94.4,215.7 94.7,214.5 94.9,214.2C95.0,214.0 95.2,214.4 95.4,214.8C95.6,215.1 96.1,216.0 96.4,216.5C96.7,217.0 97.1,217.7 97.4,218.2C97.7,218.8 98.1,219.4 98.5,219.9C98.9,220.3 99.4,220.9 99.8,221.4C100.1,221.8 100.6,222.4 101.0,222.9C101.4,223.3 101.9,223.9 102.2,224.4C102.6,224.8 103.1,225.4 103.5,225.9C103.9,226.3 104.5,226.8 104.9,227.2C105.3,227.7 105.8,228.2 106.2,228.6C106.7,229.0 107.5,229.7 107.8,229.9C108.0,230.1 108.2,230.1 107.8,230.1Z','','raw'],
+  ['obliques','M84.8,281.1C83.8,281.8 79.3,281.9 78.4,281.0C77.5,280.1 78.7,276.8 78.9,275.0C79.0,273.2 79.2,270.8 79.4,269.0C79.6,267.2 79.9,264.9 80.1,263.2C80.4,261.6 80.8,259.4 81.1,257.8C81.5,256.1 82.0,254.1 82.4,252.5C82.8,250.9 83.2,248.8 83.6,247.2C84.1,245.8 84.8,243.9 85.4,242.5C85.9,241.1 86.6,239.2 87.2,237.9C87.9,236.5 88.2,234.3 89.5,233.6C90.8,233.0 94.7,233.0 96.0,233.6C97.3,234.3 97.8,236.4 98.1,238.0C98.4,239.6 98.1,242.6 98.1,244.5C98.1,246.4 98.6,249.9 98.0,250.9C97.4,251.8 95.2,250.5 94.0,250.9C92.8,251.3 91.3,252.7 90.2,253.6C89.2,254.5 88.0,255.9 87.1,257.0C86.3,258.1 85.3,259.7 84.6,261.0C84.0,262.3 82.8,264.7 82.9,265.8C82.9,266.8 84.1,268.2 84.9,268.0C85.6,267.8 87.6,264.9 88.0,264.6C88.4,264.3 88.1,265.2 87.8,266.1C87.4,267.0 86.3,269.2 85.9,270.8C85.4,272.3 85.0,274.7 84.9,276.2C84.7,277.8 85.7,280.4 84.8,281.1Z','','raw'],
+  ['lower_back','M138.2,260.1C136.6,260.1 130.2,260.7 127.5,260.1C124.8,259.6 122.7,257.4 120.4,256.5C118.0,255.6 114.7,254.4 112.0,254.1C109.3,253.9 104.1,256.2 102.5,254.9C100.9,253.6 101.8,248.5 101.6,245.5C101.5,242.5 100.2,236.5 101.6,234.8C103.1,233.0 109.3,232.7 111.2,233.6C113.2,234.6 113.4,239.0 114.6,241.0C115.8,243.0 117.6,245.5 119.1,247.2C120.6,249.0 123.3,252.1 124.8,252.4C126.2,252.7 128.4,251.1 128.9,249.2C129.3,247.4 127.2,242.0 127.6,239.8C128.0,237.5 131.0,233.6 131.6,234.2C132.2,234.9 131.6,241.0 131.5,243.9C131.4,246.7 130.3,252.2 131.2,253.1C132.2,254.1 135.9,251.5 137.6,250.2C139.4,249.0 141.5,246.6 142.9,244.8C144.2,242.9 145.1,239.4 146.6,237.8C148.2,236.1 151.5,233.4 153.2,233.6C155.0,233.9 157.4,237.0 158.1,239.5C158.9,242.0 158.9,248.1 158.1,250.2C157.4,252.4 155.4,253.5 153.2,254.1C151.1,254.8 145.8,253.7 143.5,254.6C141.2,255.5 139.0,259.3 138.2,260.1C137.5,260.9 139.9,260.1 138.2,260.1Z','C','raw'],
+  ['lower_back','M128.0,281.1C127.7,281.2 126.6,281.1 126.0,281.1C125.4,281.1 124.6,281.1 124.0,281.1C123.4,281.1 122.3,281.4 122.0,281.1C121.7,280.8 121.9,279.8 121.9,279.2C121.9,278.7 122.0,277.9 122.0,277.4C122.0,276.8 122.1,276.1 122.1,275.5C122.1,274.9 122.1,274.1 122.1,273.5C122.1,272.9 122.2,272.1 122.1,271.5C122.1,270.9 121.9,270.3 121.9,269.8C121.8,269.2 121.9,268.3 121.9,267.8C121.8,267.2 121.7,266.6 121.6,266.0C121.6,265.4 121.4,264.4 121.6,264.0C121.9,263.6 122.7,263.7 123.2,263.6C123.8,263.6 124.7,263.6 125.2,263.6C125.8,263.6 126.8,263.5 127.2,263.6C127.7,263.8 128.0,264.3 128.1,264.8C128.3,265.2 128.1,266.1 128.1,266.8C128.1,267.4 128.1,268.1 128.1,268.8C128.1,269.4 128.1,270.1 128.1,270.8C128.1,271.4 128.1,272.1 128.1,272.8C128.1,273.4 128.1,274.1 128.1,274.8C128.1,275.4 128.1,276.1 128.1,276.8C128.1,277.4 128.1,278.1 128.1,278.8C128.1,279.4 128.1,280.4 128.1,280.8C128.1,281.1 128.3,281.1 128.0,281.1Z','','raw'],
+  ['forearms','M12.0,279.1C11.8,279.1 11.3,278.8 11.0,278.6C10.7,278.5 10.4,278.2 10.1,278.0C9.8,277.8 9.4,277.7 9.1,277.5C8.8,277.3 8.5,277.0 8.2,276.9C8.0,276.7 7.5,276.5 7.2,276.4C7.0,276.2 6.5,276.0 6.2,275.9C6.0,275.7 5.6,275.4 5.4,275.2C5.1,275.1 4.8,274.8 4.5,274.6C4.2,274.5 3.7,274.3 3.5,274.1C3.3,274.0 3.1,273.7 3.2,273.6C3.4,273.6 4.3,273.6 4.8,273.6C5.2,273.6 5.8,273.6 6.2,273.6C6.7,273.6 7.3,273.6 7.8,273.6C8.2,273.6 8.8,273.6 9.2,273.6C9.7,273.6 10.3,273.6 10.8,273.6C11.2,273.6 11.8,273.6 12.2,273.6C12.7,273.6 13.3,273.6 13.8,273.6C14.2,273.6 15.0,273.5 15.2,273.6C15.5,273.7 15.2,274.0 15.1,274.2C15.0,274.5 14.8,275.0 14.6,275.2C14.5,275.5 14.2,275.8 14.0,276.1C13.8,276.4 13.7,276.8 13.5,277.1C13.3,277.4 13.1,277.7 12.9,278.0C12.7,278.3 12.4,278.7 12.2,278.9C12.1,279.0 12.2,279.2 12.0,279.1Z','','raw'],
+  ['glutes','M84.2,358.1C83.7,357.9 81.3,355.7 80.6,354.0C80.0,352.3 80.1,349.1 79.9,347.0C79.7,344.9 79.5,342.0 79.4,339.8C79.3,337.5 79.2,334.5 79.1,332.2C79.0,330.0 78.7,327.2 78.6,325.0C78.5,322.8 78.4,319.8 78.4,317.5C78.3,315.2 78.4,312.0 78.4,309.8C78.3,307.5 78.2,304.5 78.1,302.2C78.1,300.0 78.1,296.8 78.1,294.5C78.1,292.2 77.3,288.2 78.1,286.8C79.0,285.3 82.5,284.2 83.8,284.6C85.0,285.0 85.9,287.9 86.6,289.5C87.4,291.1 88.6,294.0 88.6,295.2C88.6,296.5 86.7,297.2 86.8,298.1C86.8,299.1 87.6,300.8 88.8,301.6C89.9,302.5 93.7,302.7 94.2,303.9C94.8,305.1 93.1,308.0 92.6,309.8C92.1,311.5 91.4,313.9 90.9,315.8C90.4,317.6 89.8,320.1 89.4,322.0C88.9,323.9 88.4,326.4 88.0,328.4C87.6,330.3 87.2,333.0 86.9,335.0C86.6,337.0 86.1,339.7 85.9,341.8C85.6,343.8 85.3,346.6 85.1,348.8C84.9,350.9 84.5,354.3 84.4,355.8C84.2,357.2 84.8,358.4 84.2,358.1Z','','raw'],
+  ['glutes','M122.5,358.1C122.0,357.8 120.1,356.8 119.6,355.8C119.1,354.7 119.2,352.5 119.1,351.0C119.0,349.5 119.0,347.5 118.9,346.0C118.8,344.5 118.5,342.7 118.4,341.2C118.2,339.8 118.1,337.9 117.9,336.5C117.7,335.1 117.3,333.4 117.1,332.0C116.9,330.6 116.8,328.6 116.6,327.2C116.4,325.9 116.1,324.1 115.9,322.8C115.7,321.4 115.4,319.6 115.1,318.2C114.9,316.9 114.3,315.4 114.1,314.0C113.9,312.6 113.4,310.4 113.6,309.2C113.8,308.1 115.0,307.0 115.6,306.0C116.2,305.0 116.6,303.3 117.5,302.6C118.4,302.0 121.0,301.1 121.8,301.6C122.5,302.2 122.3,304.8 122.4,306.2C122.5,307.7 122.3,310.0 122.4,311.5C122.4,313.0 122.5,315.0 122.6,316.5C122.7,318.0 122.8,320.0 122.9,321.5C122.9,323.0 122.9,325.2 122.9,326.8C122.9,328.3 122.9,330.4 122.9,332.0C122.9,333.6 122.9,335.7 122.9,337.2C122.9,338.8 122.9,340.9 122.9,342.5C122.9,344.1 122.9,346.2 122.9,347.8C122.9,349.3 122.9,351.5 122.9,353.0C122.8,354.5 122.7,357.2 122.6,358.0C122.6,358.8 123.0,358.5 122.5,358.1Z','','raw'],
+  ['hamstrings','M104.0,358.1C103.4,358.0 100.7,358.1 100.1,357.2C99.5,356.4 100.0,354.1 99.9,352.8C99.8,351.4 99.7,349.6 99.6,348.2C99.6,346.9 99.7,344.9 99.6,343.5C99.6,342.1 99.5,340.4 99.4,339.0C99.3,337.6 99.2,335.9 99.1,334.5C99.1,333.1 99.2,331.1 99.1,329.8C99.1,328.4 98.9,326.6 98.9,325.2C98.8,323.9 98.9,321.9 98.9,320.5C98.8,319.1 98.7,317.4 98.6,316.0C98.5,314.6 98.3,312.6 98.4,311.5C98.4,310.4 98.4,308.6 99.0,308.4C99.6,308.1 101.4,309.3 102.1,310.0C102.9,310.7 103.8,311.7 104.1,312.8C104.5,313.8 104.5,315.7 104.6,317.0C104.8,318.3 105.0,319.9 105.1,321.2C105.2,322.6 105.2,324.6 105.1,326.0C105.1,327.4 104.9,329.1 104.9,330.5C104.8,331.9 104.9,333.9 104.9,335.2C104.8,336.6 104.7,338.4 104.6,339.8C104.6,341.1 104.7,343.1 104.6,344.5C104.6,345.9 104.5,347.6 104.4,349.0C104.3,350.4 104.2,352.1 104.1,353.5C104.1,354.9 104.0,357.4 104.0,358.1C104.0,358.8 104.6,358.3 104.0,358.1Z','','raw'],
+  ['hamstrings','M102.5,402.1C102.4,401.8 102.2,400.0 102.1,399.0C102.0,398.0 102.0,396.6 102.0,395.6C102.0,394.6 101.9,393.2 101.9,392.2C101.8,391.3 101.7,390.0 101.6,389.0C101.5,388.0 101.5,386.7 101.4,385.8C101.3,384.8 101.2,383.5 101.1,382.5C101.1,381.5 101.2,380.0 101.1,379.0C101.1,378.0 101.0,376.7 100.9,375.8C100.8,374.8 100.7,373.5 100.6,372.5C100.6,371.5 100.7,370.0 100.6,369.0C100.6,368.0 100.5,366.7 100.4,365.8C100.3,364.8 99.8,363.1 100.1,362.5C100.5,361.9 102.2,361.4 102.8,361.6C103.3,361.9 103.7,363.2 103.9,364.0C104.0,364.8 103.7,366.2 103.6,367.2C103.6,368.3 103.7,369.7 103.6,370.8C103.6,371.8 103.4,373.0 103.4,374.0C103.3,375.0 103.4,376.5 103.4,377.5C103.3,378.5 103.2,379.7 103.1,380.8C103.1,381.8 103.1,383.2 103.1,384.2C103.1,385.3 103.0,386.6 103.0,387.6C103.0,388.6 102.9,390.0 102.9,391.0C102.9,392.0 102.9,393.5 102.9,394.5C102.8,395.5 102.7,396.7 102.6,397.8C102.6,398.8 102.6,400.6 102.6,401.2C102.6,401.9 102.6,402.5 102.5,402.1Z','','raw'],
+  ['hamstrings','M106.2,416.1C105.6,416.4 102.6,415.5 102.5,415.1C102.4,414.7 105.2,414.4 105.8,413.4C106.3,412.4 105.8,409.9 105.9,408.5C105.9,407.1 106.1,405.2 106.1,403.8C106.2,402.3 106.2,400.3 106.2,398.9C106.3,397.4 106.3,395.4 106.4,394.0C106.4,392.6 106.5,390.7 106.6,389.2C106.7,387.8 106.8,386.0 106.9,384.5C106.9,383.0 106.8,381.0 106.9,379.5C106.9,378.0 107.0,376.2 107.1,374.8C107.2,373.3 107.3,371.5 107.4,370.0C107.4,368.5 107.2,366.2 107.4,365.0C107.6,363.8 108.4,361.7 108.6,362.0C108.8,362.3 108.8,365.3 108.9,366.8C109.0,368.2 109.0,370.1 109.1,371.5C109.2,372.9 109.3,374.8 109.4,376.2C109.5,377.7 109.6,379.5 109.6,381.0C109.7,382.5 109.7,384.5 109.6,386.0C109.6,387.5 109.5,389.3 109.4,390.8C109.3,392.2 109.2,394.1 109.1,395.5C109.0,396.9 109.0,398.9 108.9,400.2C108.8,401.6 108.6,403.4 108.4,404.8C108.2,406.1 107.8,407.7 107.6,409.0C107.4,410.3 107.1,412.2 106.9,413.2C106.7,414.3 106.9,415.8 106.2,416.1Z','','raw'],
+  ['adductors','M121.0,390.1C121.0,390.1 120.9,388.5 120.9,387.8C120.9,387.0 120.9,386.0 120.9,385.2C120.9,384.5 120.8,383.6 120.8,382.9C120.7,382.2 120.6,381.2 120.6,380.5C120.6,379.8 120.6,378.8 120.6,378.0C120.6,377.2 120.6,376.2 120.6,375.5C120.6,374.8 120.7,373.7 120.6,373.0C120.6,372.3 120.4,371.5 120.4,370.8C120.3,370.0 120.4,369.0 120.4,368.2C120.3,367.5 120.2,366.7 120.1,366.0C120.1,365.3 120.0,364.2 120.1,363.5C120.2,362.8 120.4,361.8 120.8,361.6C121.1,361.4 122.3,361.8 122.6,362.2C122.9,362.7 122.7,364.0 122.6,364.8C122.6,365.5 122.4,366.3 122.4,367.0C122.3,367.7 122.4,368.8 122.4,369.5C122.3,370.2 122.2,371.0 122.1,371.8C122.1,372.5 122.2,373.5 122.1,374.2C122.1,375.0 121.9,375.8 121.9,376.5C121.8,377.2 121.9,378.3 121.9,379.0C121.8,379.7 121.7,380.5 121.6,381.2C121.6,382.0 121.7,383.0 121.6,383.8C121.6,384.5 121.5,385.3 121.4,386.0C121.3,386.7 121.2,387.6 121.1,388.2C121.1,388.9 121.0,390.2 121.0,390.1Z','','raw'],
+  ['calves','M120.2,518.1C117.1,518.1 100.7,516.9 99.6,515.5C98.5,514.1 110.7,512.9 113.0,508.6C115.3,504.4 114.8,493.7 114.9,487.2C114.9,480.8 114.0,471.8 113.2,465.6C112.5,459.4 111.1,449.4 109.6,446.0C108.1,442.6 103.9,440.6 103.4,443.2C102.8,445.9 105.6,457.3 106.1,463.8C106.6,470.2 107.1,479.7 106.6,486.0C106.1,492.3 103.5,503.1 102.9,505.5C102.3,507.9 102.6,506.0 102.6,502.2C102.6,498.5 103.1,487.2 102.9,480.8C102.6,474.3 101.7,465.7 100.9,459.5C100.1,453.3 99.2,441.1 97.6,439.5C96.1,437.9 92.0,446.7 90.6,448.5C89.2,450.3 88.4,454.4 88.1,451.5C87.9,448.6 87.7,432.8 88.9,429.0C90.0,425.2 93.5,427.5 95.9,426.5C98.3,425.5 102.1,421.8 104.8,422.1C107.4,422.5 110.9,428.2 113.4,428.8C115.8,429.3 120.0,423.0 121.1,426.0C122.2,429.0 121.0,442.3 120.9,449.0C120.7,455.7 120.1,463.9 120.1,470.5C120.2,477.1 121.0,486.0 121.1,492.8C121.2,499.5 120.8,511.7 120.6,515.5C120.5,519.3 123.4,518.1 120.2,518.1Z','','raw'],
+  ['calves','M119.5,528.1C119.1,528.3 117.9,528.1 117.2,528.1C116.6,528.1 115.7,528.1 115.0,528.1C114.3,528.1 113.4,528.1 112.8,528.1C112.1,528.1 111.2,528.1 110.5,528.1C109.8,528.1 108.9,528.1 108.2,528.1C107.6,528.1 106.7,528.1 106.0,528.1C105.3,528.1 104.4,528.1 103.8,528.1C103.1,528.1 102.1,528.2 101.5,528.1C100.9,528.0 100.2,527.8 99.9,527.5C99.5,527.2 99.3,526.5 99.1,526.0C98.9,525.5 98.8,524.8 98.6,524.2C98.5,523.7 98.0,523.0 98.0,522.6C98.0,522.2 98.1,521.8 98.5,521.6C98.9,521.5 100.1,521.6 100.8,521.6C101.4,521.6 102.3,521.6 103.0,521.6C103.7,521.6 104.6,521.6 105.2,521.6C105.9,521.6 106.8,521.6 107.5,521.6C108.2,521.6 109.1,521.6 109.8,521.6C110.4,521.6 111.3,521.6 112.0,521.6C112.7,521.6 113.6,521.6 114.2,521.6C114.9,521.6 115.8,521.6 116.5,521.6C117.2,521.6 118.2,521.5 118.8,521.6C119.3,521.8 119.9,522.0 120.1,522.5C120.3,523.0 120.0,524.0 120.0,524.6C120.0,525.3 120.0,526.2 119.9,526.8C119.8,527.3 119.9,527.9 119.5,528.1Z','','raw'],
+];
+function buildBody(muscDefs, decoDefs, sil, pre){
+  const M = 'translate(260,0) scale(-1,1)';
+  const GT = {arm:G_ARM, fore:G_FORE, head:'', raw:'', '':''};
+  const tr = (g,mir)=>{ const t=[mir?M:'', GT[g||'']||''].filter(Boolean).join(' ');
+                        return t? ` transform="${t}"` : ''; };
+  const uid = 'b'+(buildBody.n=(buildBody.n||0)+1);
+  let s = '<svg viewBox="-30 12 320 546" xmlns="http://www.w3.org/2000/svg">'
+    + '';
+  sil.forEach(([d0,g,c])=>{
+    const d = remap(d0, modeOf(g));
+    s += `<path class="base" d="${d}"${tr(g,false)}/>`;
+    if(c!=='C') s += `<path class="base" d="${d}"${tr(g,true)}/>`;
   });
-  decoDefs.forEach(([d,mir])=>{
-    s += `<path class="deco" d="${d}"/>`;
-    if(mir) s += `<path class="deco" d="${d}" ${T}/>`;
+  /* Jeder Muskel bekommt eine eigene Gruppe mit id, z.B. <g id="front-chest_right">.
+     Damit ist jede Seite einzeln ansprechbar — per CSS (#front-chest_right{fill:…})
+     oder per JS. Seitenbenennung anatomisch: in der Vorderansicht ist die
+     ungespiegelte (linke) Hälfte die rechte Körperseite, hinten umgekehrt. */
+  const SIDE = pre==='front' ? ['right','left'] : ['left','right'];
+  const groups = new Map();
+  const push = (k,html)=>{ if(!groups.has(k)) groups.set(k,[]); groups.get(k).push(html); };
+  muscDefs.forEach(([m,d0,c,g])=>{
+    const d = remap(d0, modeOf(g)), ff = g==='raw' ? ' data-fill="1"' : '';
+    if(c==='C') push(`${m}_center`, `<path data-m="${m}"${ff} d="${d}"${tr(g,false)}/>`);
+    else {
+      push(`${m}_${SIDE[0]}`, `<path data-m="${m}"${ff} d="${d}"${tr(g,false)}/>`);
+      push(`${m}_${SIDE[1]}`, `<path data-m="${m}"${ff} d="${d}"${tr(g,true)}/>`);
+    }
   });
-  s += '</svg>';
-  return s;
+  s += '<g class="mlayer">';
+  for(const [k,arr] of groups) s += `<g id="${pre}-${k}" data-m="${k.split('_')[0]}">${arr.join('')}</g>`;
+  s += '</g>';
+  ['deco','deco2'].forEach(cls=>{
+    decoDefs.forEach(([d0,mir,g])=>{
+      const d = remap(d0, modeOf(g));
+      s += `<path class="${cls}" d="${d}"${tr(g,false)}/>`;
+      if(mir) s += `<path class="${cls}" d="${d}"${tr(g,true)}/>`;
+    });
+  });
+  return s + '</svg>';
 }
 function injectBodies(){
-  document.getElementById('bodyFront').innerHTML = buildBody(MUSC_FRONT, MUSC_FRONT_DECO, SIL_FRONT);
-  document.getElementById('bodyBack').innerHTML  = buildBody(MUSC_BACK, MUSC_BACK_DECO, SIL_BACK);
+  injectGradients();
+  document.getElementById('bodyFront').innerHTML = buildBody(MUSC_FRONT.concat(MUSC_FRONT_FILL), MUSC_FRONT_DECO, SIL_FRONT, 'front');
+  document.getElementById('bodyBack').innerHTML  = buildBody(MUSC_BACK.concat(MUSC_BACK_FILL), MUSC_BACK_DECO, SIL_BACK, 'back');
   /* Gestaffelte Einfärbung: jeder Muskel bekommt eine eigene kleine Verzögerung,
      dadurch "läuft" die Farbe über den Körper statt schlagartig umzuspringen. */
   const order = ['chest_up','chest','chest_low','front_delt','side_delt','rear_delt','traps','upper_back','lats',
@@ -1108,20 +1894,20 @@ const EXDB_RAW = [
 ['Latzug-Maschine (Scheiben)','Rücken','Maschine',['lats'],['biceps'],'machine pulldown maschine (plate loaded)'],
 ['Überzüge am Kabel (gestreckte Arme)','Rücken','Kabel',['lats'],['triceps'],'überzüge cable pullover straight-arm pulldown (kabel)'],
 ['Seilzug-Überzüge','Rücken','Kabel',['lats'],[],'rope pullover (kabel)'],
-['Langhantelrudern (Obergriff)','Rücken','Langhantel',['upper_back','lats'],['rear_delt','biceps','lower_back'],'barbell row bent over'],
+['Langhantelrudern (Obergriff)','Rücken','Langhantel',['upper_back','lats'],['traps','rear_delt','biceps','lower_back'],'barbell row bent over'],
 ['Langhantelrudern (Untergriff)','Rücken','Langhantel',['lats','upper_back'],['biceps','lower_back'],'underhand row'],
 ['Pendlay-Rudern','Rücken','Langhantel',['upper_back','lats'],['lower_back'],'pendlay row'],
-['T-Stangen-Rudern','Rücken','Langhantel',['upper_back','lats'],['biceps','lower_back'],'t bar row t-bar rudern'],
+['T-Stangen-Rudern','Rücken','Langhantel',['upper_back','lats'],['traps','biceps','lower_back'],'t bar row t-bar rudern'],
 ['T-Stangen-Rudern (Brustauflage)','Rücken','Maschine',['upper_back','lats'],['biceps'],'chest supported t bar t-bar rudern (brustauflage)'],
 ['Kurzhantelrudern (einarmig)','Rücken','Kurzhantel',['lats','upper_back'],['biceps','rear_delt'],'dumbbell row one arm',1],
 ['Kurzhantelrudern (beidseitig)','Rücken','Kurzhantel',['lats','upper_back'],['biceps'],'double db row'],
 ['Rudern (Brustauflage, Kurzhantel)','Rücken','Kurzhantel',['upper_back','lats'],['rear_delt','biceps'],'chest supported row'],
 ['Rudern in Bauchlage','Rücken','Langhantel',['upper_back','lats'],['biceps'],'seal row'],
-['Kabelrudern (V-Griff)','Rücken','Kabel',['upper_back','lats'],['biceps'],'seated cable row'],
-['Kabelrudern (breiter Griff)','Rücken','Kabel',['upper_back'],['rear_delt','biceps'],'wide cable row'],
+['Kabelrudern (V-Griff)','Rücken','Kabel',['upper_back','lats'],['traps','biceps'],'seated cable row'],
+['Kabelrudern (breiter Griff)','Rücken','Kabel',['upper_back'],['lats','traps','rear_delt','biceps'],'wide cable row'],
 ['Kabelrudern (einarmig)','Rücken','Kabel',['lats','upper_back'],['biceps'],'single arm cable row',1],
-['Rudermaschine (Scheiben)','Rücken','Maschine',['upper_back','lats'],['biceps'],'machine row rudermaschine (plate loaded)'],
-['Rudermaschine (breiter Griff)','Rücken','Maschine',['upper_back'],['rear_delt','biceps'],'wide row machine breite ruder'],
+['Rudermaschine (Scheiben)','Rücken','Maschine',['upper_back','lats'],['traps','biceps'],'machine row rudermaschine (plate loaded)'],
+['Rudermaschine (breiter Griff)','Rücken','Maschine',['upper_back'],['lats','traps','rear_delt','biceps'],'wide row machine breite ruder'],
 ['Rudermaschine (enger Griff)','Rücken','Maschine',['lats','upper_back'],['biceps'],'close row machine enge ruder'],
 ['Rudern von oben (Maschine)','Rücken','Maschine',['lats','upper_back'],['rear_delt','biceps'],'high row maschine'],
 ['Rudern von unten (Maschine)','Rücken','Maschine',['lats','upper_back'],['biceps'],'low row maschine'],
@@ -1368,19 +2154,20 @@ let state = {
   workouts: [],        // {id,date,start,end,type,exercises:[{exId,name,sets:[{w,r}]}],prs:[...]}
   customEx: [],        // gleiche Struktur wie EXDB-Einträge
   templates: [],       // {id,name,type,exIds:[]}
+  profile: null,       // Coach-Profil, siehe PROFIL_LEER
   active: null,        // laufendes Workout
   ach: {},             // freigeschaltete Achievements {id:{d,xp}}
   bodyweight: [],      // [{d:'YYYY-MM-DD', kg}]
   exOpt: {},           // Einstellungen pro Übung {exId:{uni,lo,hi,step,rest}}
   measures: [],        // Körpermaße [{d, key:cm}]
-  settings: { goal: 5, rest: 90, lastBackup: null, repLo: 6, repHi: 9, defSets: 2, setGoalLo: 10, setGoalHi: 20 }
+  settings: { goal: 5, rest: 90, lastBackup: null, backupSnooze: 0, repLo: 6, repHi: 9, defSets: 2, setGoalLo: 10, setGoalHi: 20 }
 };
 
 function loadState(){
   try{
     const raw = localStorage.getItem(LS_KEY);
     if(raw){ const s = JSON.parse(raw); state = Object.assign(state, s);
-      state.settings = Object.assign({goal:5,rest:90,lastBackup:null,repLo:6,repHi:9,defSets:2,setGoalLo:10,setGoalHi:20}, s.settings||{});
+      state.settings = Object.assign({goal:5,rest:90,lastBackup:null,backupSnooze:0,repLo:6,repHi:9,defSets:2,setGoalLo:10,setGoalHi:20}, s.settings||{});
       if(!state.bodyweight) state.bodyweight=[];
       if(!state.measures) state.measures=[];
       if(!state.exOpt) state.exOpt={}; }
@@ -1415,8 +2202,20 @@ function migrateState(){
     state.ach=a;
   }
 }
+/* Speichern darf niemals still fehlschlagen — sonst verliert man ein Training,
+   ohne es zu merken (z.B. wenn der Browser-Speicher voll ist). */
+let _saveWarned = false;
 function saveState(){
-  try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){ console.warn('save fail', e); }
+  try{
+    localStorage.setItem(LS_KEY, JSON.stringify(state));
+    _saveWarned = false;
+  }catch(e){
+    console.warn('save fail', e);
+    if(!_saveWarned){
+      _saveWarned = true;
+      try{ toast('Speichern fehlgeschlagen — Speicher voll?', 'Sichern', ()=>sendToVault()); }catch(_){}
+    }
+  }
 }
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 
@@ -1449,7 +2248,14 @@ function fmtDur(ms){ const m=Math.round(ms/60000); return m>=60? Math.floor(m/60
 function fmtVol(v){ return v>=10000? (v/1000).toFixed(1).replace('.',',')+' t' : Math.round(v).toLocaleString('de-DE')+' kg'; }
 
 /* ---------- Körpergewicht ---------- */
-function bwSorted(){ return (state.bodyweight||[]).slice().sort((a,b)=>a.d<b.d?-1:1); }
+/* Nur verwertbare Einträge: gültiges Datum und eine echte Zahl.
+   Schützt vor kaputten Backups oder von Hand editiertem JSON. */
+function bwSorted(){
+  return (state.bodyweight||[])
+    .filter(e=>e && typeof e.d==='string' && /^\d{4}-\d{2}-\d{2}$/.test(e.d) && isFinite(+e.kg) && +e.kg>0)
+    .map(e=>({d:e.d, kg:+e.kg}))
+    .sort((a,b)=>a.d<b.d?-1:1);
+}
 function bwAt(dateStr){
   const arr = bwSorted(); if(!arr.length) return 0;
   const day = String(dateStr).slice(0,10); let v = arr[0].kg;
@@ -1977,6 +2783,7 @@ function greeting(){
   return h<5? 'Gute Nacht' : h<11? 'Guten Morgen' : h<14? 'Mahlzeit' : h<18? 'Guten Tag' : h<23? 'Guten Abend' : 'Gute Nacht';
 }
 function renderHome(){
+  renderCoach();
   const now = new Date();
   const [a,b] = weekRange(now);
   const bEnd = new Date(b); bEnd.setDate(bEnd.getDate()-1);
@@ -2115,9 +2922,7 @@ $('#bm-week').addEventListener('click',()=>{ bodyMode='week'; $('#bm-week').clas
 $('#bm-rec').addEventListener('click',()=>{ bodyMode='rec'; $('#bm-rec').classList.add('on'); $('#bm-week').classList.remove('on'); paintBody(); });
 $('#scr-home').addEventListener('click', e=>{
   const p = e.target.closest('path[data-m]'); if(!p) return;
-  const k = p.dataset.m;
-  if(bodyMode==='rec') toast(`${MUSCLES[k]}: ${recMap[k]} % erholt`);
-  else { const v = weekMuscleMap[k]||0; toast(`${MUSCLES[k]}: ${v%1? v.toFixed(1).replace('.',','):v} Sätze diese Woche`); }
+  openMuscle(p.dataset.m);
 });
 $('#btn-start-home').addEventListener('click',()=>showScreen('scr-train'));
 $('#btn-settings').addEventListener('click',()=>{
@@ -2127,7 +2932,12 @@ $('#btn-settings').addEventListener('click',()=>{
   $('#set-defsets').value = state.settings.defSets||2;
   $('#set-goallo').value = state.settings.setGoalLo||10; $('#set-goalhi').value = state.settings.setGoalHi||20;
   $('#set-rir').textContent = state.settings.rir? 'An':'Aus'; $('#set-rir').classList.toggle('on', !!state.settings.rir);
-  $('#set-lastbackup').textContent = 'Letztes Backup: ' + (state.settings.lastBackup? fmtDate(new Date(state.settings.lastBackup).toISOString()) : 'noch nie');
+  const bs = backupStatus();
+  $('#set-lastbackup').innerHTML = state.settings.lastBackup
+    ? `Letzte Sicherung: <b>${fmtDate(new Date(state.settings.lastBackup).toISOString())}</b>` +
+      (bs.neu>0? ` · <span style="color:${bs.days>=7?'var(--gold)':'var(--txt3)'}">${bs.neu} ${bs.neu===1?'Workout':'Workouts'} seitdem</span>` : ' · aktuell ✓')
+    : '<b style="color:var(--gold)">Noch nie gesichert</b>';
+  renderSnapshots();
   openModal('#modal-settings');
 });
 $('#set-rir').addEventListener('click',()=>{
@@ -2394,6 +3204,7 @@ function finishWorkout(){
   saveState(); stopTicker();
   const freshAch = evalAchievements([...new Set(cleaned.map(e=>e.exId))]);
   const lvlAfter = achLevel().lvl;
+  makeSnapshot('nach Training');          // Sicherungspunkt direkt nach dem Abschluss
   haptic('success');
   showSummary(w, freshAch, lvlAfter>lvlBefore? lvlAfter : 0);
   if(lvlAfter>lvlBefore) celebrate('big');
@@ -2613,7 +3424,7 @@ function bwTrend(){
   if(!den) return null;
   return num/den*7;   // kg pro Woche
 }
-function fmtKg(v){ return v.toLocaleString('de-DE',{minimumFractionDigits:1, maximumFractionDigits:1})+' kg'; }
+function fmtKg(v){ v=+v; if(!isFinite(v)) return '–'; return v.toLocaleString('de-DE',{minimumFractionDigits:1, maximumFractionDigits:1})+' kg'; }
 function renderHomeBW(){
   const last = bwLatest(); const tr = bwTrend();
   const trTxt = tr===null? '' : `<span style="color:${tr>=0.05?'var(--green)':tr<=-0.05?'var(--red)':'var(--txt2)'};font-weight:700">${tr>0?'▲ +':tr<0?'▼ ':''}${Math.abs(tr).toLocaleString('de-DE',{maximumFractionDigits:2})} kg/Woche</span>`;
@@ -2751,11 +3562,18 @@ function doExport(){
   a.href = URL.createObjectURL(blob);
   a.download = 'fitnesstracker-backup-'+new Date().toISOString().slice(0,10)+'.json';
   a.click(); URL.revokeObjectURL(a.href);
-  state.settings.lastBackup = Date.now(); saveState();
-  renderHome(); toast('Backup heruntergeladen ✓');
+  markBackupDone();
+  toast('Backup heruntergeladen ✓');
 }
 $('#btn-export').addEventListener('click',doExport);
 $('#btn-vault').addEventListener('click',sendToVault);
+/* Dialog „fällige Sicherung" */
+$('#bk-now').addEventListener('click',async()=>{ closeModals(); await sendToVault(); });
+$('#bk-file').addEventListener('click',()=>{ closeModals(); doExport(); });
+$('#bk-later').addEventListener('click',()=>{
+  state.settings.backupSnooze = Date.now() + 2*86400000;
+  saveState(); closeModals(); toast('Erinnere in 2 Tagen wieder');
+});
 /* CSV-Export (bei Strong hinter Premium) */
 $('#btn-csv').addEventListener('click',()=>{
   const rows = [['Datum','Uhrzeit','Typ','Übung','Satz','Satztyp','Gewicht_kg','Wdh','RIR','Volumen_kg','Körpergewicht_kg']];
@@ -2787,13 +3605,40 @@ $('#import-file').addEventListener('change',e=>{
   r.onload = ()=>{ try{
     const s = JSON.parse(r.result);
     if(!Array.isArray(s.workouts)) throw 0;
-    if(!confirm(`Import: ${s.workouts.length} Workouts. Aktuelle Daten werden ERSETZT. Ok?`)) return;
+    if(!confirm(`Import: ${s.workouts.length} Workouts. Aktuelle Daten werden ERSETZT.\n\nDein jetziger Stand wird vorher als Sicherungspunkt abgelegt. Ok?`)) return;
+    makeSnapshot('vor Import', true);
     state = Object.assign({customEx:[],templates:[],active:null,ach:{},settings:{goal:5}}, s);
     migrateState(); evalAchievements();
     saveState(); closeModals(); renderAll(); toast('Import erfolgreich ✓');
   }catch(_){ toast('Ungültige Datei'); } };
   r.readAsText(f); e.target.value='';
 });
+/* ---- Ebene 3: Wiederherstellung aus einem Sicherungspunkt ---- */
+function renderSnapshots(){
+  const list = snapshots().slice().reverse();
+  const el = $('#snap-list'); if(!el) return;
+  el.innerHTML = list.length? list.map((s,i)=>{
+    const d = new Date(s.t);
+    return `<div class="item"><div class="grow">
+        <div class="ttl" style="font-size:13.5px">${d.toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit'})}, ${d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}</div>
+        <div class="meta">${s.wk} Workouts · ${esc(s.reason||'automatisch')}${i===0?' · aktuellster':''}</div></div>
+      <button class="btn btn-ghost btn-sm" data-snap="${s.t}">Zurück</button></div>`;
+  }).join('') : '<div class="tiny">Noch keine Sicherungspunkte — der erste entsteht nach deinem nächsten Training.</div>';
+  $$('#snap-list [data-snap]').forEach(b=>b.addEventListener('click',()=>{
+    const s = snapshots().find(x=>String(x.t)===b.dataset.snap); if(!s) return;
+    const d = new Date(s.t).toLocaleString('de-DE');
+    if(!confirm(`Auf den Stand vom ${d} zurücksetzen?\n\n${s.wk} Workouts.\nDer aktuelle Stand wird vorher als Sicherungspunkt abgelegt.`)) return;
+    makeSnapshot('vor Wiederherstellung', true);
+    try{
+      const restored = JSON.parse(s.data);
+      if(!Array.isArray(restored.workouts)) throw 0;
+      state = Object.assign({workouts:[],customEx:[],templates:[],active:null,ach:{},bodyweight:[],exOpt:{},measures:[],settings:{}}, restored);
+      migrateState(); evalAchievements(); saveState();
+      closeModals(); renderAll(); toast('Stand wiederhergestellt ✓');
+    }catch(_){ toast('Sicherungspunkt beschädigt'); }
+  }));
+}
+
 /* Update erzwingen — fragt den Server direkt */
 $('#btn-checkupd').addEventListener('click',async()=>{
   toast('Suche nach Update…');
@@ -2830,6 +3675,7 @@ $('#btn-hardreload').addEventListener('click',()=>{
 $('#btn-wipe').addEventListener('click',()=>{
   if(!confirm('Wirklich ALLE Daten löschen?')) return;
   if(!confirm('Letzte Warnung — alles weg. Sicher?')) return;
+  makeSnapshot('vor Löschen', true);   // Rückweg offen halten
   state = {workouts:[],customEx:[],templates:[],active:null,ach:{},settings:{goal:5}};
   saveState(); closeModals(); renderAll(); toast('Daten gelöscht');
 });
@@ -3350,6 +4196,67 @@ function initPWA(){
   $('#hint-close').addEventListener('click',()=>{ $('#install-hint').classList.remove('on'); localStorage.setItem('ft_hint_off','1'); });
 }
 
+/* ═══════════════════ DATENSICHERUNG ═══════════════════
+   Eine Browser-App darf Dateien nicht von selbst verschicken — dafür braucht es
+   immer eine Nutzergeste. Deshalb drei Ebenen, die zusammen greifen:
+
+   1) Sicherungspunkte im Gerät  (vollautomatisch)
+      → schützt vor Bedienfehlern, fehlerhaftem Import, „Alle Daten löschen"
+   2) Fällige Auslagerung        (automatisch erkannt, ein Tipp zum Absenden)
+      → schützt vor Geräteverlust und gelöschten Website-Daten
+   3) Wiederherstellung          (aus Sicherungspunkt oder Datei)
+*/
+const SNAP_KEY = 'ft_snap';
+const SNAP_MAX = 3;                    // drei Stände reichen und passen in den Speicher
+
+function snapshots(){
+  try{ const a = JSON.parse(localStorage.getItem(SNAP_KEY)); return Array.isArray(a)? a : []; }
+  catch(_){ return []; }
+}
+function writeSnapshots(list){
+  /* Bei Platzmangel lieber den ältesten Stand opfern als das Speichern zu blockieren */
+  while(list.length){
+    try{ localStorage.setItem(SNAP_KEY, JSON.stringify(list)); return true; }
+    catch(_){ list.shift(); }
+  }
+  try{ localStorage.removeItem(SNAP_KEY); }catch(_){}
+  return false;
+}
+function makeSnapshot(reason, force){
+  if(!state.workouts.length) return;                      // nichts zu sichern
+  const payload = JSON.stringify(state);
+  if(payload.length > 900000) return;                     // zu groß → würde den Speicher sprengen
+  const list = snapshots();
+  const last = list[list.length-1];
+  if(!force && last && Date.now()-last.t < 20*3600000) return;   // höchstens einer pro Tag
+  if(last && last.data === payload) return;                      // nichts verändert
+  list.push({t:Date.now(), reason:reason||'automatisch', wk:state.workouts.length, data:payload});
+  while(list.length > SNAP_MAX) list.shift();
+  writeSnapshots(list);
+}
+
+/* ---- Ebene 2: Wann ist die nächste Auslagerung fällig? ---- */
+function backupStatus(){
+  const lb = state.settings.lastBackup || 0;
+  const days = lb? Math.floor((Date.now()-lb)/86400000) : null;
+  /* Nur nerven, wenn es seit der letzten Sicherung wirklich etwas Neues gibt */
+  const neu = state.workouts.filter(w=>new Date(w.date).getTime() > lb).length;
+  const snooze = state.settings.backupSnooze || 0;
+  const due = state.workouts.length>0 && neu>0 && (days===null || days>=7) && Date.now()>snooze;
+  return {days, neu, due, urgent: days===null? state.workouts.length>=8 : days>=21};
+}
+function maybeAskBackup(){
+  const st = backupStatus();
+  if(!st.due) return;
+  const modal = $('#modal-backup'); if(!modal) return;
+  $('#bk-title').textContent = st.urgent? 'Deine Daten sind ungesichert' : 'Zeit für eine Sicherung';
+  $('#bk-text').innerHTML = st.days===null
+    ? `Du hast <b>${state.workouts.length} Workouts</b> geloggt und noch nie gesichert. Sie liegen ausschließlich auf diesem iPhone — löscht Safari die Website-Daten, sind sie weg.`
+    : `Letzte Sicherung vor <b>${st.days} Tagen</b>, seitdem <b>${st.neu} ${st.neu===1?'neues Workout':'neue Workouts'}</b>. Deine Daten liegen nur auf diesem Gerät.`;
+  $('#bk-sub').textContent = st.urgent? 'Dauert 20 Sekunden — bitte jetzt.' : 'Ein Tipp, dann an dich selbst schicken.';
+  openModal('#modal-backup');
+}
+
 /* ================= VAULT-EXPORT (Mail / Teilen) ================= */
 function backupBlob(){
   return new Blob([JSON.stringify(state,null,1)],{type:'application/json'});
@@ -3361,11 +4268,19 @@ async function sendToVault(){
   try{
     if(navigator.canShare && navigator.canShare({files:[file]})){
       await navigator.share({files:[file], title:'Fitness Backup', text:txt});
-      state.settings.lastBackup=Date.now(); saveState(); renderHome();
-      toast('Geteilt ✓ — an dich selbst mailen'); return;
+      markBackupDone();
+      toast('Geteilt ✓ — an dich selbst schicken'); return;
     }
   }catch(e){ if(e && e.name==='AbortError') return; }
   doExport();   // Fallback: Download
+}
+/* Sicherung quittieren — einheitlich für alle Wege */
+function markBackupDone(){
+  state.settings.lastBackup = Date.now();
+  state.settings.backupSnooze = 0;
+  makeSnapshot('gesichert', true);
+  saveState();
+  renderHome();
 }
 /* ================= INIT ================= */
 function renderAll(){ renderHome(); renderTrain(); renderHist(); renderLib(); renderStats(); }
@@ -3376,10 +4291,519 @@ $$('[data-close]').forEach(b=>b.innerHTML=ICO.close);
 loadState();
 evalAchievements();   // rückwirkend freischalten (z.B. nach Import/Update), still
 injectBodies();
+/* Beim ersten Start einmalig anbieten — nur wenn noch nichts eingerichtet ist */
+setTimeout(()=>{ if(!(state.profile&&state.profile.done) && !state.workouts.length && !localStorage.getItem('ft_ob_seen')){
+  localStorage.setItem('ft_ob_seen','1'); openOnboard(true); } }, 900);
+
+/* ═══ COACH: Profil, Energie- und Nährstoffbedarf ═══════════════════════
+   Grundumsatz nach Mifflin-St Jeor (1990) — die Formel mit der geringsten
+   mittleren Abweichung bei Nicht-Adipösen. Alles darüber sind Schätzungen
+   mit Bandbreite, keine Messwerte. Absichtliche Sicherungen: die Empfehlung
+   fällt nie unter den Grundumsatz und nie unter eine absolute Untergrenze. */
+const PROFIL_LEER = {done:false, alter:null, sex:null, groesse:null, gewicht:null, kfa:null,
+  ziel:null, erfahrung:null, ort:null, tage:4, alltag:null, split:null, ts:null};
+function profil(){ return Object.assign({}, PROFIL_LEER, state.profile||{}); }
+
+const ZIELE = {
+  aufbau:{n:'Muskelaufbau', ico:'💪', kcal:[250,500], prot:[1.6,2.2], reps:[6,9], sets:[10,20],
+    txt:'Kalorienüberschuss, hohe Proteinzufuhr, Hypertrophie-Wiederholungen, konsequente Progression.'},
+  abbau:{n:'Fettabbau', ico:'🔥', kcal:[-500,-300], prot:[2.0,2.4], reps:[8,12], sets:[8,16],
+    txt:'Moderates Defizit, Protein hoch für den Muskelerhalt, Volumen leicht reduziert, mehr Alltagsbewegung.'},
+  kraft:{n:'Kraftsteigerung', ico:'🏋️', kcal:[100,250], prot:[1.6,2.0], reps:[3,6], sets:[8,16],
+    txt:'Leichter Überschuss, niedrige Wiederholungen, schwere Grundübungen, längere Pausen.'},
+  ausdauer:{n:'Ausdauer', ico:'❤️', kcal:[0,150], prot:[1.4,1.8], reps:[12,20], sets:[8,14],
+    txt:'Bedarfsdeckende Zufuhr, höhere Wiederholungen, kürzere Pausen, mehr Frequenz.'}
+};
+const ERFAHRUNG = {
+  anfaenger:{n:'Anfänger', sub:'0–6 Monate', ueb:[4,5], txt:'Weniger Übungen, Fokus auf Technik und Maschinen mit geführter Bahn.'},
+  fortge:{n:'Fortgeschritten', sub:'6 Monate – 2 Jahre', ueb:[5,6], txt:'Mehr Volumen, freie Gewichte, doppelte Progression.'},
+  experte:{n:'Experte', sub:'über 2 Jahre', ueb:[6,7], txt:'Höheres Volumen, Grundübungen zuerst, Intensitätstechniken möglich.'}
+};
+const ORTE = {
+  studio:{n:'Fitnessstudio', sub:'Maschinen, freie Gewichte, Kabel', eq:null},
+  home:{n:'Home Gym', sub:'Kurzhanteln, Bänder, Eigengewicht',
+        eq:new Set(['Kurzhantel','Körpergewicht','Widerstandsband','Kettlebell','Hantelscheibe','SZ-Stange','Sonstiges'])},
+  bw:{n:'Nur Körpergewicht', sub:'ohne Geräte', eq:new Set(['Körpergewicht','Sonstiges'])}
+};
+const ALLTAG = {
+  sitzend:{n:'Überwiegend sitzend', sub:'Büro, Schule, wenig Bewegung', f:1.20},
+  leicht:{n:'Leicht aktiv', sub:'etwas Gehen, Rad, Stehen', f:1.30},
+  aktiv:{n:'Aktiv', sub:'viel auf den Beinen', f:1.40},
+  sehr:{n:'Körperlich arbeitend', sub:'schwere körperliche Arbeit', f:1.50}
+};
+
+/* Grundumsatz (kcal/Tag). Mifflin-St Jeor: 10·kg + 6,25·cm − 5·Alter + s */
+function bmr(p){
+  if(!p.gewicht||!p.groesse||!p.alter) return null;
+  const s = p.sex==='w' ? -161 : p.sex==='d' ? -78 : 5;   // divers: Mittelwert
+  return Math.round(10*p.gewicht + 6.25*p.groesse - 5*p.alter + s);
+}
+/* Gesamtumsatz: Alltagsfaktor plus Zuschlag je Trainingseinheit.
+   Ein Krafttraining kostet grob 5 kcal je kg Körpergewicht, auf die Woche verteilt. */
+function tdee(p){
+  const b = bmr(p); if(!b) return null;
+  const f = (ALLTAG[p.alltag]||ALLTAG.leicht).f;
+  const training = Math.round((p.tage||0) * 5 * p.gewicht / 7);
+  return Math.round(b*f + training);
+}
+/* Tagesziel mit Untergrenze: nie unter Grundumsatz, nie unter 1500 (m) / 1200 (w). */
+function kalorienZiel(p){
+  const t = tdee(p), b = bmr(p); if(!t) return null;
+  const z = ZIELE[p.ziel] || ZIELE.aufbau;
+  const mitte = Math.round((z.kcal[0]+z.kcal[1])/2);
+  let ziel = t + mitte;
+  const hart = p.sex==='w' ? 1200 : 1500;
+  const grenze = Math.max(b, hart);
+  const gekappt = ziel < grenze;
+  if(gekappt) ziel = grenze;
+  return {bmr:b, tdee:t, ziel:Math.round(ziel/10)*10, spanne:[t+z.kcal[0], t+z.kcal[1]], gekappt, grenze};
+}
+/* Makros. Protein je kg Körpergewicht nach Ziel, Fett 0,8–1,0 g/kg,
+   Kohlenhydrate füllen den Rest auf. */
+function makros(p){
+  const k = kalorienZiel(p); if(!k) return null;
+  const z = ZIELE[p.ziel] || ZIELE.aufbau;
+  const kg = p.gewicht;
+  const prot = Math.round(kg * (z.prot[0]+z.prot[1])/2);
+  let fett = Math.round(kg * 0.9);
+  let rest = k.ziel - prot*4 - fett*9;
+  if(rest < kg*2*4){                       // Kohlenhydrate nicht unter 2 g/kg drücken
+    fett = Math.max(Math.round(kg*0.6), Math.round((k.ziel - prot*4 - kg*2*4)/9));
+    rest = k.ziel - prot*4 - fett*9;
+  }
+  const kh = Math.max(0, Math.round(rest/4));
+  return {...k, prot, fett, kh,
+    protSpanne:[Math.round(kg*z.prot[0]), Math.round(kg*z.prot[1])]};
+}
+/* Körperfett schätzen, wenn unbekannt: Deurenberg-Formel über BMI.
+   Grobe Näherung, bei Trainierten systematisch zu hoch — wird so ausgewiesen. */
+function kfaSchaetzung(p){
+  if(!p.gewicht||!p.groesse||!p.alter) return null;
+  const bmi = p.gewicht / Math.pow(p.groesse/100, 2);
+  const sex = p.sex==='w' ? 0 : 1;
+  return Math.max(3, Math.round(1.20*bmi + 0.23*p.alter - 10.8*sex - 5.4));
+}
+
+/* ═══ COACH: Split-Vorlagen erzeugen ════════════════════════════════════
+   Zwei Systeme zur Wahl. Eigene Vorlagen bleiben davon unberührt —
+   der Generator legt zusätzliche an und löscht nichts. */
+const SPLITS = {
+  okuk:{n:'Ober-/Unterkörper', sub:'2–4 Tage · gute Frequenz, wenig Aufwand',
+    txt:'Jeder Muskel wird zwei Mal pro Woche trainiert. Robust, wenn mal ein Tag ausfällt.',
+    tage:{2:['OK','UK'], 3:['OK A','UK','OK B'], 4:['OK A','UK A','OK B','UK B'],
+          5:['OK A','UK A','OK B','UK B','OK C'], 6:['OK A','UK A','OK B','UK B','OK C','UK C']}},
+  ppl:{n:'Push / Pull / Beine', sub:'3–6 Tage · klare Trennung',
+    txt:'Drücken, Ziehen und Beine getrennt. Ab sechs Tagen wird jeder Muskel zwei Mal getroffen.',
+    tage:{2:['Push','Pull'], 3:['Push','Pull','Beine'], 4:['Push','Pull','Beine','Oberkörper'],
+          5:['Push','Pull','Beine','Push B','Pull B'], 6:['Push A','Pull A','Beine A','Push B','Pull B','Beine B']}}
+};
+/* Ein Tag besteht aus Plätzen. c = mehrgelenkig zuerst, i = isolierend danach. */
+const TAG_PLAN = {
+  'Push':      [['chest','c'],['chest_up','c'],['front_delt','c'],['side_delt','i'],['triceps','i'],['triceps','i'],['chest','i']],
+  'Pull':      [['lats','c'],['upper_back','c'],['lats','i'],['rear_delt','i'],['biceps','i'],['biceps','i'],['traps','i']],
+  'Beine':     [['quads','c'],['hamstrings','c'],['quads','i'],['glutes','i'],['hamstrings','i'],['calves','i'],['abs','i']],
+  'Oberkörper':[['chest','c'],['lats','c'],['front_delt','c'],['upper_back','i'],['side_delt','i'],['biceps','i'],['triceps','i']],
+  'OK':        [['chest','c'],['lats','c'],['upper_back','c'],['side_delt','i'],['biceps','i'],['triceps','i'],['rear_delt','i']],
+  'UK':        [['quads','c'],['hamstrings','c'],['glutes','i'],['quads','i'],['calves','i'],['abs','i'],['hamstrings','i']]
+};
+const TAG_TYP = {Push:'Push', Pull:'Pull', Beine:'Legs', UK:'Legs', OK:'Andere', 'Oberkörper':'Andere'};
+function tagBasis(name){ return name.replace(/ [A-C]$/,''); }
+
+/* Konditions- und Sonderformen gehören nicht in einen Hypertrophieplan. */
+const KEIN_PLAN = /burpee|schlitten|seilspringen|schwungseile|türkisches|bergsteiger|hängen an|wandsitz|seitstütz|drachenfahne|l-sitz|hohlkörper/i;
+const planbar = e => e.eq!=='Sonstiges' && !KEIN_PLAN.test(e.name);
+
+/* Gerätewahl nach Erfahrung: Anfänger geführt, Experte frei. */
+function eqBonus(e, erf){
+  const maschine = ['Maschine','Multipresse'].includes(e.eq), kabel = e.eq==='Kabel';
+  const frei = ['Langhantel','Kurzhantel','SZ-Stange','Trap-Stange','Kettlebell'].includes(e.eq);
+  if(erf==='anfaenger') return maschine? 16 : kabel? 10 : frei? -8 : 0;
+  if(erf==='experte')   return frei? 12 : kabel? 2 : maschine? -8 : 0;
+  return maschine? 4 : 0;
+}
+/* Welche Bewegungsmuster auf einem Grundübungsplatz überhaupt zulässig sind.
+   Ohne diese Tabelle gewinnen Fliegende und Thruster die Drückplätze, weil sie
+   rechnerisch einen höheren Muskelanteil haben. */
+const C_PATTERNS = {
+  chest:['press_h','press_inc'], chest_up:['press_inc','press_ovh'], chest_low:['press_h','tri_ext'],
+  front_delt:['press_ovh','press_inc','press_h'], side_delt:['press_ovh'], rear_delt:['row'],
+  lats:['pulldown','row','pullover'], upper_back:['row','pulldown'], traps:['row','shrug'],
+  lower_back:['hinge'], biceps:['pulldown','row'], triceps:['press_h','press_ovh'],
+  quads:['squat','lunge','leg_ext'], hamstrings:['hinge','leg_curl'], glutes:['hinge','squat','lunge'],
+  calves:['calf'], abs:['crunch','leg_raise'], obliques:['rotate'], adductors:['squat','lunge','abduct'],
+  abductors:['abduct','lunge'], forearms:['wrist','carry']
+};
+/* Bewertet, wie gut eine Übung auf einen Platz passt.
+   Grundübungsplätze werden nach Lastpotenzial besetzt, Isolationsplätze
+   nach Muskelanteil — sonst gewinnen überall die Kabelzüge. */
+function slotScore(e, muskel, art, p){
+  if(!planbar(e)) return -1;
+  if(!(e.p||[]).includes(muskel)) return -1;          // nur Zielmuskel-Übungen
+  const r = exRate(e, muskel);
+  let s;
+  if(art==='c'){
+    if(r.cat===1) return -1;                          // Isolation ist kein Grundübungsplatz
+    const erlaubteMuster = C_PATTERNS[muskel];
+    if(erlaubteMuster && !erlaubteMuster.includes(movePattern(e))) return -1;
+    const beteiligt = (e.p||[]).length + (e.s||[]).length*0.6;
+    s = r.hyp + (r.cat===3 ? 30 : 10) + r.act*0.35 + beteiligt*7;
+  } else {
+    if(r.cat===3) return -1;                          // Grundübung ist kein Isolationsplatz
+    s = r.act + (r.cat===1 ? 18 : 4) + r.hyp*0.25;
+  }
+  s += eqBonus(e, p.erfahrung);
+  if(p.erfahrung==='anfaenger') s += r.beg*0.35 - r.risk*0.40;
+  else if(p.erfahrung==='experte') s += r.hyp*0.15 - r.risk*0.05;
+  else s += -r.risk*0.15;
+  if(p.ziel==='kraft' && r.cat===3) s += 14;
+  if(p.ziel==='abbau' && r.cat===3) s += 5;
+  return s;
+}
+function buildSplit(p){
+  const sp = SPLITS[p.split] || SPLITS.okuk;
+  const tage = sp.tage[Math.min(6, Math.max(2, p.tage||4))] || sp.tage[4];
+  const erlaubt = (ORTE[p.ort]||ORTE.studio).eq;
+  const pool = EXDB.filter(e=>!erlaubt || erlaubt.has(e.eq));
+  const anzahl = (ERFAHRUNG[p.erfahrung]||ERFAHRUNG.fortge).ueb;
+  const proTag = Math.round((anzahl[0]+anzahl[1])/2);
+  const benutzt = new Set();
+  return tage.map(name=>{
+    const plan = (TAG_PLAN[tagBasis(name)] || TAG_PLAN.OK).slice(0, proTag);
+    const exIds = [];
+    for(const [muskel, art] of plan){
+      let best=null, bestS=-1, ersatz=null, ersatzS=-1;
+      for(const e of pool){
+        const s = slotScore(e, muskel, art, p);
+        if(s <= 30) continue;
+        if(benutzt.has(e.id)){ if(s>ersatzS){ ersatzS=s; ersatz=e; } continue; }
+        if(s > bestS){ bestS=s; best=e; }
+      }
+      /* Ist der Pool erschöpft (kleines Home Gym), lieber wiederholen als Lücke lassen */
+      const wahl = best || (exIds.length<3 ? ersatz : null);
+      if(wahl){ exIds.push(wahl.id); benutzt.add(wahl.id); }
+    }
+    return {name, type:TAG_TYP[tagBasis(name)]||'Andere', exIds};
+  });
+}
+/* Legt die erzeugten Vorlagen an. Bestehende mit gleichem Namen werden ersetzt,
+   alle anderen bleiben unangetastet. */
+function splitUebernehmen(plaene){
+  const namen = new Set(plaene.map(x=>x.name));
+  state.templates = (state.templates||[]).filter(t=>!namen.has(t.name));
+  plaene.forEach(x=>state.templates.push({id:uid(), name:x.name, type:x.type, exIds:x.exIds.slice()}));
+  saveState();
+}
+
+/* ═══ COACH: Onboarding ═════════════════════════════════════════════════
+   Sieben Schritte, ein Entwurf im Speicher, erst am Ende geschrieben.
+   Nutzt die Karten, Abstände und Bewegungskurven des bestehenden Designs. */
+let obStep = 0, obDraft = null, obPlan = null;
+const OB_STEPS = ['Grunddaten','Ziel','Erfahrung','Ort','Alltag','System','Fertig'];
+
+function obKarten(feld, eintraege, cb){
+  return eintraege.map(([k,o])=>`<button class="pcard ${obDraft[feld]===k?'on':''}" data-pick="${feld}:${k}">
+    ${o.ico?`<span class="pico">${o.ico}</span>`:''}
+    <span class="ptxt"><b>${o.n}</b><small>${o.sub||o.txt||''}</small></span>
+    <span class="pmark">✓</span></button>`).join('');
+}
+function obValid(){
+  const p = obDraft;
+  if(obStep===0) return p.alter>=10 && p.alter<=99 && p.groesse>=120 && p.groesse<=230 && p.gewicht>=30 && p.gewicht<=250;
+  if(obStep===1) return !!p.ziel;
+  if(obStep===2) return !!p.erfahrung;
+  if(obStep===3) return !!p.ort;
+  if(obStep===4) return !!p.alltag && p.tage>=1 && p.tage<=7;
+  if(obStep===5) return !!p.split;
+  return true;
+}
+function obInhalt(){
+  const p = obDraft;
+  switch(obStep){
+    case 0: return `<h2>Erzähl mir von dir</h2>
+      <p class="obsub">Daraus berechne ich deinen Bedarf. Alles bleibt auf deinem Gerät.</p>
+      <div class="obgrid">
+        <label>Alter<input type="number" inputmode="numeric" id="ob-alter" value="${p.alter??''}" min="10" max="99" placeholder="18"><span>Jahre</span></label>
+        <label>Größe<input type="number" inputmode="numeric" id="ob-groesse" value="${p.groesse??''}" min="120" max="230" placeholder="180"><span>cm</span></label>
+        <label>Gewicht<input type="number" inputmode="decimal" id="ob-gewicht" value="${p.gewicht??''}" min="30" max="250" step="0.1" placeholder="72"><span>kg</span></label>
+        <label>Körperfett <i>optional</i><input type="number" inputmode="decimal" id="ob-kfa" value="${p.kfa??''}" min="3" max="60" step="0.5" placeholder="—"><span>%</span></label>
+      </div>
+      <div class="obsex">${[['m','Männlich'],['w','Weiblich'],['d','Divers']].map(([k,n])=>
+        `<button class="chip ${p.sex===k?'on':''}" data-pick="sex:${k}">${n}</button>`).join('')}</div>
+      <button class="linkbtn" id="ob-kfa-est">Körperfett unbekannt? Schätzen lassen</button>`;
+    case 1: return `<h2>Was ist dein Ziel?</h2><p class="obsub">Danach richte ich Kalorien, Wiederholungen und Volumen aus.</p>
+      <div class="pcards">${obKarten('ziel', Object.entries(ZIELE))}</div>`;
+    case 2: return `<h2>Wie lange trainierst du schon?</h2><p class="obsub">Bestimmt Übungsauswahl und Umfang.</p>
+      <div class="pcards">${obKarten('erfahrung', Object.entries(ERFAHRUNG))}</div>`;
+    case 3: return `<h2>Wo trainierst du?</h2><p class="obsub">Ich schlage nur Übungen vor, die du dort machen kannst.</p>
+      <div class="pcards">${obKarten('ort', Object.entries(ORTE))}</div>`;
+    case 4: return `<h2>Dein Alltag</h2><p class="obsub">Bewegung außerhalb des Trainings macht einen großen Teil des Verbrauchs aus.</p>
+      <div class="pcards">${obKarten('alltag', Object.entries(ALLTAG))}</div>
+      <div class="obdays"><span>Trainingstage pro Woche</span>
+        <div class="daypick">${[2,3,4,5,6].map(d=>`<button class="chip ${p.tage===d?'on':''}" data-pick="tage:${d}">${d}</button>`).join('')}</div></div>`;
+    case 5: {
+      const eig = {n:'Eigene Vorlagen', sub:'Ich stelle mir die Trainingstage selbst zusammen',
+                   txt:'Es wird nichts erzeugt. Du legst deine Vorlagen wie bisher selbst an.'};
+      return `<h2>Trainingssystem</h2><p class="obsub">Ich erzeuge daraus fertige Vorlagen, die du im Gym antippst.</p>
+        <div class="pcards">${obKarten('split', [...Object.entries(SPLITS), ['eigen', eig]])}</div>`;
+    }
+    default: {
+      const m = makros(p);
+      const plan = p.split && p.split!=='eigen' ? (obPlan = buildSplit(p)) : (obPlan = null);
+      const z = ZIELE[p.ziel];
+      return `<h2>Dein Plan steht</h2>
+        <p class="obsub">${z.ico} ${z.n} · ${ERFAHRUNG[p.erfahrung].n} · ${ORTE[p.ort].n} · ${p.tage} Tage</p>
+        ${m?`<div class="kcalcard">
+          <div class="kcalbig"><b>${m.ziel}</b><span>kcal pro Tag</span></div>
+          <div class="macros">
+            <div><b>${m.prot}</b><span>Protein</span><i>g</i></div>
+            <div><b>${m.kh}</b><span>Kohlenhydrate</span><i>g</i></div>
+            <div><b>${m.fett}</b><span>Fett</span><i>g</i></div></div>
+          <p class="tiny">Grundumsatz ${m.bmr} · Gesamtverbrauch ${m.tdee} · Ziel ${m.ziel} kcal${m.gekappt?` <b>(auf die Untergrenze ${m.grenze} angehoben — tiefer wäre nicht sinnvoll)</b>`:''}</p>
+        </div>`:''}
+        <div class="obsecs"><h5>Was ich für dich anpasse</h5><p>${z.txt}</p>
+          <p>${ERFAHRUNG[p.erfahrung].txt} Wiederholungen ${z.reps[0]}–${z.reps[1]}, Ziel ${z.sets[0]}–${z.sets[1]} Sätze pro Muskelgruppe und Woche.</p></div>
+        ${plan?`<div class="obsecs"><h5>Vorlagen, die ich anlege</h5>
+          ${plan.map(t=>`<div class="plday"><b>${t.name}</b><span>${t.exIds.length} Übungen</span>
+            <small>${t.exIds.map(id=>{const e=getEx(id);return e?esc(e.name):'';}).filter(Boolean).join(' · ')}</small></div>`).join('')}
+          <p class="tiny">Deine bestehenden Vorlagen bleiben erhalten.</p></div>`:''}
+        <details class="mnote"><summary>Wie die Werte zustande kommen</summary>
+          <p><b>Grundumsatz:</b> Mifflin-St Jeor — 10·kg + 6,25·cm − 5·Alter ${p.sex==='w'?'− 161':'+ 5'}.</p>
+          <p><b>Gesamtverbrauch:</b> Grundumsatz mal Alltagsfaktor (${(ALLTAG[p.alltag].f).toFixed(2).replace('.',',')}) plus rund 5 kcal je kg und Trainingseinheit, auf die Woche verteilt.</p>
+          <p><b>Ziel:</b> ${ZIELE[p.ziel].kcal[0]>0?'+':''}${ZIELE[p.ziel].kcal.join(' bis ')} kcal auf den Verbrauch. Die Empfehlung fällt nie unter deinen Grundumsatz.</p>
+          <p><b>Makros:</b> Protein ${ZIELE[p.ziel].prot.join('–')} g je kg, Fett 0,9 g je kg, Kohlenhydrate füllen den Rest.</p>
+          <p class="tiny">Schätzwerte auf Basis anerkannter Formeln. Sie ersetzen keine ärztliche oder ernährungsmedizinische Beratung.</p>
+        </details>`;
+    }
+  }
+}
+function renderOnboard(){
+  const n = OB_STEPS.length;
+  document.getElementById('ob-body').innerHTML = `
+    <div class="obtop">
+      <div class="obprog"><i style="width:${(obStep+1)/n*100}%"></i></div>
+      <div class="obmeta"><span>Schritt ${obStep+1} von ${n}</span><span>${OB_STEPS[obStep]}</span></div>
+    </div>
+    <div class="obcontent" key="${obStep}">${obInhalt()}</div>
+    <div class="obnav">
+      ${obStep>0?'<button class="btn ghost" id="ob-back">Zurück</button>':'<span></span>'}
+      <button class="btn" id="ob-next" ${obValid()?'':'disabled'}>${obStep===n-1?'Los geht\'s':'Weiter'}</button>
+    </div>`;
+}
+function obLesen(){
+  const g=id=>{const el=document.getElementById(id); if(!el) return null;
+    const v=parseFloat((el.value||'').replace(',','.')); return isFinite(v)? v : null;};
+  if(obStep===0){ obDraft.alter=g('ob-alter'); obDraft.groesse=g('ob-groesse');
+    obDraft.gewicht=g('ob-gewicht'); obDraft.kfa=g('ob-kfa'); }
+}
+function openOnboard(neu){
+  obDraft = neu ? Object.assign({}, PROFIL_LEER) : profil();
+  if(!obDraft.gewicht){ const b=bwSorted(); if(b && b.length) obDraft.gewicht = b[b.length-1].kg; }
+  obStep = 0; obPlan = null; renderOnboard(); openModal('#modal-onboard');
+}
+function obFertig(){
+  const p = Object.assign({}, obDraft, {done:true, ts:Date.now()});
+  state.profile = p;
+  const z = ZIELE[p.ziel];
+  state.settings.repLo = z.reps[0]; state.settings.repHi = z.reps[1];
+  state.settings.setGoalLo = z.sets[0]; state.settings.setGoalHi = z.sets[1];
+  state.settings.goal = p.tage;
+  if(obPlan && obPlan.length) splitUebernehmen(obPlan);
+  saveState();
+  document.getElementById('modal-onboard').classList.remove('on');
+  if(typeof renderHome==='function') renderHome();
+  if(typeof renderTrain==='function') renderTrain();
+  toast(obPlan? `Profil gespeichert · ${obPlan.length} Vorlagen angelegt` : 'Profil gespeichert');
+}
+document.addEventListener('click', e=>{
+  const pick = e.target.closest('[data-pick]');
+  if(pick && pick.closest('#modal-onboard')){
+    const [f,v] = pick.dataset.pick.split(':');
+    obDraft[f] = (f==='tage') ? +v : v;
+    obLesen(); renderOnboard(); return;
+  }
+  if(e.target.id==='ob-kfa-est'){
+    obLesen(); const s = kfaSchaetzung(obDraft);
+    if(s==null){ toast('Dafür brauche ich Alter, Größe und Gewicht'); return; }
+    obDraft.kfa = s; renderOnboard();
+    toast(`Geschätzt: rund ${s} % — bei Trainierten fällt die Schätzung meist zu hoch aus`);
+    return;
+  }
+  if(e.target.id==='ob-back'){ obLesen(); obStep=Math.max(0,obStep-1); renderOnboard(); return; }
+  if(e.target.id==='ob-next'){
+    obLesen();
+    if(!obValid()){ toast('Bitte alle Felder ausfüllen'); return; }
+    if(obStep===OB_STEPS.length-1) obFertig();
+    else { obStep++; renderOnboard(); }
+  }
+});
+document.addEventListener('input', e=>{
+  if(e.target.closest('#modal-onboard') && e.target.tagName==='INPUT'){
+    obLesen(); const b=document.getElementById('ob-next'); if(b) b.disabled = !obValid();
+  }
+});
+
+/* ═══ COACH: Tageskarte auf der Startseite ══════════════════════════════ */
+function renderCoach(){
+  const box = document.getElementById('coach-card'); if(!box) return;
+  const p = profil();
+  if(!p.done){
+    box.innerHTML = `<div class="card coachstart">
+      <div><b>Dein Coach ist noch nicht eingerichtet</b>
+      <p class="tiny">Ein paar Angaben, dann berechne ich Kalorien, Makros und lege dir Trainingsvorlagen an.</p></div>
+      <button class="btn" id="coach-go">Einrichten</button></div>`;
+    return;
+  }
+  const m = makros(p), z = ZIELE[p.ziel];
+  const b = bwSorted(), akt = b && b.length ? b[b.length-1].kg : null;
+  const abw = (akt && Math.abs(akt - p.gewicht) >= 2) ? akt : null;
+  box.innerHTML = `<div class="card coachcard">
+    <div class="cchead"><div><span class="tiny">Tagesziel · ${z.ico} ${z.n}</span>
+      <b class="ccbig">${m.ziel}<i>kcal</i></b></div>
+      <button class="iconbtn" id="coach-edit" title="Profil ändern">${ICO.gear||'⚙'}</button></div>
+    <div class="ccmac">
+      <div><i style="--w:${Math.round(m.prot*4/m.ziel*100)}%"></i><b>${m.prot} g</b><span>Protein</span></div>
+      <div><i style="--w:${Math.round(m.kh*4/m.ziel*100)}%"></i><b>${m.kh} g</b><span>Kohlenhydrate</span></div>
+      <div><i style="--w:${Math.round(m.fett*9/m.ziel*100)}%"></i><b>${m.fett} g</b><span>Fett</span></div>
+    </div>
+    <p class="tiny">Verbrauch ${m.tdee} kcal · ${z.kcal[0]>0?'Überschuss':'Defizit'} ${Math.abs(Math.round((z.kcal[0]+z.kcal[1])/2))} kcal · Protein ${m.protSpanne.join('–')} g
+    ${abw?`<br><b>Dein letztes Wiegen: ${fmtKg(abw)} — Profil steht auf ${fmtKg(p.gewicht)}.</b> <button class="linkbtn" id="coach-sync">Übernehmen</button>`:''}</p>
+  </div>`;
+}
+document.addEventListener('click', e=>{
+  if(e.target.id==='coach-go'){ openOnboard(true); return; }
+  if(e.target.closest('#coach-edit')){ openOnboard(false); return; }
+  if(e.target.id==='coach-sync'){
+    const b=bwSorted(); if(!b||!b.length) return;
+    state.profile = Object.assign(profil(), {gewicht:b[b.length-1].kg});
+    saveState(); renderCoach(); toast('Gewicht im Profil aktualisiert');
+  }
+});
+
+
+/* ═══ Muskelatlas: Oberfläche ═══════════════════════════════════════════ */
+let atlasKey=null, atlasQ='', atlasF=new Set(), atlasOpen=null;
+const FILTERS = [
+  ['machine','Maschine',   e=>['Maschine','Kabel','Multipresse'].includes(e.eq)],
+  ['free',   'Freie Gewichte', e=>['Langhantel','Kurzhantel','SZ-Stange','Trap-Stange','Kettlebell','Hantelscheibe'].includes(e.eq)],
+  ['home',   'Zuhause',    e=>EQ_HOME.has(e.eq)],
+  ['gym',    'Studio',     e=>!EQ_HOME.has(e.eq) || e.eq==='Kurzhantel'],
+  ['easy',   'Anfänger',   e=>exRate(e,'chest').beg>=70],
+  ['adv',    'Fortgeschritten', e=>exRate(e,'chest').beg<70]
+];
+function atlasList(key){
+  let l = EXDB.filter(e=>[...(e.p||[]),...(e.s||[])].includes(key));
+  if(atlasQ){ const q=atlasQ.toLowerCase();
+    l = l.filter(e=>e.name.toLowerCase().includes(q) || (e.al||'').toLowerCase().includes(q) || e.eq.toLowerCase().includes(q)); }
+  FILTERS.forEach(([id,,fn])=>{ if(atlasF.has(id)) l = l.filter(fn); });
+  return l.map(e=>({e, r:exRate(e,key), prim:(e.p||[]).includes(key)}))
+          .sort((a,b)=> a.r.cat-b.r.cat || (b.prim-a.prim) || b.r.act-a.r.act || a.e.name.localeCompare(b.e.name,'de'));
+}
+function bar(label,v,tone){
+  return `<div class="rbar"><span>${label}</span><i><b class="t${tone}" style="width:${v}%"></b></i><em>${v}%</em></div>`;
+}
+function exCard(o, key){
+  const {e,r,prim}=o, on = atlasOpen===e.id;
+  const how = HOWTO[e.id] || HOWTO_PATTERN[movePattern(e)] || HOWTO_PATTERN.other;
+  const eigen = !!HOWTO[e.id];
+  const muskeln = [...(e.p||[]).map(k=>`<b>${MUSCLES[k]}</b>`), ...(e.s||[]).map(k=>MUSCLES[k])].join(', ');
+  return `<div class="excard ${on?'open':''}" data-ex="${e.id}">
+    <button class="exhead" data-exid="${e.id}">
+      <span class="exic">${moveIcon(e,24)}</span>
+      <span class="exmain"><b>${e.name}</b><small>${e.eq} · ${prim?'Zielmuskel':'unterstützend'} · ${MOVE_ICON[movePattern(e)][0]}</small></span>
+      <span class="exact">${r.act}%</span>
+    </button>
+    ${on? `<div class="exbody">
+      <div class="rbars">${bar('Muskelaktivierung',r.act,'a')}${bar('Anfängerfreundlich',r.beg,'b')}${bar('Hypertrophie',r.hyp,'c')}${bar('Verletzungsrisiko',r.risk,'d')}</div>
+      <div class="exsec"><h5>Ausführung${eigen?'':' <i>(Muster: '+MOVE_ICON[movePattern(e)][0]+')</i>'}</h5><ol>${how.s.map(x=>`<li>${x}</li>`).join('')}</ol></div>
+      <div class="exsec"><h5>Typische Fehler</h5><ul>${how.e.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+      <div class="exsec"><h5>Beteiligte Muskeln</h5><p class="tiny">${muskeln}</p></div>
+      <div class="exmeta"><span>${CAT_NAME[r.cat]}</span><span>${e.eq}</span>${e.uni?'<span>einseitig</span>':''}</div>
+    </div>`:''}
+  </div>`;
+}
+function miniFigure(key){
+  return ['bodyFront','bodyBack'].map(id=>{
+    const src=document.getElementById(id).firstElementChild; if(!src) return '';
+    const c=src.cloneNode(true);
+    c.querySelectorAll('path[data-m]').forEach(p=>{
+      p.classList.remove('m1','m2','m3','r0','r1','r2','r3');
+      if(p.dataset.m===key) p.classList.add('sel');
+    });
+    c.querySelectorAll('.deco,.deco2').forEach(p=>p.remove());
+    return `<div>${c.outerHTML}</div>`;
+  }).join('');
+}
+function renderAtlas(){
+  const key=atlasKey; if(!key) return;
+  const inf=MUSCLE_INFO[key]||{}, list=atlasList(key);
+  const woche=(weekMuscleMap[key]||0), erh=(recMap&&recMap[key]!=null)? recMap[key] : null;
+  const kats=[1,2,3].map(c=>{
+    const teil=list.filter(o=>o.r.cat===c); if(!teil.length) return '';
+    return `<div class="atcat"><h4>${c}. ${CAT_NAME[c]} <span>${teil.length}</span></h4>
+      <p class="tiny">${CAT_DESC[c]}</p>${teil.map(o=>exCard(o,key)).join('')}</div>`;
+  }).join('') || '<p class="tiny" style="text-align:center;padding:20px 0">Keine Übung passt zu den Filtern.</p>';
+  document.getElementById('muscle-body').innerHTML = `
+    <div class="mhead"><div><h3>${MUSCLES[key]}</h3><p class="tiny">${inf.lat||''}</p></div>
+      <button class="ic" data-close aria-label="Schließen">✕</button></div>
+    <div class="mfig">${miniFigure(key)}</div>
+    <div class="mkpi"><div><b>${woche%1? woche.toFixed(1).replace('.',','):woche}</b><span>Sätze diese Woche</span></div>
+      ${erh!=null?`<div><b>${erh} %</b><span>erholt</span></div>`:''}
+      <div><b>${list.length}</b><span>Übungen</span></div></div>
+    ${inf.fn?`<div class="msec"><h5>Funktion</h5><p>${inf.fn}</p></div>`:''}
+    ${inf.mv?`<div class="msec"><h5>Bewegungen</h5><ul>${inf.mv.map(x=>`<li>${x}</li>`).join('')}</ul></div>`:''}
+    ${inf.err?`<div class="msec"><h5>Häufige Fehler</h5><ul>${inf.err.map(x=>`<li>${x}</li>`).join('')}</ul></div>`:''}
+    <div class="msearch"><input id="atlas-q" type="search" placeholder="Übung suchen …" value="${atlasQ.replace(/"/g,'&quot;')}"></div>
+    <div class="mfilters">${FILTERS.map(([id,lbl])=>`<button class="chip ${atlasF.has(id)?'on':''}" data-f="${id}">${lbl}</button>`).join('')}</div>
+    <div class="atlist">${kats}</div>
+    <details class="mnote"><summary>Wie die Bewertungen entstehen</summary>
+      ${RATE_ERKLAERUNG.map(([t,d])=>`<p><b>${t}:</b> ${d}</p>`).join('')}
+      <p class="tiny">Es sind nachvollziehbare Schätzungen aus der Übungsdatenbank, keine Messwerte aus Studien.</p>
+    </details>`;
+}
+function openMuscle(key){
+  if(!MUSCLES[key]) return;
+  atlasKey=key; atlasQ=''; atlasOpen=null;
+  document.querySelectorAll('#bodyFront path[data-m],#bodyBack path[data-m]')
+    .forEach(p=>p.classList.toggle('hl', p.dataset.m===key));
+  renderAtlas(); openModal('#modal-muscle');
+  if(navigator.vibrate) try{navigator.vibrate(8);}catch(_){}
+}
+document.addEventListener('click',e=>{
+  const h=e.target.closest('.exhead');
+  if(h){ atlasOpen = atlasOpen===h.dataset.exid ? null : h.dataset.exid; renderAtlas();
+         /* CSS.escape fehlt in älteren WebViews — Element direkt suchen */
+         const el=[...document.querySelectorAll('.excard')].find(x=>x.dataset.ex===h.dataset.exid);
+         if(el && atlasOpen && el.scrollIntoView) el.scrollIntoView({block:'nearest',behavior:'smooth'});
+         return; }
+  const f=e.target.closest('.mfilters .chip');
+  if(f){ const id=f.dataset.f; atlasF.has(id)? atlasF.delete(id) : atlasF.add(id); renderAtlas(); }
+});
+document.addEventListener('input',e=>{
+  if(e.target.id==='atlas-q'){ atlasQ=e.target.value;
+    const box=document.querySelector('.atlist');
+    const key=atlasKey, list=atlasList(key);
+    box.innerHTML=[1,2,3].map(c=>{ const t=list.filter(o=>o.r.cat===c); if(!t.length) return '';
+      return `<div class="atcat"><h4>${c}. ${CAT_NAME[c]} <span>${t.length}</span></h4>
+        <p class="tiny">${CAT_DESC[c]}</p>${t.map(o=>exCard(o,key)).join('')}</div>`;
+    }).join('') || '<p class="tiny" style="text-align:center;padding:20px 0">Nichts gefunden.</p>';
+  }
+});
+document.getElementById('modal-muscle').addEventListener('click',e=>{
+  if(e.target.id==='modal-muscle' || e.target.closest('[data-close]'))
+    document.querySelectorAll('path.hl').forEach(p=>p.classList.remove('hl'));
+});
+
 renderAll();
 showScreen(state.active? 'scr-train':'scr-home');
 startLock();
 initPWA();
+/* Sicherungspunkt beim Start (höchstens einer pro Tag) und ggf. Erinnerung —
+   erst nachdem der PIN-Bildschirm weg ist, sonst überlagern sich die Fenster. */
+makeSnapshot('App-Start');
+setTimeout(function askLater(){
+  if($('#lock').classList.contains('on')){ setTimeout(askLater, 1500); return; }
+  maybeAskBackup();
+}, 1200);
 </script>
 </body>
 </html>
