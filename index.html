@@ -119,6 +119,7 @@ path[data-m].m3{fill:var(--m3);stroke:#3d7dff;filter:drop-shadow(0 0 5px rgba(61
 .setrow input{text-align:center;padding:9px 4px;font-weight:700}
 .setrow.filled input{border-color:#1e3a75;background:#0c1526}
 .addset{width:100%;margin-top:4px;padding:8px;border:1px dashed var(--border2);border-radius:10px;color:var(--txt2);font-weight:600;font-size:13px}
+.progbox{display:flex;align-items:center;gap:10px;background:linear-gradient(120deg,#0a1730,#080d18);border:1px solid #1d3f7a;border-radius:12px;padding:9px 11px;margin:8px 0 2px}
 
 /* ---------- lists ---------- */
 .item{display:flex;align-items:center;gap:10px;padding:12px 4px;border-bottom:1px solid var(--border)}
@@ -402,6 +403,30 @@ path[data-m].m3{fill:var(--m3);stroke:#3d7dff;filter:drop-shadow(0 0 5px rgba(61
   <button class="btn btn-acc btn-block" id="cx-save">Speichern</button>
 </div></div>
 
+<div class="mback" id="modal-exopt"><div class="modal">
+  <div class="grab"></div>
+  <div class="mhd"><h2 id="xo-title">Übung einstellen</h2><button class="iconbtn" data-close>✕</button></div>
+  <div class="card">
+    <div class="row" style="justify-content:space-between">
+      <div class="grow"><b style="font-size:14px">Einseitig (pro Seite)</b>
+        <div class="tiny">Du loggst einen Satz pro Seite. Volumen zählt dann beide Seiten, Sätze pro Muskel bleiben gleich.</div></div>
+      <button class="chip" id="xo-uni">Aus</button>
+    </div>
+  </div>
+  <div class="card">
+    <h3 style="margin-bottom:8px">Wiederholungs-Ziel</h3>
+    <div class="row"><input type="number" id="xo-lo" min="1" max="60" style="width:76px"><span class="sub">bis</span>
+      <input type="number" id="xo-hi" min="1" max="60" style="width:76px"><span class="sub">Wdh</span></div>
+    <p class="tiny" style="margin-top:8px">Sind alle Sätze am oberen Wert, schlägt die App mehr Gewicht vor.</p>
+  </div>
+  <div class="card">
+    <h3 style="margin-bottom:8px">Gewichtssprung</h3>
+    <div class="row"><input type="number" id="xo-step" min="0.25" max="20" step="0.25" style="width:90px"><span class="sub">kg pro Steigerung</span></div>
+    <p class="tiny" style="margin-top:8px">Kurzhanteln meist 2 kg (nächstes Paar), Langhantel 2,5 kg, schwere Übungen 5 kg.</p>
+  </div>
+  <button class="btn btn-ghost btn-block btn-sm" id="xo-reset">Auf Standard zurücksetzen</button>
+</div></div>
+
 <div class="mback" id="modal-bw"><div class="modal">
   <div class="grab"></div>
   <div class="mhd"><h2>⚖️ Körpergewicht</h2><button class="iconbtn" data-close>✕</button></div>
@@ -460,7 +485,7 @@ path[data-m].m3{fill:var(--m3);stroke:#3d7dff;filter:drop-shadow(0 0 5px rgba(61
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:14px">Fitness Tracker V5 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:14px">Fitness Tracker V7 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast"></div>
@@ -616,7 +641,7 @@ const RADAR_AXES = [
 function sumGroups(m, defs){ return defs.map(([label,keys])=>[label, keys.reduce((a,k)=>a+(m[k]||0),0)]); }
 /* ================= ÜBUNGSDATENBANK ================= */
 /* [Name, Gruppe, Gerät, primäre Muskeln, sekundäre Muskeln, Alias/Suchbegriffe] */
-const EQUIPS = ['Langhantel','Kurzhantel','Maschine','Kabel','Smith Machine','Körpergewicht','SZ-Stange','Trap Bar','Kettlebell','Band','Platte','Sonstiges'];
+const EQUIPS = ['Langhantel','Kurzhantel','Maschine','Kabel','Multipresse','Körpergewicht','SZ-Stange','Trap-Stange','Kettlebell','Widerstandsband','Hantelscheibe','Sonstiges'];
 const EXDB_RAW = [
 /* ---------- BRUST ---------- */
 ['Bankdrücken (Langhantel)','Brust','Langhantel',['chest'],['front_delt','triceps'],'bench press flat'],
@@ -625,302 +650,302 @@ const EXDB_RAW = [
 ['Schrägbankdrücken (Kurzhantel)','Brust','Kurzhantel',['chest_up'],['front_delt','triceps'],'incline dumbbell press'],
 ['Negativbankdrücken (Langhantel)','Brust','Langhantel',['chest_low'],['triceps'],'decline bench press'],
 ['Negativbankdrücken (Kurzhantel)','Brust','Kurzhantel',['chest_low'],['triceps'],'decline dumbbell press'],
-['Chest Press Maschine','Brust','Maschine',['chest'],['front_delt','triceps'],'brustpresse machine'],
-['Incline Chest Press Maschine','Brust','Maschine',['chest_up'],['front_delt','triceps'],'schrägbank machine press'],
-['Decline Chest Press Maschine','Brust','Maschine',['chest_low'],['triceps'],'negativ machine press'],
-['Chest Press (Kabel, sitzend)','Brust','Kabel',['chest'],['front_delt','triceps'],'cable press'],
-['Bankdrücken (Smith Machine)','Brust','Smith Machine',['chest'],['front_delt','triceps'],'smith bench'],
-['Schrägbankdrücken (Smith Machine)','Brust','Smith Machine',['chest_up'],['front_delt','triceps'],'smith incline'],
+['Brustpresse (Maschine)','Brust','Maschine',['chest'],['front_delt','triceps'],'brustpresse machine chest press maschine'],
+['Schrägbank-Brustpresse (Maschine)','Brust','Maschine',['chest_up'],['front_delt','triceps'],'schrägbank machine press incline chest maschine'],
+['Negativ-Brustpresse (Maschine)','Brust','Maschine',['chest_low'],['triceps'],'negativ machine press decline chest maschine'],
+['Brustpresse (Kabel, sitzend)','Brust','Kabel',['chest'],['front_delt','triceps'],'cable press chest (kabel, sitzend)'],
+['Bankdrücken (Multipresse)','Brust','Multipresse',['chest'],['front_delt','triceps'],'smith bench bankdrücken (smith machine) machine'],
+['Schrägbankdrücken (Multipresse)','Brust','Multipresse',['chest_up'],['front_delt','triceps'],'smith incline schrägbankdrücken (smith machine) machine'],
 ['Liegestütze','Brust','Körpergewicht',['chest'],['front_delt','triceps','abs'],'push up pushup'],
 ['Liegestütze (mit Gewicht)','Brust','Körpergewicht',['chest'],['front_delt','triceps'],'weighted push up'],
 ['Liegestütze (Defizit)','Brust','Körpergewicht',['chest'],['front_delt','triceps'],'deficit push up'],
 ['Liegestütze (auf Knien)','Brust','Körpergewicht',['chest'],['triceps'],'knee push up'],
 ['Fliegende (Kurzhantel, flach)','Brust','Kurzhantel',['chest'],['front_delt'],'chest fly dumbbell'],
 ['Fliegende (Kurzhantel, Schrägbank)','Brust','Kurzhantel',['chest_up'],['front_delt'],'incline fly'],
-['Butterfly (Pec Deck Maschine)','Brust','Maschine',['chest'],[],'pec deck fly machine'],
-['Cable Fly (hoch → tief)','Brust','Kabel',['chest_low'],['front_delt'],'high to low crossover'],
-['Cable Fly (Mitte)','Brust','Kabel',['chest'],['front_delt'],'cable crossover mid'],
-['Cable Fly (tief → hoch)','Brust','Kabel',['chest_up'],['front_delt'],'low to high crossover'],
-['Cable Fly (einarmig)','Brust','Kabel',['chest'],[],'single arm fly'],
+['Butterfly (Maschine)','Brust','Maschine',['chest'],[],'pec deck fly machine butterfly (pec maschine)'],
+['Kabelzug-Fliegende (hoch → tief)','Brust','Kabel',['chest_low'],['front_delt'],'high to low crossover cable fly (hoch → tief)'],
+['Kabelzug-Fliegende (Mitte)','Brust','Kabel',['chest'],['front_delt'],'cable crossover mid fly (mitte)'],
+['Kabelzug-Fliegende (tief → hoch)','Brust','Kabel',['chest_up'],['front_delt'],'low to high crossover cable fly (tief → hoch)'],
+['Kabelzug-Fliegende (einarmig)','Brust','Kabel',['chest'],[],'single arm fly cable (einarmig)',1],
 ['Dips (Brust-Fokus)','Brust','Körpergewicht',['chest_low'],['triceps','front_delt'],'chest dips'],
-['Dip Maschine','Brust','Maschine',['chest_low'],['triceps'],'machine dips dip'],
-['Svend Press (Platte)','Brust','Platte',['chest'],['front_delt'],'plate press'],
-['Floor Press (Langhantel)','Brust','Langhantel',['chest'],['triceps'],'floor press'],
-['Floor Press (Kurzhantel)','Brust','Kurzhantel',['chest'],['triceps'],'db floor press'],
-['Landmine Press (Brust)','Brust','Langhantel',['chest'],['front_delt','triceps'],'landmine'],
-['Guillotine Press','Brust','Langhantel',['chest_up'],['front_delt'],''],
-['Squeeze Press (Kurzhantel)','Brust','Kurzhantel',['chest'],['triceps'],'crush press'],
-['Squeeze Press (Schrägbank)','Brust','Kurzhantel',['chest_up'],['triceps'],''],
-['Liegestütze (Band)','Brust','Band',['chest'],['triceps'],'band push up'],
-['Chest Press (Band)','Brust','Band',['chest'],['triceps'],'band press'],
-['Band Fly','Brust','Band',['chest'],[],''],
-['Pullover (Kurzhantel)','Brust','Kurzhantel',['chest'],['lats','triceps'],'dumbbell pullover'],
+['Dip-Maschine','Brust','Maschine',['chest_low'],['triceps'],'machine dips dip maschine'],
+['Plattendrücken vor der Brust','Brust','Hantelscheibe',['chest'],['front_delt'],'plate press svend (platte) platte'],
+['Bodendrücken (Langhantel)','Brust','Langhantel',['chest'],['triceps'],'floor press (langhantel)'],
+['Bodendrücken (Kurzhantel)','Brust','Kurzhantel',['chest'],['triceps'],'db floor press (kurzhantel)'],
+['Landmine-Drücken (Brust)','Brust','Langhantel',['chest'],['front_delt','triceps'],'landmine press (brust)'],
+['Guillotine-Bankdrücken','Brust','Langhantel',['chest_up'],['front_delt'],'guillotine press'],
+['Enges Kurzhanteldrücken','Brust','Kurzhantel',['chest'],['triceps'],'crush press squeeze (kurzhantel)'],
+['Enges Kurzhanteldrücken (Schrägbank)','Brust','Kurzhantel',['chest_up'],['triceps'],'squeeze press (schrägbank)'],
+['Liegestütze (Band)','Brust','Widerstandsband',['chest'],['triceps'],'band push up'],
+['Brustdrücken (Band)','Brust','Widerstandsband',['chest'],['triceps'],'band press chest (band)'],
+['Fliegende (Band)','Brust','Widerstandsband',['chest'],[],'band fly'],
+['Überzüge (Kurzhantel)','Brust','Kurzhantel',['chest'],['lats','triceps'],'dumbbell pullover (kurzhantel)'],
 /* ---------- RÜCKEN ---------- */
 ['Klimmzüge (Obergriff)','Rücken','Körpergewicht',['lats'],['biceps','upper_back'],'pull up pullup'],
 ['Klimmzüge (mit Gewicht)','Rücken','Körpergewicht',['lats'],['biceps','upper_back'],'weighted pull up'],
-['Chin-Ups (Untergriff)','Rücken','Körpergewicht',['lats','biceps'],['upper_back'],'chin up'],
-['Chin-Ups (mit Gewicht)','Rücken','Körpergewicht',['lats','biceps'],['upper_back'],'weighted chin up'],
+['Klimmzüge (Untergriff)','Rücken','Körpergewicht',['lats','biceps'],['upper_back'],'chin up chin-ups (untergriff)'],
+['Klimmzüge (Untergriff, mit Gewicht)','Rücken','Körpergewicht',['lats','biceps'],['upper_back'],'weighted chin up chin-ups (mit gewicht)'],
 ['Klimmzüge (neutraler Griff)','Rücken','Körpergewicht',['lats'],['biceps','upper_back'],'neutral grip pull up'],
 ['Klimmzug-Maschine (assistiert)','Rücken','Maschine',['lats'],['biceps'],'assisted pull up'],
 ['Latzug (breiter Griff)','Rücken','Kabel',['lats'],['biceps','upper_back'],'lat pulldown wide'],
 ['Latzug (enger Griff)','Rücken','Kabel',['lats'],['biceps'],'close grip pulldown'],
 ['Latzug (neutraler Griff)','Rücken','Kabel',['lats'],['biceps'],'neutral pulldown'],
 ['Latzug (Untergriff)','Rücken','Kabel',['lats','biceps'],[],'reverse grip pulldown'],
-['Latzug (einarmig)','Rücken','Kabel',['lats'],['biceps'],'single arm pulldown'],
-['Pulldown Maschine (plate loaded)','Rücken','Maschine',['lats'],['biceps'],'machine pulldown'],
-['Straight-Arm Pulldown (Kabel)','Rücken','Kabel',['lats'],['triceps'],'überzüge cable pullover'],
-['Rope Pullover (Kabel)','Rücken','Kabel',['lats'],[],''],
+['Latzug (einarmig)','Rücken','Kabel',['lats'],['biceps'],'single arm pulldown',1],
+['Latzug-Maschine (Scheiben)','Rücken','Maschine',['lats'],['biceps'],'machine pulldown maschine (plate loaded)'],
+['Überzüge am Kabel (gestreckte Arme)','Rücken','Kabel',['lats'],['triceps'],'überzüge cable pullover straight-arm pulldown (kabel)'],
+['Seilzug-Überzüge','Rücken','Kabel',['lats'],[],'rope pullover (kabel)'],
 ['Langhantelrudern (Obergriff)','Rücken','Langhantel',['upper_back','lats'],['rear_delt','biceps','lower_back'],'barbell row bent over'],
 ['Langhantelrudern (Untergriff)','Rücken','Langhantel',['lats','upper_back'],['biceps','lower_back'],'underhand row'],
-['Pendlay Row','Rücken','Langhantel',['upper_back','lats'],['lower_back'],''],
-['T-Bar Rudern','Rücken','Langhantel',['upper_back','lats'],['biceps','lower_back'],'t bar row'],
-['T-Bar Rudern (Brustauflage)','Rücken','Maschine',['upper_back','lats'],['biceps'],'chest supported t bar'],
-['Kurzhantelrudern (einarmig)','Rücken','Kurzhantel',['lats','upper_back'],['biceps','rear_delt'],'dumbbell row one arm'],
+['Pendlay-Rudern','Rücken','Langhantel',['upper_back','lats'],['lower_back'],'pendlay row'],
+['T-Stangen-Rudern','Rücken','Langhantel',['upper_back','lats'],['biceps','lower_back'],'t bar row t-bar rudern'],
+['T-Stangen-Rudern (Brustauflage)','Rücken','Maschine',['upper_back','lats'],['biceps'],'chest supported t bar t-bar rudern (brustauflage)'],
+['Kurzhantelrudern (einarmig)','Rücken','Kurzhantel',['lats','upper_back'],['biceps','rear_delt'],'dumbbell row one arm',1],
 ['Kurzhantelrudern (beidseitig)','Rücken','Kurzhantel',['lats','upper_back'],['biceps'],'double db row'],
 ['Rudern (Brustauflage, Kurzhantel)','Rücken','Kurzhantel',['upper_back','lats'],['rear_delt','biceps'],'chest supported row'],
-['Seal Row','Rücken','Langhantel',['upper_back','lats'],['biceps'],''],
+['Rudern in Bauchlage','Rücken','Langhantel',['upper_back','lats'],['biceps'],'seal row'],
 ['Kabelrudern (V-Griff)','Rücken','Kabel',['upper_back','lats'],['biceps'],'seated cable row'],
 ['Kabelrudern (breiter Griff)','Rücken','Kabel',['upper_back'],['rear_delt','biceps'],'wide cable row'],
-['Kabelrudern (einarmig)','Rücken','Kabel',['lats','upper_back'],['biceps'],'single arm cable row'],
-['Rudermaschine (plate loaded)','Rücken','Maschine',['upper_back','lats'],['biceps'],'machine row'],
+['Kabelrudern (einarmig)','Rücken','Kabel',['lats','upper_back'],['biceps'],'single arm cable row',1],
+['Rudermaschine (Scheiben)','Rücken','Maschine',['upper_back','lats'],['biceps'],'machine row rudermaschine (plate loaded)'],
 ['Rudermaschine (breiter Griff)','Rücken','Maschine',['upper_back'],['rear_delt','biceps'],'wide row machine breite ruder'],
 ['Rudermaschine (enger Griff)','Rücken','Maschine',['lats','upper_back'],['biceps'],'close row machine enge ruder'],
-['High Row Maschine','Rücken','Maschine',['lats','upper_back'],['rear_delt','biceps'],'high row'],
-['Low Row Maschine','Rücken','Maschine',['lats','upper_back'],['biceps'],'low row'],
-['Rudern (Smith Machine)','Rücken','Smith Machine',['upper_back','lats'],['biceps'],'smith row'],
-['Inverted Row','Rücken','Körpergewicht',['upper_back','lats'],['biceps'],'australian pull up'],
-['Meadows Row','Rücken','Langhantel',['lats','upper_back'],['rear_delt'],''],
-['Landmine Row','Rücken','Langhantel',['lats','upper_back'],['biceps'],''],
-['Kroc Row','Rücken','Kurzhantel',['lats','upper_back'],['forearms','biceps'],''],
+['Rudern von oben (Maschine)','Rücken','Maschine',['lats','upper_back'],['rear_delt','biceps'],'high row maschine'],
+['Rudern von unten (Maschine)','Rücken','Maschine',['lats','upper_back'],['biceps'],'low row maschine'],
+['Rudern (Multipresse)','Rücken','Multipresse',['upper_back','lats'],['biceps'],'smith row rudern (smith machine) machine'],
+['Umgekehrtes Rudern','Rücken','Körpergewicht',['upper_back','lats'],['biceps'],'australian pull up inverted row'],
+['Meadows-Rudern','Rücken','Langhantel',['lats','upper_back'],['rear_delt'],'meadows row',1],
+['Landmine-Rudern','Rücken','Langhantel',['lats','upper_back'],['biceps'],'landmine row'],
+['Kroc-Rudern','Rücken','Kurzhantel',['lats','upper_back'],['forearms','biceps'],'kroc row',1],
 ['Kreuzheben (konventionell)','Rücken','Langhantel',['glutes','hamstrings','lower_back'],['lats','traps','forearms','quads'],'deadlift'],
 ['Kreuzheben (Sumo)','Rücken','Langhantel',['glutes','hamstrings','quads'],['lower_back','adductors','traps'],'sumo deadlift'],
-['Kreuzheben (Trap Bar)','Rücken','Trap Bar',['glutes','quads','hamstrings'],['lower_back','traps','forearms'],'trap bar deadlift'],
-['Kreuzheben (Snatch-Grip)','Rücken','Langhantel',['hamstrings','glutes','upper_back'],['lower_back','traps'],''],
-['Rack Pulls','Rücken','Langhantel',['lower_back','glutes'],['traps','lats','forearms'],''],
+['Kreuzheben (Trap-Stange)','Rücken','Trap-Stange',['glutes','quads','hamstrings'],['lower_back','traps','forearms'],'trap bar deadlift kreuzheben (trap bar)'],
+['Kreuzheben (Reißgriff)','Rücken','Langhantel',['hamstrings','glutes','upper_back'],['lower_back','traps'],'kreuzheben (snatch-grip)'],
+['Teilkreuzheben (aus dem Rack)','Rücken','Langhantel',['lower_back','glutes'],['traps','lats','forearms'],'rack pulls'],
 ['Rückenstrecker (Hyperextension)','Rücken','Körpergewicht',['lower_back'],['glutes','hamstrings'],'back extension'],
-['Rückenstrecker (mit Gewicht)','Rücken','Platte',['lower_back'],['glutes','hamstrings'],'weighted back extension'],
-['Reverse Hyperextension','Rücken','Maschine',['glutes','lower_back'],['hamstrings'],'reverse hyper'],
-['Superman','Rücken','Körpergewicht',['lower_back'],['glutes'],''],
-['Shrugs (Langhantel)','Rücken','Langhantel',['traps'],['forearms'],'barbell shrug nacken'],
-['Shrugs (Kurzhantel)','Rücken','Kurzhantel',['traps'],['forearms'],'dumbbell shrug'],
-['Shrugs (Smith Machine)','Rücken','Smith Machine',['traps'],[],'smith shrug'],
-['Shrugs (Trap Bar)','Rücken','Trap Bar',['traps'],['forearms'],''],
-['Shrugs (Kabel)','Rücken','Kabel',['traps'],[],'cable shrug'],
+['Rückenstrecker (mit Gewicht)','Rücken','Hantelscheibe',['lower_back'],['glutes','hamstrings'],'weighted back extension platte'],
+['Umgekehrter Rückenstrecker','Rücken','Maschine',['glutes','lower_back'],['hamstrings'],'reverse hyper hyperextension'],
+['Superman (Bauchlage)','Rücken','Körpergewicht',['lower_back'],['glutes'],'superman'],
+['Schulterheben (Langhantel)','Rücken','Langhantel',['traps'],['forearms'],'barbell shrug nacken shrugs (langhantel)'],
+['Schulterheben (Kurzhantel)','Rücken','Kurzhantel',['traps'],['forearms'],'dumbbell shrug shrugs (kurzhantel)'],
+['Schulterheben (Multipresse)','Rücken','Multipresse',['traps'],[],'smith shrug shrugs (smith machine) machine'],
+['Schulterheben (Trap-Stange)','Rücken','Trap-Stange',['traps'],['forearms'],'shrugs (trap bar)'],
+['Schulterheben (Kabel)','Rücken','Kabel',['traps'],[],'cable shrug shrugs (kabel)'],
 /* ---------- SCHULTERN ---------- */
 ['Schulterdrücken (Langhantel, stehend)','Schultern','Langhantel',['front_delt'],['side_delt','triceps','abs'],'overhead press ohp military'],
 ['Schulterdrücken (Langhantel, sitzend)','Schultern','Langhantel',['front_delt'],['side_delt','triceps'],'seated ohp'],
 ['Schulterdrücken (Kurzhantel, sitzend)','Schultern','Kurzhantel',['front_delt'],['side_delt','triceps'],'dumbbell shoulder press'],
 ['Schulterdrücken (Kurzhantel, stehend)','Schultern','Kurzhantel',['front_delt'],['side_delt','triceps','abs'],'standing db press'],
-['Arnold Press','Schultern','Kurzhantel',['front_delt','side_delt'],['triceps'],''],
-['Shoulder Press Maschine','Schultern','Maschine',['front_delt'],['side_delt','triceps'],'schulterpresse machine'],
-['Schulterdrücken (Smith Machine)','Schultern','Smith Machine',['front_delt'],['side_delt','triceps'],'smith ohp'],
-['Push Press','Schultern','Langhantel',['front_delt'],['side_delt','triceps','quads'],''],
-['Landmine Press (Schulter)','Schultern','Langhantel',['front_delt'],['chest','triceps'],''],
-['Landmine Press (einarmig)','Schultern','Langhantel',['front_delt'],['side_delt','abs'],''],
-['Z Press','Schultern','Langhantel',['front_delt'],['side_delt','abs'],''],
-['Viking Press','Schultern','Maschine',['front_delt'],['side_delt','triceps'],''],
+['Arnold-Drücken','Schultern','Kurzhantel',['front_delt','side_delt'],['triceps'],'arnold press'],
+['Schulterpresse (Maschine)','Schultern','Maschine',['front_delt'],['side_delt','triceps'],'schulterpresse machine shoulder press maschine'],
+['Schulterdrücken (Multipresse)','Schultern','Multipresse',['front_delt'],['side_delt','triceps'],'smith ohp schulterdrücken (smith machine) machine'],
+['Schulterdrücken mit Schwung','Schultern','Langhantel',['front_delt'],['side_delt','triceps','quads'],'push press'],
+['Landmine-Drücken (Schulter)','Schultern','Langhantel',['front_delt'],['chest','triceps'],'landmine press (schulter)'],
+['Landmine-Drücken (einarmig)','Schultern','Langhantel',['front_delt'],['side_delt','abs'],'landmine press (einarmig)',1],
+['Z-Drücken (am Boden sitzend)','Schultern','Langhantel',['front_delt'],['side_delt','abs'],'z press'],
+['Viking-Drücken','Schultern','Maschine',['front_delt'],['side_delt','triceps'],'viking press'],
 ['Seitheben (Kurzhantel)','Schultern','Kurzhantel',['side_delt'],[],'lateral raise seitenheben'],
 ['Seitheben (sitzend)','Schultern','Kurzhantel',['side_delt'],[],'seated lateral raise'],
 ['Seitheben (Kabel)','Schultern','Kabel',['side_delt'],[],'cable lateral raise'],
 ['Seitheben (Kabel, hinter Rücken)','Schultern','Kabel',['side_delt'],[],'behind back lateral'],
 ['Seitheben Maschine','Schultern','Maschine',['side_delt'],[],'lateral raise machine'],
-['Lean-In Seitheben','Schultern','Kurzhantel',['side_delt'],[],''],
+['Seitheben (angelehnt)','Schultern','Kurzhantel',['side_delt'],[],'lean-in seitheben'],
 ['Frontheben (Kurzhantel)','Schultern','Kurzhantel',['front_delt'],[],'front raise'],
-['Frontheben (Platte)','Schultern','Platte',['front_delt'],[],'plate raise'],
+['Frontheben (Platte)','Schultern','Hantelscheibe',['front_delt'],[],'plate raise platte'],
 ['Frontheben (Kabel)','Schultern','Kabel',['front_delt'],[],'cable front raise'],
-['Reverse Flys (Kurzhantel)','Schultern','Kurzhantel',['rear_delt'],['upper_back'],'rear delt fly bent over'],
-['Reverse Pec Deck Maschine','Schultern','Maschine',['rear_delt'],['upper_back'],'reverse butterfly pec dec rear delt machine'],
-['Reverse Cable Fly','Schultern','Kabel',['rear_delt'],['upper_back'],'rear delt crossover'],
-['Face Pulls (Kabel)','Schultern','Kabel',['rear_delt'],['traps','upper_back'],'facepull'],
-['Face Pulls (Band)','Schultern','Band',['rear_delt'],['traps'],''],
+['Umgekehrte Fliegende (Kurzhantel)','Schultern','Kurzhantel',['rear_delt'],['upper_back'],'rear delt fly bent over reverse flys (kurzhantel)'],
+['Umgekehrtes Butterfly (Maschine)','Schultern','Maschine',['rear_delt'],['upper_back'],'reverse butterfly pec dec rear delt machine deck maschine'],
+['Umgekehrte Fliegende (Kabel)','Schultern','Kabel',['rear_delt'],['upper_back'],'rear delt crossover reverse cable fly'],
+['Gesichtsziehen (Kabel)','Schultern','Kabel',['rear_delt'],['traps','upper_back'],'facepull face pulls (kabel)'],
+['Gesichtsziehen (Band)','Schultern','Widerstandsband',['rear_delt'],['traps'],'face pulls (band) band'],
 ['Aufrechtes Rudern (Langhantel)','Schultern','Langhantel',['side_delt'],['traps','biceps'],'upright row'],
 ['Aufrechtes Rudern (Kurzhantel)','Schultern','Kurzhantel',['side_delt'],['traps'],'db upright row'],
 ['Aufrechtes Rudern (Kabel)','Schultern','Kabel',['side_delt'],['traps'],'cable upright row'],
-['Band Pull-Aparts','Schultern','Band',['rear_delt'],['upper_back'],''],
-['Cuban Rotation','Schultern','Kurzhantel',['rear_delt'],['side_delt'],''],
-['Bus Driver','Schultern','Platte',['front_delt','side_delt'],[],''],
-['Bradford Press','Schultern','Langhantel',['front_delt','side_delt'],[],''],
+['Band auseinanderziehen','Schultern','Widerstandsband',['rear_delt'],['upper_back'],'band pull-aparts'],
+['Kubanische Rotation','Schultern','Kurzhantel',['rear_delt'],['side_delt'],'cuban rotation'],
+['Lenkrad-Drehen (Scheibe)','Schultern','Hantelscheibe',['front_delt','side_delt'],[],'bus driver platte'],
+['Bradford-Drücken','Schultern','Langhantel',['front_delt','side_delt'],[],'bradford press'],
 /* ---------- ARME: BIZEPS ---------- */
 ['Langhantel-Curls','Arme','Langhantel',['biceps'],['forearms'],'barbell curl'],
 ['SZ-Curls','Arme','SZ-Stange',['biceps'],['forearms'],'ez curl'],
 ['Kurzhantel-Curls','Arme','Kurzhantel',['biceps'],['forearms'],'dumbbell bicep curl'],
 ['Kurzhantel-Curls (alternierend)','Arme','Kurzhantel',['biceps'],['forearms'],'alternating curl'],
 ['Hammer-Curls','Arme','Kurzhantel',['biceps','forearms'],[],'hammer curl'],
-['Cross-Body Hammer-Curls','Arme','Kurzhantel',['biceps','forearms'],[],''],
+['Hammer-Curls (quer zum Körper)','Arme','Kurzhantel',['biceps','forearms'],[],'cross-body hammer-curls'],
 ['Schrägbank-Curls','Arme','Kurzhantel',['biceps'],[],'incline curl'],
-['Konzentrations-Curls','Arme','Kurzhantel',['biceps'],[],'concentration curl'],
-['Preacher Curls (SZ-Stange)','Arme','SZ-Stange',['biceps'],[],'scott curl preacher ez bar'],
-['Preacher Curls (Kurzhantel)','Arme','Kurzhantel',['biceps'],[],''],
-['Hammer Preacher Curls','Arme','Kurzhantel',['biceps','forearms'],[],'hammer preachercurl neutral'],
-['Preacher Curl Maschine','Arme','Maschine',['biceps'],[],'machine preacher'],
-['Bizeps Curl Maschine','Arme','Maschine',['biceps'],[],'bicep machine'],
+['Konzentrations-Curls','Arme','Kurzhantel',['biceps'],[],'concentration curl',1],
+['Scottcurls (SZ-Stange)','Arme','SZ-Stange',['biceps'],[],'scott curl preacher ez bar curls (sz-stange)'],
+['Scottcurls (Kurzhantel)','Arme','Kurzhantel',['biceps'],[],'preacher curls (kurzhantel)'],
+['Hammer-Scottcurls','Arme','Kurzhantel',['biceps','forearms'],[],'hammer preachercurl neutral preacher curls'],
+['Scottcurl-Maschine','Arme','Maschine',['biceps'],[],'machine preacher curl maschine'],
+['Bizeps-Curl-Maschine','Arme','Maschine',['biceps'],[],'bicep machine bizeps curl maschine'],
 ['Kabel-Curls (Stange)','Arme','Kabel',['biceps'],['forearms'],'cable curl'],
 ['Kabel-Curls (Seil, Hammer)','Arme','Kabel',['biceps','forearms'],[],'rope hammer curl'],
-['Kabel-Curls (einarmig)','Arme','Kabel',['biceps'],[],'single arm cable curl'],
-['High Cable Curls','Arme','Kabel',['biceps'],[],''],
-['Bayesian Curls (Kabel)','Arme','Kabel',['biceps'],[],''],
-['Spider Curls','Arme','SZ-Stange',['biceps'],[],''],
-['Drag Curls','Arme','Langhantel',['biceps'],[],''],
-['Zottman Curls','Arme','Kurzhantel',['biceps','forearms'],[],''],
-['21s (Langhantel)','Arme','Langhantel',['biceps'],[],'21er curls'],
-['Reverse Curls (SZ-Stange)','Arme','SZ-Stange',['forearms','biceps'],[],'reverse curl'],
-['Waiter Curls','Arme','Kurzhantel',['biceps'],[],''],
+['Kabel-Curls (einarmig)','Arme','Kabel',['biceps'],[],'single arm cable curl',1],
+['Kabel-Curls (von oben)','Arme','Kabel',['biceps'],[],'high cable curls'],
+['Kabel-Curls (hinter dem Körper)','Arme','Kabel',['biceps'],[],'bayesian curls (kabel)'],
+['Spider-Curls (vorgebeugt)','Arme','SZ-Stange',['biceps'],[],'spider curls'],
+['Zieh-Curls (am Körper entlang)','Arme','Langhantel',['biceps'],[],'drag curls'],
+['Zottman-Curls','Arme','Kurzhantel',['biceps','forearms'],[],'zottman curls'],
+['21er-Curls (Langhantel)','Arme','Langhantel',['biceps'],[],'21er curls 21s (langhantel)'],
+['Umgekehrte Curls (SZ-Stange)','Arme','SZ-Stange',['forearms','biceps'],[],'reverse curl curls (sz-stange)'],
+['Kellner-Curls','Arme','Kurzhantel',['biceps'],[],'waiter curls'],
 /* ---------- ARME: TRIZEPS ---------- */
 ['Enges Bankdrücken','Arme','Langhantel',['triceps'],['chest','front_delt'],'close grip bench'],
-['JM Press','Arme','Langhantel',['triceps'],['chest'],''],
-['Skull Crushers (SZ-Stange)','Arme','SZ-Stange',['triceps'],[],'french press liegend stirndrücken'],
-['Skull Crushers (Kurzhantel)','Arme','Kurzhantel',['triceps'],[],'db skull crusher'],
+['JM-Drücken','Arme','Langhantel',['triceps'],['chest'],'jm press'],
+['Stirndrücken (SZ-Stange)','Arme','SZ-Stange',['triceps'],[],'french press liegend stirndrücken skull crushers (sz-stange)'],
+['Stirndrücken (Kurzhantel)','Arme','Kurzhantel',['triceps'],[],'db skull crusher crushers (kurzhantel)'],
 ['Trizepsdrücken über Kopf (Kurzhantel)','Arme','Kurzhantel',['triceps'],[],'overhead extension'],
 ['Trizepsdrücken über Kopf (SZ-Stange)','Arme','SZ-Stange',['triceps'],[],''],
-['Overhead Extension (Kabel, Seil)','Arme','Kabel',['triceps'],[],'cable overhead'],
+['Trizepsdrücken über Kopf (Kabel, Seil)','Arme','Kabel',['triceps'],[],'cable overhead extension (kabel, seil)'],
 ['Trizepsdrücken (Kabel, Seil)','Arme','Kabel',['triceps'],[],'pushdown rope'],
 ['Trizepsdrücken (Kabel, Stange)','Arme','Kabel',['triceps'],[],'pushdown bar'],
 ['Trizepsdrücken (Kabel, V-Griff)','Arme','Kabel',['triceps'],[],'v bar pushdown'],
-['Trizepsdrücken (einarmig)','Arme','Kabel',['triceps'],[],'single arm pushdown'],
+['Trizepsdrücken (einarmig)','Arme','Kabel',['triceps'],[],'single arm pushdown',1],
 ['Trizepsdrücken (Untergriff)','Arme','Kabel',['triceps'],[],'reverse grip pushdown'],
-['Kickbacks (Kabel)','Arme','Kabel',['triceps'],[],'cable kickback'],
-['Kickbacks (Kurzhantel)','Arme','Kurzhantel',['triceps'],[],'db kickback'],
+['Trizeps-Rückdrücken (Kabel)','Arme','Kabel',['triceps'],[],'cable kickback kickbacks (kabel)',1],
+['Trizeps-Rückdrücken (Kurzhantel)','Arme','Kurzhantel',['triceps'],[],'db kickback kickbacks (kurzhantel)',1],
 ['Dips (Trizeps, Barren)','Arme','Körpergewicht',['triceps'],['chest_low','front_delt'],'triceps dips'],
-['Bench Dips','Arme','Körpergewicht',['triceps'],['front_delt'],''],
-['Trizeps Maschine','Arme','Maschine',['triceps'],[],'triceps extension machine'],
-['Overhead Triceps Extension Maschine','Arme','Maschine',['triceps'],[],'overhead extension machine über kopf'],
-['Seated Dip Maschine','Arme','Maschine',['triceps'],['chest'],''],
+['Bank-Dips','Arme','Körpergewicht',['triceps'],['front_delt'],'bench dips'],
+['Trizeps-Maschine','Arme','Maschine',['triceps'],[],'triceps extension machine trizeps maschine'],
+['Trizepsdrücken über Kopf (Maschine)','Arme','Maschine',['triceps'],[],'overhead extension machine über kopf triceps maschine'],
+['Dip-Maschine (sitzend)','Arme','Maschine',['triceps'],['chest'],'seated dip maschine'],
 ['Diamant-Liegestütze','Arme','Körpergewicht',['triceps'],['chest'],'diamond push up'],
-['Tate Press','Arme','Kurzhantel',['triceps'],[],''],
-['French Press (sitzend, SZ)','Arme','SZ-Stange',['triceps'],[],''],
-['Trizepsdrücken (Band)','Arme','Band',['triceps'],[],'band pushdown'],
-['Enges Bankdrücken (Smith)','Arme','Smith Machine',['triceps'],['chest'],''],
+['Tate-Drücken','Arme','Kurzhantel',['triceps'],[],'tate press'],
+['Französisches Drücken (sitzend, SZ)','Arme','SZ-Stange',['triceps'],[],'french press (sitzend, sz)'],
+['Trizepsdrücken (Band)','Arme','Widerstandsband',['triceps'],[],'band pushdown'],
+['Enges Bankdrücken (Multipresse)','Arme','Multipresse',['triceps'],['chest'],'enges bankdrücken (smith) smith machine'],
 /* ---------- ARME: UNTERARME ---------- */
-['Wrist Curls (Langhantel)','Arme','Langhantel',['forearms'],[],'handgelenk curls'],
-['Reverse Wrist Curls','Arme','Langhantel',['forearms'],[],''],
-['Wrist Curls (Kurzhantel)','Arme','Kurzhantel',['forearms'],[],''],
-['Wrist Curls (hinter Rücken)','Arme','Langhantel',['forearms'],[],''],
-['Reverse Curls (Langhantel)','Arme','Langhantel',['forearms'],['biceps'],''],
-["Farmer's Walk",'Arme','Kurzhantel',['forearms'],['traps','abs'],'farmers carry'],
-['Plate Pinch','Arme','Platte',['forearms'],[],''],
-['Dead Hang','Arme','Körpergewicht',['forearms'],['lats'],''],
-['Wrist Roller','Arme','Sonstiges',['forearms'],[],''],
+['Handgelenk-Curls (Langhantel)','Arme','Langhantel',['forearms'],[],'handgelenk curls wrist (langhantel)'],
+['Handgelenk-Curls (Obergriff)','Arme','Langhantel',['forearms'],[],'reverse wrist curls'],
+['Handgelenk-Curls (Kurzhantel)','Arme','Kurzhantel',['forearms'],[],'wrist curls (kurzhantel)'],
+['Handgelenk-Curls (hinter dem Rücken)','Arme','Langhantel',['forearms'],[],'wrist curls (hinter rücken)'],
+['Umgekehrte Curls (Langhantel)','Arme','Langhantel',['forearms'],['biceps'],'reverse curls (langhantel)'],
+['Gewichte tragen (Farmers Walk)','Arme','Kurzhantel',['forearms'],['traps','abs'],"farmers carry farmer's walk"],
+['Scheiben-Kneifgriff','Arme','Hantelscheibe',['forearms'],[],'plate pinch platte'],
+['Hängen an der Stange','Arme','Körpergewicht',['forearms'],['lats'],'dead hang'],
+['Unterarm-Roller','Arme','Sonstiges',['forearms'],[],'wrist roller'],
 /* ---------- BEINE: QUADS ---------- */
 ['Kniebeugen (Langhantel)','Beine','Langhantel',['quads','glutes'],['lower_back','adductors','abs'],'squat high bar'],
-['Kniebeugen (Low Bar)','Beine','Langhantel',['quads','glutes'],['lower_back','hamstrings'],'low bar squat'],
+['Kniebeugen (tiefe Auflage)','Beine','Langhantel',['quads','glutes'],['lower_back','hamstrings'],'low bar squat kniebeugen (low bar)'],
 ['Frontkniebeugen','Beine','Langhantel',['quads'],['glutes','abs'],'front squat'],
-['Box Squats','Beine','Langhantel',['quads','glutes'],['hamstrings'],''],
-['Pause Squats','Beine','Langhantel',['quads','glutes'],['lower_back'],''],
-['Goblet Squats','Beine','Kurzhantel',['quads','glutes'],['abs'],''],
-['Kniebeugen (Smith Machine)','Beine','Smith Machine',['quads','glutes'],[],'smith squat'],
-['Hack Squat Maschine','Beine','Maschine',['quads'],['glutes'],'hackenschmidt'],
-['Pendulum Squat Maschine','Beine','Maschine',['quads'],['glutes'],''],
-['V-Squat Maschine','Beine','Maschine',['quads'],['glutes'],''],
+['Kniebeugen auf Box','Beine','Langhantel',['quads','glutes'],['hamstrings'],'box squats'],
+['Kniebeugen mit Pause','Beine','Langhantel',['quads','glutes'],['lower_back'],'pause squats'],
+['Kelch-Kniebeugen','Beine','Kurzhantel',['quads','glutes'],['abs'],'goblet squats'],
+['Kniebeugen (Multipresse)','Beine','Multipresse',['quads','glutes'],[],'smith squat kniebeugen (smith machine) machine'],
+['Hackenschmidt-Maschine','Beine','Maschine',['quads'],['glutes'],'hackenschmidt hack squat maschine'],
+['Pendel-Kniebeugenmaschine','Beine','Maschine',['quads'],['glutes'],'pendulum squat maschine'],
+['V-Kniebeugenmaschine','Beine','Maschine',['quads'],['glutes'],'v-squat maschine'],
 ['Beinpresse','Beine','Maschine',['quads','glutes'],['hamstrings','adductors'],'leg press'],
-['Beinpresse (einbeinig)','Beine','Maschine',['quads','glutes'],[],'single leg press'],
+['Beinpresse (einbeinig)','Beine','Maschine',['quads','glutes'],[],'single leg press',1],
 ['Beinpresse (vertikal)','Beine','Maschine',['quads'],['glutes'],'vertical leg press'],
 ['Beinstrecker Maschine','Beine','Maschine',['quads'],[],'leg extension'],
-['Beinstrecker (einbeinig)','Beine','Maschine',['quads'],[],''],
-['Bulgarian Split Squats','Beine','Kurzhantel',['quads','glutes'],['adductors'],'bss'],
-['Split Squats','Beine','Kurzhantel',['quads','glutes'],[],''],
-['Ausfallschritte (gehend)','Beine','Kurzhantel',['quads','glutes'],['hamstrings'],'walking lunges'],
-['Ausfallschritte (rückwärts)','Beine','Kurzhantel',['quads','glutes'],[],'reverse lunges'],
-['Ausfallschritte (seitlich)','Beine','Körpergewicht',['quads','adductors'],['glutes'],'lateral lunge'],
-['Curtsy Lunges','Beine','Kurzhantel',['glutes','quads'],['adductors'],''],
-['Step-Ups','Beine','Kurzhantel',['quads','glutes'],[],''],
-['Sissy Squats','Beine','Körpergewicht',['quads'],[],''],
-['Belt Squats','Beine','Maschine',['quads','glutes'],[],''],
-['Zercher Squats','Beine','Langhantel',['quads','glutes'],['abs','upper_back'],''],
+['Beinstrecker (einbeinig)','Beine','Maschine',['quads'],[],'',1],
+['Bulgarische Kniebeugen','Beine','Kurzhantel',['quads','glutes'],['adductors'],'bss bulgarian split squats',1],
+['Geteilte Kniebeugen','Beine','Kurzhantel',['quads','glutes'],[],'split squats',1],
+['Ausfallschritte (gehend)','Beine','Kurzhantel',['quads','glutes'],['hamstrings'],'walking lunges',1],
+['Ausfallschritte (rückwärts)','Beine','Kurzhantel',['quads','glutes'],[],'reverse lunges',1],
+['Ausfallschritte (seitlich)','Beine','Körpergewicht',['quads','adductors'],['glutes'],'lateral lunge',1],
+['Überkreuz-Ausfallschritte','Beine','Kurzhantel',['glutes','quads'],['adductors'],'curtsy lunges',1],
+['Aufsteiger auf Box','Beine','Kurzhantel',['quads','glutes'],[],'step-ups',1],
+['Sissy-Kniebeugen','Beine','Körpergewicht',['quads'],[],'sissy squats'],
+['Gürtel-Kniebeugen','Beine','Maschine',['quads','glutes'],[],'belt squats'],
+['Zercher-Kniebeugen','Beine','Langhantel',['quads','glutes'],['abs','upper_back'],'zercher squats'],
 ['Wandsitz','Beine','Körpergewicht',['quads'],[],'wall sit'],
-['Pistol Squats','Beine','Körpergewicht',['quads','glutes'],['abs'],''],
+['Einbeinige Kniebeugen (Pistol)','Beine','Körpergewicht',['quads','glutes'],['abs'],'pistol squats',1],
 /* ---------- BEINE: BEINBEUGER ---------- */
 ['Rumänisches Kreuzheben (Langhantel)','Beine','Langhantel',['hamstrings','glutes'],['lower_back','forearms'],'rdl romanian deadlift'],
 ['Rumänisches Kreuzheben (Kurzhantel)','Beine','Kurzhantel',['hamstrings','glutes'],['lower_back'],'db rdl'],
-['Stiff-Leg Deadlift','Beine','Langhantel',['hamstrings'],['glutes','lower_back'],'gestrecktes kreuzheben'],
-['Einbeiniges RDL','Beine','Kurzhantel',['hamstrings','glutes'],['lower_back'],'single leg rdl'],
+['Gestrecktes Kreuzheben','Beine','Langhantel',['hamstrings'],['glutes','lower_back'],'gestrecktes kreuzheben stiff-leg deadlift'],
+['Einbeiniges rumänisches Kreuzheben','Beine','Kurzhantel',['hamstrings','glutes'],['lower_back'],'single leg rdl einbeiniges',1],
 ['Beinbeuger liegend (Maschine)','Beine','Maschine',['hamstrings'],[],'lying leg curl'],
 ['Beinbeuger sitzend (Maschine)','Beine','Maschine',['hamstrings'],[],'seated leg curl'],
-['Beinbeuger stehend (einbeinig)','Beine','Maschine',['hamstrings'],[],'standing leg curl'],
-['Nordic Curls','Beine','Körpergewicht',['hamstrings'],[],''],
-['Glute-Ham Raise','Beine','Maschine',['hamstrings','glutes'],['lower_back'],'ghr'],
-['Good Mornings','Beine','Langhantel',['hamstrings','lower_back'],['glutes'],''],
-['RDL (Smith Machine)','Beine','Smith Machine',['hamstrings','glutes'],['lower_back'],'smith rdl'],
-['Beincurl (Gymnastikball)','Beine','Körpergewicht',['hamstrings'],['glutes'],''],
-['Beincurl (Slider)','Beine','Körpergewicht',['hamstrings'],[],''],
+['Beinbeuger stehend (einbeinig)','Beine','Maschine',['hamstrings'],[],'standing leg curl',1],
+['Nordische Beinbeuger','Beine','Körpergewicht',['hamstrings'],[],'nordic curls'],
+['Beinbeuger-Rückenstrecker (GHR)','Beine','Maschine',['hamstrings','glutes'],['lower_back'],'ghr glute-ham raise'],
+['Guten-Morgen-Beugen','Beine','Langhantel',['hamstrings','lower_back'],['glutes'],'good mornings'],
+['Rumänisches Kreuzheben (Multipresse)','Beine','Multipresse',['hamstrings','glutes'],['lower_back'],'smith rdl (smith machine) machine'],
+['Beinbeuger (Gymnastikball)','Beine','Körpergewicht',['hamstrings'],['glutes'],'beincurl (gymnastikball)'],
+['Beinbeuger (Slider)','Beine','Körpergewicht',['hamstrings'],[],'beincurl (slider)'],
 /* ---------- BEINE: PO ---------- */
-['Hip Thrust (Langhantel)','Beine','Langhantel',['glutes'],['hamstrings','quads'],'hip thrust'],
-['Hip Thrust Maschine','Beine','Maschine',['glutes'],['hamstrings'],''],
-['Hip Thrust (Smith Machine)','Beine','Smith Machine',['glutes'],['hamstrings'],''],
-['Glute Bridge','Beine','Körpergewicht',['glutes'],['hamstrings'],''],
-['Glute Bridge (einbeinig)','Beine','Körpergewicht',['glutes'],['hamstrings'],''],
-['B-Stance Hip Thrust','Beine','Langhantel',['glutes'],['hamstrings'],''],
-['Kickbacks (Kabel, Glute)','Beine','Kabel',['glutes'],['hamstrings'],'glute kickback'],
-['Kickback Maschine','Beine','Maschine',['glutes'],['hamstrings'],''],
-['Donkey Kicks','Beine','Körpergewicht',['glutes'],[],''],
-['Fire Hydrants','Beine','Körpergewicht',['glutes','abductors'],[],''],
-['Frog Pumps','Beine','Körpergewicht',['glutes'],[],''],
-['Sumo Squats','Beine','Kurzhantel',['glutes','adductors'],['quads'],''],
-['Cable Pull-Throughs','Beine','Kabel',['glutes','hamstrings'],['lower_back'],''],
+['Hüftstoß (Langhantel)','Beine','Langhantel',['glutes'],['hamstrings','quads'],'hip thrust (langhantel)'],
+['Hüftstoß-Maschine','Beine','Maschine',['glutes'],['hamstrings'],'hip thrust maschine'],
+['Hüftstoß (Multipresse)','Beine','Multipresse',['glutes'],['hamstrings'],'hip thrust (smith machine) smith machine'],
+['Beckenheben','Beine','Körpergewicht',['glutes'],['hamstrings'],'glute bridge'],
+['Beckenheben (einbeinig)','Beine','Körpergewicht',['glutes'],['hamstrings'],'glute bridge (einbeinig)',1],
+['Hüftstoß (versetzter Stand)','Beine','Langhantel',['glutes'],['hamstrings'],'b-stance hip thrust'],
+['Beinrückheben (Kabel)','Beine','Kabel',['glutes'],['hamstrings'],'glute kickback kickbacks (kabel, glute)',1],
+['Beinrückheben (Maschine)','Beine','Maschine',['glutes'],['hamstrings'],'kickback maschine',1],
+['Eselstritte','Beine','Körpergewicht',['glutes'],[],'donkey kicks',1],
+['Beinabspreizen (Vierfüßler)','Beine','Körpergewicht',['glutes','abductors'],[],'fire hydrants',1],
+['Frosch-Beckenheben','Beine','Körpergewicht',['glutes'],[],'frog pumps'],
+['Sumo-Kniebeugen','Beine','Kurzhantel',['glutes','adductors'],['quads'],'sumo squats'],
+['Durchziehen am Kabel','Beine','Kabel',['glutes','hamstrings'],['lower_back'],'cable pull-throughs'],
 ['Abduktoren-Maschine','Beine','Maschine',['abductors'],['glutes'],'hip abduction'],
 ['Abduktion (Kabel)','Beine','Kabel',['abductors'],['glutes'],'cable abduction'],
-['Band Side Walks','Beine','Band',['abductors','glutes'],[],'monster walk'],
-['Clamshells','Beine','Band',['abductors','glutes'],[],''],
+['Seitschritte mit Band','Beine','Widerstandsband',['abductors','glutes'],[],'monster walk band side walks'],
+['Muschel-Öffnen (seitlich liegend)','Beine','Widerstandsband',['abductors','glutes'],[],'clamshells band',1],
 /* ---------- BEINE: ADDUKTOREN ---------- */
 ['Adduktoren-Maschine','Beine','Maschine',['adductors'],[],'hip adduction'],
 ['Adduktion (Kabel)','Beine','Kabel',['adductors'],[],'cable adduction'],
-['Copenhagen Plank','Beine','Körpergewicht',['adductors'],['obliques'],''],
+['Kopenhagener Seitstütz','Beine','Körpergewicht',['adductors'],['obliques'],'copenhagen plank',1],
 /* ---------- BEINE: WADEN ---------- */
 ['Wadenheben stehend (Maschine)','Beine','Maschine',['calves'],[],'standing calf raise'],
 ['Wadenheben sitzend (Maschine)','Beine','Maschine',['calves'],[],'seated calf raise'],
 ['Wadenpresse (Beinpresse)','Beine','Maschine',['calves'],[],'calf press'],
-['Wadenheben (Smith Machine)','Beine','Smith Machine',['calves'],[],'smith calf'],
-['Wadenheben einbeinig (Kurzhantel)','Beine','Kurzhantel',['calves'],[],'single leg calf raise'],
-['Donkey Calf Raises','Beine','Maschine',['calves'],[],''],
+['Wadenheben (Multipresse)','Beine','Multipresse',['calves'],[],'smith calf wadenheben (smith machine) machine'],
+['Wadenheben einbeinig (Kurzhantel)','Beine','Kurzhantel',['calves'],[],'single leg calf raise',1],
+['Esel-Wadenheben','Beine','Maschine',['calves'],[],'donkey calf raises'],
 ['Wadenheben stehend (Langhantel)','Beine','Langhantel',['calves'],[],''],
-['Tibialis Raises','Beine','Körpergewicht',['calves'],[],''],
+['Schienbeinheben','Beine','Körpergewicht',['calves'],[],'tibialis raises'],
 ['Seilspringen','Beine','Sonstiges',['calves'],[],'jump rope'],
 /* ---------- BAUCH ---------- */
-['Crunches','Bauch','Körpergewicht',['abs'],[],''],
-['Crunches (mit Gewicht)','Bauch','Platte',['abs'],[],'weighted crunch'],
+['Crunches (Bauchpressen)','Bauch','Körpergewicht',['abs'],[],'crunches'],
+['Crunches (mit Gewicht)','Bauch','Hantelscheibe',['abs'],[],'weighted crunch platte'],
 ['Kabel-Crunches (kniend)','Bauch','Kabel',['abs'],[],'cable crunch'],
-['Crunch Maschine','Bauch','Maschine',['abs'],[],'ab machine'],
+['Crunch-Maschine','Bauch','Maschine',['abs'],[],'ab machine crunch maschine'],
 ['Sit-Ups','Bauch','Körpergewicht',['abs'],[],''],
-['Sit-Ups (mit Gewicht)','Bauch','Platte',['abs'],[],''],
+['Sit-Ups (mit Gewicht)','Bauch','Hantelscheibe',['abs'],[],'platte'],
 ['Sit-Ups (Negativbank)','Bauch','Körpergewicht',['abs'],[],'decline sit up'],
-['Hanging Leg Raises','Bauch','Körpergewicht',['abs'],['forearms'],'beinheben hängend'],
-['Hanging Knee Raises','Bauch','Körpergewicht',['abs'],[],'knieheben'],
-["Beinheben (Captain's Chair)",'Bauch','Maschine',['abs'],[],'captains chair'],
+['Beinheben (hängend)','Bauch','Körpergewicht',['abs'],['forearms'],'beinheben hängend hanging leg raises'],
+['Knieheben (hängend)','Bauch','Körpergewicht',['abs'],[],'knieheben hanging knee raises'],
+['Beinheben (Beinhebemaschine)','Bauch','Maschine',['abs'],[],"captains chair beinheben (captain's chair)"],
 ['Beinheben (liegend)','Bauch','Körpergewicht',['abs'],[],'lying leg raise'],
-['Reverse Crunches','Bauch','Körpergewicht',['abs'],[],''],
-['V-Ups','Bauch','Körpergewicht',['abs'],[],''],
-['Toes-to-Bar','Bauch','Körpergewicht',['abs'],['forearms','lats'],''],
-['Ab-Wheel Rollouts','Bauch','Sonstiges',['abs'],['obliques','lats'],'ab roller'],
-['Plank (Sek. als Wdh)','Bauch','Körpergewicht',['abs'],['obliques'],'planke unterarmstütz'],
-['Plank (mit Gewicht)','Bauch','Platte',['abs'],['obliques'],''],
-['Side Plank (Sek. als Wdh)','Bauch','Körpergewicht',['obliques'],['abs'],'seitstütz'],
-['Russian Twists','Bauch','Platte',['obliques'],['abs'],''],
-['Woodchopper (Kabel, hoch → tief)','Bauch','Kabel',['obliques'],['abs'],'holzhacker'],
-['Woodchopper (Kabel, tief → hoch)','Bauch','Kabel',['obliques'],['abs'],''],
-['Pallof Press','Bauch','Kabel',['obliques','abs'],[],''],
-['Dead Bugs','Bauch','Körpergewicht',['abs'],[],''],
-['Bird Dogs','Bauch','Körpergewicht',['abs','lower_back'],[],''],
-['Mountain Climbers','Bauch','Körpergewicht',['abs'],['obliques'],''],
-['Dragon Flags','Bauch','Körpergewicht',['abs'],['obliques'],''],
-['Hollow Hold (Sek. als Wdh)','Bauch','Körpergewicht',['abs'],[],''],
-['L-Sit (Sek. als Wdh)','Bauch','Körpergewicht',['abs'],['triceps'],''],
-['Seitbeugen (Kurzhantel)','Bauch','Kurzhantel',['obliques'],[],'side bend'],
-['Suitcase Carry','Bauch','Kurzhantel',['obliques'],['forearms','traps'],''],
+['Umgekehrte Crunches','Bauch','Körpergewicht',['abs'],[],'reverse crunches'],
+['V-Aufrichter','Bauch','Körpergewicht',['abs'],[],'v-ups'],
+['Zehen zur Stange','Bauch','Körpergewicht',['abs'],['forearms','lats'],'toes-to-bar'],
+['Bauchroller (Ab-Wheel)','Bauch','Sonstiges',['abs'],['obliques','lats'],'ab roller ab-wheel rollouts'],
+['Unterarmstütz (Sek. als Wdh)','Bauch','Körpergewicht',['abs'],['obliques'],'planke unterarmstütz plank (sek. als wdh)'],
+['Unterarmstütz (mit Gewicht)','Bauch','Hantelscheibe',['abs'],['obliques'],'plank (mit gewicht) platte'],
+['Seitstütz (Sek. als Wdh)','Bauch','Körpergewicht',['obliques'],['abs'],'seitstütz side plank (sek. als wdh)',1],
+['Russische Drehungen','Bauch','Hantelscheibe',['obliques'],['abs'],'russian twists platte'],
+['Holzhacker (Kabel, hoch → tief)','Bauch','Kabel',['obliques'],['abs'],'holzhacker woodchopper (kabel, hoch → tief)'],
+['Holzhacker (Kabel, tief → hoch)','Bauch','Kabel',['obliques'],['abs'],'woodchopper (kabel, tief → hoch)'],
+['Pallof-Drücken (Anti-Rotation)','Bauch','Kabel',['obliques','abs'],[],'pallof press'],
+['Toter Käfer','Bauch','Körpergewicht',['abs'],[],'dead bugs'],
+['Vierfüßler diagonal','Bauch','Körpergewicht',['abs','lower_back'],[],'bird dogs'],
+['Bergsteiger','Bauch','Körpergewicht',['abs'],['obliques'],'mountain climbers'],
+['Drachenfahne','Bauch','Körpergewicht',['abs'],['obliques'],'dragon flags'],
+['Hohlkörper-Halten (Sek. als Wdh)','Bauch','Körpergewicht',['abs'],[],'hollow hold (sek. als wdh)'],
+['L-Sitz (Sek. als Wdh)','Bauch','Körpergewicht',['abs'],['triceps'],'l-sit (sek. als wdh)'],
+['Seitbeugen (Kurzhantel)','Bauch','Kurzhantel',['obliques'],[],'side bend',1],
+['Koffertragen (einseitig)','Bauch','Kurzhantel',['obliques'],['forearms','traps'],'suitcase carry',1],
 /* ---------- GANZKÖRPER ---------- */
-['Power Cleans','Ganzkörper','Langhantel',['quads','glutes','traps'],['hamstrings','lower_back','forearms'],''],
-['Hang Cleans','Ganzkörper','Langhantel',['quads','glutes','traps'],['hamstrings'],''],
-['Clean & Jerk','Ganzkörper','Langhantel',['quads','glutes','front_delt'],['traps','triceps','lower_back'],''],
-['Snatch','Ganzkörper','Langhantel',['quads','glutes','traps'],['front_delt','lower_back'],''],
-['Kettlebell Swings','Ganzkörper','Kettlebell',['glutes','hamstrings'],['lower_back','front_delt','abs'],''],
-['Kettlebell Clean & Press','Ganzkörper','Kettlebell',['front_delt','glutes'],['triceps','abs'],''],
-['Thrusters','Ganzkörper','Langhantel',['quads','front_delt'],['glutes','triceps'],''],
-['Sled Push','Ganzkörper','Sonstiges',['quads','glutes'],['calves','chest'],'schlitten'],
-['Sled Pull','Ganzkörper','Sonstiges',['hamstrings','upper_back'],['glutes','forearms'],''],
-['Battle Ropes','Ganzkörper','Sonstiges',['front_delt','abs'],['forearms'],''],
+['Umsetzen (Power Clean)','Ganzkörper','Langhantel',['quads','glutes','traps'],['hamstrings','lower_back','forearms'],'power cleans'],
+['Umsetzen aus dem Hang','Ganzkörper','Langhantel',['quads','glutes','traps'],['hamstrings'],'hang cleans'],
+['Umsetzen & Stoßen','Ganzkörper','Langhantel',['quads','glutes','front_delt'],['traps','triceps','lower_back'],'clean & jerk'],
+['Reißen','Ganzkörper','Langhantel',['quads','glutes','traps'],['front_delt','lower_back'],'snatch'],
+['Kettlebell-Schwünge','Ganzkörper','Kettlebell',['glutes','hamstrings'],['lower_back','front_delt','abs'],'kettlebell swings'],
+['Kettlebell Umsetzen & Drücken','Ganzkörper','Kettlebell',['front_delt','glutes'],['triceps','abs'],'kettlebell clean & press'],
+['Kniebeuge mit Drücken (Thruster)','Ganzkörper','Langhantel',['quads','front_delt'],['glutes','triceps'],'thrusters thruster (kniebeuge + drücken)'],
+['Schlitten schieben','Ganzkörper','Sonstiges',['quads','glutes'],['calves','chest'],'schlitten sled push'],
+['Schlitten ziehen','Ganzkörper','Sonstiges',['hamstrings','upper_back'],['glutes','forearms'],'sled pull'],
+['Schwungseile','Ganzkörper','Sonstiges',['front_delt','abs'],['forearms'],'battle ropes'],
 ['Burpees','Ganzkörper','Körpergewicht',['quads','chest'],['abs','triceps'],''],
-['Turkish Get-Ups','Ganzkörper','Kettlebell',['abs','front_delt'],['glutes','obliques'],'']
+['Türkisches Aufstehen','Ganzkörper','Kettlebell',['abs','front_delt'],['glutes','obliques'],'turkish get-ups',1],
 ];
 const exSlug = n=>'x-'+n.toLowerCase().replace(/[^a-z0-9äöüß]+/g,'-').replace(/^-+|-+$/g,'');
-const EXDB = EXDB_RAW.map(r=>({id:exSlug(r[0]), name:r[0], grp:r[1], eq:r[2], p:r[3], s:r[4]||[], al:(r[5]||'').toLowerCase()}));
+const EXDB = EXDB_RAW.map(r=>({id:exSlug(r[0]), name:r[0], grp:r[1], eq:r[2], p:r[3], s:r[4]||[], al:(r[5]||'').toLowerCase(), uni:!!r[6]}));
 /* ================= KERN: STATE / DATUM / PR-LOGIK ================= */
 const LS_KEY = 'ironlog_v1';
 const SPLIT = ['Push','Pull','Legs','Push','Pull'];
@@ -933,6 +958,7 @@ let state = {
   active: null,        // laufendes Workout
   ach: {},             // freigeschaltete Achievements {id:{d,xp}}
   bodyweight: [],      // [{d:'YYYY-MM-DD', kg}]
+  exOpt: {},           // Einstellungen pro Übung {exId:{uni:bool, lo:number, hi:number, step:number}}
   settings: { goal: 5, rest: 90, lastBackup: null }
 };
 
@@ -944,12 +970,32 @@ function loadState(){
   migrateState();
   saveState();
 }
-/* Migration: alte Positions-IDs (e12) → stabile Namens-IDs; 'chest' bleibt gültig (mittlere Brust) */
+const RENAME_MAP = {"x-chest-press-maschine":"x-brustpresse-maschine","x-incline-chest-press-maschine":"x-schrägbank-brustpresse-maschine","x-decline-chest-press-maschine":"x-negativ-brustpresse-maschine","x-chest-press-kabel-sitzend":"x-brustpresse-kabel-sitzend","x-bankdrücken-smith-machine":"x-bankdrücken-multipresse","x-schrägbankdrücken-smith-machine":"x-schrägbankdrücken-multipresse","x-butterfly-pec-deck-maschine":"x-butterfly-maschine","x-cable-fly-hoch-tief":"x-kabelzug-fliegende-hoch-tief","x-cable-fly-mitte":"x-kabelzug-fliegende-mitte","x-cable-fly-tief-hoch":"x-kabelzug-fliegende-tief-hoch","x-cable-fly-einarmig":"x-kabelzug-fliegende-einarmig","x-dip-maschine":"x-dip-maschine","x-svend-press-platte":"x-plattendrücken-vor-der-brust","x-floor-press-langhantel":"x-bodendrücken-langhantel","x-floor-press-kurzhantel":"x-bodendrücken-kurzhantel","x-landmine-press-brust":"x-landmine-drücken-brust","x-guillotine-press":"x-guillotine-bankdrücken","x-squeeze-press-kurzhantel":"x-enges-kurzhanteldrücken","x-squeeze-press-schrägbank":"x-enges-kurzhanteldrücken-schrägbank","x-chest-press-band":"x-brustdrücken-band","x-band-fly":"x-fliegende-band","x-pullover-kurzhantel":"x-überzüge-kurzhantel","x-chin-ups-untergriff":"x-klimmzüge-untergriff","x-chin-ups-mit-gewicht":"x-klimmzüge-untergriff-mit-gewicht","x-pulldown-maschine-plate-loaded":"x-latzug-maschine-scheiben","x-straight-arm-pulldown-kabel":"x-überzüge-am-kabel-gestreckte-arme","x-rope-pullover-kabel":"x-seilzug-überzüge","x-pendlay-row":"x-pendlay-rudern","x-t-bar-rudern":"x-t-stangen-rudern","x-t-bar-rudern-brustauflage":"x-t-stangen-rudern-brustauflage","x-seal-row":"x-rudern-in-bauchlage","x-rudermaschine-plate-loaded":"x-rudermaschine-scheiben","x-high-row-maschine":"x-rudern-von-oben-maschine","x-low-row-maschine":"x-rudern-von-unten-maschine","x-rudern-smith-machine":"x-rudern-multipresse","x-inverted-row":"x-umgekehrtes-rudern","x-meadows-row":"x-meadows-rudern","x-landmine-row":"x-landmine-rudern","x-kroc-row":"x-kroc-rudern","x-kreuzheben-trap-bar":"x-kreuzheben-trap-stange","x-kreuzheben-snatch-grip":"x-kreuzheben-reißgriff","x-rack-pulls":"x-teilkreuzheben-aus-dem-rack","x-reverse-hyperextension":"x-umgekehrter-rückenstrecker","x-superman":"x-superman-bauchlage","x-shrugs-langhantel":"x-schulterheben-langhantel","x-shrugs-kurzhantel":"x-schulterheben-kurzhantel","x-shrugs-smith-machine":"x-schulterheben-multipresse","x-shrugs-trap-bar":"x-schulterheben-trap-stange","x-shrugs-kabel":"x-schulterheben-kabel","x-arnold-press":"x-arnold-drücken","x-shoulder-press-maschine":"x-schulterpresse-maschine","x-schulterdrücken-smith-machine":"x-schulterdrücken-multipresse","x-push-press":"x-schulterdrücken-mit-schwung","x-landmine-press-schulter":"x-landmine-drücken-schulter","x-landmine-press-einarmig":"x-landmine-drücken-einarmig","x-z-press":"x-z-drücken-am-boden-sitzend","x-viking-press":"x-viking-drücken","x-lean-in-seitheben":"x-seitheben-angelehnt","x-reverse-flys-kurzhantel":"x-umgekehrte-fliegende-kurzhantel","x-reverse-pec-deck-maschine":"x-umgekehrtes-butterfly-maschine","x-reverse-cable-fly":"x-umgekehrte-fliegende-kabel","x-face-pulls-kabel":"x-gesichtsziehen-kabel","x-face-pulls-band":"x-gesichtsziehen-band","x-band-pull-aparts":"x-band-auseinanderziehen","x-cuban-rotation":"x-kubanische-rotation","x-bus-driver":"x-lenkrad-drehen-scheibe","x-bradford-press":"x-bradford-drücken","x-preacher-curls-sz-stange":"x-scottcurls-sz-stange","x-preacher-curls-kurzhantel":"x-scottcurls-kurzhantel","x-hammer-preacher-curls":"x-hammer-scottcurls","x-preacher-curl-maschine":"x-scottcurl-maschine","x-high-cable-curls":"x-kabel-curls-von-oben","x-bayesian-curls-kabel":"x-kabel-curls-hinter-dem-körper","x-spider-curls":"x-spider-curls-vorgebeugt","x-drag-curls":"x-zieh-curls-am-körper-entlang","x-zottman-curls":"x-zottman-curls","x-21s-langhantel":"x-21er-curls-langhantel","x-waiter-curls":"x-kellner-curls","x-jm-press":"x-jm-drücken","x-skull-crushers-sz-stange":"x-stirndrücken-sz-stange","x-skull-crushers-kurzhantel":"x-stirndrücken-kurzhantel","x-overhead-extension-kabel-seil":"x-trizepsdrücken-über-kopf-kabel-seil","x-kickbacks-kabel":"x-trizeps-rückdrücken-kabel","x-kickbacks-kurzhantel":"x-trizeps-rückdrücken-kurzhantel","x-bench-dips":"x-bank-dips","x-trizeps-maschine":"x-trizeps-maschine","x-overhead-triceps-extension-maschine":"x-trizepsdrücken-über-kopf-maschine","x-seated-dip-maschine":"x-dip-maschine-sitzend","x-tate-press":"x-tate-drücken","x-french-press-sitzend-sz":"x-französisches-drücken-sitzend-sz","x-enges-bankdrücken-smith":"x-enges-bankdrücken-multipresse","x-wrist-curls-langhantel":"x-handgelenk-curls-langhantel","x-reverse-wrist-curls":"x-handgelenk-curls-obergriff","x-wrist-curls-kurzhantel":"x-handgelenk-curls-kurzhantel","x-wrist-curls-hinter-rücken":"x-handgelenk-curls-hinter-dem-rücken","x-farmer-s-walk":"x-gewichte-tragen-farmers-walk","x-plate-pinch":"x-scheiben-kneifgriff","x-dead-hang":"x-hängen-an-der-stange","x-wrist-roller":"x-unterarm-roller","x-kniebeugen-low-bar":"x-kniebeugen-tiefe-auflage","x-box-squats":"x-kniebeugen-auf-box","x-pause-squats":"x-kniebeugen-mit-pause","x-goblet-squats":"x-kelch-kniebeugen","x-kniebeugen-smith-machine":"x-kniebeugen-multipresse","x-hack-squat-maschine":"x-hackenschmidt-maschine","x-pendulum-squat-maschine":"x-pendel-kniebeugenmaschine","x-v-squat-maschine":"x-v-kniebeugenmaschine","x-bulgarian-split-squats":"x-bulgarische-kniebeugen","x-split-squats":"x-geteilte-kniebeugen","x-curtsy-lunges":"x-überkreuz-ausfallschritte","x-step-ups":"x-aufsteiger-auf-box","x-sissy-squats":"x-sissy-kniebeugen","x-belt-squats":"x-gürtel-kniebeugen","x-zercher-squats":"x-zercher-kniebeugen","x-pistol-squats":"x-einbeinige-kniebeugen-pistol","x-stiff-leg-deadlift":"x-gestrecktes-kreuzheben","x-einbeiniges-rdl":"x-einbeiniges-rumänisches-kreuzheben","x-nordic-curls":"x-nordische-beinbeuger","x-glute-ham-raise":"x-beinbeuger-rückenstrecker-ghr","x-good-mornings":"x-guten-morgen-beugen","x-rdl-smith-machine":"x-rumänisches-kreuzheben-multipresse","x-beincurl-gymnastikball":"x-beinbeuger-gymnastikball","x-beincurl-slider":"x-beinbeuger-slider","x-hip-thrust-langhantel":"x-hüftstoß-langhantel","x-hip-thrust-maschine":"x-hüftstoß-maschine","x-hip-thrust-smith-machine":"x-hüftstoß-multipresse","x-glute-bridge":"x-beckenheben","x-glute-bridge-einbeinig":"x-beckenheben-einbeinig","x-b-stance-hip-thrust":"x-hüftstoß-versetzter-stand","x-kickbacks-kabel-glute":"x-beinrückheben-kabel","x-kickback-maschine":"x-beinrückheben-maschine","x-donkey-kicks":"x-eselstritte","x-fire-hydrants":"x-beinabspreizen-vierfüßler","x-frog-pumps":"x-frosch-beckenheben","x-sumo-squats":"x-sumo-kniebeugen","x-cable-pull-throughs":"x-durchziehen-am-kabel","x-band-side-walks":"x-seitschritte-mit-band","x-clamshells":"x-muschel-öffnen-seitlich-liegend","x-copenhagen-plank":"x-kopenhagener-seitstütz","x-wadenheben-smith-machine":"x-wadenheben-multipresse","x-donkey-calf-raises":"x-esel-wadenheben","x-tibialis-raises":"x-schienbeinheben","x-crunches":"x-crunches-bauchpressen","x-hanging-leg-raises":"x-beinheben-hängend","x-hanging-knee-raises":"x-knieheben-hängend","x-beinheben-captain-s-chair":"x-beinheben-beinhebemaschine","x-reverse-crunches":"x-umgekehrte-crunches","x-v-ups":"x-v-aufrichter","x-toes-to-bar":"x-zehen-zur-stange","x-ab-wheel-rollouts":"x-bauchroller-ab-wheel","x-plank-sek-als-wdh":"x-unterarmstütz-sek-als-wdh","x-plank-mit-gewicht":"x-unterarmstütz-mit-gewicht","x-side-plank-sek-als-wdh":"x-seitstütz-sek-als-wdh","x-russian-twists":"x-russische-drehungen","x-woodchopper-kabel-hoch-tief":"x-holzhacker-kabel-hoch-tief","x-woodchopper-kabel-tief-hoch":"x-holzhacker-kabel-tief-hoch","x-pallof-press":"x-pallof-drücken-anti-rotation","x-dead-bugs":"x-toter-käfer","x-bird-dogs":"x-vierfüßler-diagonal","x-mountain-climbers":"x-bergsteiger","x-dragon-flags":"x-drachenfahne","x-hollow-hold-sek-als-wdh":"x-hohlkörper-halten-sek-als-wdh","x-l-sit-sek-als-wdh":"x-l-sitz-sek-als-wdh","x-suitcase-carry":"x-koffertragen-einseitig","x-power-cleans":"x-umsetzen-power-clean","x-hang-cleans":"x-umsetzen-aus-dem-hang","x-clean-jerk":"x-umsetzen-stoßen","x-snatch":"x-reißen","x-kettlebell-swings":"x-kettlebell-schwünge","x-kettlebell-clean-press":"x-kettlebell-umsetzen-drücken","x-thrusters":"x-kniebeuge-mit-drücken-thruster","x-sled-push":"x-schlitten-schieben","x-sled-pull":"x-schlitten-ziehen","x-battle-ropes":"x-schwungseile","x-turkish-get-ups":"x-türkisches-aufstehen","x-cross-body-hammer-curls":"x-hammer-curls-quer-zum-körper","x-reverse-curls-sz-stange":"x-umgekehrte-curls-sz-stange","x-reverse-curls-langhantel":"x-umgekehrte-curls-langhantel","x-bizeps-curl-maschine":"x-bizeps-curl-maschine","x-crunch-maschine":"x-crunch-maschine","x-thruster-kniebeuge-drücken":"x-kniebeuge-mit-drücken-thruster"};
+/* Migration: alte Positions-IDs (e12) → Namens-IDs; V7: englische → deutsche Übungsnamen */
 function migrateState(){
-  const remap = id=>{ if(typeof id==='string' && /^e\d+$/.test(id)){ const ex=EXDB[+id.slice(1)]; return ex? ex.id : id; } return id; };
-  (state.workouts||[]).forEach(w=>{ (w.exercises||[]).forEach(e=>{ e.exId=remap(e.exId); }); (w.prs||[]).forEach(p=>{ p.exId=remap(p.exId); }); });
+  const remap = id=>{
+    if(typeof id!=='string') return id;
+    if(/^e\d+$/.test(id)){ const ex=EXDB[+id.slice(1)]; id = ex? ex.id : id; }
+    return RENAME_MAP[id] || id;
+  };
+  const fixEx = e=>{ e.exId = remap(e.exId); const ex=getEx(e.exId); if(ex) e.name = ex.name; };
+  (state.workouts||[]).forEach(w=>{
+    (w.exercises||[]).forEach(fixEx);
+    (w.prs||[]).forEach(p=>{ p.exId=remap(p.exId); const ex=getEx(p.exId); if(ex) p.name=ex.name; });
+  });
   (state.templates||[]).forEach(t=>{ t.exIds=(t.exIds||[]).map(remap); });
-  if(state.active) (state.active.exercises||[]).forEach(e=>{ e.exId=remap(e.exId); });
+  if(state.active) (state.active.exercises||[]).forEach(fixEx);
+  if(state.exOpt){ const o={}; Object.keys(state.exOpt).forEach(k=>{ o[remap(k)]=state.exOpt[k]; }); state.exOpt=o; }
+  /* Erfolge: ID-Schema "<exId>|<cat>|<target>" mitziehen */
+  if(state.ach){
+    const a={};
+    Object.keys(state.ach).forEach(k=>{
+      const i=k.indexOf('|');
+      if(i>0 && !k.startsWith('g|')){ const nid=remap(k.slice(0,i)); a[nid+k.slice(i)]=state.ach[k]; }
+      else a[k]=state.ach[k];
+    });
+    state.ach=a;
+  }
 }
 function saveState(){
   try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){ console.warn('save fail', e); }
@@ -995,13 +1041,53 @@ function bwAt(dateStr){
 function bwLatest(){ const a=bwSorted(); return a.length? a[a.length-1] : null; }
 function exIsBW(exId){ const ex=getEx(exId); return !!ex && ex.eq==='Körpergewicht'; }
 
+/* ---------- Übungs-Einstellungen (unilateral, Wdh-Zielbereich, Gewichtssprung) ---------- */
+/* Wdh-Zielbereiche: schwere Grundübungen niedriger, Isolation höher (Hypertrophie-Fokus).
+   Pro Übung jederzeit über das Zahnrad änderbar. */
+function defaultRepRange(ex){
+  const n=(ex.name||'').toLowerCase(), g=ex.grp;
+  if(/sek\. als wdh|hängen an der stange|wandsitz/.test(n)) return [20,45];
+  if(/waden|schienbein/.test(n)) return [10,15];
+  if(g==='Bauch') return [10,20];
+  if(/kreuzheben|kniebeugen/.test(n) && !/sissy|kelch|geteilte|bulgarische|einbeinige/.test(n)) return [5,8];
+  if(/bankdrücken|schulterdrücken(?!.*maschine)/.test(n)) return [6,9];
+  if(/rudern|klimmzüge|latzug|beinpresse|hüftstoß|dips|brustpresse|schulterpresse|hackenschmidt|umsetzen|reißen/.test(n)) return [6,10];
+  if(g==='Arme' || /heben|fliegende|curl|butterfly|abduktion|adduktion|beinstrecker|beinbeuger|überzüge|gesichtsziehen/.test(n)) return [8,12];
+  return [8,12];
+}
+function defaultStep(ex){
+  const n=(ex.name||'').toLowerCase();
+  if(ex.eq==='Körpergewicht') return 2.5;
+  if(/kreuzheben|kniebeugen|beinpresse|hüftstoß|hackenschmidt|wadenheben|rudermaschine/.test(n)) return 5;
+  if(ex.eq==='Kurzhantel') return 2;
+  if(ex.eq==='Maschine'||ex.eq==='Kabel') return 2.5;
+  if(ex.eq==='Langhantel'||ex.eq==='Multipresse'||ex.eq==='SZ-Stange'||ex.eq==='Trap-Stange') return 2.5;
+  return 2.5;
+}
+function exOpt(exId){
+  const ex=getEx(exId); if(!ex) return {uni:false, lo:6, hi:10, step:2.5};
+  const [lo,hi]=defaultRepRange(ex);
+  const d={uni:!!ex.uni, lo, hi, step:defaultStep(ex)};
+  return Object.assign(d, (state.exOpt||{})[exId]||{});
+}
+function setExOpt(exId, patch){
+  if(!state.exOpt) state.exOpt={};
+  state.exOpt[exId]=Object.assign({}, state.exOpt[exId]||{}, patch);
+  saveState();
+}
+function exIsUni(exId){ return !!exOpt(exId).uni; }
+
 /* ---------- Kennzahlen ---------- */
 function validSets(ex){ return ex.sets.filter(s=>(+s.r||0)>0); }
-function setVol(s){ return (+s.w||0)*(+s.r||0); }
-/* Volumen einer Übung im Workout: bei Körpergewichtsübungen zählt (Körpergewicht + Zusatz) × Wdh */
+/* Volumen einer Übung im Workout:
+   - Körpergewichtsübungen: (Körpergewicht + Zusatz) × Wdh
+   - einseitige Übungen: ×2, weil der Satz pro Seite geloggt wird
+   Sätze pro Muskel bleiben unverändert (der einzelne Muskel bekommt nur seine eigenen Sätze). */
 function exVol(e, dateStr){
-  const bw = exIsBW(e.exId)? bwAt(dateStr) : 0;
-  return validSets(e).reduce((a,s)=>a+((+s.w||0)+bw)*(+s.r||0),0);
+  const isBW = e.bw!==undefined? !!e.bw : exIsBW(e.exId);
+  const bw = isBW? (e.bwkg!==undefined? +e.bwkg : bwAt(dateStr)) : 0;
+  const side = (e.uni!==undefined? !!e.uni : exIsUni(e.exId))? 2 : 1;
+  return validSets(e).reduce((a,s)=>a+((+s.w||0)+bw)*(+s.r||0),0) * side;
 }
 function wVolume(w){ return w.exercises.reduce((a,e)=>a+exVol(e,w.date),0); }
 function wSets(w){ return w.exercises.reduce((a,e)=>a+validSets(e).length,0); }
@@ -1081,6 +1167,38 @@ function detectPRs(w){
   });
   return prs;
 }
+
+/* ================= PROGRESSION (doppelte Progression) =================
+   Regel: Erreichen ALLE Arbeitssätze das obere Ende des Wdh-Bereichs → Gewicht rauf,
+   Wdh zurück auf das untere Ende. Sonst gleiches Gewicht, eine Wdh mehr.
+   Bei Körpergewichtsübungen ohne Zusatzgewicht: erst Wdh steigern, dann Zusatz.  */
+function progressionFor(exId, beforeTs){
+  const o = exOpt(exId);
+  const h = exHistory(exId, beforeTs);
+  if(!h.length) return null;
+  const last = h[h.length-1];
+  const sets = last.sets;
+  const nSets = sets.length;
+  const isBW = exIsBW(exId);
+  const w = Math.max(...sets.map(s=>+s.w||0));
+  const atTop = sets.every(s=>(+s.r||0) >= o.hi) && sets.every(s=>(+s.w||0) >= w - 0.001);
+  const minR = Math.min(...sets.map(s=>+s.r||0));
+  const prevBest = h.length>1? h[h.length-2] : null;
+  const stalled = prevBest && prevBest.bestW===last.bestW && prevBest.maxReps>=last.maxReps && h.length>=3;
+
+  if(atTop){
+    const nw = Math.round((w + o.step)*4)/4;
+    return {kind:'up', w:nw, r:o.lo, sets:nSets,
+      txt:`${nSets}×${o.lo} @ ${isBW&&nw>0?'+':''}${fmtW(nw)} kg`,
+      why:`Letztes Mal alle Sätze auf ${o.hi} Wdh — Gewicht rauf (+${fmtW(o.step)} kg).`};
+  }
+  const targetR = Math.min(o.hi, minR + 1);
+  return {kind:'reps', w:w, r:targetR, sets:nSets,
+    txt:`${nSets}×${targetR} @ ${isBW&&w>0?'+':''}${fmtW(w)}${isBW&&w===0?' (nur Körpergewicht)':' kg'}`,
+    why: stalled? `Seit 2 Einheiten kein Fortschritt — heute mindestens ${targetR} Wdh anpeilen.`
+                : `Ziel: ${o.lo}–${o.hi} Wdh. Noch nicht am oberen Ende → gleiches Gewicht, eine Wdh mehr.`};
+}
+function fmtW(v){ v=+v||0; return (Math.round(v*100)/100).toString().replace('.',','); }
 
 /* ---------- Split-Vorschlag: Position = Workouts diese Woche ---------- */
 function suggestType(){
@@ -1426,14 +1544,20 @@ function renderActive(){
   $('#tw-exlist').innerHTML = a.exercises.map((e,ei)=>{
     const ex = getEx(e.exId);
     const isBW = exIsBW(e.exId);
+    const o = exOpt(e.exId);
     const fmtS = s=>{ const w0=+s.w||0; return isBW? (w0>0?`+${w0}×${s.r}`:`BW×${s.r}`) : `${w0}×${s.r}`; };
     const prev = prevSession(e.exId);
     const bests = exBests(e.exId, new Date(a.date).getTime());
     const prevTxt = prev? prev.sets.map(fmtS).join(' · ') : null;
+    const prog = progressionFor(e.exId, new Date(a.date).getTime());
     return `<div class="excard" data-ei="${ei}">
-      <div class="exhd"><div class="grow"><b>${esc(e.name)}</b><div class="musctags">${ex?esc(exMuscleLabel(ex)):''}${isBW?' · <b style="color:var(--acc2)">Körpergewicht — „+kg" = Zusatzgewicht</b>':''}</div></div>
+      <div class="exhd"><div class="grow"><b>${esc(e.name)}</b><div class="musctags">${ex?esc(exMuscleLabel(ex)):''}${isBW?' · <b style="color:var(--acc2)">„+kg" = Zusatzgewicht</b>':''}${o.uni?' · <b style="color:var(--acc2)">einseitig — Eingabe gilt pro Seite</b>':''}</div></div>
+        <button class="iconbtn" data-exopt="${ei}" style="width:32px;height:32px">${ICO.gear}</button>
         <button class="iconbtn" data-rmex="${ei}" style="width:32px;height:32px">${ICO.trash}</button></div>
-      ${prevTxt? `<div class="prevline">Letztes Mal: ${prevTxt}${bests&&bests.maxW>0? ` &nbsp;·&nbsp; Best: <b>${isBW?'+':''}${bests.maxW} kg</b>`:''}</div>`:`<div class="prevline">Erstes Mal — leg vor! 🚀</div>`}
+      ${prog? `<div class="progbox"><div class="grow"><div class="tiny up" style="color:var(--acc2);letter-spacing:1px">Heute empfohlen</div>
+          <b style="font-size:15px">${prog.txt}</b><div class="tiny" style="margin-top:2px">${esc(prog.why)}</div></div>
+          <button class="btn btn-acc btn-sm" data-applyprog="${ei}">Übernehmen</button></div>`:''}
+      ${prevTxt? `<div class="prevline">Letztes Mal: ${prevTxt}${bests&&bests.maxW>0? ` &nbsp;·&nbsp; Best: <b>${isBW?'+':''}${bests.maxW} kg</b>`:''}</div>`:`<div class="prevline">Erstes Mal — such dir ein Gewicht, mit dem ${o.lo}–${o.hi} Wdh sauber gehen 🚀</div>`}
       <div class="sethead"><span>#</span><span>Letztes Mal · Tippen = übernehmen</span><span>${isBW?'+kg':'kg'}</span><span>Wdh</span></div>
       ${e.sets.map((s,si)=>{
         const ps = prev && prev.sets[si];
@@ -1442,7 +1566,7 @@ function renderActive(){
           <span class="idx">${si+1}</span>
           ${ps? `<button class="prevpill" data-pf data-w="${+ps.w||0}" data-r="${ps.r}">${fmtS(ps).replace('×',' kg × ').replace('BW kg','BW')}</button>` : `<span class="prevpill none">—</span>`}
           <input type="number" inputmode="decimal" step="0.5" min="0" placeholder="${ps? +ps.w||0 : (isBW?'+kg':'kg')}" value="${s.w!==''&&s.w!=null? s.w:''}" data-f="w">
-          <input type="number" inputmode="numeric" step="1" min="0" placeholder="${ps? ps.r : 'Wdh'}" value="${s.r!==''&&s.r!=null? s.r:''}" data-f="r">
+          <input type="number" inputmode="numeric" step="1" min="0" placeholder="${e.target||(ps? ps.r : 'Wdh')}" value="${s.r!==''&&s.r!=null? s.r:''}" data-f="r">
         </div>`;
       }).join('')}
       <button class="addset" data-addset="${ei}">＋ Satz</button>
@@ -1451,17 +1575,24 @@ function renderActive(){
 
   $$('#tw-exlist input').forEach(inp=>inp.addEventListener('input',()=>{
     const row = inp.closest('.setrow');
-    state.active.exercises[+row.dataset.ei].sets[+row.dataset.si][inp.dataset.f] = inp.value;
-    row.classList.toggle('filled', (+state.active.exercises[+row.dataset.ei].sets[+row.dataset.si].r||0)>0);
+    const set = state.active.exercises[+row.dataset.ei].sets[+row.dataset.si];
+    const wasDone = (+set.r||0)>0;
+    set[inp.dataset.f] = inp.value;
+    const isDone = (+set.r||0)>0;
+    row.classList.toggle('filled', isDone);
     saveState();
     const t = state.active.exercises.reduce((x,e)=>x+validSets(e).length,0);
     $('#tw-setcount').textContent = t+' Sätze';
+    /* Satz gilt als erledigt, sobald Wdh stehen → Pause startet automatisch */
+    if(inp.dataset.f==='r' && !wasDone && isDone && !restEnd){ restEnd = Date.now() + (state.settings.rest||90)*1000; tick(); }
   }));
   $$('#tw-exlist [data-pf]').forEach(b=>b.addEventListener('click',()=>{
     const row = b.closest('.setrow');
     const set = state.active.exercises[+row.dataset.ei].sets[+row.dataset.si];
+    const wasDone = (+set.r||0)>0;
     set.w = b.dataset.w; set.r = b.dataset.r;
     saveState(); renderActive();
+    if(!wasDone && !restEnd){ restEnd = Date.now() + (state.settings.rest||90)*1000; tick(); }
   }));
   $$('[data-addset]').forEach(b=>b.addEventListener('click',()=>{
     const e = state.active.exercises[+b.dataset.addset];
@@ -1472,6 +1603,17 @@ function renderActive(){
   $$('[data-rmex]').forEach(b=>b.addEventListener('click',()=>{
     if(confirm('Übung entfernen?')){ state.active.exercises.splice(+b.dataset.rmex,1); saveState(); renderActive(); }
   }));
+  $$('[data-applyprog]').forEach(b=>b.addEventListener('click',()=>{
+    const e = state.active.exercises[+b.dataset.applyprog];
+    const p = progressionFor(e.exId, new Date(state.active.date).getTime());
+    if(!p) return;
+    const hasData = e.sets.some(s=>(+s.r||0)>0 || (s.w!==''&&s.w!=null&&+s.w>0));
+    if(hasData && !confirm('Es sind schon Werte eingetragen. Wirklich mit dem Vorschlag überschreiben?')) return;
+    e.sets = Array.from({length:p.sets}, ()=>({w: p.w>0? String(p.w):'', r:''}));
+    e.target = p.r;
+    saveState(); renderActive(); toast(`Ziel: ${p.sets}×${p.r} Wdh`);
+  }));
+  $$('[data-exopt]').forEach(b=>b.addEventListener('click',()=>openExOpt(state.active.exercises[+b.dataset.exopt].exId)));
 }
 $('#btn-add-ex').addEventListener('click',()=>openPicker(id=>{
   const ex = getEx(id);
@@ -1488,6 +1630,7 @@ function finishWorkout(){
   const cleaned = a.exercises.map(e=>{
     const o = {exId:e.exId, name:e.name, sets:validSets(e).map(s=>({w:+s.w||0, r:+s.r||0}))};
     if(exIsBW(e.exId)){ o.bw = true; const b = bwAt(a.date); if(b) o.bwkg = b; }   // fürs Vault-Protokoll
+    if(exIsUni(e.exId)) o.uni = true;                                              // Satz gilt pro Seite
     return o;
   }).filter(e=>e.sets.length);
   if(!cleaned.length){ toast('Keine gültigen Sätze eingetragen'); return; }
@@ -1597,6 +1740,38 @@ $('#cx-save').addEventListener('click',()=>{
   const grp = Object.entries(MGROUPS).find(([g,ms])=>ms.includes(cxP[0]));
   state.customEx.push({id:'c'+uid(), name, grp: grp? grp[0]:'Ganzkörper', eq:$('#cx-equip').value, p:cxP.slice(), s:cxS.slice(), al:'', custom:true});
   saveState(); closeModals(); toast('Übung gespeichert ✓'); renderLib();
+});
+
+/* ================= ÜBUNGS-EINSTELLUNGEN ================= */
+let xoId = null;
+function openExOpt(exId){
+  xoId = exId; const ex = getEx(exId); if(!ex) return;
+  const o = exOpt(exId);
+  $('#xo-title').textContent = ex.name;
+  $('#xo-uni').textContent = o.uni? 'An' : 'Aus';
+  $('#xo-uni').classList.toggle('on', o.uni);
+  $('#xo-lo').value = o.lo; $('#xo-hi').value = o.hi; $('#xo-step').value = o.step;
+  openModal('#modal-exopt');
+}
+$('#xo-uni').addEventListener('click',()=>{
+  const cur = exOpt(xoId).uni;
+  setExOpt(xoId, {uni:!cur});
+  $('#xo-uni').textContent = !cur? 'An':'Aus'; $('#xo-uni').classList.toggle('on', !cur);
+  if(state.active) renderActive();
+  renderHome();
+});
+['lo','hi','step'].forEach(k=>$('#xo-'+k).addEventListener('change',()=>{
+  let lo = Math.max(1, Math.min(60, +$('#xo-lo').value||6));
+  let hi = Math.max(1, Math.min(60, +$('#xo-hi').value||10));
+  if(hi < lo) hi = lo;
+  const step = Math.max(0.25, Math.min(20, +$('#xo-step').value||2.5));
+  $('#xo-lo').value=lo; $('#xo-hi').value=hi; $('#xo-step').value=step;
+  setExOpt(xoId, {lo, hi, step});
+  if(state.active) renderActive();
+}));
+$('#xo-reset').addEventListener('click',()=>{
+  if(state.exOpt) delete state.exOpt[xoId];
+  saveState(); openExOpt(xoId); if(state.active) renderActive(); toast('Zurückgesetzt');
 });
 
 /* ================= KÖRPERGEWICHT-UI ================= */
@@ -1946,7 +2121,11 @@ function renderExStats(){
   const ex = getEx(exStatId); if(!ex){ $('#exstat-detail').innerHTML=''; return; }
   const h = exHistory(exStatId);
   const bests = exBests(exStatId);
-  if(!h.length){ $('#exstat-detail').innerHTML = `<div class="hd" style="margin-top:14px"><h2 style="margin:0">${esc(ex.name)}</h2></div><div class="empty"><div class="big">📭</div>Noch nie trainiert</div>` + exAchCard(ex); return; }
+  if(!h.length){ $('#exstat-detail').innerHTML =
+    `<div class="hd" style="margin-top:14px"><div><h2 style="margin:0">${esc(ex.name)}</h2>
+      <span class="tiny">${esc(ex.eq)}${exOpt(ex.id).uni?' · einseitig':''} · Ziel ${exOpt(ex.id).lo}–${exOpt(ex.id).hi} Wdh</span></div>
+      <button class="iconbtn" onclick="openExOpt('${ex.id}')">${ICO.gear}</button></div>
+     <div class="empty"><div class="big">📭</div>Noch nie trainiert</div>` + exAchCard(ex); return; }
   const dl = x=>new Date(x.date).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'});
   const ePts = h.map(x=>({y:Math.round(x.bestE), l:dl(x)}));
   const vPts = h.map(x=>({y:Math.round(x.vol), l:dl(x)}));
@@ -1960,7 +2139,8 @@ function renderExStats(){
       <div class="kpi"><b>${Math.round(bests.maxE/1.2667)}</b><span>8RM kg</span></div>
     </div></div>` : '';
   $('#exstat-detail').innerHTML = `
-    <div class="hd" style="margin-top:14px"><h2 style="margin:0">${esc(ex.name)}</h2><span class="tiny">${esc(ex.eq)}</span></div>
+    <div class="hd" style="margin-top:14px"><div><h2 style="margin:0">${esc(ex.name)}</h2><span class="tiny">${esc(ex.eq)}${exOpt(ex.id).uni?' · einseitig':''} · Ziel ${exOpt(ex.id).lo}–${exOpt(ex.id).hi} Wdh</span></div>
+      <button class="iconbtn" onclick="openExOpt('${ex.id}')">${ICO.gear}</button></div>
     <div class="kpis" style="margin-bottom:12px">
       <div class="kpi"><b>${isBW? (bests.maxW>0? '+'+bests.maxW+' kg' : bests.maxReps+' Wdh') : bests.maxW+' kg'}</b><span>${isBW? (bests.maxW>0?'Best Zusatz':'Best Wdh') :'Best Gewicht'}</span></div>
       <div class="kpi"><b>${isBW? bests.maxReps+' Wdh' : Math.round(bests.maxE)+' kg'}</b><span>${isBW?'Best Wdh':'Best e1RM'}</span></div>
@@ -2052,7 +2232,7 @@ function renderLib(){
 $('#lib-search').addEventListener('input',renderLib);
 
 /* ================= PIN-SPERRE ================= */
-const PIN_KEY='ft_pin', PIN_TRUST='ft_pin_trust';
+const PIN_KEY='ft_pin';
 async function sha(t){
   if(crypto&&crypto.subtle){
     const b=await crypto.subtle.digest('SHA-256', new TextEncoder().encode('ft:'+t));
@@ -2085,7 +2265,6 @@ async function pinKey(k){
     } else if(pinMode==='confirm'){
       if(entered===pinFirst){
         localStorage.setItem(PIN_KEY, await sha(entered));
-        localStorage.setItem(PIN_TRUST,'1');
         unlockApp();
       } else {
         pinBuf=''; pinMode='set'; pinFirst='';
@@ -2093,7 +2272,7 @@ async function pinKey(k){
         L.classList.add('err'); renderPinDots();
       }
     } else {
-      if(await sha(entered)===localStorage.getItem(PIN_KEY)){ localStorage.setItem(PIN_TRUST,'1'); unlockApp(); }
+      if(await sha(entered)===localStorage.getItem(PIN_KEY)){ unlockApp(); }
       else { pinBuf=''; L.classList.add('err'); $('#lock-sub').textContent='Falscher PIN'; renderPinDots(); if(navigator.vibrate) navigator.vibrate(200); }
     }
   }, 120);
