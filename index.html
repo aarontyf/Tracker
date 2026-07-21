@@ -819,8 +819,16 @@ path[data-m].r3{fill:var(--r-full);stroke:rgba(120,255,180,.55);filter:drop-shad
     </div>
     <p class="tiny" style="margin-top:8px">CSV lässt sich in Excel öffnen — eine Zeile pro Satz.</p>
   </div>
+  <div class="card">
+    <h3 style="margin-bottom:6px">App-Version</h3>
+    <p class="tiny" style="margin-bottom:10px">Zeigt die App eine alte Version, hier erzwingen. <b>Deine Trainingsdaten bleiben dabei immer erhalten.</b></p>
+    <div class="row">
+      <button class="btn btn-ghost btn-sm grow" id="btn-checkupd">Nach Update suchen</button>
+      <button class="btn btn-ghost btn-sm grow" id="btn-hardreload">Cache leeren &amp; neu laden</button>
+    </div>
+  </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:14px">Fitness Tracker V10.1 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:14px">Fitness Tracker V10.2 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -2785,6 +2793,39 @@ $('#import-file').addEventListener('change',e=>{
   }catch(_){ toast('Ungültige Datei'); } };
   r.readAsText(f); e.target.value='';
 });
+/* Update erzwingen — fragt den Server direkt */
+$('#btn-checkupd').addEventListener('click',async()=>{
+  toast('Suche nach Update…');
+  try{
+    if(swReg) await swReg.update();
+    const r = await fetch('index.html?cb='+Date.now(), {cache:'reload'});
+    const t = await r.text();
+    const m = t.match(/Fitness Tracker (V[\d.]+)/);
+    const here = (document.body.textContent.match(/Fitness Tracker (V[\d.]+)/)||[])[1];
+    if(m && here && m[1]!==here){
+      toast(`Version ${m[1]} gefunden`, 'Laden', ()=>hardReload());
+    } else if(swReg && swReg.waiting){
+      toast('Update bereit', 'Laden', ()=>{ swReg.waiting.postMessage({type:'SKIP_WAITING'}); setTimeout(()=>location.reload(),300); });
+    } else {
+      toast('Du hast bereits die neueste Version ✓');
+    }
+  }catch(_){ toast('Keine Verbindung zum Server'); }
+});
+/* Notausgang: Cache und Service Worker weg, dann neu laden.
+   localStorage wird NICHT angefasst — Workouts, Gewicht und Erfolge bleiben. */
+async function hardReload(){
+  try{
+    if('caches' in window){ const ks = await caches.keys(); await Promise.all(ks.map(k=>caches.delete(k))); }
+    if('serviceWorker' in navigator){
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r=>r.unregister()));
+    }
+  }catch(_){}
+  location.replace(location.pathname + '?r=' + Date.now());
+}
+$('#btn-hardreload').addEventListener('click',()=>{
+  if(confirm('App neu laden?\n\nCache wird geleert, deine Trainingsdaten bleiben erhalten.')) hardReload();
+});
 $('#btn-wipe').addEventListener('click',()=>{
   if(!confirm('Wirklich ALLE Daten löschen?')) return;
   if(!confirm('Letzte Warnung — alles weg. Sicher?')) return;
@@ -3280,17 +3321,24 @@ $('#lock-forgot').addEventListener('click',()=>{
 /* ================= PWA / UPDATES / INSTALL ================= */
 function isStandalone(){ return mq('(display-mode: standalone)').matches || navigator.standalone===true; }
 function isIOS(){ return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1); }
+let swReg = null;
 function initPWA(){
   if('serviceWorker' in navigator && location.protocol.startsWith('http')){
     navigator.serviceWorker.register('sw.js').then(reg=>{
-      reg.addEventListener('updatefound',()=>{
-        const nw=reg.installing;
+      swReg = reg;
+      const watch = nw=>{
         nw && nw.addEventListener('statechange',()=>{
           if(nw.state==='installed' && navigator.serviceWorker.controller){
             toast('Neue Version verfügbar', 'Jetzt laden', ()=>{ nw.postMessage({type:'SKIP_WAITING'}); setTimeout(()=>location.reload(),300); });
           }
         });
-      });
+      };
+      if(reg.waiting){ toast('Neue Version verfügbar', 'Jetzt laden', ()=>{ reg.waiting.postMessage({type:'SKIP_WAITING'}); setTimeout(()=>location.reload(),300); }); }
+      reg.addEventListener('updatefound',()=>watch(reg.installing));
+      /* Aktiv nach Updates fragen — iOS prüft in installierten Apps sonst fast nie von selbst */
+      reg.update().catch(()=>{});
+      document.addEventListener('visibilitychange',()=>{ if(!document.hidden) reg.update().catch(()=>{}); });
+      setInterval(()=>reg.update().catch(()=>{}), 30*60*1000);
     }).catch(()=>{});
     let reloaded=false;
     navigator.serviceWorker.addEventListener('controllerchange',()=>{ if(!reloaded){ reloaded=true; location.reload(); } });
