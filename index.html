@@ -681,6 +681,29 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
 .misscard.done .missbar i{background:var(--green,#30d158)}
 .missx{flex:0 0 auto;font-size:11.5px;color:var(--txt3);font-variant-numeric:tabular-nums;font-weight:600}
 .misscard.done .missx{color:var(--green,#30d158)}
+/* ═══ Trainings-Streak (Flamme im Kopfbereich) ═══ */
+.streakchip{display:inline-flex;align-items:center;gap:5px;height:38px;padding:0 13px;cursor:pointer;
+  background:linear-gradient(135deg,color-mix(in srgb,#ff7a1a 22%,var(--s2)),var(--s2));
+  border:1px solid color-mix(in srgb,#ff7a1a 40%,var(--line));border-radius:var(--r-full);
+  color:var(--txt1);font-weight:800;font-size:15px;font-variant-numeric:tabular-nums;
+  box-shadow:0 0 0 0 rgba(255,122,26,.5);transition:transform var(--dur-2) var(--ease),box-shadow var(--dur-3) var(--ease)}
+.streakchip:active{transform:scale(.94)}
+.streakchip .fl{font-size:15px;line-height:1;display:inline-block;transform-origin:50% 90%;
+  animation:flameFlicker 2.4s ease-in-out infinite;filter:drop-shadow(0 0 4px rgba(255,140,40,.7))}
+.streakchip .stx{letter-spacing:.01em}
+.streakchip.zero{filter:grayscale(.6);opacity:.7;background:var(--s2);border-color:var(--line)}
+.streakchip.zero .fl{animation:none;filter:none;opacity:.6}
+.streakchip.setup{background:var(--s2);border-color:var(--line);font-weight:600;font-size:12.5px;color:var(--txt2)}
+.streakchip.setup .stx{font-weight:600}
+.streakchip.bump{animation:streakBump .6s var(--spring)}
+@keyframes flameFlicker{0%,100%{transform:scale(1) rotate(-3deg)}45%{transform:scale(1.14) rotate(3deg)}70%{transform:scale(.97) rotate(-1deg)}}
+@keyframes streakBump{0%{transform:scale(1)}35%{transform:scale(1.22)}100%{transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){.streakchip .fl{animation:none}.streakchip.bump{animation:none}}
+/* Wochentag-Auswahl im Onboarding */
+.weekdaypick .chip{padding:11px 0;font-size:13px;font-weight:600}
+/* kleiner Umschalter über „Sätze pro Muskelgruppe" */
+.seg.segsm{display:inline-flex;padding:2px}
+.seg.segsm button{font-size:12px;padding:6px 12px}
 /* ═══ Wochenrückblick ═══ */
 .rvhead{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--sp2);margin-bottom:var(--sp3)}
 .rvhead h2{font-size:22px;margin:2px 0 0}
@@ -748,6 +771,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
         <div class="tiny" id="home-week-label" style="margin-top:2px"></div>
       </div>
       <div class="row" style="gap:8px">
+        <div id="home-streak"></div>
         <button class="iconbtn" id="btn-ach" aria-label="Erfolge öffnen"></button>
         <button class="iconbtn" id="btn-settings" aria-label="Einstellungen öffnen"></button>
       </div>
@@ -756,7 +780,6 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     <div id="home-resume"></div>
 
     <!-- HERO: die Figur ist die Identität der App -->
-    <div id="coach-card"></div>
       <section class="hero" aria-label="Muskelübersicht">
       <div class="seg" style="margin-bottom:14px">
         <button id="bm-week" class="on">Diese Woche</button>
@@ -1051,7 +1074,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:14px">Fitness Tracker V25 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:14px">Fitness Tracker V26 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -2375,17 +2398,20 @@ function wVolume(w){ return w.exercises.reduce((a,e)=>a+exVol(e,w.date),0); }
 function wSets(w){ return w.exercises.reduce((a,e)=>a+validSets(e).length,0); }
 function wReps(w){ return w.exercises.reduce((a,e)=>a+validSets(e).reduce((x,s)=>x+(+s.r||0),0),0); }
 
-/* Sätze pro Muskel: primär 1.0, sekundär 0.5 */
-function muscleSets(workouts){
+/* Sätze pro Muskel.
+   mode 'both'   = direkt (primär 1.0) + indirekt (sekundär 0.5)  ← Standard
+   mode 'direct' = nur direkte Sätze (primärer Zielmuskel), sekundär zählt nicht */
+function muscleSetsBy(workouts, mode){
   const m = {};
   workouts.forEach(w=>w.exercises.forEach(e=>{
     const ex = getEx(e.exId); if(!ex) return;
     const n = validSets(e).length; if(!n) return;
     ex.p.forEach(k=>m[k]=(m[k]||0)+n);
-    ex.s.forEach(k=>m[k]=(m[k]||0)+n*0.5);
+    if(mode!=='direct') ex.s.forEach(k=>m[k]=(m[k]||0)+n*0.5);
   }));
   return m;
 }
+function muscleSets(workouts){ return muscleSetsBy(workouts, 'both'); }
 
 /* ---------- e1RM (Epley, Wdh gedeckelt bei 20) ---------- */
 function e1rm(w,r){ w=+w||0; r=Math.min(+r||0,20); if(w<=0||r<=0) return 0; if(r===1) return w; return w*(1+r/30); }
@@ -2892,6 +2918,7 @@ function renderHome(){
   /* ── Level ── */
   const xpPct = Math.min(100, Math.round((L.xp-L.cur)/Math.max(1,L.next-L.cur)*100));
   renderMissions();
+  renderStreak();
   const _titel = titelFuer(L.lvl), _nt = naechsterTitel(L.lvl);
   $('#home-level').innerHTML = `<div class="levelcard card tap" style="margin-bottom:12px" onclick="haptic();renderAchModal();openModal('#modal-ach')" role="button" tabindex="0">
     <div class="row">
@@ -3873,14 +3900,26 @@ function groupDetail(groupName, ws){
   const total = list.reduce((a,x)=>a+x.sets,0);
   return {list, total};
 }
-/* Karten: Radar + Gruppen-Balken + Details pro Muskel */
+/* Karten: Radar + Gruppen-Balken + Details pro Muskel.
+   Der Umschalter betrifft nur die Karte „Sätze pro Muskelgruppe" (Gruppen-Balken
+   und die Einzelmuskel-Details). Das Radar bleibt auf direkt+indirekt. */
+let statsSetMode = 'both';
 function muscleSection(ws, weeks){
-  const m = muscleSets(ws);
-  const radar = sumGroups(m, RADAR_AXES);
+  const radar = sumGroups(muscleSets(ws), RADAR_AXES);
+  const mg = muscleSetsBy(ws, statsSetMode);
+  const toggle = `<div class="seg segsm" id="setmode-seg" style="margin-bottom:10px">
+      <button data-setmode="both" class="${statsSetMode==='both'?'on':''}">Direkt + indirekt</button>
+      <button data-setmode="direct" class="${statsSetMode==='direct'?'on':''}">Nur direkt</button>
+    </div>`;
   return `<div class="card"><h3>Muskel-Balance</h3>${svgRadar(radar)}</div>
-    <div class="card"><h3 style="margin-bottom:10px">Sätze pro Muskelgruppe</h3>${groupBars(m, ws, weeks)}
-    ${Object.keys(m).length? `<details style="margin-top:10px"><summary class="tiny" style="cursor:pointer">Details pro Einzelmuskel anzeigen</summary><div style="margin-top:10px">${muscleBars(m)}</div></details>`:''}</div>`;
+    <div class="card"><h3 style="margin-bottom:8px">Sätze pro Muskelgruppe</h3>${toggle}${groupBars(mg, ws, weeks)}
+    ${Object.keys(mg).length? `<details style="margin-top:10px"><summary class="tiny" style="cursor:pointer">Details pro Einzelmuskel anzeigen</summary><div style="margin-top:10px">${muscleBars(mg)}</div></details>`:''}</div>`;
 }
+document.addEventListener('click', e=>{
+  const b = e.target.closest('[data-setmode]'); if(!b) return;
+  if(statsSetMode===b.dataset.setmode) return;
+  statsSetMode = b.dataset.setmode; haptic(); renderStats();
+});
 /* Klick auf eine Muskelgruppe → Modal mit allen Übungen */
 let lastStatsWs = [];
 document.addEventListener('click', e=>{
@@ -4475,6 +4514,56 @@ function renderMissions(){
   </div>`;
 }
 
+/* ═══ Trainings-Streak nach festen Wochentagen ══════════════════════════
+   Basis sind ausschließlich die im Profil festgelegten Trainingstage.
+   Ruhetage (nicht geplante Wochentage) beeinflussen die Streak nie.
+   Ein geplanter Trainingstag ohne abgeschlossenes Training beendet die Serie.
+   Der heutige geplante Tag ist bis Mitternacht „offen" und bricht nicht ab. */
+function trainingsStreak(){
+  const p = profil();
+  const plan = Array.isArray(p.trainingsTage) ? p.trainingsTage.map(Number) : [];
+  if(!plan.length) return null;                 // keine Wochentage gesetzt
+  const ymd = dt => { const d=new Date(dt);
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
+  const done = new Set(state.workouts.map(w=>ymd(w.date)));
+  const planSet = new Set(plan);
+  const today = new Date(); today.setHours(12,0,0,0);
+  const todayY = ymd(today);
+  let streak = 0;
+  const d = new Date(today);
+  for(let i=0;i<400;i++){
+    if(planSet.has(d.getDay())){
+      const dy = ymd(d);
+      if(done.has(dy)) streak++;
+      else if(dy===todayY){ /* heute noch offen — Gnadenfrist, kein Abbruch */ }
+      else break;                               // verpasster geplanter Tag → Ende der Serie
+    }
+    d.setDate(d.getDate()-1);
+  }
+  return streak;
+}
+/* Kleine Flammen-Anzeige im Kopfbereich der Startseite */
+let _lastStreak = null;
+function renderStreak(){
+  const box = document.getElementById('home-streak'); if(!box) return;
+  const p = profil();
+  const s = trainingsStreak();
+  if(s===null){
+    // Profil ohne Trainingstage → dezenter Einrichten-Hinweis
+    box.innerHTML = `<button class="streakchip setup" id="streak-setup" title="Trainingstage festlegen">
+      <span class="fl">🔥</span><span class="stx">Tage</span></button>`;
+    return;
+  }
+  const bump = (_lastStreak!==null && s>_lastStreak);
+  _lastStreak = s;
+  box.innerHTML = `<button class="streakchip ${s===0?'zero':''} ${bump?'bump':''}" id="streak-setup"
+      title="${s} Trainingstage in Folge – tippen zum Anpassen">
+      <span class="fl">🔥</span><span class="stx" data-count="${s}">${s}</span></button>`;
+}
+document.addEventListener('click', e=>{
+  if(e.target.closest('#streak-setup')){ haptic(); openOnboard(false); }
+});
+
 function renderReview(){
   const box = document.getElementById('review-body'); if(!box) return;
   const jetzt = wochenDaten(), start = jetzt.start;
@@ -4530,7 +4619,8 @@ setTimeout(()=>{ if(!(state.profile&&state.profile.done) && !state.workouts.leng
    mit Bandbreite, keine Messwerte. Absichtliche Sicherungen: die Empfehlung
    fällt nie unter den Grundumsatz und nie unter eine absolute Untergrenze. */
 const PROFIL_LEER = {done:false, alter:null, sex:null, groesse:null, gewicht:null, kfa:null,
-  ziel:null, erfahrung:null, ort:null, tage:4, alltag:null, split:null, ts:null};
+  ziel:null, erfahrung:null, ort:null, tage:4, alltag:null, split:null, ts:null,
+  trainingsTage:[]};   // feste Wochentage (0=So … 6=Sa) für die Trainings-Streak
 function profil(){ return Object.assign({}, PROFIL_LEER, state.profile||{}); }
 
 const ZIELE = {
@@ -4768,7 +4858,9 @@ function obInhalt(){
     case 4: return `<h2>Dein Alltag</h2><p class="obsub">Bewegung außerhalb des Trainings macht einen großen Teil des Verbrauchs aus.</p>
       <div class="pcards">${obKarten('alltag', Object.entries(ALLTAG))}</div>
       <div class="obdays"><span>Trainingstage pro Woche</span>
-        <div class="daypick">${[2,3,4,5,6].map(d=>`<button class="chip ${p.tage===d?'on':''}" data-pick="tage:${d}">${d}</button>`).join('')}</div></div>`;
+        <div class="daypick">${[2,3,4,5,6].map(d=>`<button class="chip ${p.tage===d?'on':''}" data-pick="tage:${d}">${d}</button>`).join('')}</div></div>
+      <div class="obdays"><span>Feste Trainingstage <i>— für deine Streak</i></span>
+        <div class="daypick weekdaypick">${[['Mo',1],['Di',2],['Mi',3],['Do',4],['Fr',5],['Sa',6],['So',0]].map(([n,d])=>`<button class="chip ${(p.trainingsTage||[]).includes(d)?'on':''}" data-obday="${d}">${n}</button>`).join('')}</div></div>`;
     case 5: {
       const eig = {n:'Eigene Vorlagen', sub:'Ich stelle mir die Trainingstage selbst zusammen',
                    txt:'Es wird nichts erzeugt. Du legst deine Vorlagen wie bisher selbst an.'};
@@ -4844,6 +4936,14 @@ function obFertig(){
   toast(obPlan? `Profil gespeichert · ${obPlan.length} Vorlagen angelegt` : 'Profil gespeichert');
 }
 document.addEventListener('click', e=>{
+  const day = e.target.closest('[data-obday]');
+  if(day && day.closest('#modal-onboard')){
+    const n = +day.dataset.obday;
+    if(!Array.isArray(obDraft.trainingsTage)) obDraft.trainingsTage = [];
+    const i = obDraft.trainingsTage.indexOf(n);
+    if(i>=0) obDraft.trainingsTage.splice(i,1); else obDraft.trainingsTage.push(n);
+    obLesen(); renderOnboard(); return;
+  }
   const pick = e.target.closest('[data-pick]');
   if(pick && pick.closest('#modal-onboard')){
     const [f,v] = pick.dataset.pick.split(':');
