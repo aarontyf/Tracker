@@ -706,6 +706,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
 .seg.segsm button{font-size:12px;padding:6px 12px}
 /* ═══ Wochenrückblick ═══ */
 .rvhead{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--sp2);margin-bottom:var(--sp3)}
+.rvhr{display:flex;align-items:flex-start;gap:var(--sp2)}
 .rvhead h2{font-size:22px;margin:2px 0 0}
 .rvtitel{text-align:right}
 .rvtitel b{display:block;font-size:15px;color:var(--acc)}
@@ -1074,7 +1075,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:14px">Fitness Tracker V26 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:14px">Fitness Tracker V27 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -4581,9 +4582,13 @@ function renderReview(){
   const fD = d=>d.toLocaleDateString('de-DE',{day:'numeric',month:'short'});
 
   box.innerHTML = `
+    <div class="grab"></div>
     <div class="rvhead">
       <div><span class="tiny">Wochenrückblick</span><h2>${fD(datum)} – ${fD(bis)}</h2></div>
-      <div class="rvtitel"><b>${titelFuer(L.lvl)}</b><span>Level ${L.lvl}</span></div>
+      <div class="rvhr">
+        <div class="rvtitel"><b>${titelFuer(L.lvl)}</b><span>Level ${L.lvl}</span></div>
+        <button class="iconbtn" data-close aria-label="Schließen">✕</button>
+      </div>
     </div>
     ${jetzt.workouts.length===0 ? `<div class="card" style="text-align:center;padding:26px">
         <div style="font-size:30px">🌙</div><b>Noch kein Training diese Woche</b>
