@@ -374,6 +374,8 @@ path[data-m].r3{fill:var(--fig-3);stroke:rgba(0,0,0,.40)}
   box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
 .sethead,.setrow{display:grid;grid-template-columns:30px 1fr 78px 66px;gap:var(--sp2);align-items:center}
 .sethead.rir,.setrow.rir{grid-template-columns:30px 1fr 70px 58px 52px}
+.sethead.uni,.setrow.uni{grid-template-columns:28px 1fr 62px 50px 50px}
+.sethead.uni.rir,.setrow.uni.rir{grid-template-columns:26px .9fr 56px 44px 44px 44px}
 .sethead{font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.08em;font-weight:650;margin:10px 0 6px;padding:0 2px}
 .setrow{margin-bottom:7px}
 .setrow .idx{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:750;font-size:12px;color:var(--txt3);background:var(--s2);border:1px solid var(--line);justify-self:center;transition:all var(--dur-2) var(--spring)}
@@ -704,6 +706,8 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
 /* kleiner Umschalter über „Sätze pro Muskelgruppe" */
 .seg.segsm{display:inline-flex;padding:2px}
 .seg.segsm button{font-size:12px;padding:6px 12px}
+.seg.setmode-top{display:flex;width:100%;margin-bottom:12px}
+.seg.setmode-top button{flex:1}
 /* ═══ Wochenrückblick ═══ */
 .rvhead{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--sp2);margin-bottom:var(--sp3)}
 .rvhr{display:flex;align-items:flex-start;gap:var(--sp2)}
@@ -952,7 +956,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
   <div class="card">
     <div class="row" style="justify-content:space-between">
       <div class="grow"><b style="font-size:14px">Einseitig (pro Seite)</b>
-        <div class="tiny">Du loggst einen Satz pro Seite. Volumen zählt dann beide Seiten, Sätze pro Muskel bleiben gleich.</div></div>
+        <div class="tiny">Beim Training bekommst du dann pro Satz zwei Wdh-Felder (L/R). Volumen zählt beide Seiten, Sätze pro Muskel bleiben gleich. Lässt du R leer, zählt links doppelt.</div></div>
       <button class="chip" id="xo-uni">Aus</button>
     </div>
   </div>
@@ -1075,7 +1079,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:14px">Fitness Tracker V27 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:14px">Fitness Tracker V29 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -1883,30 +1887,45 @@ const RADAR_AXES = [
 ];
 function sumGroups(m, defs){ return defs.map(([label,keys])=>[label, keys.reduce((a,k)=>a+(m[k]||0),0)]); }
 
-/* ================= MUSKEL-ERHOLUNG (Prinzip wie bei Fitbod, dort kostenpflichtig) =================
-   Jeder Satz erzeugt Ermüdung, die über ~72 h (leichte Belastung) bis 120 h (harte Belastung)
-   linear abklingt. 100 % = frisch/vollständig erholt. */
+/* ================= MUSKEL-ERHOLUNG (überarbeitet V29) =================
+   Prinzip wie bei Fitbod, aber sauber gerechnet:
+   1. Pro TRAININGSEINHEIT werden die effektiven Sätze je Muskel gesammelt
+      (Primärmuskel × 1, Sekundärmuskel × 0,5).
+   2. Jede Einheit erzeugt eine Anfangs-Ermüdung f0 = min(1, Sätze/10)
+      — ~10 harte Sätze in einer Einheit ermüden einen Muskel praktisch voll.
+   3. Diese klingt EXPONENTIELL ab; die Erholzeit skaliert mit dem Umfang
+      (kleiner Muskel/wenig Volumen erholt schneller): recovH = 24…96 h.
+   4. Mehrere Einheiten werden über die Wahrscheinlichkeits-Regel kombiniert
+      Ermüdung = 1 − ∏(1 − fᵢ) — dadurch sättigt sie sauber bei 100 % und
+      kann nie „überlaufen" (der alte Fehler: Summe > 1 pegte Muskeln tagelang
+      auf 0 % erholt, auch bei über die Woche verteilten Sätzen).
+   100 % = frisch/vollständig erholt. */
 function recoveryMap(now){
   now = now || Date.now();
-  const fatigue = {};
+  const sessions = {};                                  // Muskel → [{ageH, sets}]
   state.workouts.forEach(w=>{
     const ageH = (now - new Date(w.date).getTime())/3600000;
-    if(ageH < 0 || ageH > 168) return;
+    if(ageH < 0 || ageH > 240) return;                  // älter als 10 Tage: sicher erholt
+    const perMuscle = {};
     w.exercises.forEach(e=>{
       const ex = getEx(e.exId); if(!ex) return;
       const n = validSets(e).length; if(!n) return;
-      const add = (k, factor)=>{
-        const load = n * factor;                       // Sätze gewichtet
-        const full = 48 + Math.min(72, load*12);       // Erholdauer: 48–120 h je nach Umfang
-        const left = Math.max(0, 1 - ageH/full);       // linear abklingend
-        fatigue[k] = (fatigue[k]||0) + left * Math.min(1, load/6);
-      };
-      ex.p.forEach(k=>add(k,1));
-      ex.s.forEach(k=>add(k,0.5));
+      ex.p.forEach(k=> perMuscle[k] = (perMuscle[k]||0) + n);
+      ex.s.forEach(k=> perMuscle[k] = (perMuscle[k]||0) + n*0.5);
     });
+    Object.entries(perMuscle).forEach(([k,sets])=>{ (sessions[k] = sessions[k]||[]).push({ageH, sets}); });
   });
   const rec = {};
-  Object.keys(MUSCLES).forEach(k=>{ rec[k] = Math.max(0, Math.min(100, Math.round(100 - (fatigue[k]||0)*100))); });
+  Object.keys(MUSCLES).forEach(k=>{
+    let fresh = 1;                                       // ∏(1 − fᵢ)
+    (sessions[k]||[]).forEach(({ageH, sets})=>{
+      const f0     = Math.min(1, sets/10);              // Anfangs-Ermüdung 0…1
+      const recovH = Math.max(24, Math.min(96, 24 + 6*sets));   // Erholfenster 24…96 h
+      const tau    = recovH/3;                          // nach recovH h ≈ 95 % erholt
+      fresh *= (1 - f0 * Math.exp(-ageH/tau));
+    });
+    rec[k] = Math.max(0, Math.min(100, Math.round(100 * fresh)));
+  });
   return rec;
 }
 function recoveryGroups(rec){
@@ -1955,7 +1974,7 @@ const EXDB_RAW = [
 ['Liegestütze (Band)','Brust','Widerstandsband',['chest'],['triceps'],'band push up'],
 ['Brustdrücken (Band)','Brust','Widerstandsband',['chest'],['triceps'],'band press chest (band)'],
 ['Fliegende (Band)','Brust','Widerstandsband',['chest'],[],'band fly'],
-['Überzüge (Kurzhantel)','Brust','Kurzhantel',['chest'],['lats','triceps'],'dumbbell pullover (kurzhantel)'],
+['Überzüge (Kurzhantel)','Brust','Kurzhantel',['chest','lats'],['triceps'],'dumbbell pullover (kurzhantel)'],
 /* ---------- RÜCKEN ---------- */
 ['Klimmzüge (Obergriff)','Rücken','Körpergewicht',['lats'],['biceps','upper_back'],'pull up pullup'],
 ['Klimmzüge (mit Gewicht)','Rücken','Körpergewicht',['lats'],['biceps','upper_back'],'weighted pull up'],
@@ -2104,7 +2123,7 @@ const EXDB_RAW = [
 /* ---------- BEINE: QUADS ---------- */
 ['Kniebeugen (Langhantel)','Beine','Langhantel',['quads','glutes'],['lower_back','adductors','abs'],'squat high bar'],
 ['Kniebeugen (tiefe Auflage)','Beine','Langhantel',['quads','glutes'],['lower_back','hamstrings'],'low bar squat kniebeugen (low bar)'],
-['Frontkniebeugen','Beine','Langhantel',['quads'],['glutes','abs'],'front squat'],
+['Frontkniebeugen','Beine','Langhantel',['quads'],['glutes','abs','upper_back'],'front squat'],
 ['Kniebeugen auf Box','Beine','Langhantel',['quads','glutes'],['hamstrings'],'box squats'],
 ['Kniebeugen mit Pause','Beine','Langhantel',['quads','glutes'],['lower_back'],'pause squats'],
 ['Kelch-Kniebeugen','Beine','Kurzhantel',['quads','glutes'],['abs'],'goblet squats'],
@@ -2219,6 +2238,64 @@ const EXDB_RAW = [
 ['Schwungseile','Ganzkörper','Sonstiges',['front_delt','abs'],['forearms'],'battle ropes'],
 ['Burpees','Ganzkörper','Körpergewicht',['quads','chest'],['abs','triceps'],''],
 ['Türkisches Aufstehen','Ganzkörper','Kettlebell',['abs','front_delt'],['glutes','obliques'],'turkish get-ups',1],
+/* ---------- NEU V29: Calisthenics & Lücken (Muskeln recherchiert) ---------- */
+/* Brust — Körpergewicht/Ring */
+['Archer-Liegestütze','Brust','Körpergewicht',['chest'],['triceps','front_delt'],'archer push up einarmig betont'],
+['Pseudo-Planche-Liegestütze','Brust','Körpergewicht',['chest'],['front_delt','triceps','abs'],'pseudo planche push up'],
+['Breite Liegestütze','Brust','Körpergewicht',['chest'],['front_delt'],'wide push up breit'],
+['Hindu-Liegestütze','Brust','Körpergewicht',['chest'],['front_delt','triceps'],'hindu dive bomber push up'],
+['Ring-Liegestütze','Brust','Körpergewicht',['chest'],['triceps','front_delt','abs'],'ring push up'],
+['Klatsch-Liegestütze','Brust','Körpergewicht',['chest'],['triceps','front_delt'],'clap plyo explosive push up'],
+['Spiderman-Liegestütze','Brust','Körpergewicht',['chest'],['obliques','triceps'],'spiderman push up'],
+['Liegestütze (Füße erhöht)','Brust','Körpergewicht',['chest_up'],['front_delt','triceps'],'decline push up feet elevated obere brust'],
+['Liegestütze (Hände erhöht)','Brust','Körpergewicht',['chest_low'],['triceps','front_delt'],'incline push up hands elevated'],
+['Ring-Dips','Brust','Körpergewicht',['chest_low'],['triceps','front_delt'],'ring dips'],
+/* Rücken — Klimmzug-Varianten & Lücken */
+['Muscle-Up (Stange)','Rücken','Körpergewicht',['lats','chest'],['biceps','triceps','upper_back'],'muscle up bar'],
+['Archer-Klimmzüge','Rücken','Körpergewicht',['lats'],['biceps','upper_back'],'archer pull up'],
+['Breite Klimmzüge','Rücken','Körpergewicht',['lats'],['upper_back','biceps'],'wide grip pull up breit'],
+['Kommando-Klimmzüge','Rücken','Körpergewicht',['lats'],['biceps','upper_back'],'commando pull up'],
+['Klimmzug-Negativ (langsam)','Rücken','Körpergewicht',['lats'],['biceps','upper_back'],'negative eccentric pull up'],
+['Explosive Klimmzüge','Rücken','Körpergewicht',['lats'],['biceps','upper_back'],'explosive plyo pull up'],
+['Ring-Rudern','Rücken','Körpergewicht',['upper_back','lats'],['biceps','rear_delt'],'ring row inverted'],
+['Umgekehrtes Rudern (Füße erhöht)','Rücken','Körpergewicht',['upper_back','lats'],['biceps'],'feet elevated inverted row'],
+['Front-Lever-Ziehen','Rücken','Körpergewicht',['lats'],['abs','upper_back'],'front lever raise pull'],
+['Back-Lever (Sek. als Wdh)','Rücken','Körpergewicht',['lats'],['chest','abs','biceps'],'back lever hold halten'],
+['Kreuzheben (Defizit)','Rücken','Langhantel',['glutes','hamstrings','lower_back'],['quads','upper_back','traps'],'deficit deadlift'],
+/* Schultern */
+['Pike-Liegestütze','Schultern','Körpergewicht',['front_delt'],['triceps','side_delt'],'pike push up'],
+['Handstand-Liegestütze (Wand)','Schultern','Körpergewicht',['front_delt'],['triceps','side_delt','traps'],'handstand push up wall hspu'],
+['Handstand halten (Wand, Sek. als Wdh)','Schultern','Körpergewicht',['front_delt'],['traps','abs'],'wall handstand hold halten'],
+['Wandlauf','Schultern','Körpergewicht',['front_delt'],['abs','triceps'],'wall walk'],
+['Frontheben (Langhantel)','Schultern','Langhantel',['front_delt'],[],'barbell front raise'],
+['Y-Heben (Bauchlage)','Schultern','Kurzhantel',['rear_delt'],['upper_back','traps'],'prone y raise incline'],
+/* Arme */
+['Ring-Bizeps-Curls','Arme','Körpergewicht',['biceps'],['upper_back'],'ring bodyweight bicep curl'],
+['Ring-Trizepsstrecken','Arme','Körpergewicht',['triceps'],['chest'],'ring triceps extension skull'],
+['Bank-Dips (Füße erhöht)','Arme','Körpergewicht',['triceps'],['front_delt'],'bench dip feet elevated'],
+/* Beine — Körpergewicht/Plyo */
+['Cossack-Kniebeugen','Beine','Körpergewicht',['quads','adductors'],['glutes'],'cossack squat seitlich'],
+['Shrimp-Kniebeugen','Beine','Körpergewicht',['quads','glutes'],['abs'],'shrimp squat'],
+['Sprung-Kniebeugen','Beine','Körpergewicht',['quads'],['glutes','calves'],'jump squat plyo'],
+['Box-Sprünge','Beine','Körpergewicht',['quads'],['glutes','calves'],'box jump'],
+['Weitsprünge','Beine','Körpergewicht',['quads','glutes'],['calves'],'broad jump standweitsprung'],
+['Skater-Sprünge','Beine','Körpergewicht',['quads','abductors'],['glutes','calves'],'skater jumps lateral'],
+['Umgekehrte Nordics','Beine','Körpergewicht',['quads'],['abs'],'reverse nordic kneeling quad'],
+['Enten-Gang','Beine','Körpergewicht',['quads'],['glutes','calves'],'duck walk entengang'],
+['Erhöhtes Beckenheben (Füße auf Bank)','Beine','Körpergewicht',['glutes'],['hamstrings'],'feet elevated glute bridge'],
+['Wadenheben (Körpergewicht)','Beine','Körpergewicht',['calves'],[],'bodyweight calf raise freihändig'],
+['Wadenheben einbeinig (Körpergewicht)','Beine','Körpergewicht',['calves'],[],'single leg calf raise bodyweight',1],
+/* Bauch */
+['Hohlkörper-Schaukeln','Bauch','Körpergewicht',['abs'],[],'hollow body rock'],
+['Hängende Scheibenwischer','Bauch','Körpergewicht',['obliques'],['abs','lats'],'hanging windshield wipers'],
+['Bär-Gang','Bauch','Körpergewicht',['abs'],['front_delt','quads'],'bear crawl bärengang'],
+['Fahrrad-Crunch','Bauch','Körpergewicht',['abs'],['obliques'],'bicycle crunch fahrrad radfahren'],
+['Tuck-Planche (Sek. als Wdh)','Bauch','Körpergewicht',['abs'],['front_delt','chest'],'tuck planche hold halten'],
+['Seitliches Beinheben (liegend)','Bauch','Körpergewicht',['obliques'],['abs'],'side lying leg raise oblique'],
+/* Ganzkörper */
+['Human Flag (Sek. als Wdh)','Ganzkörper','Körpergewicht',['obliques'],['lats','side_delt','abs'],'human flag menschliche fahne halten'],
+['Renegade-Rudern','Ganzkörper','Kurzhantel',['upper_back','lats'],['abs','biceps'],'renegade row',1],
+['Wandball-Würfe','Ganzkörper','Sonstiges',['quads','front_delt'],['glutes','abs'],'wall ball wandball'],
 ];
 const exSlug = n=>'x-'+n.toLowerCase().replace(/[^a-z0-9äöüß]+/g,'-').replace(/^-+|-+$/g,'');
 const EXDB = EXDB_RAW.map(r=>({id:exSlug(r[0]), name:r[0], grp:r[1], eq:r[2], p:r[3], s:r[4]||[], al:(r[5]||'').toLowerCase(), uni:!!r[6]}));
@@ -2382,22 +2459,28 @@ function exIsUni(exId){ return !!exOpt(exId).uni; }
 /* ---------- Kennzahlen ----------
    Satz-Typen:  (leer)=Arbeitssatz · 'w'=Aufwärmen · 'd'=Dropset
    Aufwärmsätze zählen NICHT in Volumen, PRs, Muskelsätze und Progression. */
-function validSets(ex){ return ex.sets.filter(s=>(+s.r||0)>0 && s.t!=='w'); }
-function allLoggedSets(ex){ return ex.sets.filter(s=>(+s.r||0)>0); }
+/* Ein Satz zählt, sobald links ODER rechts Wdh stehen (rr = Wdh rechte Seite bei einseitigen Übungen) */
+function validSets(ex){ return ex.sets.filter(s=>((+s.r||0)>0 || (+s.rr||0)>0) && s.t!=='w'); }
+function allLoggedSets(ex){ return ex.sets.filter(s=>(+s.r||0)>0 || (+s.rr||0)>0); }
 const SETTYPE = {w:['A','Aufwärmsatz'], d:['D','Dropset']};
 /* Volumen einer Übung im Workout:
    - Körpergewichtsübungen: (Körpergewicht + Zusatz) × Wdh
-   - einseitige Übungen: ×2, weil der Satz pro Seite geloggt wird
-   Sätze pro Muskel bleiben unverändert (der einzelne Muskel bekommt nur seine eigenen Sätze). */
+   - einseitige Übungen: Wdh links + Wdh rechts (getrennt geloggt).
+     Fehlt die rechte Seite (alte Daten oder R-Feld leer), zählt links doppelt — wie früher.
+   Sätze pro Muskel bleiben unverändert (ein einseitiger Satz = ein Satz für den Muskel). */
 function exVol(e, dateStr){
   const isBW = e.bw!==undefined? !!e.bw : exIsBW(e.exId);
   const bw = isBW? (e.bwkg!==undefined? +e.bwkg : bwAt(dateStr)) : 0;
-  const side = (e.uni!==undefined? !!e.uni : exIsUni(e.exId))? 2 : 1;
-  return validSets(e).reduce((a,s)=>a+((+s.w||0)+bw)*(+s.r||0),0) * side;
+  const uni = (e.uni!==undefined? !!e.uni : exIsUni(e.exId));
+  return validSets(e).reduce((a,s)=>{
+    const base = (+s.w||0)+bw, rl = +s.r||0;
+    if(uni){ const rr = (s.rr!==undefined && s.rr!=='') ? (+s.rr||0) : rl; return a + base*(rl+rr); }
+    return a + base*rl;
+  },0);
 }
 function wVolume(w){ return w.exercises.reduce((a,e)=>a+exVol(e,w.date),0); }
 function wSets(w){ return w.exercises.reduce((a,e)=>a+validSets(e).length,0); }
-function wReps(w){ return w.exercises.reduce((a,e)=>a+validSets(e).reduce((x,s)=>x+(+s.r||0),0),0); }
+function wReps(w){ return w.exercises.reduce((a,e)=>a+validSets(e).reduce((x,s)=>x+(+s.r||0)+(+s.rr||0),0),0); }
 
 /* Sätze pro Muskel.
    mode 'both'   = direkt (primär 1.0) + indirekt (sekundär 0.5)  ← Standard
@@ -2458,10 +2541,11 @@ function detectPRs(w){
     const old = exBests(e.exId, t);
     const isBW = exIsBW(e.exId);
     const kg = isBW? '+kg':'kg';
+    const sReps = s=>Math.max(+s.r||0, +s.rr||0);   // beste Seite zählt für Wdh-/e1RM-Rekorde
     const bestW = Math.max(...sets.map(s=>+s.w||0));
-    const bestE = Math.max(...sets.map(s=>e1rm(s.w,s.r)));
+    const bestE = Math.max(...sets.map(s=>e1rm(s.w,sReps(s))));
     const vol = exVol(e, w.date);
-    const maxReps = Math.max(...sets.map(s=>+s.r||0));
+    const maxReps = Math.max(...sets.map(sReps));
     const name = e.name;
     if(bestW>0 && (!old || bestW > old.maxW))
       prs.push({exId:e.exId,name,kind:isBW?'Zusatzgewicht':'Gewicht',val:(isBW?'+':'')+bestW+' kg',old: old&&old.maxW>0? (isBW?'+':'')+old.maxW+' kg':null});
@@ -2998,7 +3082,7 @@ function paintBody(){
   } else {
     document.querySelectorAll('path[data-m]').forEach(p=>p.classList.remove('r0','r1','r2','r3'));
     paintBodies(weekMuscleMap);
-    $('#body-sub').textContent = 'Reset: Montag 00:00';
+    $('#body-sub').textContent = 'Diese Woche (Mo–So) · Reset Sonntag Mitternacht';
     $('#body-legend').innerHTML = `<span><i class="dot" style="background:var(--m0)"></i>0 Sätze</span>
       <span><i class="dot" style="background:var(--m1)"></i>1–3</span>
       <span><i class="dot" style="background:var(--m2)"></i>4–8</span>
@@ -3151,13 +3235,15 @@ function renderActive(){
     const ex = getEx(e.exId);
     const isBW = exIsBW(e.exId);
     const o = exOpt(e.exId);
-    const fmtS = s=>{ const w0=+s.w||0; return isBW? (w0>0?`+${w0}×${s.r}`:`BW×${s.r}`) : `${w0}×${s.r}`; };
+    const uni = !!o.uni;
+    const rTxt = s=> (uni && s.rr!==undefined && s.rr!=='' && (+s.rr||0)!==(+s.r||0)) ? `${s.r||0}/${s.rr||0}` : (s.r||0);
+    const fmtS = s=>{ const w0=+s.w||0; const rt=rTxt(s); return isBW? (w0>0?`+${w0}×${rt}`:`BW×${rt}`) : `${w0}×${rt}`; };
     const prev = prevSession(e.exId);
     const bests = exBests(e.exId, new Date(a.date).getTime());
     const prevTxt = prev? prev.sets.map(fmtS).join(' · ') : null;
     const prog = progressionFor(e.exId, new Date(a.date).getTime());
     return `<div class="excard" data-ei="${ei}">
-      <div class="exhd"><div class="grow"><b>${esc(e.name)}</b><div class="musctags">${ex?esc(exMuscleLabel(ex)):''}${isBW?' · <b style="color:var(--acc2)">„+kg" = Zusatzgewicht</b>':''}${o.uni?' · <b style="color:var(--acc2)">einseitig — Eingabe gilt pro Seite</b>':''}</div></div>
+      <div class="exhd"><div class="grow"><b>${esc(e.name)}</b><div class="musctags">${ex?esc(exMuscleLabel(ex)):''}${isBW?' · <b style="color:var(--acc2)">„+kg" = Zusatzgewicht</b>':''}${o.uni?' · <b style="color:var(--acc2)">einseitig — Wdh L/R getrennt</b>':''}</div></div>
         <button class="iconbtn" data-calc="${ei}" style="width:32px;height:32px;font-size:14px">🧮</button>
         <button class="iconbtn" data-exopt="${ei}" style="width:32px;height:32px">${ICO.gear}</button>
         <button class="iconbtn" data-rmex="${ei}" style="width:32px;height:32px">${ICO.trash}</button></div>
@@ -3165,17 +3251,18 @@ function renderActive(){
           <b style="font-size:15px">${prog.txt}</b><div class="tiny" style="margin-top:2px">${esc(prog.why)}</div></div>
           <button class="btn btn-acc btn-sm" data-applyprog="${ei}">Übernehmen</button></div>`:''}
       ${prevTxt? `<div class="prevline">Letztes Mal: ${prevTxt}${bests&&bests.maxW>0? ` &nbsp;·&nbsp; Best: <b>${isBW?'+':''}${bests.maxW} kg</b>`:''}</div>`:`<div class="prevline">Erstes Mal — such dir ein Gewicht, mit dem ${o.lo}–${o.hi} Wdh sauber gehen 🚀</div>`}
-      <div class="sethead ${useRir?'rir':''}"><span>#</span><span>Letztes Mal · Tippen = übernehmen</span><span>${isBW?'+kg':'kg'}</span><span>Wdh</span>${useRir?'<span title="Reps in Reserve">RIR</span>':''}</div>
+      <div class="sethead ${useRir?'rir':''} ${uni?'uni':''}"><span>#</span><span>Letztes Mal · Tippen = übernehmen</span><span>${isBW?'+kg':'kg'}</span>${uni?'<span title="Wdh linke Seite">Wdh L</span><span title="Wdh rechte Seite">Wdh R</span>':'<span>Wdh</span>'}${useRir?'<span title="Reps in Reserve">RIR</span>':''}</div>
       ${e.sets.map((s,si)=>{
         const ps = prev && prev.sets[si];
-        const filled = (+s.r||0)>0;
+        const filled = (+s.r||0)>0 || (+s.rr||0)>0;
         const tcls = s.t==='w'?'warm':s.t==='d'?'drop':'';
         const lbl = s.t? SETTYPE[s.t][0] : (si+1);
-        return `<div class="setrow ${useRir?'rir':''} ${filled?'filled':''} ${tcls}" data-ei="${ei}" data-si="${si}">
+        return `<div class="setrow ${useRir?'rir':''} ${uni?'uni':''} ${filled?'filled':''} ${tcls}" data-ei="${ei}" data-si="${si}">
           <button class="idx" data-settype title="Satz-Typ wechseln">${lbl}</button>
-          ${ps? `<button class="prevpill" data-pf data-w="${+ps.w||0}" data-r="${ps.r}">${fmtS(ps).replace('×',' kg × ').replace('BW kg','BW')}</button>` : `<span class="prevpill none">—</span>`}
+          ${ps? `<button class="prevpill" data-pf data-w="${+ps.w||0}" data-r="${ps.r||''}" data-rr="${ps.rr!==undefined?ps.rr:''}">${fmtS(ps).replace('×',' kg × ').replace('BW kg','BW')}</button>` : `<span class="prevpill none">—</span>`}
           <input type="number" inputmode="decimal" step="0.5" min="0" placeholder="${ps? +ps.w||0 : (isBW?'+kg':'kg')}" value="${s.w!==''&&s.w!=null? s.w:''}" data-f="w">
-          <input type="number" inputmode="numeric" step="1" min="0" placeholder="${e.target||(ps? ps.r : 'Wdh')}" value="${s.r!==''&&s.r!=null? s.r:''}" data-f="r">
+          <input type="number" inputmode="numeric" step="1" min="0" placeholder="${e.target||(ps? ps.r : (uni?'L':'Wdh'))}" value="${s.r!==''&&s.r!=null? s.r:''}" data-f="r">
+          ${uni? `<input type="number" inputmode="numeric" step="1" min="0" placeholder="${ps&&ps.rr!==undefined&&ps.rr!==''?ps.rr:(ps?ps.r:'R')}" value="${s.rr!==''&&s.rr!=null&&s.rr!==undefined? s.rr:''}" data-f="rr">`:''}
           ${useRir? `<input class="riri" type="number" inputmode="numeric" step="1" min="0" max="10" placeholder="–" value="${s.rir!==''&&s.rir!=null&&s.rir!==undefined? s.rir:''}" data-f="rir">`:''}
         </div>`;
       }).join('')}
@@ -3186,15 +3273,15 @@ function renderActive(){
   $$('#tw-exlist input').forEach(inp=>inp.addEventListener('input',()=>{
     const row = inp.closest('.setrow');
     const set = state.active.exercises[+row.dataset.ei].sets[+row.dataset.si];
-    const wasDone = (+set.r||0)>0;
+    const wasDone = (+set.r||0)>0 || (+set.rr||0)>0;
     set[inp.dataset.f] = inp.value;
-    const isDone = (+set.r||0)>0;
+    const isDone = (+set.r||0)>0 || (+set.rr||0)>0;
     row.classList.toggle('filled', isDone);
     saveState();
     const t = state.active.exercises.reduce((x,e)=>x+validSets(e).length,0);
     $('#tw-setcount').textContent = t+' Sätze';
     /* Satz gilt als erledigt, sobald Wdh stehen → Pause startet automatisch (Aufwärmsätze kürzer) */
-    if(inp.dataset.f==='r' && !wasDone && isDone && !restEnd){
+    if((inp.dataset.f==='r'||inp.dataset.f==='rr') && !wasDone && isDone && !restEnd){
       const base = exOpt(state.active.exercises[+row.dataset.ei].exId).rest || state.settings.rest || 90;
       restEnd = Date.now() + (set.t==='w'? Math.round(base/2) : base)*1000; tick();
     }
@@ -3215,10 +3302,12 @@ function renderActive(){
   $$('#tw-exlist [data-pf]').forEach(b=>b.addEventListener('click',()=>{
     const row = b.closest('.setrow');
     const set = state.active.exercises[+row.dataset.ei].sets[+row.dataset.si];
-    const wasDone = (+set.r||0)>0;
+    const wasDone = (+set.r||0)>0 || (+set.rr||0)>0;
     set.w = b.dataset.w; set.r = b.dataset.r;
     row.querySelector('[data-f=w]').value = set.w;
     row.querySelector('[data-f=r]').value = set.r;
+    const rrIn = row.querySelector('[data-f=rr]');
+    if(rrIn){ set.rr = (b.dataset.rr!==undefined && b.dataset.rr!=='') ? b.dataset.rr : b.dataset.r; rrIn.value = set.rr; }
     row.classList.add('filled');
     $('#tw-setcount').textContent = state.active.exercises.reduce((x,e)=>x+validSets(e).length,0)+' Sätze';
     saveState(); haptic();
@@ -3902,18 +3991,19 @@ function groupDetail(groupName, ws){
   return {list, total};
 }
 /* Karten: Radar + Gruppen-Balken + Details pro Muskel.
-   Der Umschalter betrifft nur die Karte „Sätze pro Muskelgruppe" (Gruppen-Balken
-   und die Einzelmuskel-Details). Das Radar bleibt auf direkt+indirekt. */
+   Der Umschalter steht jetzt oben und gilt für die ganze Muskelsektion —
+   sowohl das Radar (Muskel-Balance) als auch die Karte „Sätze pro Muskelgruppe". */
 let statsSetMode = 'both';
 function muscleSection(ws, weeks){
-  const radar = sumGroups(muscleSets(ws), RADAR_AXES);
-  const mg = muscleSetsBy(ws, statsSetMode);
-  const toggle = `<div class="seg segsm" id="setmode-seg" style="margin-bottom:10px">
+  const mg = muscleSetsBy(ws, statsSetMode);            // ein Datensatz für Radar UND Balken
+  const radar = sumGroups(mg, RADAR_AXES);
+  const toggle = `<div class="seg segsm setmode-top" id="setmode-seg">
       <button data-setmode="both" class="${statsSetMode==='both'?'on':''}">Direkt + indirekt</button>
       <button data-setmode="direct" class="${statsSetMode==='direct'?'on':''}">Nur direkt</button>
     </div>`;
-  return `<div class="card"><h3>Muskel-Balance</h3>${svgRadar(radar)}</div>
-    <div class="card"><h3 style="margin-bottom:8px">Sätze pro Muskelgruppe</h3>${toggle}${groupBars(mg, ws, weeks)}
+  return toggle
+    + `<div class="card"><h3>Muskel-Balance</h3>${svgRadar(radar)}</div>
+    <div class="card"><h3 style="margin-bottom:8px">Sätze pro Muskelgruppe</h3>${groupBars(mg, ws, weeks)}
     ${Object.keys(mg).length? `<details style="margin-top:10px"><summary class="tiny" style="cursor:pointer">Details pro Einzelmuskel anzeigen</summary><div style="margin-top:10px">${muscleBars(mg)}</div></details>`:''}</div>`;
 }
 document.addEventListener('click', e=>{
@@ -4399,6 +4489,28 @@ $$('[data-close]').forEach(b=>b.innerHTML=ICO.close);
 loadState();
 evalAchievements();   // rückwirkend freischalten (z.B. nach Import/Update), still
 injectBodies();
+
+/* ═══ WOCHENWECHSEL: Figur aktualisiert sich zum Sonntag-Ende automatisch ═══
+   Die Wochenansicht (Mo–So) setzt sich zurück, sobald die neue Woche beginnt
+   (Sonntag Mitternacht → Montag 0 Uhr). Läuft auch, wenn die App offen bleibt,
+   und wird beim Zurückkehren in die App zusätzlich geprüft. */
+let _lastWeekKey = weekKey(new Date());
+function refreshOnNewWeek(){
+  const k = weekKey(new Date());
+  if(k !== _lastWeekKey){
+    _lastWeekKey = k;
+    if(typeof renderHome==='function') renderHome();     // rechnet weekMuscleMap neu + malt Figur
+  }
+}
+function scheduleWeekRollover(){
+  const now = new Date();
+  const nextMon = weekRange(now)[1].getTime();           // nächster Montag 0 Uhr = Ende Sonntag
+  const ms = Math.min(Math.max(1000, nextMon - now.getTime()), 2147483000);
+  setTimeout(()=>{ refreshOnNewWeek(); scheduleWeekRollover(); }, ms);
+}
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) refreshOnNewWeek(); });
+window.addEventListener('focus', refreshOnNewWeek);
+scheduleWeekRollover();
 
 /* ═══ MOTIVATION: Titel, Wochen-Missionen, Wochenrückblick ══════════════ */
 
