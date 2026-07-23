@@ -111,11 +111,11 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 :focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:6px}
 
 /* ─── TYPOGRAFIE ─────────────────────────────────────────────────── */
-h1{font-size:26px;font-weight:800;letter-spacing:-.028em;line-height:1.1}
-h2{font-size:19px;font-weight:700;letter-spacing:-.02em;line-height:1.2;margin-bottom:var(--sp3)}
+h1{font-size:26px;font-weight:800;letter-spacing:-.028em;line-height:1.1;text-wrap:balance}
+h2{font-size:19px;font-weight:700;letter-spacing:-.02em;line-height:1.2;margin-bottom:var(--sp3);text-wrap:balance}
 h3{font-size:15px;font-weight:650;letter-spacing:-.012em}
-.sub{color:var(--txt2);font-size:13px;letter-spacing:-.005em}
-.tiny{color:var(--txt3);font-size:12px;letter-spacing:0;line-height:1.4}
+.sub{color:var(--txt2);font-size:13px;letter-spacing:-.005em;text-wrap:pretty}
+.tiny{color:var(--txt3);font-size:12px;letter-spacing:0;line-height:1.4;text-wrap:pretty}
 .acc{color:var(--acc)}
 .up{text-transform:uppercase;letter-spacing:.09em;font-size:10.5px;font-weight:650;color:var(--txt3)}
 /* Zahlen laufen nicht mehr — Tabellenziffern überall, wo gezählt wird */
@@ -264,9 +264,9 @@ h3{font-size:15px;font-weight:650;letter-spacing:-.012em}
 path[data-m]{fill:var(--fig-body);stroke:var(--fig-line);stroke-width:.6;stroke-linejoin:round;
   transition:fill var(--dur-4) var(--ease);
   transition-delay:calc(var(--md,0) * 26ms)}
-path[data-m].m1{fill:var(--fig-1);stroke:rgba(0,0,0,.40)}
+path[data-m].m1{fill:var(--fig-3);stroke:rgba(0,0,0,.40)}
 path[data-m].m2{fill:var(--fig-2);stroke:rgba(0,0,0,.40)}
-path[data-m].m3{fill:var(--fig-3);stroke:rgba(0,0,0,.40)}
+path[data-m].m3{fill:var(--fig-1);stroke:rgba(0,0,0,.40)}
 path[data-m].r0{fill:var(--fig-r0);stroke:rgba(0,0,0,.40)}
 path[data-m].r1{fill:var(--fig-r1);stroke:rgba(0,0,0,.40)}
 path[data-m].r2{fill:var(--fig-2);stroke:rgba(0,0,0,.40)}
@@ -1079,7 +1079,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:14px">Fitness Tracker V29 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:14px">Fitness Tracker V31 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -3072,21 +3072,21 @@ function paintBody(){
     const g = recoveryGroups(recMap).sort((a,b)=>b[1]-a[1]);
     const fresh = g.filter(x=>x[1]>=80).map(x=>x[0]);
     $('#body-sub').innerHTML = fresh.length? `Frisch und bereit: <b style="color:var(--green)">${fresh.join(' · ')}</b>` : 'Alles noch in Erholung — heute leichter oder Pausentag.';
-    $('#body-legend').innerHTML = `<span><i class="dot" style="background:var(--r-low)"></i>&lt;35 %</span>
-      <span><i class="dot" style="background:var(--r-mid)"></i>35–60 %</span>
-      <span><i class="dot" style="background:var(--r-ok)"></i>60–85 %</span>
-      <span><i class="dot" style="background:var(--r-full)"></i>85 %+</span>`;
+    $('#body-legend').innerHTML = `<span><i class="dot" style="background:var(--fig-r0)"></i>&lt;35 %</span>
+      <span><i class="dot" style="background:var(--fig-r1)"></i>35–60 %</span>
+      <span><i class="dot" style="background:var(--fig-2)"></i>60–85 %</span>
+      <span><i class="dot" style="background:var(--fig-3)"></i>85 %+</span>`;
     $('#body-reclist').innerHTML = `<div style="margin-top:12px">` + g.map(([n,v],i)=>`
-      <div class="mbar"><span>${n}</span><span class="bar"><i style="width:${v}%;animation-delay:${i*45}ms;background:${v>=85?'var(--r-full)':v>=60?'var(--r-ok)':v>=35?'var(--r-mid)':'var(--r-low)'}"></i></span><span class="val">${v} %</span></div>`).join('') + `</div>
+      <div class="mbar"><span>${n}</span><span class="bar"><i style="width:${v}%;animation-delay:${i*45}ms;background:${v>=85?'var(--fig-3)':v>=60?'var(--fig-2)':v>=35?'var(--fig-r1)':'var(--fig-r0)'}"></i></span><span class="val">${v} %</span></div>`).join('') + `</div>
       <p class="tiny" style="margin-top:10px">Ermüdung klingt über 2–5 Tage ab — je mehr Sätze, desto länger.</p>`;
   } else {
     document.querySelectorAll('path[data-m]').forEach(p=>p.classList.remove('r0','r1','r2','r3'));
     paintBodies(weekMuscleMap);
     $('#body-sub').textContent = 'Diese Woche (Mo–So) · Reset Sonntag Mitternacht';
-    $('#body-legend').innerHTML = `<span><i class="dot" style="background:var(--m0)"></i>0 Sätze</span>
-      <span><i class="dot" style="background:var(--m1)"></i>1–3</span>
-      <span><i class="dot" style="background:var(--m2)"></i>4–8</span>
-      <span><i class="dot" style="background:var(--m3);box-shadow:0 0 6px rgba(61,125,255,.7)"></i>9+ <span class="tiny">(dunkler = mehr)</span></span>`;
+    $('#body-legend').innerHTML = `<span><i class="dot" style="background:var(--fig-body)"></i>0 Sätze</span>
+      <span><i class="dot" style="background:var(--fig-3)"></i>1–3</span>
+      <span><i class="dot" style="background:var(--fig-2)"></i>4–8</span>
+      <span><i class="dot" style="background:var(--fig-1)"></i>9+ <span class="tiny">(dunkler = mehr)</span></span>`;
     $('#body-reclist').innerHTML = '';
   }
 }
@@ -3932,9 +3932,11 @@ function svgLine(pts, fmt, opts){
     s+=`<path d="${ad}" fill="none" stroke="#ffc94d" stroke-width="1.4" stroke-dasharray="4 3" opacity=".8"/>`;
   }
   pts.forEach((p,i)=>{
+    const last=i===pts.length-1;
     s+=`<g style="cursor:pointer" onclick="chartTip('${tid}','${(p.l||'')}: ${String(fmt(p.y)).replace(/'/g,'')}')">`;
     s+=`<circle cx="${X(i)}" cy="${Y(p.y)}" r="10" fill="transparent"/>`;
-    s+=`<circle cx="${X(i)}" cy="${Y(p.y)}" r="${i===pts.length-1?4:2.6}" fill="${i===pts.length-1?'#ffc94d':'#3d7dff'}"/></g>`;
+    if(last) s+=`<circle cx="${X(i)}" cy="${Y(p.y)}" r="7" fill="#ffc94d" opacity=".18"/>`;
+    s+=`<circle cx="${X(i)}" cy="${Y(p.y)}" r="${last?4:2.6}" fill="${last?'#ffc94d':'#3d7dff'}"/></g>`;
   });
   s+=`<text x="${X(0)}" y="${H-6}" font-size="8.5" fill="#5f6877">${pts[0].l||''}</text>`;
   if(pts.length>1) s+=`<text x="${X(pts.length-1)}" y="${H-6}" font-size="8.5" fill="#9aa3b2" text-anchor="end">${pts[pts.length-1].l||''}</text>`;
@@ -4202,9 +4204,10 @@ function renderExStats(){
       <div class="kpi"><b>${bests.sessions}</b><span>Sessions</span></div>
     </div>
     ${maxes}
-    ${isBW? (bests.maxW>0? `<div class="card"><h3>Zusatzgewicht pro Session</h3>${svgLine(zPts.slice(-30),v=>'+'+Math.round(v)+'kg')}</div>`:'')
-          : `<div class="card"><h3>e1RM-Verlauf <span class="tiny">(geschätztes 1RM · gestrichelt = Ø-Trend)</span></h3>${svgLine(ePts.slice(-30),v=>Math.round(v)+'kg',{avg:true})}</div>`}
-    <div class="card"><h3>Volumen pro Session ${isBW?'<span class="tiny">(inkl. Körpergewicht)</span>':''}</h3>${svgLine(vPts.slice(-30),v=>fmtVol(v))}</div>
+    ${isBW? (bests.maxW>0? `<div class="card"><h3>Zusatzgewicht pro Session</h3>${svgLine(zPts.slice(-30),v=>'+'+Math.round(v)+'kg',{fill:true})}</div>`:'')
+          : `<div class="card"><h3>e1RM-Verlauf <span class="tiny">(geschätztes 1RM · gestrichelt = Ø-Trend)</span></h3>${svgLine(ePts.slice(-30),v=>Math.round(v)+'kg',{avg:true,fill:true})}</div>`}
+    <div class="card"><h3>Volumen pro Session ${isBW?'<span class="tiny">(inkl. Körpergewicht)</span>':''}</h3>${svgLine(vPts.slice(-30),v=>fmtVol(v),{fill:true})}</div>
+    ${!isBW? `<div class="card"><h3>Arbeitsgewicht pro Session <span class="tiny">(schwerster Satz · gestrichelt = Ø-Trend)</span></h3>${svgLine(zPts.slice(-30),v=>Math.round(v)+' kg',{avg:true,fill:true})}</div>` : ''}
     <div class="card"><h3 style="margin-bottom:6px">Letzte Sessions</h3>
       <table class="htable"><tr><th>Datum</th><th>Sätze</th><th>Best-Satz</th><th>Volumen</th></tr>
       ${h.slice(-12).reverse().map(x=>{
