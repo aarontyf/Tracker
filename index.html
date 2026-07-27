@@ -1056,7 +1056,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     <h3 style="margin-bottom:6px">Backup</h3>
     <p class="sub" style="margin-bottom:4px">Daten liegen nur in diesem Browser. Regelmäßig exportieren!</p>
     <p class="tiny" id="set-lastbackup" style="margin-bottom:10px"></p>
-    <button class="btn btn-acc btn-block" id="btn-vault" style="margin-bottom:8px">📤 An Vault senden (mailen)</button>
+    <button class="btn btn-acc btn-block" id="btn-vault" style="margin-bottom:8px">📧 An Vault senden (1 Tipp)</button>
     <div class="row">
       <button class="btn btn-ghost btn-sm grow" id="btn-export">⬇ Als Datei</button>
       <button class="btn btn-ghost btn-sm grow" id="btn-csv">⬇ CSV</button>
@@ -1079,7 +1079,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:14px">Fitness Tracker V34 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:14px">Fitness Tracker V35 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -4482,14 +4482,14 @@ function backupName(){ return 'fitnesstracker-backup-'+new Date().toISOString().
 /* Lesbarer Trainings-Text für die Mail: landet im E-Mail-TEXT (nicht nur im JSON-Anhang).
    So liest Claude im Vault die letzten Trainings + aktuelle Erholung direkt aus der Mail —
    ohne dass du den Anhang herunterladen und irgendwo ablegen musst. Ein Knopf genügt. */
-function backupText(){
+function backupText(maxWk){
   const head = `Fitness-Backup ${new Date().toLocaleDateString('de-DE')} — ${state.workouts.length} Workouts, ${Object.keys(state.ach||{}).length} Erfolge.`;
   let recLine = '';
   try{ const g = recoveryGroups(recoveryMap());
     recLine = '\n\n▼ ERHOLUNG JETZT\n' + g.map(([n,v])=>`${n} ${v}%`).join(' · '); }catch(e){}
   const cutoff = Date.now() - 14*864e5;                 // letzte 14 Tage
   const recent = state.workouts.filter(w=> new Date(w.date).getTime() >= cutoff)
-    .sort((a,b)=> new Date(b.date) - new Date(a.date)).slice(0,12);   // neueste zuerst, max 12
+    .sort((a,b)=> new Date(b.date) - new Date(a.date)).slice(0, maxWk||12);   // neueste zuerst
   let log = '';
   if(recent.length){
     log = '\n\n▼ LETZTE TRAININGS (14 Tage)\n' + recent.map(w=>{
@@ -4506,17 +4506,17 @@ function backupText(){
   }
   return head + recLine + log;
 }
-async function sendToVault(){
-  const file = new File([backupBlob()], backupName(), {type:'application/json'});
-  const txt = backupText();
-  try{
-    if(navigator.canShare && navigator.canShare({files:[file]})){
-      await navigator.share({files:[file], title:'Fitness Backup', text:txt});
-      markBackupDone();
-      toast('Geteilt ✓ — an dich selbst schicken'); return;
-    }
-  }catch(e){ if(e && e.name==='AbortError') return; }
-  doExport();   // Fallback: Download
+/* Fester Vault-Empfänger — ein Tipp öffnet Mail schon adressiert + ausgefüllt.
+   (Für eine spätere Freunde-Version könnte das in die Einstellungen wandern.) */
+const VAULT_EMAIL = 'jeetunaaron750@gmail.com';
+function sendToVault(){
+  const subj = `Fitness-Backup ${new Date().toLocaleDateString('de-DE')}`;
+  let n = 12, body = backupText(n);
+  // mailto-Text nicht zu lang werden lassen (iOS kürzt sonst) — notfalls ältere Einheiten weglassen
+  while(n > 3 && encodeURIComponent(body).length > 5200){ n -= 2; body = backupText(n); }
+  markBackupDone();
+  location.href = `mailto:${VAULT_EMAIL}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`;
+  toast('Mail ist fertig adressiert — nur noch „Senden" tippen ✓');
 }
 /* Sicherung quittieren — einheitlich für alle Wege */
 function markBackupDone(){
