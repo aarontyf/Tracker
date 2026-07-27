@@ -264,9 +264,9 @@ h3{font-size:15px;font-weight:650;letter-spacing:-.012em}
 path[data-m]{fill:var(--fig-body);stroke:var(--fig-line);stroke-width:.6;stroke-linejoin:round;
   transition:fill var(--dur-4) var(--ease);
   transition-delay:calc(var(--md,0) * 26ms)}
-path[data-m].m1{fill:var(--fig-3);stroke:rgba(0,0,0,.40)}
+path[data-m].m1{fill:var(--fig-1);stroke:rgba(0,0,0,.40)}
 path[data-m].m2{fill:var(--fig-2);stroke:rgba(0,0,0,.40)}
-path[data-m].m3{fill:var(--fig-1);stroke:rgba(0,0,0,.40)}
+path[data-m].m3{fill:var(--fig-3);stroke:rgba(0,0,0,.40)}
 path[data-m].r0{fill:var(--fig-r0);stroke:rgba(0,0,0,.40)}
 path[data-m].r1{fill:var(--fig-r1);stroke:rgba(0,0,0,.40)}
 path[data-m].r2{fill:var(--fig-2);stroke:rgba(0,0,0,.40)}
@@ -1079,7 +1079,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:14px">Fitness Tracker V31 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:14px">Fitness Tracker V34 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -1887,51 +1887,67 @@ const RADAR_AXES = [
 ];
 function sumGroups(m, defs){ return defs.map(([label,keys])=>[label, keys.reduce((a,k)=>a+(m[k]||0),0)]); }
 
-/* ================= MUSKEL-ERHOLUNG (überarbeitet V29) =================
+/* ================= MUSKEL-ERHOLUNG (neu aufgebaut V33) =================
    Prinzip wie bei Fitbod, aber sauber gerechnet:
-   1. Pro TRAININGSEINHEIT werden die effektiven Sätze je Muskel gesammelt
+   1. REGION-ZUSAMMENLEGUNG: obere/mittlere/untere Brust sind EIN Muskel
+      (Pectoralis). Bankdrücken ermüdet die ganze Brust, nicht nur ein Drittel —
+      also werden ihre Sätze für die Erholung zusammengezählt. Andere Gruppen
+      (Rücken, Beine, Schultern) bestehen aus wirklich verschiedenen Muskeln und
+      werden NICHT zusammengelegt.
+   2. Pro TRAININGSEINHEIT effektive Sätze je Erholungs-Einheit sammeln
       (Primärmuskel × 1, Sekundärmuskel × 0,5).
-   2. Jede Einheit erzeugt eine Anfangs-Ermüdung f0 = min(1, Sätze/10)
-      — ~10 harte Sätze in einer Einheit ermüden einen Muskel praktisch voll.
-   3. Diese klingt EXPONENTIELL ab; die Erholzeit skaliert mit dem Umfang
-      (kleiner Muskel/wenig Volumen erholt schneller): recovH = 24…96 h.
-   4. Mehrere Einheiten werden über die Wahrscheinlichkeits-Regel kombiniert
-      Ermüdung = 1 − ∏(1 − fᵢ) — dadurch sättigt sie sauber bei 100 % und
-      kann nie „überlaufen" (der alte Fehler: Summe > 1 pegte Muskeln tagelang
-      auf 0 % erholt, auch bei über die Woche verteilten Sätzen).
+   3. Sättigende Anfangs-Ermüdung f0 = 1 − e^(−Sätze/5): 2 Sätze ≈ 33 %,
+      5 ≈ 63 %, 8 ≈ 80 %, 12 ≈ 91 %. So registriert schon leichtes Training,
+      und ein harter Tag (8–12 Sätze) drückt den Muskel nahe 0 % erholt.
+   4. Abklingen EXPONENTIELL; Erholzeit skaliert mit Umfang: recovH = 24…96 h.
+   5. Mehrere Einheiten über 1 − ∏(1 − fᵢ) kombiniert — sättigt sauber bei 100 %,
+      läuft nie über.
    100 % = frisch/vollständig erholt. */
+let recLoad = {};   // Muskel → jüngste, zeitgewichtete Satz-Last (für die Gruppen-Gewichtung)
+const REC_MERGE = { chest_up:'chest', chest_low:'chest' };   // Brust-Regionen = ein Erholungsmuskel
+const recUnit = k => REC_MERGE[k] || k;
 function recoveryMap(now){
   now = now || Date.now();
-  const sessions = {};                                  // Muskel → [{ageH, sets}]
+  const sessions = {};                                  // Erholungs-Einheit → [{ageH, sets}]
   state.workouts.forEach(w=>{
     const ageH = (now - new Date(w.date).getTime())/3600000;
     if(ageH < 0 || ageH > 240) return;                  // älter als 10 Tage: sicher erholt
-    const perMuscle = {};
+    const perUnit = {};
     w.exercises.forEach(e=>{
       const ex = getEx(e.exId); if(!ex) return;
       const n = validSets(e).length; if(!n) return;
-      ex.p.forEach(k=> perMuscle[k] = (perMuscle[k]||0) + n);
-      ex.s.forEach(k=> perMuscle[k] = (perMuscle[k]||0) + n*0.5);
+      ex.p.forEach(k=> perUnit[recUnit(k)] = (perUnit[recUnit(k)]||0) + n);
+      ex.s.forEach(k=> perUnit[recUnit(k)] = (perUnit[recUnit(k)]||0) + n*0.5);
     });
-    Object.entries(perMuscle).forEach(([k,sets])=>{ (sessions[k] = sessions[k]||[]).push({ageH, sets}); });
+    Object.entries(perUnit).forEach(([k,sets])=>{ (sessions[k] = sessions[k]||[]).push({ageH, sets}); });
   });
-  const rec = {};
+  const rec = {}; recLoad = {};
   Object.keys(MUSCLES).forEach(k=>{
-    let fresh = 1;                                       // ∏(1 − fᵢ)
-    (sessions[k]||[]).forEach(({ageH, sets})=>{
-      const f0     = Math.min(1, sets/10);              // Anfangs-Ermüdung 0…1
-      const recovH = Math.max(24, Math.min(96, 24 + 6*sets));   // Erholfenster 24…96 h
+    let fresh = 1, load = 0;                             // ∏(1 − fᵢ)  /  zeitgewichtete Last
+    (sessions[recUnit(k)]||[]).forEach(({ageH, sets})=>{
+      const f0     = 1 - Math.exp(-sets/5);             // sättigende Ermüdung 0…1
+      const recovH = Math.max(24, Math.min(96, 24 + 8*sets));   // Erholfenster 24…96 h
       const tau    = recovH/3;                          // nach recovH h ≈ 95 % erholt
-      fresh *= (1 - f0 * Math.exp(-ageH/tau));
+      const decay  = Math.exp(-ageH/tau);
+      fresh *= (1 - f0 * decay);
+      load  += sets * decay;                            // jüngere/größere Reize wiegen mehr
     });
     rec[k] = Math.max(0, Math.min(100, Math.round(100 * fresh)));
+    recLoad[k] = load;
   });
   return rec;
 }
+/* Gruppen-Erholung: nach zuletzt trainiertem Volumen GEWICHTET. Sonst ziehen nie
+   trainierte Teilmuskeln (z. B. untere Brust an einem Flachbank-Tag stehen auf
+   100 %) den Wert künstlich hoch — dann kann „Brust" selbst direkt nach dem
+   Training nie unter ~67 % fallen. Keine jüngste Last → Mittel (= alles frisch). */
 function recoveryGroups(rec){
-  return sumGroups({}, RADAR_AXES).map(([label])=>{
-    const keys = RADAR_AXES.find(a=>a[0]===label)[1];
-    return [label, Math.round(keys.reduce((a,k)=>a+rec[k],0)/keys.length)];
+  return RADAR_AXES.map(([label, keys])=>{
+    let wsum = 0, rsum = 0;
+    keys.forEach(k=>{ const w = recLoad[k] || 0; wsum += w; rsum += w * rec[k]; });
+    const val = wsum > 0 ? Math.round(rsum / wsum)
+                         : Math.round(keys.reduce((a,k)=>a + rec[k], 0) / keys.length);
+    return [label, val];
   });
 }
 /* ================= ÜBUNGSDATENBANK ================= */
@@ -3084,9 +3100,9 @@ function paintBody(){
     paintBodies(weekMuscleMap);
     $('#body-sub').textContent = 'Diese Woche (Mo–So) · Reset Sonntag Mitternacht';
     $('#body-legend').innerHTML = `<span><i class="dot" style="background:var(--fig-body)"></i>0 Sätze</span>
-      <span><i class="dot" style="background:var(--fig-3)"></i>1–3</span>
+      <span><i class="dot" style="background:var(--fig-1)"></i>1–3</span>
       <span><i class="dot" style="background:var(--fig-2)"></i>4–8</span>
-      <span><i class="dot" style="background:var(--fig-1)"></i>9+ <span class="tiny">(dunkler = mehr)</span></span>`;
+      <span><i class="dot" style="background:var(--fig-3);box-shadow:0 0 6px rgba(103,232,107,.7)"></i>9+ <span class="tiny">(heller = mehr)</span></span>`;
     $('#body-reclist').innerHTML = '';
   }
 }
@@ -4463,9 +4479,36 @@ function backupBlob(){
   return new Blob([JSON.stringify(state,null,1)],{type:'application/json'});
 }
 function backupName(){ return 'fitnesstracker-backup-'+new Date().toISOString().slice(0,10)+'.json'; }
+/* Lesbarer Trainings-Text für die Mail: landet im E-Mail-TEXT (nicht nur im JSON-Anhang).
+   So liest Claude im Vault die letzten Trainings + aktuelle Erholung direkt aus der Mail —
+   ohne dass du den Anhang herunterladen und irgendwo ablegen musst. Ein Knopf genügt. */
+function backupText(){
+  const head = `Fitness-Backup ${new Date().toLocaleDateString('de-DE')} — ${state.workouts.length} Workouts, ${Object.keys(state.ach||{}).length} Erfolge.`;
+  let recLine = '';
+  try{ const g = recoveryGroups(recoveryMap());
+    recLine = '\n\n▼ ERHOLUNG JETZT\n' + g.map(([n,v])=>`${n} ${v}%`).join(' · '); }catch(e){}
+  const cutoff = Date.now() - 14*864e5;                 // letzte 14 Tage
+  const recent = state.workouts.filter(w=> new Date(w.date).getTime() >= cutoff)
+    .sort((a,b)=> new Date(b.date) - new Date(a.date)).slice(0,12);   // neueste zuerst, max 12
+  let log = '';
+  if(recent.length){
+    log = '\n\n▼ LETZTE TRAININGS (14 Tage)\n' + recent.map(w=>{
+      const d = new Date(w.date).toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit'});
+      const lines = w.exercises.map(e=>{
+        const sets = validSets(e); if(!sets.length) return '';
+        const nm = (getEx(e.exId)||{}).name || e.name || e.exId;
+        const body = sets.map(s=>{ const w2=+s.w||0, r=s.r||0, rr=s.rr;
+          return (w2? w2 : 'BW')+'×'+r + ((rr!=null&&rr!=='')? '|'+rr : ''); }).join(', ');
+        return `• ${nm}: ${body}`;
+      }).filter(Boolean);
+      return `━ ${d} · ${w.type||''}\n${lines.join('\n')}`;
+    }).join('\n\n');
+  }
+  return head + recLine + log;
+}
 async function sendToVault(){
   const file = new File([backupBlob()], backupName(), {type:'application/json'});
-  const txt = `Fitness-Backup ${new Date().toLocaleDateString('de-DE')} — ${state.workouts.length} Workouts, ${Object.keys(state.ach||{}).length} Erfolge.`;
+  const txt = backupText();
   try{
     if(navigator.canShare && navigator.canShare({files:[file]})){
       await navigator.share({files:[file], title:'Fitness Backup', text:txt});
