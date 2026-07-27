@@ -33,11 +33,13 @@
   /* Schrift */
   --txt:#f2f4f8;
   --txt2:#9aa4b8;
-  --txt3:#616b7e;
+  --txt3:#7d8798;   /* 4,7:1 gegen Karte — WCAG 2.2 AA bestanden */
   /* Akzent */
   --acc:#4c8dff;
   --acc2:#8fb8ff;
   --acc-deep:#2563eb;
+  /* Touch-Ziel-Norm (WCAG 2.2 · 2.5.8 = 24px, Apple HIG = 44px) */
+  --hit-min:24px; --hit-comfort:44px;
   --accdark:#0e2350;
   --acc-a08:rgba(76,141,255,.08);
   --acc-a16:rgba(76,141,255,.16);
@@ -48,14 +50,10 @@
   --red:#ff453a;
   --purple:#bf5af2;
   --teal:#40cbe0;
-  --blue:#4c8dff;
-  /* Muskel-Heatmap */
-  --m0:#3f4857;
+  /* Muskel-Heatmap — Figur: dunkel = wenig, hell = viel */
   --fig-body:#2b2b2b; --fig-line:#3d3d3d;
   --fig-1:#2f6b38; --fig-2:#47a850; --fig-3:#67e86b;
-  --fig-r0:#e2564f; --fig-r1:#e0973f; --m1:#9dc2ff; --m2:#4c8dff; --m3:#1b4fd8;
-  /* Erholung */
-  --r-low:#c8323c; --r-mid:#d98324; --r-ok:#2a9d5c; --r-full:#30d158;
+  --fig-r0:#e2564f; --fig-r1:#e0973f;
   /* Abstände (4er-Raster) */
   --sp1:4px; --sp2:8px; --sp3:12px; --sp4:16px; --sp5:20px; --sp6:24px; --sp8:32px; --sp10:40px;
   /* Radien */
@@ -82,12 +80,12 @@
 
 /* ─── RESET ──────────────────────────────────────────────────────── */
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;font-size:100%}
 html,body{height:100%;max-width:100%;overflow-x:hidden}
 body{
   background:var(--bg); color:var(--txt);
   font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,system-ui,sans-serif;
-  font-size:15px; line-height:1.45; letter-spacing:-.01em;
+  font-size:.9375rem; line-height:1.45; letter-spacing:-.01em;   /* rem = respektiert iOS-Textgröße */
   overscroll-behavior-y:none; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
 }
 /* Atmosphärischer Verlauf hinter allem — erzeugt Tiefe ohne Ablenkung */
@@ -104,6 +102,7 @@ input,select,textarea{
   transition:border-color var(--dur-2) var(--ease), background var(--dur-2) var(--ease), box-shadow var(--dur-2) var(--ease);
 }
 input:focus,select:focus,textarea:focus{border-color:var(--acc);background:var(--s3);box-shadow:0 0 0 4px var(--acc-a16)}
+input.err{border-color:var(--red);box-shadow:0 0 0 4px rgba(255,69,58,.16)}
 input[type=number]{-moz-appearance:textfield}
 input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 ::placeholder{color:var(--txt3)}
@@ -169,6 +168,12 @@ h3{font-size:15px;font-weight:650;letter-spacing:-.012em}
 .btn-block{width:100%}
 .btn-sm{padding:8px 13px;font-size:13.5px;border-radius:var(--r-sm);min-height:36px}
 .btn-lg{padding:17px 22px;font-size:16.5px;border-radius:var(--r-lg)}
+/* Inline-Icon in Beschriftungen — ersetzt die früheren Emoji, damit die
+   Bildsprache geräteunabhängig identisch aussieht */
+.bi{display:inline-flex;align-items:center;justify-content:center;vertical-align:-3px;margin-right:6px;flex:none}
+.bi svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+h3>.bi svg{width:15px;height:15px}
+.bi.solid svg{fill:currentColor;stroke:none}
 /* Ripple */
 .rip{position:absolute;border-radius:50%;transform:scale(0);background:rgba(255,255,255,.32);pointer-events:none;animation:rip var(--dur-4) var(--ease) forwards}
 @keyframes rip{to{transform:scale(2.6);opacity:0}}
@@ -308,6 +313,15 @@ path[data-m].r3{fill:var(--fig-3);stroke:rgba(0,0,0,.40)}
 .item .ttl{font-weight:650;font-size:14.5px;letter-spacing:-.012em}
 .item .meta{font-size:12px;color:var(--txt2);margin-top:1px}
 .item.tap{cursor:pointer;transition:background var(--dur-2) var(--ease);border-radius:var(--r-sm);margin:0 -8px;padding-left:8px;padding-right:8px}
+/* Abschnittsköpfe im Übungs-Picker (Favoriten / Zuletzt / Alle) */
+.picksec{font-size:10.5px;font-weight:650;letter-spacing:.09em;text-transform:uppercase;color:var(--txt3);padding:14px 2px 6px;border-bottom:1px solid var(--line);margin-bottom:2px}
+.picksec:first-child{padding-top:4px}
+.favbtn{position:relative;width:var(--hit-min);height:var(--hit-min);flex:none;display:inline-flex;align-items:center;justify-content:center;color:var(--txt3);background:none;border:none;transition:color var(--dur-2) var(--ease),transform var(--dur-1) var(--ease)}
+.favbtn::after{content:'';position:absolute;inset:-9px}
+.favbtn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linejoin:round}
+.favbtn.on{color:var(--gold)} .favbtn.on svg{fill:currentColor}
+.favbtn:active{transform:scale(.85)}
+.empty .big svg{width:40px;height:40px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;opacity:.7}
 .item.tap:active{background:var(--s2)}
 .badge{display:inline-block;font-size:10px;font-weight:750;border-radius:6px;padding:3px 7px;letter-spacing:.03em;vertical-align:middle}
 .badge.pr{background:rgba(255,214,10,.14);color:var(--gold);border:1px solid rgba(255,214,10,.3)}
@@ -376,10 +390,13 @@ path[data-m].r3{fill:var(--fig-3);stroke:rgba(0,0,0,.40)}
 .sethead.rir,.setrow.rir{grid-template-columns:30px 1fr 70px 58px 52px 26px}
 .sethead.uni,.setrow.uni{grid-template-columns:28px 1fr 62px 50px 50px 24px}
 .sethead.uni.rir,.setrow.uni.rir{grid-template-columns:26px .84fr 54px 42px 42px 42px 22px}
-.setdel{width:24px;height:24px;border-radius:6px;background:none;border:none;color:var(--txt3);font-size:13px;display:inline-flex;align-items:center;justify-content:center;justify-self:center;transition:color var(--dur-2) var(--ease),transform var(--dur-1) var(--ease)}
-.setdel:active{color:var(--red);transform:scale(.85)}
-.exreorder{display:flex;flex-direction:column;gap:2px;flex:none;margin-top:1px}
-.rord{width:26px;height:19px;border-radius:5px;background:var(--s2);border:1px solid var(--line);color:var(--txt2);font-size:9px;line-height:1;display:inline-flex;align-items:center;justify-content:center;transition:background var(--dur-2) var(--ease),transform var(--dur-1) var(--ease)}
+/* Touch-Ziele: sichtbare Größe kompakt, Trefferfläche via ::after auf Norm gebracht */
+.setdel{position:relative;width:var(--hit-min);height:var(--hit-min);border-radius:var(--r-sm);background:none;border:none;color:var(--txt3);font-size:13px;display:inline-flex;align-items:center;justify-content:center;justify-self:center;transition:color var(--dur-2) var(--ease),transform var(--dur-1) var(--ease),background var(--dur-2) var(--ease)}
+.setdel::after{content:'';position:absolute;inset:-10px -8px}
+.setdel:active{color:var(--red);background:rgba(255,69,58,.12);transform:scale(.85)}
+.exreorder{display:flex;flex-direction:column;gap:3px;flex:none;margin-top:1px}
+.rord{position:relative;width:28px;height:var(--hit-min);border-radius:var(--r-sm);background:var(--s2);border:1px solid var(--line);color:var(--txt2);font-size:9px;line-height:1;display:inline-flex;align-items:center;justify-content:center;transition:background var(--dur-2) var(--ease),transform var(--dur-1) var(--ease)}
+.rord::after{content:'';position:absolute;inset:-4px -8px}
 .rord:active{background:var(--s3);color:var(--txt);transform:scale(.9)}
 .rord[disabled]{opacity:.25;pointer-events:none}
 .sethead{font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.08em;font-weight:650;margin:10px 0 6px;padding:0 2px}
@@ -411,6 +428,13 @@ path[data-m].r3{fill:var(--fig-3);stroke:rgba(0,0,0,.40)}
   box-shadow:var(--e3);animation:sheet var(--dur-4) var(--ease);-webkit-overflow-scrolling:touch;
 }
 @media(min-width:700px){.mback{align-items:center;padding:var(--sp4)}.modal{border-radius:var(--r-xl);max-height:86vh;padding-bottom:var(--sp6);animation:pop var(--dur-3) var(--spring)}}
+/* Bestätigungsdialog — ersetzt den System-confirm(), damit die Optik nicht bricht */
+#modal-confirm{z-index:97}
+.modal.cfm{max-width:400px}
+.cf-ico{width:52px;height:52px;border-radius:var(--r-full);display:flex;align-items:center;justify-content:center;margin:2px auto 14px;background:var(--acc-a16);color:var(--acc2)}
+.cf-ico svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.cf-ico.danger{background:rgba(255,69,58,.14);color:var(--red)}
+.cf-ico.warn{background:rgba(255,214,10,.14);color:var(--gold)}
 @keyframes sheet{from{transform:translate3d(0,42px,0);opacity:0}to{transform:none;opacity:1}}
 @keyframes pop{from{transform:scale(.965);opacity:0}to{transform:none;opacity:1}}
 .mhd{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp3);margin-bottom:var(--sp4)}
@@ -790,6 +814,9 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
 
     <div id="home-resume"></div>
 
+    <!-- Wichtigste Aktion zuerst: ohne Scrollen erreichbar (vorher unter der Figur) -->
+    <button class="btn btn-acc btn-block btn-lg" id="btn-start-home" style="margin-bottom:14px"></button>
+
     <!-- HERO: die Figur ist die Identität der App -->
       <section class="hero" aria-label="Muskelübersicht">
       <div class="seg" style="margin-bottom:14px">
@@ -804,8 +831,6 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
       <div class="legend" id="body-legend"></div>
       <div id="body-reclist"></div>
     </section>
-
-    <button class="btn btn-acc btn-block btn-lg" id="btn-start-home" style="margin-bottom:14px"></button>
 
     <div id="home-rings"></div>
     <div id="home-level"></div>
@@ -866,6 +891,8 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
   <section class="screen" id="scr-hist">
     <div class="hd"><div><h1>Verlauf</h1><div class="tiny" id="hist-count"></div></div></div>
     <div id="hist-stats"></div>
+    <input type="search" id="hist-search" placeholder="Übung suchen (z.B. Bankdrücken)…" aria-label="Verlauf nach Übung durchsuchen" style="margin-bottom:8px">
+    <div class="chips scroll" id="hist-filters" style="margin-bottom:12px"></div>
     <div id="hist-list" class="stagger"></div>
   </section>
 
@@ -898,6 +925,15 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
   <div style="height:9px"></div>
   <div class="chips scroll" id="pick-groups"></div>
   <div id="pick-list" style="margin-top:10px"></div>
+</div></div>
+
+<div class="mback" id="modal-confirm" role="alertdialog" aria-modal="true" aria-labelledby="cf-title"><div class="modal cfm">
+  <div class="grab"></div>
+  <div class="cf-ico" id="cf-ico"></div>
+  <h2 id="cf-title" style="text-align:center;margin-bottom:6px"></h2>
+  <p class="sub" id="cf-text" style="text-align:center;margin-bottom:18px;white-space:pre-line"></p>
+  <button class="btn btn-block btn-lg" id="cf-ok" style="margin-bottom:8px"></button>
+  <button class="btn btn-ghost btn-block" id="cf-cancel">Abbrechen</button>
 </div></div>
 
 <div class="mback" id="modal-summary"><div class="modal" id="summary-body"></div></div>
@@ -1064,14 +1100,24 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     <h3 style="margin-bottom:6px">Backup</h3>
     <p class="sub" style="margin-bottom:4px">Daten liegen nur in diesem Browser. Regelmäßig exportieren!</p>
     <p class="tiny" id="set-lastbackup" style="margin-bottom:10px"></p>
-    <button class="btn btn-acc btn-block" id="btn-vault" style="margin-bottom:8px">📧 An Vault senden (1 Tipp)</button>
+    <button class="btn btn-acc btn-block" id="btn-vault" style="margin-bottom:8px"><span class="bi" data-ico="mail"></span>Sicherung mailen (1 Tipp)</button>
+    <label class="tiny up" for="set-vaultmail">Empfänger</label>
+    <input type="email" id="set-vaultmail" inputmode="email" autocomplete="email" spellcheck="false"
+           placeholder="deine@mail.de" style="margin:4px 0 6px">
+    <p class="tiny" style="margin-bottom:12px">Deine eigene Adresse — die Sicherung geht nur an dich.</p>
     <div class="row">
-      <button class="btn btn-ghost btn-sm grow" id="btn-export">⬇ Als Datei</button>
-      <button class="btn btn-ghost btn-sm grow" id="btn-csv">⬇ CSV</button>
-      <button class="btn btn-ghost btn-sm grow" id="btn-import">⬆ Import</button>
+      <button class="btn btn-ghost btn-sm grow" id="btn-export"><span class="bi" data-ico="down"></span>Datei</button>
+      <button class="btn btn-ghost btn-sm grow" id="btn-csv"><span class="bi" data-ico="chart"></span>CSV</button>
+      <button class="btn btn-ghost btn-sm grow" id="btn-import"><span class="bi" data-ico="upload"></span>Import</button>
       <input type="file" id="import-file" accept=".json" style="display:none">
     </div>
     <p class="tiny" style="margin-top:8px">CSV lässt sich in Excel öffnen — eine Zeile pro Satz.</p>
+  </div>
+  <div class="card">
+    <h3 style="margin-bottom:6px"><span class="bi" data-ico="shield"></span>Deine Daten</h3>
+    <p class="tiny" style="line-height:1.6">Alle Trainingsdaten bleiben <b>auf diesem Gerät</b>. Die App sendet nichts an Server, nutzt kein Tracking, keine Werbung und keine Analyse-Dienste. Sie fordert keine Berechtigungen an (kein Standort, keine Kamera, keine Kontakte).<br><br>
+    Eine Sicherung verlässt dein Gerät nur, wenn du selbst auf „Sicherung mailen" tippst — und dann ausschließlich an die Adresse, die du oben einträgst.<br><br>
+    <b>Wichtig:</b> Weil alles lokal liegt, sind deine Daten weg, wenn du den Browser-Speicher löschst oder die App entfernst. Sichere regelmäßig.</p>
   </div>
   <div class="card">
     <h3 style="margin-bottom:6px">Sicherungspunkte auf dem Gerät</h3>
@@ -2357,6 +2403,12 @@ function loadState(){
 const RENAME_MAP = {"x-chest-press-maschine":"x-brustpresse-maschine","x-incline-chest-press-maschine":"x-schrägbank-brustpresse-maschine","x-decline-chest-press-maschine":"x-negativ-brustpresse-maschine","x-chest-press-kabel-sitzend":"x-brustpresse-kabel-sitzend","x-bankdrücken-smith-machine":"x-bankdrücken-multipresse","x-schrägbankdrücken-smith-machine":"x-schrägbankdrücken-multipresse","x-butterfly-pec-deck-maschine":"x-butterfly-maschine","x-cable-fly-hoch-tief":"x-kabelzug-fliegende-hoch-tief","x-cable-fly-mitte":"x-kabelzug-fliegende-mitte","x-cable-fly-tief-hoch":"x-kabelzug-fliegende-tief-hoch","x-cable-fly-einarmig":"x-kabelzug-fliegende-einarmig","x-dip-maschine":"x-dip-maschine","x-svend-press-platte":"x-plattendrücken-vor-der-brust","x-floor-press-langhantel":"x-bodendrücken-langhantel","x-floor-press-kurzhantel":"x-bodendrücken-kurzhantel","x-landmine-press-brust":"x-landmine-drücken-brust","x-guillotine-press":"x-guillotine-bankdrücken","x-squeeze-press-kurzhantel":"x-enges-kurzhanteldrücken","x-squeeze-press-schrägbank":"x-enges-kurzhanteldrücken-schrägbank","x-chest-press-band":"x-brustdrücken-band","x-band-fly":"x-fliegende-band","x-pullover-kurzhantel":"x-überzüge-kurzhantel","x-chin-ups-untergriff":"x-klimmzüge-untergriff","x-chin-ups-mit-gewicht":"x-klimmzüge-untergriff-mit-gewicht","x-pulldown-maschine-plate-loaded":"x-latzug-maschine-scheiben","x-straight-arm-pulldown-kabel":"x-überzüge-am-kabel-gestreckte-arme","x-rope-pullover-kabel":"x-seilzug-überzüge","x-pendlay-row":"x-pendlay-rudern","x-t-bar-rudern":"x-t-stangen-rudern","x-t-bar-rudern-brustauflage":"x-t-stangen-rudern-brustauflage","x-seal-row":"x-rudern-in-bauchlage","x-rudermaschine-plate-loaded":"x-rudermaschine-scheiben","x-high-row-maschine":"x-rudern-von-oben-maschine","x-low-row-maschine":"x-rudern-von-unten-maschine","x-rudern-smith-machine":"x-rudern-multipresse","x-inverted-row":"x-umgekehrtes-rudern","x-meadows-row":"x-meadows-rudern","x-landmine-row":"x-landmine-rudern","x-kroc-row":"x-kroc-rudern","x-kreuzheben-trap-bar":"x-kreuzheben-trap-stange","x-kreuzheben-snatch-grip":"x-kreuzheben-reißgriff","x-rack-pulls":"x-teilkreuzheben-aus-dem-rack","x-reverse-hyperextension":"x-umgekehrter-rückenstrecker","x-superman":"x-superman-bauchlage","x-shrugs-langhantel":"x-schulterheben-langhantel","x-shrugs-kurzhantel":"x-schulterheben-kurzhantel","x-shrugs-smith-machine":"x-schulterheben-multipresse","x-shrugs-trap-bar":"x-schulterheben-trap-stange","x-shrugs-kabel":"x-schulterheben-kabel","x-arnold-press":"x-arnold-drücken","x-shoulder-press-maschine":"x-schulterpresse-maschine","x-schulterdrücken-smith-machine":"x-schulterdrücken-multipresse","x-push-press":"x-schulterdrücken-mit-schwung","x-landmine-press-schulter":"x-landmine-drücken-schulter","x-landmine-press-einarmig":"x-landmine-drücken-einarmig","x-z-press":"x-z-drücken-am-boden-sitzend","x-viking-press":"x-viking-drücken","x-lean-in-seitheben":"x-seitheben-angelehnt","x-reverse-flys-kurzhantel":"x-umgekehrte-fliegende-kurzhantel","x-reverse-pec-deck-maschine":"x-umgekehrtes-butterfly-maschine","x-reverse-cable-fly":"x-umgekehrte-fliegende-kabel","x-face-pulls-kabel":"x-gesichtsziehen-kabel","x-face-pulls-band":"x-gesichtsziehen-band","x-band-pull-aparts":"x-band-auseinanderziehen","x-cuban-rotation":"x-kubanische-rotation","x-bus-driver":"x-lenkrad-drehen-scheibe","x-bradford-press":"x-bradford-drücken","x-preacher-curls-sz-stange":"x-preacher-curls-sz-stange","x-preacher-curls-kurzhantel":"x-preacher-curls-kurzhantel","x-hammer-preacher-curls":"x-hammer-preacher-curls","x-preacher-curl-maschine":"x-preacher-curl-maschine","x-high-cable-curls":"x-kabel-curls-von-oben","x-bayesian-curls-kabel":"x-kabel-curls-hinter-dem-körper","x-spider-curls":"x-spider-curls-vorgebeugt","x-drag-curls":"x-zieh-curls-am-körper-entlang","x-zottman-curls":"x-zottman-curls","x-21s-langhantel":"x-21er-curls-langhantel","x-waiter-curls":"x-kellner-curls","x-jm-press":"x-jm-drücken","x-skull-crushers-sz-stange":"x-stirndrücken-sz-stange","x-skull-crushers-kurzhantel":"x-stirndrücken-kurzhantel","x-overhead-extension-kabel-seil":"x-trizepsdrücken-über-kopf-kabel-seil","x-kickbacks-kabel":"x-trizeps-rückdrücken-kabel","x-kickbacks-kurzhantel":"x-trizeps-rückdrücken-kurzhantel","x-bench-dips":"x-bank-dips","x-trizeps-maschine":"x-trizeps-maschine","x-overhead-triceps-extension-maschine":"x-trizepsdrücken-über-kopf-maschine","x-seated-dip-maschine":"x-dip-maschine-sitzend","x-tate-press":"x-tate-drücken","x-french-press-sitzend-sz":"x-französisches-drücken-sitzend-sz","x-enges-bankdrücken-smith":"x-enges-bankdrücken-multipresse","x-wrist-curls-langhantel":"x-handgelenk-curls-langhantel","x-reverse-wrist-curls":"x-handgelenk-curls-obergriff","x-wrist-curls-kurzhantel":"x-handgelenk-curls-kurzhantel","x-wrist-curls-hinter-rücken":"x-handgelenk-curls-hinter-dem-rücken","x-farmer-s-walk":"x-gewichte-tragen-farmers-walk","x-plate-pinch":"x-scheiben-kneifgriff","x-dead-hang":"x-hängen-an-der-stange","x-wrist-roller":"x-unterarm-roller","x-kniebeugen-low-bar":"x-kniebeugen-tiefe-auflage","x-box-squats":"x-kniebeugen-auf-box","x-pause-squats":"x-kniebeugen-mit-pause","x-goblet-squats":"x-kelch-kniebeugen","x-kniebeugen-smith-machine":"x-kniebeugen-multipresse","x-hack-squat-maschine":"x-hackenschmidt-maschine","x-pendulum-squat-maschine":"x-pendel-kniebeugenmaschine","x-v-squat-maschine":"x-v-kniebeugenmaschine","x-bulgarian-split-squats":"x-bulgarische-kniebeugen","x-split-squats":"x-geteilte-kniebeugen","x-curtsy-lunges":"x-überkreuz-ausfallschritte","x-step-ups":"x-aufsteiger-auf-box","x-sissy-squats":"x-sissy-kniebeugen","x-belt-squats":"x-gürtel-kniebeugen","x-zercher-squats":"x-zercher-kniebeugen","x-pistol-squats":"x-einbeinige-kniebeugen-pistol","x-stiff-leg-deadlift":"x-gestrecktes-kreuzheben","x-einbeiniges-rdl":"x-einbeiniges-rumänisches-kreuzheben","x-nordic-curls":"x-nordische-beinbeuger","x-glute-ham-raise":"x-beinbeuger-rückenstrecker-ghr","x-good-mornings":"x-guten-morgen-beugen","x-rdl-smith-machine":"x-rumänisches-kreuzheben-multipresse","x-beincurl-gymnastikball":"x-beinbeuger-gymnastikball","x-beincurl-slider":"x-beinbeuger-slider","x-hip-thrust-langhantel":"x-hüftstoß-langhantel","x-hip-thrust-maschine":"x-hüftstoß-maschine","x-hip-thrust-smith-machine":"x-hüftstoß-multipresse","x-glute-bridge":"x-beckenheben","x-glute-bridge-einbeinig":"x-beckenheben-einbeinig","x-b-stance-hip-thrust":"x-hüftstoß-versetzter-stand","x-kickbacks-kabel-glute":"x-beinrückheben-kabel","x-kickback-maschine":"x-beinrückheben-maschine","x-donkey-kicks":"x-eselstritte","x-fire-hydrants":"x-beinabspreizen-vierfüßler","x-frog-pumps":"x-frosch-beckenheben","x-sumo-squats":"x-sumo-kniebeugen","x-cable-pull-throughs":"x-durchziehen-am-kabel","x-band-side-walks":"x-seitschritte-mit-band","x-clamshells":"x-muschel-öffnen-seitlich-liegend","x-copenhagen-plank":"x-kopenhagener-seitstütz","x-wadenheben-smith-machine":"x-wadenheben-multipresse","x-donkey-calf-raises":"x-esel-wadenheben","x-tibialis-raises":"x-schienbeinheben","x-crunches":"x-crunches-bauchpressen","x-hanging-leg-raises":"x-beinheben-hängend","x-hanging-knee-raises":"x-knieheben-hängend","x-beinheben-captain-s-chair":"x-beinheben-beinhebemaschine","x-reverse-crunches":"x-umgekehrte-crunches","x-v-ups":"x-v-aufrichter","x-toes-to-bar":"x-zehen-zur-stange","x-ab-wheel-rollouts":"x-bauchroller-ab-wheel","x-plank-sek-als-wdh":"x-unterarmstütz-sek-als-wdh","x-plank-mit-gewicht":"x-unterarmstütz-mit-gewicht","x-side-plank-sek-als-wdh":"x-seitstütz-sek-als-wdh","x-russian-twists":"x-russische-drehungen","x-woodchopper-kabel-hoch-tief":"x-holzhacker-kabel-hoch-tief","x-woodchopper-kabel-tief-hoch":"x-holzhacker-kabel-tief-hoch","x-pallof-press":"x-pallof-drücken-anti-rotation","x-dead-bugs":"x-toter-käfer","x-bird-dogs":"x-vierfüßler-diagonal","x-mountain-climbers":"x-bergsteiger","x-dragon-flags":"x-drachenfahne","x-hollow-hold-sek-als-wdh":"x-hohlkörper-halten-sek-als-wdh","x-l-sit-sek-als-wdh":"x-l-sitz-sek-als-wdh","x-suitcase-carry":"x-koffertragen-einseitig","x-power-cleans":"x-umsetzen-power-clean","x-hang-cleans":"x-umsetzen-aus-dem-hang","x-clean-jerk":"x-umsetzen-stoßen","x-snatch":"x-reißen","x-kettlebell-swings":"x-kettlebell-schwünge","x-kettlebell-clean-press":"x-kettlebell-umsetzen-drücken","x-thrusters":"x-kniebeuge-mit-drücken-thruster","x-sled-push":"x-schlitten-schieben","x-sled-pull":"x-schlitten-ziehen","x-battle-ropes":"x-schwungseile","x-turkish-get-ups":"x-türkisches-aufstehen","x-cross-body-hammer-curls":"x-hammer-curls-quer-zum-körper","x-reverse-curls-sz-stange":"x-umgekehrte-curls-sz-stange","x-reverse-curls-langhantel":"x-umgekehrte-curls-langhantel","x-bizeps-curl-maschine":"x-bizeps-curl-maschine","x-crunch-maschine":"x-crunch-maschine","x-thruster-kniebeuge-drücken":"x-kniebeuge-mit-drücken-thruster","x-scottcurls-sz-stange":"x-preacher-curls-sz-stange","x-scottcurls-kurzhantel":"x-preacher-curls-kurzhantel","x-hammer-scottcurls":"x-hammer-preacher-curls","x-scottcurl-maschine":"x-preacher-curl-maschine"};
 /* Migration: alte Positions-IDs (e12) → Namens-IDs; V7: englische → deutsche Übungsnamen */
 function migrateState(){
+  /* V37: Sicherungs-Empfänger war früher fest im Code. Bestehende Installationen
+     übernehmen ihn einmalig, damit der Ein-Tipp-Versand weiter funktioniert.
+     Neue Installationen tragen ihn selbst ein. */
+  if(state.settings && state.settings.vaultMail === undefined && state.workouts && state.workouts.length){
+    state.settings.vaultMail = 'jeetunaaron750@gmail.com';
+  }
   const remap = id=>{
     if(typeof id!=='string') return id;
     if(/^e\d+$/.test(id)){ const ex=EXDB[+id.slice(1)]; id = ex? ex.id : id; }
@@ -2396,6 +2448,22 @@ function saveState(){
     }
   }
 }
+/* Entprelltes Speichern: beim Tippen im Training würde sonst bei JEDEM Zeichen
+   der komplette Datenbestand serialisiert und synchron geschrieben. 300 ms
+   Sammelfenster; vor dem Verlassen/Verstecken der Seite wird sofort geschrieben,
+   damit nichts verloren geht. */
+let _saveTimer = null;
+function saveStateSoon(){
+  if(_saveTimer) return;                       // Fenster läuft bereits
+  _saveTimer = setTimeout(()=>{ _saveTimer = null; saveState(); }, 300);
+}
+function flushSave(){
+  if(_saveTimer){ clearTimeout(_saveTimer); _saveTimer = null; saveState(); }
+}
+window.addEventListener('pagehide', flushSave);
+window.addEventListener('beforeunload', flushSave);
+document.addEventListener('visibilitychange', ()=>{ if(document.hidden) flushSave(); });
+
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 
 /* ---------- Übungen ---------- */
@@ -2921,8 +2989,39 @@ const ICO = {
   plus:  _i('<path d="M12 5v14M5 12h14"/>'),
   up:    _i('<path d="M12 19V5M5 12l7-7 7 7"/>'),
   scale: _i('<path d="M6 3h12a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V5a2 2 0 012-2z"/><path d="M8 3a6.5 6.5 0 008 0M12 11l2-3"/>'),
-  timer: _i('<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/>')
+  timer: _i('<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/>'),
+  /* ergänzt: ersetzt die bisherigen Emoji, damit die Bildsprache einheitlich bleibt */
+  check: _i('<path d="M20 6L9 17l-5-5"/>'),
+  flame: _i('<path d="M12 22c4 0 6.5-2.7 6.5-6.2 0-4.4-4.2-6.3-3.4-11.3-2.6.6-4.4 2.7-4.8 5.3-1-.8-1.5-2-1.5-3.4C6.6 8.2 5.5 10.9 5.5 13.7 5.5 18.4 8.4 22 12 22z"/>'),
+  play:  _i('<path d="M7 4.5v15l12-7.5z"/>'),
+  mail:  _i('<rect x="2.5" y="5" width="19" height="14" rx="2.4"/><path d="M3 7l9 6 9-6"/>'),
+  down:  _i('<path d="M12 4v13M6 12l6 6 6-6M5 21h14"/>'),
+  upload:_i('<path d="M12 20V7M6 12l6-6 6 6M5 21h14"/>'),
+  chart: _i('<path d="M4 20h16M7 20V10M12 20V4M17 20v-7"/>'),
+  trend: _i('<path d="M3 17l6-6 4 4 8-8M15 7h6v6"/>'),
+  muscle:_i('<path d="M5 8c2-3 6-4 9-2 2 1.3 3 3.4 3 5.6 0 3.4-2.6 6.4-6 6.4-2.6 0-4.6-1.4-5.6-3.6M5 8c-1.4 1-2 2.6-2 4.2 0 1.6.7 3 1.8 4"/>'),
+  inbox: _i('<path d="M3 13h5l1.5 3h5L16 13h5M4.5 6.5h15L21 13v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5z"/>'),
+  rocket:_i('<path d="M12 2c3.5 2.2 5.5 6 5.5 10.2L15 15H9l-2.5-2.8C6.5 8 8.5 4.2 12 2zM9 19c-1 1.5-3 2-3 2s.5-2 2-3M15 19c1 1.5 3 2 3 2s-.5-2-2-3"/><circle cx="12" cy="10" r="1.6"/>'),
+  search:_i('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>'),
+  star:  _i('<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z"/>'),
+  undo:  _i('<path d="M9 14L4 9l5-5"/><path d="M4 9h9a7 7 0 010 14h-3"/>'),
+  alert: _i('<path d="M12 8v5M12 17h.01"/><path d="M10.3 3.9L2.6 17a2 2 0 001.7 3h15.4a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/>'),
+  shield:_i('<path d="M12 3l7.5 3v5.5c0 4.4-3.1 8.3-7.5 9.5-4.4-1.2-7.5-5.1-7.5-9.5V6z"/><path d="M9.2 12.2l1.9 1.9 3.7-3.9"/>'),
+  /* Trainingstypen — ersetzen die bisherigen Emoji im Typ-Raster */
+  push:  _i('<path d="M12 3v10M8.5 6.5L12 3l3.5 3.5"/><path d="M4 17h16M6.5 21h11"/>'),
+  pull:  _i('<path d="M12 13V3M8.5 9.5L12 13l3.5-3.5"/><path d="M4 17h16M6.5 21h11"/>'),
+  legs:  _i('<path d="M9 3v7l-1.5 11M15 3v7l1.5 11M9 3h6M8.5 10h7"/>'),
+  bolt:  _i('<path d="M13 2L5 13h5l-1 9 8-11h-5z"/>')
 };
+/* Füllt alle <span class="bi" data-ico="name"> mit dem passenden SVG.
+   Nach jedem Neuaufbau aufrufen — idempotent, überspringt bereits gefüllte. */
+function hydrateIcons(root){
+  (root||document).querySelectorAll('.bi[data-ico]').forEach(el=>{
+    if(el.firstElementChild) return;
+    const svg = ICO[el.dataset.ico];
+    if(svg) el.innerHTML = svg;
+  });
+}
 function esc(t){ return String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 let toastT;
 function toast(msg, act, cb){
@@ -2933,9 +3032,54 @@ function toast(msg, act, cb){
   t.classList.add('on'); clearTimeout(toastT);
   toastT=setTimeout(()=>{ t.classList.remove('on'); t.style.pointerEvents='none'; }, act?6500:2200);
 }
+/* ── Bestätigungsdialog im App-Design (ersetzt window.confirm) ──────────
+   Gibt ein Promise<boolean> zurück. Tastatur: Esc = Abbrechen.
+   opts: {ok, tone:'danger'|'warn'|'acc', icon} */
+let _cfResolve = null;
+function ask(title, text, opts){
+  opts = opts || {};
+  const tone = opts.tone || 'acc';
+  const ic = { danger: ICO.trash, warn: ICO.flame, acc: ICO.check }[tone] || ICO.check;
+  $('#cf-title').textContent = title;
+  $('#cf-text').textContent = text || '';
+  $('#cf-text').style.display = text ? '' : 'none';
+  const ico = $('#cf-ico'); ico.className = 'cf-ico' + (tone==='acc' ? '' : ' '+tone); ico.innerHTML = ic;
+  const ok = $('#cf-ok');
+  ok.textContent = opts.ok || 'Ja, weiter';
+  ok.className = 'btn btn-block btn-lg ' + (tone==='danger' ? 'btn-danger' : 'btn-acc');
+  openModal('#modal-confirm');
+  haptic();
+  setTimeout(()=>ok.focus(), 60);
+  return new Promise(res=>{ _cfResolve = res; });
+}
+function _cfClose(val){
+  if(!_cfResolve) return;
+  const r = _cfResolve; _cfResolve = null;
+  $('#modal-confirm').classList.remove('on');
+  r(val);
+}
+$('#cf-ok').addEventListener('click', ()=>_cfClose(true));
+$('#cf-cancel').addEventListener('click', ()=>_cfClose(false));
+$('#modal-confirm').addEventListener('click', e=>{ if(e.target.id==='modal-confirm') _cfClose(false); });
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape' && _cfResolve) _cfClose(false);
+  else if(e.key==='Enter' && _cfResolve) _cfClose(true);
+});
+
+/* ── Rückgängig-System ─────────────────────────────────────────────────
+   Jede zerstörerische Aktion legt einen Wiederherstellungspunkt an und
+   zeigt einen Toast mit „Rückgängig". Nielsen-Heuristik 3. */
+function withUndo(label, restoreFn){
+  toast(label, 'Rückgängig', ()=>{ restoreFn(); haptic(); toast('Wiederhergestellt'); });
+}
 function openModal(id){ $(id).classList.add('on'); }
 function closeModals(){ $$('.mback').forEach(m=>m.classList.remove('on')); }
-$$('.mback').forEach(m=>m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('on'); }));
+$$('.mback').forEach(m=>m.addEventListener('click',e=>{
+  if(e.target!==m) return;
+  const inner = m.querySelector('.modal');
+  if(inner && inner.dataset.locked==='1') return;   // Sicherungs-Warnung nicht wegtippbar
+  m.classList.remove('on');
+}));
 document.addEventListener('click',e=>{ const c=e.target.closest('[data-close]'); if(c){ const mb=c.closest('.mback'); if(mb) mb.classList.remove('on'); } });
 
 let curScreen = 'scr-home';
@@ -3059,21 +3203,22 @@ function renderHome(){
 
   /* ── Fortsetzen / Backup ── */
   $('#home-resume').innerHTML = state.active ? `
-    <div class="banner"><span style="font-size:20px">▶️</span>
+    <div class="banner"><span class="bi" data-ico="play" style="margin:0"></span>
       <div class="grow"><b>${esc(state.active.type)}-Workout läuft</b><div class="tiny">seit ${fmtDur(Date.now()-state.active.start)}</div></div>
       <button class="btn btn-acc btn-sm" onclick="showScreen('scr-train')">Weiter</button>
     </div>` : '';
   const lb = state.settings.lastBackup;
   const lbDays = lb? Math.floor((Date.now()-lb)/86400000) : null;
-  $('#home-backup').innerHTML = (state.workouts.length>=5 && (lbDays===null || lbDays>14)) ? `
-    <div class="banner warn"><span style="font-size:18px">⚠️</span>
+  $('#home-backup').innerHTML = (state.workouts.length>=5 && (lbDays===null || lbDays>7)) ? `
+    <div class="banner warn"><span class="bi" data-ico="alert" style="margin:0"></span>
       <div class="grow"><b>Kein Backup ${lbDays===null?'bisher':'seit '+lbDays+' Tagen'}</b><div class="tiny">Daten liegen nur auf diesem Gerät</div></div>
       <button class="btn btn-ghost btn-sm" onclick="sendToVault()">Sichern</button>
     </div>` : '';
 
   $('#btn-start-home').innerHTML = state.active
-    ? '<span>▶️ Weiter trainieren</span>'
-    : `<span>Training starten</span><span style="opacity:.72;font-weight:600;font-size:14px">· ${suggestType()}</span>`;
+    ? '<span class="bi" data-ico="play"></span><span>Weiter trainieren</span>'
+    : `<span class="bi" data-ico="play"></span><span>Training starten</span><span style="opacity:.72;font-weight:600;font-size:14px">· ${suggestType()}</span>`;
+  hydrateIcons($('#scr-home'));
   renderHomeBW();
 
   /* Animationen anstoßen: Ringe füllen, XP-Balken, Zähler */
@@ -3123,6 +3268,8 @@ $('#scr-home').addEventListener('click', e=>{
 $('#btn-start-home').addEventListener('click',()=>showScreen('scr-train'));
 $('#btn-settings').addEventListener('click',()=>{
   $('#set-goal').value = state.settings.goal;
+  $('#set-vaultmail').value = state.settings.vaultMail || '';
+  hydrateIcons($('#modal-settings'));
   $('#set-rest').value = state.settings.rest||90;
   $('#set-replo').value = state.settings.repLo||6; $('#set-rephi').value = state.settings.repHi||9;
   $('#set-defsets').value = state.settings.defSets||2;
@@ -3159,9 +3306,11 @@ function renderTrain(){
   else{
     $('#train-idle').style.display='block'; $('#train-active').style.display='none'; stopTicker();
     const sug = suggestType();
+    const TYPE_ICO = {Push:'push', Pull:'pull', Legs:'legs', Andere:'bolt'};
     $('#type-grid').innerHTML = WTYPES.map(t=>`
-      <button class="typebtn ${t===sug?'hot':''}" data-t="${t}">${t==='Push'?'🔥':t==='Pull'?'🧲':t==='Legs'?'🦵':'⚡'} ${t}
+      <button class="typebtn ${t===sug?'hot':''}" data-t="${t}" aria-label="${t}-Training starten"><span class="bi" data-ico="${TYPE_ICO[t]}"></span>${t}
       <small>${t===sug?'Heute dran':t==='Andere'?'Freies Training':'&nbsp;'}</small></button>`).join('');
+    hydrateIcons($('#type-grid'));
     $$('#type-grid .typebtn').forEach(b=>b.addEventListener('click',()=>startWorkout(b.dataset.t)));
     const tpls = state.templates;
     $('#tpl-section').innerHTML = `<h2>Meine Workouts</h2>` + (tpls.length ? `<div class="card" style="padding:2px 14px">${
@@ -3173,7 +3322,13 @@ function renderTrain(){
     + `<button class="btn btn-ghost btn-block" id="btn-new-rt">＋ Workout erstellen</button>`;
     $$('[data-start-tpl]').forEach(b=>b.addEventListener('click',()=>startWorkout(null,b.dataset.startTpl)));
     $$('[data-edit-tpl]').forEach(b=>b.addEventListener('click',()=>openRoutineEditor(b.dataset.editTpl)));
-    $$('[data-del-tpl]').forEach(b=>b.addEventListener('click',()=>{ if(confirm('Workout löschen?')){ state.templates=state.templates.filter(x=>x.id!==b.dataset.delTpl); saveState(); renderTrain(); }}));
+    $$('[data-del-tpl]').forEach(b=>b.addEventListener('click',()=>{
+      const id = b.dataset.delTpl;
+      const idx = state.templates.findIndex(x=>x.id===id); if(idx<0) return;
+      const backup = JSON.parse(JSON.stringify(state.templates[idx]));
+      state.templates.splice(idx,1); saveState(); haptic(); renderTrain();
+      withUndo(`„${backup.name}" gelöscht`, ()=>{ state.templates.splice(idx,0,backup); saveState(); renderTrain(); });
+    }));
     $('#btn-new-rt').addEventListener('click',()=>openRoutineEditor(null));
   }
 }
@@ -3295,96 +3450,174 @@ function renderActive(){
     </div>`;
   }).join('');
 
-  $$('#tw-exlist input').forEach(inp=>inp.addEventListener('input',()=>{
-    const row = inp.closest('.setrow');
-    const set = state.active.exercises[+row.dataset.ei].sets[+row.dataset.si];
+  wireActiveOnce();
+}
+
+/* ── Ereignis-Delegation für den Trainings-Screen ───────────────────────
+   Früher wurden nach JEDEM Neuaufbau ~150 Listener neu gehängt und die
+   komplette Liste bei jedem Tastendruck neu erzeugt (Tastatur-Flackern,
+   Fokusverlust). Jetzt: drei Listener, die dauerhaft am Container hängen,
+   und punktgenaue DOM-Updates statt Neuaufbau. */
+let _activeWired = false;
+function totalActiveSets(){ return state.active ? state.active.exercises.reduce((x,e)=>x+validSets(e).length,0) : 0; }
+function refreshSetCount(){ $('#tw-setcount').textContent = totalActiveSets()+' Sätze'; }
+function startRestFor(ei, set){
+  if(restEnd) return;
+  const base = exOpt(state.active.exercises[ei].exId).rest || state.settings.rest || 90;
+  restEnd = Date.now() + (set.t==='w' ? Math.round(base/2) : base)*1000; tick();
+}
+/* Unrealistische Eingaben abfangen, bevor sie Statistik und Rekorde dauerhaft verzerren */
+function plausibilityCheck(exId, w){
+  const kg = +w||0; if(kg<=0) return;
+  const b = exBests(exId);
+  const ref = b && b.maxW>0 ? b.maxW : 0;
+  if((ref>0 && kg > ref*2.5 && kg-ref > 40) || kg > 500){
+    toast('Ungewöhnlich schwer — Tippfehler?', 'Passt', ()=>{});
+  }
+}
+function wireActiveOnce(){
+  if(_activeWired) return;
+  _activeWired = true;
+  const list = $('#tw-exlist');
+
+  list.addEventListener('input', e=>{
+    const inp = e.target.closest('input[data-f]'); if(!inp) return;
+    const row = inp.closest('.setrow'); if(!row) return;
+    const ei = +row.dataset.ei, si = +row.dataset.si;
+    const set = state.active.exercises[ei].sets[si];
     const wasDone = (+set.r||0)>0 || (+set.rr||0)>0;
     set[inp.dataset.f] = inp.value;
     const isDone = (+set.r||0)>0 || (+set.rr||0)>0;
     row.classList.toggle('filled', isDone);
-    saveState();
-    const t = state.active.exercises.reduce((x,e)=>x+validSets(e).length,0);
-    $('#tw-setcount').textContent = t+' Sätze';
-    /* Satz gilt als erledigt, sobald Wdh stehen → Pause startet automatisch (Aufwärmsätze kürzer) */
-    if((inp.dataset.f==='r'||inp.dataset.f==='rr') && !wasDone && isDone && !restEnd){
-      const base = exOpt(state.active.exercises[+row.dataset.ei].exId).rest || state.settings.rest || 90;
-      restEnd = Date.now() + (set.t==='w'? Math.round(base/2) : base)*1000; tick();
+    saveStateSoon();
+    refreshSetCount();
+    if((inp.dataset.f==='r'||inp.dataset.f==='rr') && !wasDone && isDone) startRestFor(ei, set);
+  });
+  list.addEventListener('change', e=>{
+    const inp = e.target.closest('input[data-f="w"]'); if(!inp) return;
+    const row = inp.closest('.setrow'); if(!row) return;
+    flushSave();
+    plausibilityCheck(state.active.exercises[+row.dataset.ei].exId, inp.value);
+  });
+
+  list.addEventListener('click', async e=>{
+    const t = e.target;
+    const row = t.closest('.setrow');
+
+    /* Satz-Typ wechseln — nur die Zeile anfassen, Fokus bleibt */
+    const st = t.closest('[data-settype]');
+    if(st && row){
+      const ei=+row.dataset.ei, si=+row.dataset.si;
+      const set = state.active.exercises[ei].sets[si];
+      set.t = set.t==='w' ? 'd' : set.t==='d' ? undefined : 'w';
+      saveState(); haptic();
+      row.classList.toggle('warm', set.t==='w');
+      row.classList.toggle('drop', set.t==='d');
+      st.textContent = set.t ? SETTYPE[set.t][0] : (si+1);
+      refreshSetCount();
+      toast(set.t ? SETTYPE[set.t][1]+' — zählt nicht ins Volumen' : 'Arbeitssatz');
+      return;
     }
-  }));
-  /* Satz-Typ wechselt ohne kompletten Neuaufbau — Tastaturfokus bleibt erhalten */
-  $$('#tw-exlist [data-settype]').forEach(b=>b.addEventListener('click',()=>{
-    const row = b.closest('.setrow');
-    const set = state.active.exercises[+row.dataset.ei].sets[+row.dataset.si];
-    set.t = set.t==='w'? 'd' : set.t==='d'? undefined : 'w';
-    saveState(); haptic();
-    row.classList.toggle('warm', set.t==='w');
-    row.classList.toggle('drop', set.t==='d');
-    b.textContent = set.t? SETTYPE[set.t][0] : (+row.dataset.si + 1);
-    $('#tw-setcount').textContent = state.active.exercises.reduce((x,e)=>x+validSets(e).length,0)+' Sätze';
-    toast(set.t? SETTYPE[set.t][1]+' — zählt nicht ins Volumen' : 'Arbeitssatz');
-  }));
-  /* Werte übernehmen: nur die betroffene Zeile aktualisieren */
-  $$('#tw-exlist [data-pf]').forEach(b=>b.addEventListener('click',()=>{
-    const row = b.closest('.setrow');
-    const set = state.active.exercises[+row.dataset.ei].sets[+row.dataset.si];
-    const wasDone = (+set.r||0)>0 || (+set.rr||0)>0;
-    set.w = b.dataset.w; set.r = b.dataset.r;
-    row.querySelector('[data-f=w]').value = set.w;
-    row.querySelector('[data-f=r]').value = set.r;
-    const rrIn = row.querySelector('[data-f=rr]');
-    if(rrIn){ set.rr = (b.dataset.rr!==undefined && b.dataset.rr!=='') ? b.dataset.rr : b.dataset.r; rrIn.value = set.rr; }
-    row.classList.add('filled');
-    $('#tw-setcount').textContent = state.active.exercises.reduce((x,e)=>x+validSets(e).length,0)+' Sätze';
-    saveState(); haptic();
-    if(!wasDone && !restEnd){
-      const base = exOpt(state.active.exercises[+row.dataset.ei].exId).rest || state.settings.rest || 90;
-      restEnd = Date.now() + base*1000; tick();
+    /* Vorherige Werte übernehmen */
+    const pf = t.closest('[data-pf]');
+    if(pf && row){
+      const ei=+row.dataset.ei, si=+row.dataset.si;
+      const set = state.active.exercises[ei].sets[si];
+      const wasDone = (+set.r||0)>0 || (+set.rr||0)>0;
+      set.w = pf.dataset.w; set.r = pf.dataset.r;
+      row.querySelector('[data-f=w]').value = set.w;
+      row.querySelector('[data-f=r]').value = set.r;
+      const rrIn = row.querySelector('[data-f=rr]');
+      if(rrIn){ set.rr = (pf.dataset.rr!==undefined && pf.dataset.rr!=='') ? pf.dataset.rr : pf.dataset.r; rrIn.value = set.rr; }
+      row.classList.add('filled');
+      refreshSetCount(); saveState(); haptic();
+      if(!wasDone) startRestFor(ei, set);
+      return;
     }
-  }));
-  $$('[data-addset]').forEach(b=>b.addEventListener('click',()=>{
-    const e = state.active.exercises[+b.dataset.addset];
-    const last = e.sets[e.sets.length-1];
-    e.sets.push({w:last? last.w:'', r:''});
-    saveState(); haptic(); renderActive();
-    /* Neue Zeile fokussieren, damit man direkt tippen kann */
-    const rows = $$(`#tw-exlist .excard[data-ei="${b.dataset.addset}"] .setrow`);
-    const inp = rows[rows.length-1] && rows[rows.length-1].querySelector('[data-f=r]');
-    if(inp) inp.focus();
-  }));
-  $$('[data-rmex]').forEach(b=>b.addEventListener('click',()=>{
-    if(confirm('Übung entfernen?')){ state.active.exercises.splice(+b.dataset.rmex,1); saveState(); renderActive(); }
-  }));
-  $$('[data-delset]').forEach(b=>b.addEventListener('click',()=>{
-    const row=b.closest('.setrow'); const e=state.active.exercises[+row.dataset.ei];
-    e.sets.splice(+row.dataset.si,1);
-    if(!e.sets.length) e.sets.push({w:'',r:''});   // Übung nie ganz ohne Satz
-    saveState(); haptic(); renderActive();
-  }));
-  $$('[data-exup]').forEach(b=>b.addEventListener('click',()=>{
-    const i=+b.dataset.exup, ex=state.active.exercises; if(i<=0) return;
-    const t=ex[i-1]; ex[i-1]=ex[i]; ex[i]=t; saveState(); haptic(); renderActive();
-  }));
-  $$('[data-exdown]').forEach(b=>b.addEventListener('click',()=>{
-    const i=+b.dataset.exdown, ex=state.active.exercises; if(i>=ex.length-1) return;
-    const t=ex[i+1]; ex[i+1]=ex[i]; ex[i]=t; saveState(); haptic(); renderActive();
-  }));
-  $$('[data-applyprog]').forEach(b=>b.addEventListener('click',()=>{
-    const e = state.active.exercises[+b.dataset.applyprog];
-    const p = progressionFor(e.exId, new Date(state.active.date).getTime());
-    if(!p) return;
-    const hasData = e.sets.some(s=>(+s.r||0)>0 || (s.w!==''&&s.w!=null&&+s.w>0));
-    if(hasData && !confirm('Es sind schon Werte eingetragen. Wirklich mit dem Vorschlag überschreiben?')) return;
-    e.sets = Array.from({length:p.sets}, ()=>({w: p.w>0? String(p.w):'', r:''}));
-    e.target = p.r;
-    saveState(); renderActive(); toast(`Ziel: ${p.sets}×${p.r} Wdh`);
-  }));
-  $$('[data-exopt]').forEach(b=>b.addEventListener('click',()=>openExOpt(state.active.exercises[+b.dataset.exopt].exId)));
-  $$('[data-calc]').forEach(b=>b.addEventListener('click',()=>{
-    const e = state.active.exercises[+b.dataset.calc];
-    const entered = Math.max(...e.sets.map(s=>+s.w||0));
-    const p = progressionFor(e.exId, new Date(state.active.date).getTime());
-    openCalc(entered>0? entered : (p? p.w : ''));
-  }));
+    /* Satz löschen — mit Rückgängig */
+    const del = t.closest('[data-delset]');
+    if(del && row){
+      const ei=+row.dataset.ei, si=+row.dataset.si;
+      const ex = state.active.exercises[ei];
+      const backup = JSON.parse(JSON.stringify(ex.sets[si]));
+      ex.sets.splice(si,1);
+      const padded = !ex.sets.length;
+      if(padded) ex.sets.push({w:'',r:''});
+      saveState(); haptic(); renderActive();
+      withUndo('Satz gelöscht', ()=>{
+        const x = state.active.exercises[ei]; if(!x) return;
+        if(padded) x.sets.length = 0;
+        x.sets.splice(Math.min(si, x.sets.length), 0, backup);
+        saveState(); renderActive();
+      });
+      return;
+    }
+    /* Satz hinzufügen */
+    const add = t.closest('[data-addset]');
+    if(add){
+      const ei = +add.dataset.addset;
+      const ex = state.active.exercises[ei];
+      const last = ex.sets[ex.sets.length-1];
+      ex.sets.push({w: last? last.w : '', r:''});
+      saveState(); haptic(); renderActive();
+      const rows = $$(`#tw-exlist .excard[data-ei="${ei}"] .setrow`);
+      const inp = rows[rows.length-1] && rows[rows.length-1].querySelector('[data-f=r]');
+      if(inp) inp.focus();
+      return;
+    }
+    /* Übung entfernen — mit Rückgängig statt Systemdialog */
+    const rm = t.closest('[data-rmex]');
+    if(rm){
+      const i = +rm.dataset.rmex;
+      const backup = JSON.parse(JSON.stringify(state.active.exercises[i]));
+      const name = backup.name;
+      state.active.exercises.splice(i,1);
+      saveState(); haptic(); renderActive();
+      withUndo(`${name} entfernt`, ()=>{
+        state.active.exercises.splice(Math.min(i, state.active.exercises.length), 0, backup);
+        saveState(); renderActive();
+      });
+      return;
+    }
+    /* Reihenfolge */
+    const up = t.closest('[data-exup]');
+    if(up){
+      const i=+up.dataset.exup, ex=state.active.exercises; if(i<=0) return;
+      [ex[i-1], ex[i]] = [ex[i], ex[i-1]];
+      saveState(); haptic(); renderActive(); return;
+    }
+    const dn = t.closest('[data-exdown]');
+    if(dn){
+      const i=+dn.dataset.exdown, ex=state.active.exercises; if(i>=ex.length-1) return;
+      [ex[i+1], ex[i]] = [ex[i], ex[i+1]];
+      saveState(); haptic(); renderActive(); return;
+    }
+    /* Progressionsvorschlag übernehmen */
+    const ap = t.closest('[data-applyprog]');
+    if(ap){
+      const ex = state.active.exercises[+ap.dataset.applyprog];
+      const p = progressionFor(ex.exId, new Date(state.active.date).getTime());
+      if(!p) return;
+      const hasData = ex.sets.some(s=>(+s.r||0)>0 || (s.w!==''&&s.w!=null&&+s.w>0));
+      if(hasData && !await ask('Werte überschreiben?', 'Es sind schon Werte eingetragen. Der Vorschlag ersetzt sie.', {ok:'Überschreiben', tone:'warn'})) return;
+      const backup = JSON.parse(JSON.stringify(ex.sets));
+      ex.sets = Array.from({length:p.sets}, ()=>({w: p.w>0? String(p.w):'', r:''}));
+      ex.target = p.r;
+      saveState(); renderActive();
+      withUndo(`Ziel: ${p.sets}×${p.r} Wdh`, ()=>{ ex.sets = backup; saveState(); renderActive(); });
+      return;
+    }
+    const op = t.closest('[data-exopt]');
+    if(op){ openExOpt(state.active.exercises[+op.dataset.exopt].exId); return; }
+    const ca = t.closest('[data-calc]');
+    if(ca){
+      const ex = state.active.exercises[+ca.dataset.calc];
+      const entered = Math.max(...ex.sets.map(s=>+s.w||0));
+      const p = progressionFor(ex.exId, new Date(state.active.date).getTime());
+      openCalc(entered>0 ? entered : (p ? p.w : ''));
+      return;
+    }
+  });
 }
 $('#btn-add-ex').addEventListener('click',()=>openPicker(id=>{
   const ex = getEx(id);
@@ -3392,12 +3625,19 @@ $('#btn-add-ex').addEventListener('click',()=>openPicker(id=>{
   state.active.exercises.push({exId:id, name:ex.name, sets:Array.from({length:n},()=>({w:'',r:''}))});
   saveState(); renderActive(); $('#modal-picker').classList.remove('on');
 }));
-$('#btn-cancel-w').addEventListener('click',()=>{
-  if(confirm('Training wirklich verwerfen? Alle Eingaben gehen verloren.')){ state.active=null; saveState(); stopTicker(); renderTrain(); }
+$('#btn-cancel-w').addEventListener('click', async ()=>{
+  const logged = totalActiveSets();
+  const ok = await ask('Training verwerfen?',
+    logged ? `${logged} geloggte ${logged===1?'Satz geht':'Sätze gehen'} verloren.` : 'Alle Eingaben gehen verloren.',
+    {ok:'Verwerfen', tone:'danger'});
+  if(!ok) return;
+  const backup = JSON.parse(JSON.stringify(state.active));
+  state.active = null; saveState(); stopTicker(); renderTrain();
+  withUndo('Training verworfen', ()=>{ state.active = backup; saveState(); renderTrain(); renderActive(); });
 });
 $('#btn-finish').addEventListener('click',finishWorkout);
 
-function finishWorkout(){
+async function finishWorkout(){
   const a = state.active;
   const cleaned = a.exercises.map(e=>{
     const o = {exId:e.exId, name:e.name, sets:allLoggedSets(e).map(s=>{
@@ -3411,7 +3651,8 @@ function finishWorkout(){
     return o;
   }).filter(e=>e.sets.length);
   if(!cleaned.length){ toast('Keine gültigen Sätze eingetragen'); return; }
-  if(!confirm('Workout abschließen?')) return;
+  const nSets = cleaned.reduce((x,e)=>x+e.sets.length,0);
+  if(!await ask('Training abschließen?', `${nSets} ${nSets===1?'Satz':'Sätze'} in ${cleaned.length} ${cleaned.length===1?'Übung':'Übungen'} werden gespeichert.`, {ok:'Abschließen'})) return;
   const lvlBefore = achLevel().lvl;
   const w = { id:a.id, date:a.date, start:a.start, end:Date.now(), type:a.type, exercises:cleaned };
   w.prs = detectPRs(w);
@@ -3526,14 +3767,55 @@ function filterEx(q, grp){
     return terms.every(t=>hay.includes(t) || (t.endsWith('s') && hay.includes(t.slice(0,-1))));
   });
 }
+/* Häufigkeit je Übung aus der echten Historie — „Zuletzt benutzt" spart bei
+   337 Übungen den Suchvorgang für genau die, die man ohnehin ständig macht. */
+function recentExIds(limit){
+  const seen = new Map();
+  const ws = state.workouts.slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
+  for(const w of ws){
+    for(const e of w.exercises){ if(!seen.has(e.exId)) seen.set(e.exId, new Date(w.date).getTime()); }
+    if(seen.size >= (limit||8)*3) break;
+  }
+  return [...seen.keys()].slice(0, limit||8);
+}
+function isFav(id){ return (state.settings.favEx||[]).includes(id); }
+function toggleFav(id){
+  const f = state.settings.favEx || (state.settings.favEx = []);
+  const i = f.indexOf(id);
+  if(i>=0) f.splice(i,1); else f.push(id);
+  saveState(); haptic();
+  toast(i>=0 ? 'Favorit entfernt' : 'Zu Favoriten hinzugefügt');
+}
+function pickRow(ex, badge){
+  return `<div class="item" data-pick="${ex.id}" style="cursor:pointer">
+      <button class="favbtn ${isFav(ex.id)?'on':''}" data-fav="${ex.id}" aria-label="${isFav(ex.id)?'Favorit entfernen':'Als Favorit merken'}">${ICO.star}</button>
+      <div class="grow"><div class="ttl">${esc(ex.name)}${badge?` <span class="badge type">${badge}</span>`:''}</div>
+        <div class="meta">${esc(ex.eq)} · ${esc(exMuscleLabel(ex))}</div></div>
+      <span style="color:var(--acc);font-weight:800;font-size:18px" aria-hidden="true">＋</span>
+    </div>`;
+}
 function renderPickList(){
-  const list = filterEx($('#pick-search').value, pickGrp).slice(0,80);
-  $('#pick-list').innerHTML = list.length? list.map(ex=>`
-    <div class="item" data-pick="${ex.id}" style="cursor:pointer">
-      <div class="grow"><div class="ttl">${esc(ex.name)}</div><div class="meta">${esc(ex.eq)} · ${esc(exMuscleLabel(ex))}</div></div>
-      <span style="color:var(--acc);font-weight:800;font-size:18px">＋</span>
-    </div>`).join('') : '<div class="empty"><div class="big">🔍</div><b>Keine Übung gefunden</b>Versuch es mit einem anderen Begriff —<br>Englisch funktioniert auch.</div>';
-  $$('#pick-list [data-pick]').forEach(el=>el.addEventListener('click',()=>pickCb&&pickCb(el.dataset.pick)));
+  const q = $('#pick-search').value;
+  const list = filterEx(q, pickGrp).slice(0,80);
+  let head = '';
+  /* Schnellzugriff nur ohne Suche und in der Gesamtansicht — sonst stört er */
+  if(!q && pickGrp==='Alle'){
+    const favs = (state.settings.favEx||[]).map(getEx).filter(Boolean);
+    const recent = recentExIds(6).map(getEx).filter(Boolean).filter(x=>!isFav(x.id));
+    if(favs.length) head += `<div class="picksec">Favoriten</div>` + favs.map(x=>pickRow(x)).join('');
+    if(recent.length) head += `<div class="picksec">Zuletzt benutzt</div>` + recent.map(x=>pickRow(x)).join('');
+    if(head) head += `<div class="picksec">Alle Übungen</div>`;
+  }
+  $('#pick-list').innerHTML = list.length
+    ? head + list.map(ex=>pickRow(ex)).join('')
+    : `<div class="empty"><div class="big">${ICO.search}</div><b>Keine Übung gefunden</b>Versuch es mit einem anderen Begriff —<br>Englisch funktioniert auch.</div>`;
+  $$('#pick-list [data-pick]').forEach(el=>el.addEventListener('click', e=>{
+    if(e.target.closest('[data-fav]')) return;          // Stern schließt den Picker nicht
+    pickCb && pickCb(el.dataset.pick);
+  }));
+  $$('#pick-list [data-fav]').forEach(b=>b.addEventListener('click', e=>{
+    e.stopPropagation(); toggleFav(b.dataset.fav); renderPickList();
+  }));
 }
 $('#pick-search').addEventListener('input',renderPickList);
 
@@ -3780,6 +4062,13 @@ function exAchCard(ex){
 
 /* ================= EINSTELLUNGEN / DATEN ================= */
 $('#set-goal').addEventListener('change',()=>{ const v=Math.max(1,Math.min(14,+$('#set-goal').value||5)); state.settings.goal=v; $('#set-goal').value=v; saveState(); renderHome(); });
+$('#set-vaultmail').addEventListener('change',()=>{
+  const el = $('#set-vaultmail'), v = el.value.trim();
+  if(v && !validMail(v)){ el.classList.add('err'); toast('Das sieht nicht nach einer E-Mail-Adresse aus'); return; }
+  el.classList.remove('err');
+  state.settings.vaultMail = v; saveState();
+  if(v) toast('Empfänger gespeichert');
+});
 function doExport(){
   const blob = new Blob([JSON.stringify(state,null,1)],{type:'application/json'});
   const a = document.createElement('a');
@@ -3826,10 +4115,10 @@ $('#btn-import').addEventListener('click',()=>$('#import-file').click());
 $('#import-file').addEventListener('change',e=>{
   const f = e.target.files[0]; if(!f) return;
   const r = new FileReader();
-  r.onload = ()=>{ try{
+  r.onload = async ()=>{ try{
     const s = JSON.parse(r.result);
     if(!Array.isArray(s.workouts)) throw 0;
-    if(!confirm(`Import: ${s.workouts.length} Workouts. Aktuelle Daten werden ERSETZT.\n\nDein jetziger Stand wird vorher als Sicherungspunkt abgelegt. Ok?`)) return;
+    if(!await ask('Daten ersetzen?', `${s.workouts.length} Workouts aus der Datei ersetzen deinen aktuellen Stand.\nDein jetziger Stand wird vorher als Sicherungspunkt abgelegt.`, {ok:'Importieren', tone:'warn'})) return;
     makeSnapshot('vor Import', true);
     state = Object.assign({customEx:[],templates:[],active:null,ach:{},settings:{goal:5}}, s);
     migrateState(); evalAchievements();
@@ -3848,10 +4137,10 @@ function renderSnapshots(){
         <div class="meta">${s.wk} Workouts · ${esc(s.reason||'automatisch')}${i===0?' · aktuellster':''}</div></div>
       <button class="btn btn-ghost btn-sm" data-snap="${s.t}">Zurück</button></div>`;
   }).join('') : '<div class="tiny">Noch keine Sicherungspunkte — der erste entsteht nach deinem nächsten Training.</div>';
-  $$('#snap-list [data-snap]').forEach(b=>b.addEventListener('click',()=>{
+  $$('#snap-list [data-snap]').forEach(b=>b.addEventListener('click', async ()=>{
     const s = snapshots().find(x=>String(x.t)===b.dataset.snap); if(!s) return;
     const d = new Date(s.t).toLocaleString('de-DE');
-    if(!confirm(`Auf den Stand vom ${d} zurücksetzen?\n\n${s.wk} Workouts.\nDer aktuelle Stand wird vorher als Sicherungspunkt abgelegt.`)) return;
+    if(!await ask('Stand zurücksetzen?', `Zurück auf den ${d} mit ${s.wk} Workouts.\nDein aktueller Stand wird vorher gesichert.`, {ok:'Wiederherstellen', tone:'warn'})) return;
     makeSnapshot('vor Wiederherstellung', true);
     try{
       const restored = JSON.parse(s.data);
@@ -3893,15 +4182,20 @@ async function hardReload(){
   }catch(_){}
   location.replace(location.pathname + '?r=' + Date.now());
 }
-$('#btn-hardreload').addEventListener('click',()=>{
-  if(confirm('App neu laden?\n\nCache wird geleert, deine Trainingsdaten bleiben erhalten.')) hardReload();
+$('#btn-hardreload').addEventListener('click', async ()=>{
+  if(await ask('App neu laden?', 'Der Zwischenspeicher wird geleert. Deine Trainingsdaten bleiben erhalten.', {ok:'Neu laden'})) hardReload();
 });
-$('#btn-wipe').addEventListener('click',()=>{
-  if(!confirm('Wirklich ALLE Daten löschen?')) return;
-  if(!confirm('Letzte Warnung — alles weg. Sicher?')) return;
+$('#btn-wipe').addEventListener('click', async ()=>{
+  const n = state.workouts.length;
+  if(!await ask('Wirklich alle Daten löschen?', `${n} ${n===1?'Workout':'Workouts'}, alle Erfolge und Einstellungen werden entfernt.`, {ok:'Alles löschen', tone:'danger'})) return;
+  if(!await ask('Letzte Warnung', 'Danach ist alles weg. Ein Sicherungspunkt bleibt für 24 Stunden erhalten.', {ok:'Ja, endgültig löschen', tone:'danger'})) return;
   makeSnapshot('vor Löschen', true);   // Rückweg offen halten
   state = {workouts:[],customEx:[],templates:[],active:null,ach:{},settings:{goal:5}};
-  saveState(); closeModals(); renderAll(); toast('Daten gelöscht');
+  saveState(); closeModals(); renderAll();
+  toast('Daten gelöscht — Sicherungspunkt vorhanden', 'Wiederherstellen', ()=>{
+    renderSnapshots(); openModal('#modal-settings');
+    setTimeout(()=>{ const el=$('#snap-list'); if(el) el.scrollIntoView({behavior:'smooth', block:'center'}); }, 150);
+  });
 });
 /* ================= CHARTS (SVG, ohne Libraries, mit Tap-Tooltips) ================= */
 let __cid = 0;
@@ -4152,7 +4446,7 @@ function renderAllStats(){
   const el = $('#stats-all');
   const ws = state.workouts.slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
   lastStatsWs = ws;
-  if(!ws.length){ el.innerHTML = '<div class="empty"><div class="big">📊</div>Noch keine Trainings — leg los!</div>'; return; }
+  if(!ws.length){ el.innerHTML = `<div class="empty"><div class="big">${ICO.chart}</div><b>Noch keine Trainings</b>Sobald du das erste Training abschließt,<br>siehst du hier deine gesamte Entwicklung.</div>`; return; }
   const first = new Date(ws[0].date);
   const weeks = Math.max(1, (Date.now() - first.getTime())/(7*864e5));
   const vol = ws.reduce((a,w)=>a+wVolume(w),0), sets = ws.reduce((a,w)=>a+wSets(w),0);
@@ -4432,8 +4726,8 @@ function startLock(){
   else { pinMode='enter'; $('#lock-title').textContent='PIN eingeben'; $('#lock-sub').textContent=''; }
   $('#lock').classList.add('on'); document.body.style.overflow='hidden';
 }
-$('#lock-forgot').addEventListener('click',()=>{
-  if(!confirm('PIN zurücksetzen?\n\nDeine Trainingsdaten bleiben erhalten — du legst nur einen neuen PIN fest.')) return;
+$('#lock-forgot').addEventListener('click', async ()=>{
+  if(!await ask('PIN zurücksetzen?', 'Deine Trainingsdaten bleiben erhalten — du legst nur einen neuen PIN fest.', {ok:'Zurücksetzen', tone:'warn'})) return;
   localStorage.removeItem(PIN_KEY); pinBuf=''; pinFirst=''; startLock();
 });
 
@@ -4514,8 +4808,13 @@ function backupStatus(){
   /* Nur nerven, wenn es seit der letzten Sicherung wirklich etwas Neues gibt */
   const neu = state.workouts.filter(w=>new Date(w.date).getTime() > lb).length;
   const snooze = state.settings.backupSnooze || 0;
-  const due = state.workouts.length>0 && neu>0 && (days===null || days>=7) && Date.now()>snooze;
-  return {days, neu, due, urgent: days===null? state.workouts.length>=8 : days>=21};
+  /* Ab 4 Tagen erinnern (vorher 7) — auf iOS kann Safari Website-Daten
+     nach ~7 Tagen Inaktivität räumen, danach ist alles weg. */
+  const due = state.workouts.length>0 && neu>0 && (days===null || days>=4) && Date.now()>snooze;
+  /* „Dringend" heißt: Der Schutzabstand zur iOS-Räumfrist ist praktisch weg.
+     Dann ist Wegtippen nicht mehr möglich (siehe maybeAskBackup). */
+  const urgent = days===null ? state.workouts.length>=5 : (days>=10 || neu>=6);
+  return {days, neu, due, urgent};
 }
 function maybeAskBackup(){
   const st = backupStatus();
@@ -4526,6 +4825,12 @@ function maybeAskBackup(){
     ? `Du hast <b>${state.workouts.length} Workouts</b> geloggt und noch nie gesichert. Sie liegen ausschließlich auf diesem iPhone — löscht Safari die Website-Daten, sind sie weg.`
     : `Letzte Sicherung vor <b>${st.days} Tagen</b>, seitdem <b>${st.neu} ${st.neu===1?'neues Workout':'neue Workouts'}</b>. Deine Daten liegen nur auf diesem Gerät.`;
   $('#bk-sub').textContent = st.urgent? 'Dauert 20 Sekunden — bitte jetzt.' : 'Ein Tipp, dann an dich selbst schicken.';
+  /* Bei akuter Gefahr lässt sich die Erinnerung nicht mehr wegtippen —
+     Datenverlust ist der einzige irreversible Fehler in dieser App. */
+  const later = $('#bk-later');
+  if(later) later.style.display = st.urgent ? 'none' : '';
+  const modalEl = modal.querySelector('.modal');
+  if(modalEl) modalEl.dataset.locked = st.urgent ? '1' : '';
   openModal('#modal-backup');
 }
 
@@ -4561,17 +4866,28 @@ function backupText(maxWk){
   }
   return head + recLine + log;
 }
-/* Fester Vault-Empfänger — ein Tipp öffnet Mail schon adressiert + ausgefüllt.
-   (Für eine spätere Freunde-Version könnte das in die Einstellungen wandern.) */
-const VAULT_EMAIL = 'jeetunaaron750@gmail.com';
-function sendToVault(){
+/* Empfänger der Sicherung — pro Nutzer in den Einstellungen hinterlegt.
+   Bewusst NICHT fest im Code: sonst gingen die Trainingsdaten anderer Nutzer
+   an eine fremde Adresse (Datenschutz). Leer = App fragt danach. */
+function vaultMail(){ return (state.settings.vaultMail || '').trim(); }
+function validMail(m){ return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(m || ''); }
+async function sendToVault(){
+  let to = vaultMail();
+  if(!validMail(to)){
+    const ok = await ask('Empfänger fehlt', 'Trag in den Einstellungen unter „Backup" deine eigene E-Mail-Adresse ein — dorthin geht die Sicherung.', {ok:'Einstellungen öffnen', tone:'warn'});
+    if(ok){
+      openModal('#modal-settings');
+      setTimeout(()=>{ const el=$('#set-vaultmail'); if(el){ el.scrollIntoView({behavior:'smooth',block:'center'}); el.focus(); } }, 200);
+    }
+    return;
+  }
   const subj = `Fitness-Backup ${new Date().toLocaleDateString('de-DE')}`;
   let n = 12, body = backupText(n);
   // mailto-Text nicht zu lang werden lassen (iOS kürzt sonst) — notfalls ältere Einheiten weglassen
   while(n > 3 && encodeURIComponent(body).length > 5200){ n -= 2; body = backupText(n); }
   markBackupDone();
-  location.href = `mailto:${VAULT_EMAIL}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`;
-  toast('Mail ist fertig adressiert — nur noch „Senden" tippen ✓');
+  location.href = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`;
+  toast('Mail ist fertig adressiert — nur noch „Senden" tippen');
 }
 /* Sicherung quittieren — einheitlich für alle Wege */
 function markBackupDone(){
@@ -5134,24 +5450,37 @@ function obLesen(){
   if(obStep===0){ obDraft.alter=g('ob-alter'); obDraft.groesse=g('ob-groesse');
     obDraft.gewicht=g('ob-gewicht'); obDraft.kfa=g('ob-kfa'); }
 }
+/* obErstlauf: true = Profil wird zum ersten Mal angelegt. Nur dann dürfen
+   Vorlagen automatisch erzeugt werden — sonst überschreibt eine simple
+   Gewichtskorrektur im Profil die selbst angepassten Vorlagen. */
+let obErstlauf = true;
 function openOnboard(neu){
   obDraft = neu ? Object.assign({}, PROFIL_LEER) : profil();
+  obErstlauf = !!neu || !(state.profile && state.profile.done);
   if(!obDraft.gewicht){ const b=bwSorted(); if(b && b.length) obDraft.gewicht = b[b.length-1].kg; }
   obStep = 0; obPlan = null; renderOnboard(); openModal('#modal-onboard');
 }
-function obFertig(){
+async function obFertig(){
   const p = Object.assign({}, obDraft, {done:true, ts:Date.now()});
-  state.profile = p;
   const z = ZIELE[p.ziel];
+  let vorlagen = false;
+  if(obPlan && obPlan.length){
+    if(obErstlauf) vorlagen = true;
+    else if(!state.templates.length) vorlagen = true;      // nichts zu verlieren
+    else vorlagen = await ask('Vorlagen neu erzeugen?',
+      `Du hast ${state.templates.length} eigene ${state.templates.length===1?'Vorlage':'Vorlagen'}. Sollen sie durch den vorgeschlagenen ${p.split}-Split ersetzt werden?`,
+      {ok:'Ersetzen', tone:'warn'});
+  }
+  state.profile = p;
   state.settings.repLo = z.reps[0]; state.settings.repHi = z.reps[1];
   state.settings.setGoalLo = z.sets[0]; state.settings.setGoalHi = z.sets[1];
   state.settings.goal = p.tage;
-  if(obPlan && obPlan.length) splitUebernehmen(obPlan);
+  if(vorlagen) splitUebernehmen(obPlan);
   saveState();
   document.getElementById('modal-onboard').classList.remove('on');
   if(typeof renderHome==='function') renderHome();
   if(typeof renderTrain==='function') renderTrain();
-  toast(obPlan? `Profil gespeichert · ${obPlan.length} Vorlagen angelegt` : 'Profil gespeichert');
+  toast(vorlagen ? `Profil gespeichert · ${obPlan.length} Vorlagen angelegt` : 'Profil gespeichert');
 }
 document.addEventListener('click', e=>{
   const day = e.target.closest('[data-obday]');
