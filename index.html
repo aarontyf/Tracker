@@ -372,10 +372,16 @@ path[data-m].r3{fill:var(--fig-3);stroke:rgba(0,0,0,.40)}
 .progbox{display:flex;align-items:center;gap:var(--sp3);border-radius:var(--r-md);padding:11px 12px;margin:10px 0 2px;
   background:linear-gradient(135deg,rgba(76,141,255,.15),rgba(76,141,255,.03)),var(--s1);border:1px solid var(--acc-a30);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
-.sethead,.setrow{display:grid;grid-template-columns:30px 1fr 78px 66px;gap:var(--sp2);align-items:center}
-.sethead.rir,.setrow.rir{grid-template-columns:30px 1fr 70px 58px 52px}
-.sethead.uni,.setrow.uni{grid-template-columns:28px 1fr 62px 50px 50px}
-.sethead.uni.rir,.setrow.uni.rir{grid-template-columns:26px .9fr 56px 44px 44px 44px}
+.sethead,.setrow{display:grid;grid-template-columns:30px 1fr 78px 66px 26px;gap:var(--sp2);align-items:center}
+.sethead.rir,.setrow.rir{grid-template-columns:30px 1fr 70px 58px 52px 26px}
+.sethead.uni,.setrow.uni{grid-template-columns:28px 1fr 62px 50px 50px 24px}
+.sethead.uni.rir,.setrow.uni.rir{grid-template-columns:26px .84fr 54px 42px 42px 42px 22px}
+.setdel{width:24px;height:24px;border-radius:6px;background:none;border:none;color:var(--txt3);font-size:13px;display:inline-flex;align-items:center;justify-content:center;justify-self:center;transition:color var(--dur-2) var(--ease),transform var(--dur-1) var(--ease)}
+.setdel:active{color:var(--red);transform:scale(.85)}
+.exreorder{display:flex;flex-direction:column;gap:2px;flex:none;margin-top:1px}
+.rord{width:26px;height:19px;border-radius:5px;background:var(--s2);border:1px solid var(--line);color:var(--txt2);font-size:9px;line-height:1;display:inline-flex;align-items:center;justify-content:center;transition:background var(--dur-2) var(--ease),transform var(--dur-1) var(--ease)}
+.rord:active{background:var(--s3);color:var(--txt);transform:scale(.9)}
+.rord[disabled]{opacity:.25;pointer-events:none}
 .sethead{font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.08em;font-weight:650;margin:10px 0 6px;padding:0 2px}
 .setrow{margin-bottom:7px}
 .setrow .idx{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:750;font-size:12px;color:var(--txt3);background:var(--s2);border:1px solid var(--line);justify-self:center;transition:all var(--dur-2) var(--spring)}
@@ -842,11 +848,13 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
       <button data-p="week" class="on">Woche</button>
       <button data-p="month">Monat</button>
       <button data-p="year">Jahr</button>
+      <button data-p="all">Gesamt</button>
       <button data-p="ex">Übung</button>
     </div>
     <div id="stats-week" class="statspanel"></div>
     <div id="stats-month" class="statspanel" style="display:none"></div>
     <div id="stats-year" class="statspanel" style="display:none"></div>
+    <div id="stats-all" class="statspanel" style="display:none"></div>
     <div id="stats-ex" class="statspanel" style="display:none">
       <input type="search" id="exstat-search" placeholder="Übung suchen (z.B. Bankdrücken)…">
       <div id="exstat-results" style="margin-top:8px"></div>
@@ -1079,7 +1087,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:14px">Fitness Tracker V35 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:14px">Fitness Tracker V36 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -3259,7 +3267,7 @@ function renderActive(){
     const prevTxt = prev? prev.sets.map(fmtS).join(' · ') : null;
     const prog = progressionFor(e.exId, new Date(a.date).getTime());
     return `<div class="excard" data-ei="${ei}">
-      <div class="exhd"><div class="grow"><b>${esc(e.name)}</b><div class="musctags">${ex?esc(exMuscleLabel(ex)):''}${isBW?' · <b style="color:var(--acc2)">„+kg" = Zusatzgewicht</b>':''}${o.uni?' · <b style="color:var(--acc2)">einseitig — Wdh L/R getrennt</b>':''}</div></div>
+      <div class="exhd">${a.exercises.length>1?`<div class="exreorder"><button class="rord" data-exup="${ei}" ${ei===0?'disabled':''} title="nach oben">▲</button><button class="rord" data-exdown="${ei}" ${ei===a.exercises.length-1?'disabled':''} title="nach unten">▼</button></div>`:''}<div class="grow"><b>${esc(e.name)}</b><div class="musctags">${ex?esc(exMuscleLabel(ex)):''}${isBW?' · <b style="color:var(--acc2)">„+kg" = Zusatzgewicht</b>':''}${o.uni?' · <b style="color:var(--acc2)">einseitig — Wdh L/R getrennt</b>':''}</div></div>
         <button class="iconbtn" data-calc="${ei}" style="width:32px;height:32px;font-size:14px">🧮</button>
         <button class="iconbtn" data-exopt="${ei}" style="width:32px;height:32px">${ICO.gear}</button>
         <button class="iconbtn" data-rmex="${ei}" style="width:32px;height:32px">${ICO.trash}</button></div>
@@ -3267,7 +3275,7 @@ function renderActive(){
           <b style="font-size:15px">${prog.txt}</b><div class="tiny" style="margin-top:2px">${esc(prog.why)}</div></div>
           <button class="btn btn-acc btn-sm" data-applyprog="${ei}">Übernehmen</button></div>`:''}
       ${prevTxt? `<div class="prevline">Letztes Mal: ${prevTxt}${bests&&bests.maxW>0? ` &nbsp;·&nbsp; Best: <b>${isBW?'+':''}${bests.maxW} kg</b>`:''}</div>`:`<div class="prevline">Erstes Mal — such dir ein Gewicht, mit dem ${o.lo}–${o.hi} Wdh sauber gehen 🚀</div>`}
-      <div class="sethead ${useRir?'rir':''} ${uni?'uni':''}"><span>#</span><span>Letztes Mal · Tippen = übernehmen</span><span>${isBW?'+kg':'kg'}</span>${uni?'<span title="Wdh linke Seite">Wdh L</span><span title="Wdh rechte Seite">Wdh R</span>':'<span>Wdh</span>'}${useRir?'<span title="Reps in Reserve">RIR</span>':''}</div>
+      <div class="sethead ${useRir?'rir':''} ${uni?'uni':''}"><span>#</span><span>Letztes Mal · Tippen = übernehmen</span><span>${isBW?'+kg':'kg'}</span>${uni?'<span title="Wdh linke Seite">Wdh L</span><span title="Wdh rechte Seite">Wdh R</span>':'<span>Wdh</span>'}${useRir?'<span title="Reps in Reserve">RIR</span>':''}<span></span></div>
       ${e.sets.map((s,si)=>{
         const ps = prev && prev.sets[si];
         const filled = (+s.r||0)>0 || (+s.rr||0)>0;
@@ -3280,6 +3288,7 @@ function renderActive(){
           <input type="number" inputmode="numeric" step="1" min="0" placeholder="${e.target||(ps? ps.r : (uni?'L':'Wdh'))}" value="${s.r!==''&&s.r!=null? s.r:''}" data-f="r">
           ${uni? `<input type="number" inputmode="numeric" step="1" min="0" placeholder="${ps&&ps.rr!==undefined&&ps.rr!==''?ps.rr:(ps?ps.r:'R')}" value="${s.rr!==''&&s.rr!=null&&s.rr!==undefined? s.rr:''}" data-f="rr">`:''}
           ${useRir? `<input class="riri" type="number" inputmode="numeric" step="1" min="0" max="10" placeholder="–" value="${s.rir!==''&&s.rir!=null&&s.rir!==undefined? s.rir:''}" data-f="rir">`:''}
+          <button class="setdel" data-delset title="Satz löschen">✕</button>
         </div>`;
       }).join('')}
       <button class="addset" data-addset="${ei}">＋ Satz</button>
@@ -3344,6 +3353,20 @@ function renderActive(){
   }));
   $$('[data-rmex]').forEach(b=>b.addEventListener('click',()=>{
     if(confirm('Übung entfernen?')){ state.active.exercises.splice(+b.dataset.rmex,1); saveState(); renderActive(); }
+  }));
+  $$('[data-delset]').forEach(b=>b.addEventListener('click',()=>{
+    const row=b.closest('.setrow'); const e=state.active.exercises[+row.dataset.ei];
+    e.sets.splice(+row.dataset.si,1);
+    if(!e.sets.length) e.sets.push({w:'',r:''});   // Übung nie ganz ohne Satz
+    saveState(); haptic(); renderActive();
+  }));
+  $$('[data-exup]').forEach(b=>b.addEventListener('click',()=>{
+    const i=+b.dataset.exup, ex=state.active.exercises; if(i<=0) return;
+    const t=ex[i-1]; ex[i-1]=ex[i]; ex[i]=t; saveState(); haptic(); renderActive();
+  }));
+  $$('[data-exdown]').forEach(b=>b.addEventListener('click',()=>{
+    const i=+b.dataset.exdown, ex=state.active.exercises; if(i>=ex.length-1) return;
+    const t=ex[i+1]; ex[i+1]=ex[i]; ex[i]=t; saveState(); haptic(); renderActive();
   }));
   $$('[data-applyprog]').forEach(b=>b.addEventListener('click',()=>{
     const e = state.active.exercises[+b.dataset.applyprog];
@@ -4011,7 +4034,7 @@ function groupDetail(groupName, ws){
 /* Karten: Radar + Gruppen-Balken + Details pro Muskel.
    Der Umschalter steht jetzt oben und gilt für die ganze Muskelsektion —
    sowohl das Radar (Muskel-Balance) als auch die Karte „Sätze pro Muskelgruppe". */
-let statsSetMode = 'both';
+let statsSetMode = 'direct';
 function muscleSection(ws, weeks){
   const mg = muscleSetsBy(ws, statsSetMode);            // ein Datensatz für Radar UND Balken
   const radar = sumGroups(mg, RADAR_AXES);
@@ -4121,7 +4144,39 @@ function renderStats(){
   if(statsPanel==='week') renderWeekStats();
   if(statsPanel==='month') renderMonthStats();
   if(statsPanel==='year') renderYearStats();
+  if(statsPanel==='all') renderAllStats();
   if(statsPanel==='ex') renderExStats();
+}
+/* Seit Beginn — alle Trainings über den gesamten Zeitraum */
+function renderAllStats(){
+  const el = $('#stats-all');
+  const ws = state.workouts.slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
+  lastStatsWs = ws;
+  if(!ws.length){ el.innerHTML = '<div class="empty"><div class="big">📊</div>Noch keine Trainings — leg los!</div>'; return; }
+  const first = new Date(ws[0].date);
+  const weeks = Math.max(1, (Date.now() - first.getTime())/(7*864e5));
+  const vol = ws.reduce((a,w)=>a+wVolume(w),0), sets = ws.reduce((a,w)=>a+wSets(w),0);
+  const prc = ws.reduce((a,w)=>a+(w.prs?w.prs.length:0),0);
+  // Volumen pro Monat über die gesamte Historie (max. 18 Balken)
+  let mLabels=[], mVals=[], m0=new Date(first.getFullYear(), first.getMonth(), 1); const now=new Date();
+  while(m0 <= now){
+    const m1=new Date(m0.getFullYear(), m0.getMonth()+1, 1);
+    mLabels.push(m0.toLocaleDateString('de-DE',{month:'short'}).replace('.','') + (m0.getMonth()===0? ` '`+String(m0.getFullYear()).slice(2):''));
+    mVals.push(workoutsIn([m0, m1]).reduce((x,w)=>x+wVolume(w),0));
+    m0=m1;
+  }
+  if(mLabels.length>18){ mLabels=mLabels.slice(-18); mVals=mVals.slice(-18); }
+  const header = `<div class="cnav" style="justify-content:center"><b>Seit Beginn · ${fmtDate(first)} – heute</b></div>`;
+  const kpis = `<div class="kpis" style="margin-bottom:12px">
+      <div class="kpi"><b>${ws.length}</b><span>Workouts</span></div>
+      <div class="kpi"><b>${fmtVol(vol)}</b><span>Volumen</span></div>
+      <div class="kpi"><b>${sets}</b><span>Sätze</span></div>
+      <div class="kpi"><b class="pr">${prc}</b><span>PRs</span></div>
+    </div>`;
+  el.innerHTML = header + kpis
+    + muscleSection(ws, weeks)
+    + `<div class="card"><h3>Volumen pro Monat</h3>${svgBars(mLabels, mVals, v=>fmtVol(v))}</div>`
+    + prListHtml(ws);
 }
 function navRow(label, cb){ return {html:`<div class="cnav"><button class="iconbtn" data-nav="-1">‹</button><b>${label}</b><button class="iconbtn" data-nav="1">${''}›</button></div>`, wire(el){ el.querySelectorAll('[data-nav]').forEach(b=>b.addEventListener('click',()=>cb(+b.dataset.nav))); }}; }
 
