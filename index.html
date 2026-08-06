@@ -1172,7 +1172,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V43 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V44 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -2114,6 +2114,7 @@ const EXDB_RAW = [
 ['Kabelrudern (einarmig)','Rücken','Kabel',['lats','upper_back'],['biceps'],'single arm cable row',1],
 ['Rudermaschine (Scheiben)','Rücken','Maschine',['upper_back','lats'],['traps','biceps'],'machine row rudermaschine (plate loaded)'],
 ['Rudermaschine (breiter Griff)','Rücken','Maschine',['upper_back'],['lats','traps','rear_delt','biceps'],'wide row machine breite ruder'],
+['Rudermaschine (einarmig)','Rücken','Maschine',['lats','upper_back'],['biceps','rear_delt'],'machine row one arm einarmig unilateral',1],
 ['Rudermaschine (enger Griff)','Rücken','Maschine',['lats','upper_back'],['biceps'],'close row machine enge ruder'],
 ['Rudern von oben (Maschine)','Rücken','Maschine',['lats','upper_back'],['rear_delt','biceps'],'high row maschine'],
 ['Rudern von unten (Maschine)','Rücken','Maschine',['lats','upper_back'],['biceps'],'low row maschine'],
@@ -2181,6 +2182,7 @@ const EXDB_RAW = [
 ['Konzentrations-Curls','Arme','Kurzhantel',['biceps'],[],'concentration curl',1],
 ['Preacher Curls (SZ-Stange)','Arme','SZ-Stange',['biceps'],[],'scott curl preacher ez bar curls (sz-stange) scottcurl scottcurls'],
 ['Preacher Curls (Kurzhantel)','Arme','Kurzhantel',['biceps'],[],'preacher curls (kurzhantel) scottcurl scottcurls scott'],
+['Hammer Preacher Curls (einarmig)','Arme','Kurzhantel',['biceps','forearms'],[],'hammer preacher curl one arm einarmig unilateral',1],
 ['Hammer Preacher Curls','Arme','Kurzhantel',['biceps','forearms'],[],'hammer preachercurl neutral preacher curls scottcurl scottcurls scott'],
 ['Preacher Curl Maschine','Arme','Maschine',['biceps'],[],'machine preacher curl maschine scottcurl scottcurls scott'],
 ['Bizeps-Curl-Maschine','Arme','Maschine',['biceps'],[],'bicep machine bizeps curl maschine'],
@@ -2461,7 +2463,9 @@ function migrateState(){
     (w.prs||[]).forEach(p=>{ p.exId=remap(p.exId); const ex=getEx(p.exId); if(ex) p.name=ex.name; });
   });
   (state.templates||[]).forEach(t=>{ t.exIds=(t.exIds||[]).map(remap); });
-  if(state.active) (state.active.exercises||[]).forEach(fixEx);
+  /* Ein laufendes Training darf die aktuelle Einseitig-Einstellung befragen,
+     ein abgeschlossenes niemals — deshalb hier markieren. */
+  if(state.active) (state.active.exercises||[]).forEach(e=>{ fixEx(e); e.__live = true; });
   if(state.exOpt){ const o={}; Object.keys(state.exOpt).forEach(k=>{ o[remap(k)]=state.exOpt[k]; }); state.exOpt=o; }
   /* Erfolge: ID-Schema "<exId>|<cat>|<target>" mitziehen */
   if(state.ach){
@@ -2618,9 +2622,21 @@ function validSets(ex){ return ex.sets.filter(s=>((+s.r||0)>0 || (+s.rr||0)>0) &
      'weak'  → Progressionsvorschlag: erst steigern, wenn BEIDE Seiten liefern
      'total' → Gesamt-Wiederholungen: beide Seiten addiert
    Fehlt der rechte Wert, gilt der linke für beide Seiten (Altdaten). */
+/* Ob ein EINTRAG einseitig war. Entscheidend: Ein gespeichertes Training trägt
+   sein eigenes Flag. Fehlt es, war die Übung damals BEIDARMIG — es darf NIEMALS
+   die heutige Einstellung befragt werden.
+   Sonst passiert Folgendes: Wer eine Übung später auf einarmig umstellt, dessen
+   alte beidarmige Sätze werden rückwirkend als „beide Seiten" gelesen und zählen
+   doppelt (55 kg × 7 Wdh wurde zu 55 × 14). Genau dieser Fehler hat Aarons
+   Statistik verfälscht. */
+function entryIsUni(e){
+  if(!e) return false;
+  if(e.uni!==undefined) return !!e.uni;
+  return e.__live ? exIsUni(e.exId) : false;   // nur das laufende Training fragt die Einstellung
+}
 function repsOf(e, s, mode){
   const rl = +s.r||0;
-  const uni = (e && e.uni!==undefined) ? !!e.uni : (e ? exIsUni(e.exId) : false);
+  const uni = entryIsUni(e);
   if(!uni) return rl;
   const rr = (s.rr!==undefined && s.rr!=='' && s.rr!==null) ? (+s.rr||0) : rl;
   if(mode==='total') return rl + rr;
@@ -2638,7 +2654,7 @@ function exVol(e, dateStr){
   const assist = entryIsAssist(e);
   const isBW = !assist && (e.bw!==undefined? !!e.bw : exIsBW(e.exId));
   const bw = isBW? (e.bwkg!==undefined? +e.bwkg : bwAt(dateStr)) : 0;
-  const uni = (e.uni!==undefined? !!e.uni : exIsUni(e.exId));
+  const uni = entryIsUni(e);
   return validSets(e).reduce((a,s)=>{
     /* unterstützt: Körpergewicht − Hilfe · sonst: Gewicht + ggf. Körpergewicht */
     const base = assist ? setW(e,s,dateStr) : (+s.w||0)+bw;
@@ -3503,7 +3519,7 @@ function startWorkout(type, tplId){
   let exs = [], t = type;
   if(tplId){ const tpl = state.templates.find(x=>x.id===tplId); if(!tpl) return;
     const dn = Math.max(1, Math.min(10, state.settings.defSets||2));
-    t = tpl.type; exs = tpl.exIds.map(id=>{ const ex=getEx(id); return ex? {exId:id,name:ex.name,sets:Array.from({length:dn},()=>({w:'',r:''}))} : null; }).filter(Boolean);
+    t = tpl.type; exs = tpl.exIds.map(id=>{ const ex=getEx(id); return ex? {exId:id,name:ex.name,__live:true,sets:Array.from({length:dn},()=>({w:'',r:''}))} : null; }).filter(Boolean);
   }
   state.active = { id:uid(), date:new Date().toISOString(), start:Date.now(), type:t, exercises:exs };
   saveState(); renderTrain();
@@ -3753,7 +3769,7 @@ function wireActiveOnce(){
 $('#btn-add-ex').addEventListener('click',()=>openPicker(id=>{
   const ex = getEx(id);
   const n = Math.max(1, Math.min(10, state.settings.defSets||2));
-  state.active.exercises.push({exId:id, name:ex.name, sets:Array.from({length:n},()=>({w:'',r:''}))});
+  state.active.exercises.push({exId:id, name:ex.name, __live:true, sets:Array.from({length:n},()=>({w:'',r:''}))});
   saveState(); renderActive(); $('#modal-picker').classList.remove('on');
 }));
 $('#btn-cancel-w').addEventListener('click', async ()=>{
@@ -3786,7 +3802,10 @@ async function finishWorkout(){
     /* unterstützt: Körpergewicht mitschreiben, sonst lässt sich die effektive
        Last später nicht mehr rekonstruieren, wenn sich das Gewicht ändert */
     if(exIsAssist(e.exId)){ o.as = true; const b = bwAt(a.date); if(b) o.bwkg = b; }
-    if(exIsUni(e.exId)) o.uni = true;                                              // Satz gilt pro Seite
+    /* Flag IMMER explizit schreiben (true UND false). Nur so bleibt ein
+       abgeschlossenes Training für immer eindeutig — auch wenn die Übung
+       später auf einarmig/beidarmig umgestellt wird. */
+    o.uni = exIsUni(e.exId);
     return o;
   }).filter(e=>e.sets.length);
   if(!cleaned.length){ toast('Keine gültigen Sätze eingetragen'); return; }
@@ -4035,9 +4054,19 @@ $('#xo-rest').addEventListener('change',()=>{
   const v = Math.max(0, Math.min(600, +$('#xo-rest').value||0));
   setExOpt(xoId, {rest:v}); $('#xo-rest').value=v;
 });
-$('#xo-uni').addEventListener('click',()=>{
+$('#xo-uni').addEventListener('click', async ()=>{
   const cur = exOpt(xoId).uni;
+  /* Umstellen ändert die Bedeutung aller künftigen Sätze. Wer schon Historie hat,
+     bekommt im Verlauf einen Sprung — bei einarmig hebt man pro Seite weniger. */
+  if(!cur && exHistory(xoId).length >= 2){
+    const ok = await ask('Auf einarmig umstellen?',
+      'Du hast in dieser Übung schon Trainings gespeichert. Ab jetzt gilt das eingetragene Gewicht pro Seite — im Verlauf entsteht dadurch ein Sprung nach unten.\n\nSauberer: eine eigene Übung „einarmig" anlegen und die alte unangetastet lassen.',
+      {ok:'Trotzdem umstellen', tone:'warn'});
+    if(!ok) return;
+  }
   setExOpt(xoId, {uni:!cur});
+  /* laufendes Training sofort mitziehen, damit die Anzeige stimmt */
+  if(state.active) state.active.exercises.forEach(e=>{ if(e.exId===xoId) delete e.uni; });
   $('#xo-uni').textContent = !cur? 'An':'Aus'; $('#xo-uni').classList.toggle('on', !cur);
   if(state.active) renderActive();
   renderHome();
