@@ -1172,7 +1172,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V44 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V45 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -2683,7 +2683,12 @@ function muscleSetsBy(workouts, mode){
 function muscleSets(workouts){ return muscleSetsBy(workouts, 'both'); }
 
 /* ---------- e1RM (Epley, Wdh gedeckelt bei 20) ---------- */
+/* Epley: w·(1+r/30). Deckungsgleich mit Brzycki bis ~10 Wdh, darüber
+   laufen alle gängigen Formeln auseinander (bei 15 Wdh 8 %, bei 20 Wdh 21 %
+   Abweichung). Ab 12 Wdh ist die Schätzung deshalb als unsicher zu kennzeichnen. */
+const E1RM_RELIABLE_MAX = 12;
 function e1rm(w,r){ w=+w||0; r=Math.min(+r||0,20); if(w<=0||r<=0) return 0; if(r===1) return w; return w*(1+r/30); }
+function e1rmReliable(reps){ return (+reps||0) <= E1RM_RELIABLE_MAX; }
 
 /* ---------- Übungs-Historie & PRs ---------- */
 /* Alle Sessions einer Übung, älteste zuerst: [{date,wid,sets,vol,bestW,bestE,maxReps}] */
@@ -3662,7 +3667,12 @@ function wireActiveOnce(){
       row.classList.toggle('drop', set.t==='d');
       st.textContent = set.t ? SETTYPE[set.t][0] : (si+1);
       refreshSetCount();
-      toast(set.t ? SETTYPE[set.t][1]+' — zählt nicht ins Volumen' : 'Arbeitssatz');
+      /* Korrigiert: Nur AUFWÄRMSÄTZE sind aus dem Volumen ausgeschlossen
+         (validSets filtert t==='w'). Dropsets sind echte Arbeit und zählen
+         voll mit — der frühere Text behauptete das Gegenteil. */
+      toast(set.t==='w' ? 'Aufwärmsatz — zählt nicht ins Volumen'
+          : set.t==='d' ? 'Dropset — zählt voll ins Volumen'
+          : 'Arbeitssatz');
       return;
     }
     /* Vorherige Werte übernehmen */
@@ -4464,23 +4474,43 @@ function muscleBars(m){
   return entries.map(([k,v])=>`<div class="mbar"><span>${MUSCLES[k]}</span><span class="bar"><i style="width:${Math.round(v/max*100)}%"></i></span><span class="val">${v%1? v.toFixed(1).replace('.',','):v}</span></div>`).join('');
 }
 /* Gruppen-Balken mit Wochenziel-Ampel; antippen öffnet die Übungs-Aufschlüsselung */
+/* ── ZIELKORRIDOR: gilt PRO MUSKEL, nicht pro Gruppe ────────────────────
+   Die Literatur (Schoenfeld et al., Dosis-Wirkungs-Metaanalysen) nennt
+   10–20 Sätze pro Woche und MUSKEL. Die Anzeige gruppiert aber: „Rücken"
+   fasst Lat, oberen Rücken, unteren Rücken und Trapez zusammen — vier
+   Muskeln. Wurde der Gruppensumme derselbe Korridor angelegt, sah gut
+   verteiltes Training wie „viel zu viel" aus (Aaron: Rücken 22 → rot,
+   obwohl kein einzelner Muskel über dem Ziel lag).
+   Lösung: Der Korridor skaliert mit der Zahl der in dieser Gruppe
+   tatsächlich trainierten Muskeln. */
+function groupTarget(keys, m, weeks){
+  const S = state.settings;
+  const lo1 = (S.setGoalLo||10), hi1 = (S.setGoalHi||20);
+  const trained = keys.filter(k => (m[k]||0) > 0).length || 1;
+  return { lo: lo1*trained*(weeks||1), hi: hi1*trained*(weeks||1), n: trained };
+}
 function groupBars(m, ws, weeks){
   const all = sumGroups(m, SETGROUPS);
   const entries = all.filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
   if(!entries.length) return '<div class="empty">Keine Sätze in diesem Zeitraum</div>';
-  const S = state.settings, lo=(S.setGoalLo||10)*(weeks||1), hi=(S.setGoalHi||20)*(weeks||1);
-  const max = Math.max(entries[0][1], hi);
-  const col = v=> v>=lo && v<=hi? 'var(--green)' : v<lo? 'var(--gold)' : 'var(--red)';
-  const mark = v=> v>=lo && v<=hi? '✓' : v<lo? '↓' : '↑';
-  const rows = entries.map(([g,v])=>`
-    <div class="mbar big goal" data-grp="${esc(g)}" style="cursor:pointer">
-      <span>${g}</span>
-      <span class="bar"><i style="width:${Math.round(Math.min(1,v/max)*100)}%;background:${col(v)}"></i>
-        <b class="zone" style="left:${Math.round(lo/max*100)}%;width:${Math.round((hi-lo)/max*100)}%"></b></span>
-      <span class="val" style="color:${col(v)}"><b>${v%1? v.toFixed(1).replace('.',','):v}</b> ${mark(v)}</span>
-    </div>`).join('');
+  const keysOf = g => (SETGROUPS.find(x=>x[0]===g)||[null,[]])[1];
+  const maxHi = Math.max(...entries.map(([g])=>groupTarget(keysOf(g), m, weeks).hi));
+  const max = Math.max(entries[0][1], maxHi);
+  const rows = entries.map(([g,v])=>{
+    const t = groupTarget(keysOf(g), m, weeks);
+    const col  = v>=t.lo && v<=t.hi? 'var(--green)' : v<t.lo? 'var(--gold)' : 'var(--red)';
+    const mark = v>=t.lo && v<=t.hi? '✓' : v<t.lo? '↓' : '↑';
+    const hint = t.n>1? ` title="${t.n} Muskeln · Ziel ${t.lo}–${t.hi}"`:'';
+    return `<div class="mbar big goal" data-grp="${esc(g)}" style="cursor:pointer"${hint}>
+      <span>${g}${t.n>1?`<span class="tiny" style="opacity:.65"> ·${t.n}</span>`:''}</span>
+      <span class="bar"><i style="width:${Math.round(Math.min(1,v/max)*100)}%;background:${col}"></i>
+        <b class="zone" style="left:${Math.round(t.lo/max*100)}%;width:${Math.round((t.hi-t.lo)/max*100)}%"></b></span>
+      <span class="val" style="color:${col}"><b>${v%1? v.toFixed(1).replace('.',','):v}</b> ${mark}</span>
+    </div>`;
+  }).join('');
   const missing = all.filter(([,v])=>v===0).map(([g])=>g);
-  return rows + `<p class="tiny" style="margin-top:8px">Zielkorridor ${lo}–${hi} Sätze${weeks>1?` (${weeks} Wochen)`:''} · <span style="color:var(--gold)">↓ zu wenig</span> · <span style="color:var(--green)">✓ im Ziel</span> · <span style="color:var(--red)">↑ viel</span>${missing.length? ' · <b>gar nicht trainiert:</b> '+missing.join(', '):''}<br>Gruppe antippen zeigt die Übungen.</p>`;
+  const S = state.settings;
+  return rows + `<p class="tiny" style="margin-top:8px">Ziel <b>${(S.setGoalLo||10)}–${(S.setGoalHi||20)} Sätze pro Muskel</b>${weeks>1?` und Woche (${weeks} Wochen gerechnet)`:' und Woche'} · bei Gruppen mit mehreren Muskeln (·2, ·3 …) skaliert der Korridor mit.<br><span style="color:var(--gold)">↓ zu wenig</span> · <span style="color:var(--green)">✓ im Ziel</span> · <span style="color:var(--red)">↑ viel</span>${missing.length? ' · <b>gar nicht trainiert:</b> '+missing.join(', '):''} · Gruppe antippen zeigt die Übungen.</p>`;
 }
 /* Welche Übungen haben eine Muskelgruppe im Zeitraum trainiert? */
 function groupDetail(groupName, ws){
@@ -4705,6 +4735,96 @@ function renderYearStats(){
   nav.wire(el);
 }
 
+/* ══════════ ÜBUNGS-ANALYTIK ══════════════════════════════════════════
+   Alle Funktionen liefern zusätzlich `ok` — ob die Aussage bei der
+   vorhandenen Datenmenge belastbar ist. Ist sie es nicht, wird sie in der
+   Anzeige unterdrückt statt geschätzt. Lieber nichts sagen als raten. */
+
+const TREND_MIN_SESSIONS = 4;    // darunter ist eine Steigung Rauschen
+const BALANCE_MIN_SESSIONS = 3;
+
+/* Progressionsgeschwindigkeit: lineare Regression des Arbeitsgewichts
+   über die Zeit, in kg pro Woche. R² sagt, wie gut die Gerade passt. */
+function exTrend(exId){
+  const h = exHistory(exId);
+  if(h.length < TREND_MIN_SESSIONS) return {ok:false, need:TREND_MIN_SESSIONS-h.length, n:h.length};
+  const t0 = new Date(h[0].date).getTime();
+  const pts = h.map(x=>({ x:(new Date(x.date).getTime()-t0)/(7*864e5), y:x.bestW }));  // x in Wochen
+  const n = pts.length;
+  const sx = pts.reduce((a,p)=>a+p.x,0), sy = pts.reduce((a,p)=>a+p.y,0);
+  const mx = sx/n, my = sy/n;
+  const sxy = pts.reduce((a,p)=>a+(p.x-mx)*(p.y-my),0);
+  const sxx = pts.reduce((a,p)=>a+(p.x-mx)*(p.x-mx),0);
+  if(sxx === 0) return {ok:false, n};
+  const slope = sxy/sxx;
+  const syy = pts.reduce((a,p)=>a+(p.y-my)*(p.y-my),0);
+  const r2 = syy===0 ? 0 : (sxy*sxy)/(sxx*syy);
+  /* Schutz gegen beschädigte Daten: ein ungültiges Datum macht aus jeder
+     Rechnung NaN. Lieber gar keine Aussage als eine unsinnige. */
+  if(!isFinite(slope) || !isFinite(r2)) return {ok:false, n, broken:true};
+  const weeks = pts[n-1].x || 1;
+  return {ok:true, n, slope, r2, weeks, from:h[0].bestW, to:h[n-1].bestW,
+          solid: r2>=0.5, pct: h[0].bestW>0 ? (h[n-1].bestW-h[0].bestW)/h[0].bestW*100 : 0};
+}
+
+/* Links/Rechts-Balance — nur bei einseitigen Übungen berechenbar.
+   Ein Ungleichgewicht über 10 % gilt als auffällig; darunter ist es
+   normale Streuung zwischen dominanter und schwacher Seite. */
+function exBalance(exId){
+  const h = exHistory(exId);
+  const rows = [];
+  h.forEach(x=>{
+    const e = {exId, uni:true};
+    let l=0, r=0, any=false;
+    x.sets.forEach(s=>{
+      if(s.rr===undefined || s.rr==='' || s.rr===null) return;   // ohne rechten Wert keine Aussage
+      any = true; l += +s.r||0; r += +s.rr||0;
+    });
+    if(any && (l+r)>0) rows.push({date:x.date, l, r, diff:(r-l)/((l+r)/2)*100});
+  });
+  if(rows.length < BALANCE_MIN_SESSIONS) return {ok:false, n:rows.length, need:BALANCE_MIN_SESSIONS-rows.length};
+  const avg = rows.reduce((a,x)=>a+x.diff,0)/rows.length;
+  const last = rows[rows.length-1];
+  return {ok:true, n:rows.length, rows, avg, last,
+          strong: avg>0?'rechts':'links', mag:Math.abs(avg), auffaellig:Math.abs(avg)>=10};
+}
+
+/* Wiederholungsverteilung gegen den eigenen Zielbereich.
+   Ständig über dem Ziel = zu leicht, ständig darunter = zu schwer. */
+function exRepRange(exId){
+  const o = exOpt(exId);
+  const h = exHistory(exId);
+  let unter=0, drin=0, drueber=0, total=0;
+  h.forEach(x=>{
+    const e = {exId, uni:entryIsUni({exId, uni:undefined, __live:false})};
+    x.sets.forEach(s=>{
+      const rep = repsOf({exId, uni:x.sets.some(y=>y.rr!==undefined)}, s, 'best');
+      if(rep<=0) return;
+      total++;
+      if(rep < o.lo) unter++; else if(rep > o.hi) drueber++; else drin++;
+    });
+  });
+  if(total < 6) return {ok:false, total};
+  return {ok:true, total, unter, drin, drueber, lo:o.lo, hi:o.hi,
+          pctDrin: Math.round(drin/total*100)};
+}
+
+/* Wechsel beidarmig ↔ einarmig erkennen — dort bricht die Vergleichbarkeit.
+   Der Sprung wird gekennzeichnet, nicht geglättet. */
+function exModeSwitch(exId){
+  const h = exHistory(exId);
+  if(h.length < 2) return null;
+  const modes = h.map(x=>{
+    const w = state.workouts.find(w=>w.id===x.wid);
+    const e = w && w.exercises.find(e=>e.exId===exId);
+    return e ? entryIsUni(e) : false;
+  });
+  for(let i=1;i<modes.length;i++){
+    if(modes[i]!==modes[i-1]) return {at:i, date:h[i].date, to: modes[i]?'einarmig':'beidarmig'};
+  }
+  return null;
+}
+
 /* ---------- Übungs-Statistik ---------- */
 function renderExStats(){
   const q = $('#exstat-search').value;
@@ -4736,20 +4856,97 @@ function renderExStats(){
       <div class="kpi"><b>${Math.round(bests.maxE/1.1667)}</b><span>5RM kg</span></div>
       <div class="kpi"><b>${Math.round(bests.maxE/1.2667)}</b><span>8RM kg</span></div>
     </div></div>` : '';
+  /* ── Analyse ── */
+  const assist = exIsAssist(ex.id);
+  const uni    = exIsUni(ex.id);
+  const trend  = exTrend(ex.id);
+  const bal    = uni ? exBalance(ex.id) : {ok:false};
+  const rr     = exRepRange(ex.id);
+  const stall  = plateauCount(ex.id);
+  const prog   = progressionFor(ex.id);
+  const swi    = exModeSwitch(ex.id);
+  const lastD  = new Date(h[h.length-1].date);
+  const daysAgo= Math.floor((Date.now()-lastD.getTime())/864e5);
+  const wochen = Math.max(1, Math.round((Date.now()-new Date(h[0].date).getTime())/(7*864e5)));
+  const unsafeE1 = bests.maxReps > E1RM_RELIABLE_MAX;
+
+  /* Statuszeile — eine Aussage, kein Diagramm */
+  let status, statusCol;
+  if(stall >= 3){ status = `Steht seit ${stall} Einheiten — Deload sinnvoll`; statusCol='var(--red)'; }
+  else if(stall >= 2){ status = `Seit ${stall} Einheiten kein neuer Bestwert`; statusCol='var(--gold)'; }
+  else if(trend.ok && trend.solid && trend.slope > 0.05){ status = `Wird stärker · +${trend.slope.toFixed(1).replace('.',',')} kg pro Woche`; statusCol='var(--green)'; }
+  else if(trend.ok && trend.solid && trend.slope < -0.05){ status = `Geht zurück · ${trend.slope.toFixed(1).replace('.',',')} kg pro Woche`; statusCol='var(--red)'; }
+  else if(trend.ok){ status = 'Stabil — noch kein klarer Trend'; statusCol='var(--txt2)'; }
+  else { status = `Noch ${trend.need} ${trend.need===1?'Einheit':'Einheiten'}, dann zeige ich einen Trend`; statusCol='var(--txt3)'; }
+
+  const wirkung = ex.p.map(k=>MUSCLES[k]).filter(Boolean).join(', ');
+
   $('#exstat-detail').innerHTML = `
-    <div class="hd" style="margin-top:12px"><div><h2 style="margin:0">${esc(ex.name)}</h2><span class="tiny">${esc(ex.eq)}${exOpt(ex.id).uni?' · einseitig':''} · Ziel ${exOpt(ex.id).lo}–${exOpt(ex.id).hi} Wdh</span></div>
-      <button class="iconbtn" onclick="openExOpt('${ex.id}')">${ICO.gear}</button></div>
-    <div class="kpis" style="margin-bottom:12px">
-      <div class="kpi"><b>${isBW? (bests.maxW>0? '+'+bests.maxW+' kg' : bests.maxReps+' Wdh') : bests.maxW+' kg'}</b><span>${isBW? (bests.maxW>0?'Best Zusatz':'Best Wdh') :'Best Gewicht'}</span></div>
-      <div class="kpi"><b>${isBW? bests.maxReps+' Wdh' : Math.round(bests.maxE)+' kg'}</b><span>${isBW?'Best Wdh':'Best e1RM'}</span></div>
-      <div class="kpi"><b>${fmtVol(bests.maxVol)}</b><span>Best Volumen</span></div>
-      <div class="kpi"><b>${bests.sessions}</b><span>Sessions</span></div>
+    <div class="hd" style="margin-top:12px"><div><h2 style="margin:0">${esc(ex.name)}</h2><span class="tiny">${esc(ex.eq)}${uni?' · einseitig':''}${assist?' · unterstützt':''} · Ziel ${exOpt(ex.id).lo}–${exOpt(ex.id).hi} Wdh</span></div>
+      <button class="iconbtn" onclick="openExOpt('${ex.id}')" aria-label="Einstellungen">${ICO.gear}</button></div>
+
+    ${prog? `<div class="card" style="border-color:var(--acc-a30);background:linear-gradient(160deg,var(--acc-a08),transparent 60%),var(--s1)">
+      <div class="label" style="color:var(--acc)">Nächstes Mal</div>
+      <b style="font-size:var(--fs-lg);display:block;margin:4px 0 4px">${esc(prog.txt)}</b>
+      <div class="tiny">${esc(prog.why)}</div></div>`:''}
+
+    <div class="card" style="padding:12px 16px">
+      <div class="row" style="gap:8px"><span class="rdot" style="background:${statusCol}"></span>
+        <b style="font-size:var(--fs-sub);color:${statusCol}">${status}</b></div>
+      <div class="tiny" style="margin-top:4px">${bests.sessions} ${bests.sessions===1?'Einheit':'Einheiten'} über ${wochen} ${wochen===1?'Woche':'Wochen'} · zuletzt vor ${daysAgo===0?'heute':daysAgo+(daysAgo===1?' Tag':' Tagen')} · trainiert ${esc(wirkung)}</div>
     </div>
+
+    ${swi? `<div class="card" style="border-color:rgba(255,176,32,.34);background:rgba(255,176,32,.07)">
+      <div class="row" style="gap:8px;align-items:flex-start"><span class="bi" data-ico="alert" style="color:var(--gold);margin:0"></span>
+      <div><b style="font-size:var(--fs-sub);color:var(--gold)">Ausführung gewechselt</b>
+      <div class="tiny" style="margin-top:2px">Ab ${fmtDate(swi.date)} als <b>${swi.to}</b> geloggt. Davor und danach sind unterschiedliche Belastungen — der Sprung im Verlauf ist kein Leistungsabfall. Für saubere Kurven eine eigene Übung anlegen.</div></div></div></div>`:''}
+
+    <div class="kpis" style="margin-bottom:12px">
+      <div class="kpi"><b>${assist? bests.maxW+' kg' : isBW? (bests.maxW>0? '+'+bests.maxW+' kg' : bests.maxReps+' Wdh') : bests.maxW+' kg'}</b><span>${assist?'Best effektiv':isBW? (bests.maxW>0?'Best Zusatz':'Best Wdh') :'Best Gewicht'}</span></div>
+      <div class="kpi"><b>${isBW&&!assist? bests.maxReps+' Wdh' : Math.round(bests.maxE)+' kg'}</b><span>${isBW&&!assist?'Best Wdh':'Best e1RM'}${unsafeE1?' *':''}</span></div>
+      <div class="kpi"><b>${fmtVol(bests.maxVol)}</b><span>Best Volumen</span></div>
+      <div class="kpi"><b>${bests.sessions}</b><span>Einheiten</span></div>
+    </div>
+    ${unsafeE1? `<p class="tiny" style="margin:-8px 2px 12px">* Der beste Satz hatte ${bests.maxReps} Wdh. Über ${E1RM_RELIABLE_MAX} Wdh streuen alle 1RM-Formeln stark — die Zahl ist eine grobe Näherung.</p>`:''}
     ${maxes}
-    ${isBW? (bests.maxW>0? `<div class="card"><h3>Zusatzgewicht pro Session</h3>${svgLine(zPts.slice(-30),v=>'+'+Math.round(v)+'kg',{fill:true})}</div>`:'')
-          : `<div class="card"><h3>e1RM-Verlauf <span class="tiny">(geschätztes 1RM · gestrichelt = Ø-Trend)</span></h3>${svgLine(ePts.slice(-30),v=>Math.round(v)+'kg',{avg:true,fill:true})}</div>`}
-    <div class="card"><h3>Volumen pro Session ${isBW?'<span class="tiny">(inkl. Körpergewicht)</span>':''}</h3>${svgLine(vPts.slice(-30),v=>fmtVol(v),{fill:true})}</div>
-    ${!isBW? `<div class="card"><h3>Arbeitsgewicht pro Session <span class="tiny">(schwerster Satz · gestrichelt = Ø-Trend)</span></h3>${svgLine(zPts.slice(-30),v=>Math.round(v)+' kg',{avg:true,fill:true})}</div>` : ''}
+
+    <div class="card">
+      <h3>${assist? 'Effektive Last pro Einheit' : isBW&&bests.maxW>0? 'Zusatzgewicht pro Einheit' : 'Arbeitsgewicht pro Einheit'}
+        <span class="tiny">(schwerster Satz${trend.ok?' · gestrichelt = Ø-Trend':''})</span></h3>
+      ${svgLine(zPts.slice(-30), v=>Math.round(v)+' kg', {avg:trend.ok, fill:true})}
+      <p class="tiny" style="margin-top:8px">${
+        trend.ok
+          ? `${trend.from} → ${trend.to} kg in ${wochen} ${wochen===1?'Woche':'Wochen'}${trend.pct?` · <b style="color:${trend.pct>=0?'var(--green)':'var(--red)'}">${trend.pct>=0?'+':''}${trend.pct.toFixed(0)} %</b>`:''}${trend.solid? ` · Trend belastbar (R²&nbsp;${trend.r2.toFixed(2).replace('.',',')})` : ` · <span style="color:var(--txt3)">stark schwankend, Trendlinie mit Vorsicht (R²&nbsp;${trend.r2.toFixed(2).replace('.',',')})</span>`}`
+          : `Ab ${TREND_MIN_SESSIONS} Einheiten rechne ich hier eine belastbare Steigung aus — aktuell ${trend.n}.`
+      }${assist? '<br><b>Weniger Hilfe = mehr eigene Last.</b> Die Kurve zeigt bereits die effektive Last.' : ''}</p>
+    </div>
+
+    ${bal.ok? `<div class="card">
+      <h3>Links/Rechts-Balance <span class="tiny">(nur bei einseitigen Übungen messbar)</span></h3>
+      ${svgLine(bal.rows.slice(-30).map(x=>({y:Math.round(x.diff*10)/10, l:new Date(x.date).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})})), v=>(v>0?'+':'')+v+'%')}
+      <p class="tiny" style="margin-top:8px">Letzte Einheit: links <b>${bal.last.l}</b> · rechts <b>${bal.last.r}</b> Wdh.
+      Im Schnitt ist <b>${bal.strong}</b> um <b style="color:${bal.auffaellig?'var(--gold)':'var(--green)'}">${bal.mag.toFixed(0)} %</b> stärker.
+      ${bal.auffaellig
+        ? `Über 10 % gilt als auffällig. Wer die schwache Seite zuerst trainiert und die starke nur so viele Wiederholungen machen lässt, gleicht das über Wochen aus.`
+        : `Unter 10 % ist normale Seitendifferenz — kein Handlungsbedarf.`}</p>
+    </div>`
+    : uni? `<div class="card"><h3>Links/Rechts-Balance</h3>
+      <p class="tiny">Noch keine Aussage möglich — dafür brauche ich ${bal.need||BALANCE_MIN_SESSIONS} Einheiten, in denen du <b>beide Seiten getrennt</b> einträgst.</p></div>` : ''}
+
+    <div class="card"><h3>Volumen pro Einheit ${isBW&&!assist?'<span class="tiny">(inkl. Körpergewicht)</span>':''}</h3>
+      ${svgLine(vPts.slice(-30),v=>fmtVol(v),{fill:true})}
+      <p class="tiny" style="margin-top:8px">Volumen = Gewicht × Wiederholungen, Aufwärmsätze ausgenommen${uni?', beide Seiten gezählt':''}. Steigt es ohne mehr Gewicht, machst du mehr Arbeit bei gleicher Intensität.</p>
+    </div>
+
+    ${rr.ok? `<div class="card"><h3>Wiederholungen im Zielbereich <span class="tiny">(${rr.lo}–${rr.hi} Wdh)</span></h3>
+      <div class="mbar"><span>zu wenig</span><span class="bar"><i style="width:${Math.round(rr.unter/rr.total*100)}%;background:var(--red)"></i></span><span class="v">${rr.unter}</span></div>
+      <div class="mbar"><span>im Ziel</span><span class="bar"><i style="width:${Math.round(rr.drin/rr.total*100)}%;background:var(--green)"></i></span><span class="v">${rr.drin}</span></div>
+      <div class="mbar"><span>zu viele</span><span class="bar"><i style="width:${Math.round(rr.drueber/rr.total*100)}%;background:var(--gold)"></i></span><span class="v">${rr.drueber}</span></div>
+      <p class="tiny" style="margin-top:8px"><b>${rr.pctDrin} %</b> deiner ${rr.total} Arbeitssätze lagen im Zielbereich.
+      ${rr.drueber > rr.total*0.4 ? 'Auffällig viele darüber — das Gewicht ist zu leicht, geh hoch.'
+        : rr.unter > rr.total*0.4 ? 'Auffällig viele darunter — das Gewicht ist zu schwer für diesen Bereich.'
+        : 'Passt.'}</p>
+    </div>`:''}
     <div class="card"><h3 style="margin-bottom:4px">Letzte Sessions</h3>
       <table class="htable"><tr><th>Datum</th><th>Sätze</th><th>Best-Satz</th><th>Volumen</th></tr>
       ${h.slice(-12).reverse().map(x=>{
