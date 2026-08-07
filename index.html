@@ -1186,7 +1186,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V51 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V52 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -2002,11 +2002,16 @@ const SETGROUPS = [
   ['Quadrizeps',['quads','adductors'],1], ['Beinbeuger',['hamstrings'],1],
   ['Po',['glutes','abductors'],1], ['Waden',['calves'],1]
 ];
+/* [Achse, Muskelschlüssel, Ziel-Faktor]
+   Der Faktor ist die Summe der Faktoren aus SETGROUPS, die auf diese Achse
+   fallen — damit bekommt jede Achse ihren eigenen Zielkorridor und das Radar
+   zeigt nicht nur „viel/wenig", sondern „im Korridor oder nicht".
+   Arme = Bizeps 1 + Trizeps 1 + Unterarme 1 · Beine = Quads + Beinbeuger + Po + Waden */
 const RADAR_AXES = [
-  ['Arme',['biceps','triceps','forearms']], ['Rücken',['lats','upper_back','lower_back','traps']],
-  ['Brust',['chest_up','chest','chest_low']], ['Core',['abs','obliques']],
-  ['Beine',['quads','hamstrings','glutes','calves','adductors','abductors']],
-  ['Schultern',['front_delt','side_delt','rear_delt']]
+  ['Arme',['biceps','triceps','forearms'],3], ['Rücken',['lats','upper_back','lower_back','traps'],2],
+  ['Brust',['chest_up','chest','chest_low'],1], ['Core',['abs','obliques'],1],
+  ['Beine',['quads','hamstrings','glutes','calves','adductors','abductors'],4],
+  ['Schultern',['front_delt','side_delt','rear_delt'],2]
 ];
 function sumGroups(m, defs){ return defs.map(([label,keys])=>[label, keys.reduce((a,k)=>a+(m[k]||0),0)]); }
 
@@ -4762,15 +4767,35 @@ function svgBars(labels, values, fmt){
   return `<div class="chart">${s}</div>`;
 }
 /* Radar / Spider-Chart (6 Achsen) */
-function svgRadar(pairs){
+/* Radar mit ZIELBAND.
+   Vorher zeigte es nur die Rohsummen gegen den eigenen Maximalwert — damit war
+   die Form immer „irgendein Sechseck" und man konnte nichts daran ablesen.
+   Jetzt wird jede Achse auf IHREN Zielkorridor normiert: der graue Ring ist die
+   Obergrenze, der innere die Untergrenze. Liegt die blaue Fläche im Band,
+   stimmt das Volumen. Ohne Zielangaben fällt es auf die alte Darstellung zurück. */
+function svgRadar(pairs, ziel){
   const W=340,H=232,cx=170,cy=118,R=82,n=pairs.length;
+  if(!pairs.some(p=>p[1]>0)) return '<div class="empty">Keine Sätze in diesem Zeitraum</div>';
+  const norm = !!(ziel && ziel.length===n);
+  /* Normiert: 1,0 = Obergrenze des Korridors. Bis 1,4 wird gezeichnet, darüber gedeckelt. */
+  const val = i => norm? Math.min(1.4, (pairs[i][1]||0) / Math.max(1, ziel[i].hi)) : null;
   const max=Math.max(...pairs.map(p=>p[1]),1);
   const pt=(i,f)=>{ const a=Math.PI*2*i/n-Math.PI/2; return [(cx+Math.cos(a)*R*f).toFixed(1),(cy+Math.sin(a)*R*f).toFixed(1)]; };
   let s=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
   [0.33,0.66,1].forEach(f=>{ s+=`<polygon points="${pairs.map((_,i)=>pt(i,f).join(',')).join(' ')}" fill="none" stroke="#1c2230" stroke-width="1"/>`; });
   pairs.forEach((_,i)=>{ const [x,y]=pt(i,1); s+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#1c2230" stroke-width="1"/>`; });
-  s+=`<polygon points="${pairs.map((p,i)=>pt(i,(p[1]||0)/max).join(',')).join(' ')}" fill="rgba(93,155,255,.28)" stroke="#4C8DFF" stroke-width="2" stroke-linejoin="round"/>`;
-  pairs.forEach((p,i)=>{ if(p[1]>0){ const [x,y]=pt(i,p[1]/max); s+=`<circle cx="${x}" cy="${y}" r="3" fill="#8FB8FF"/>`; } });
+  if(norm){
+    const skala = 1.4;
+    const ringLo = pairs.map((_,i)=>pt(i, (ziel[i].lo/Math.max(1,ziel[i].hi))/skala).join(',')).join(' ');
+    const ringHi = pairs.map((_,i)=>pt(i, 1/skala).join(',')).join(' ');
+    s+=`<polygon points="${ringHi}" fill="rgba(48,209,88,.10)" stroke="none"/>`;
+    s+=`<polygon points="${ringLo}" fill="var(--s1,#101319)" stroke="none"/>`;
+    s+=`<polygon points="${ringLo}" fill="none" stroke="#30D158" stroke-width="1.2" stroke-dasharray="3 3" opacity=".75"/>`;
+    s+=`<polygon points="${ringHi}" fill="none" stroke="#30D158" stroke-width="1.2" stroke-dasharray="3 3" opacity=".75"/>`;
+  }
+  const f_ = i => norm? val(i)/1.4 : (pairs[i][1]||0)/max;
+  s+=`<polygon points="${pairs.map((p,i)=>pt(i,f_(i)).join(',')).join(' ')}" fill="rgba(93,155,255,.28)" stroke="#4C8DFF" stroke-width="2" stroke-linejoin="round"/>`;
+  pairs.forEach((p,i)=>{ if(p[1]>0){ const [x,y]=pt(i,f_(i)); s+=`<circle cx="${x}" cy="${y}" r="3" fill="#8FB8FF"/>`; } });
   pairs.forEach((p,i)=>{
     const [x,y]=pt(i,1.22);
     const anch = Math.abs(x-cx)<12? 'middle' : (x>cx? 'start':'end');
@@ -4956,11 +4981,16 @@ function muscleSection(ws, weeks, opt){
       <button data-setmode="direct" class="${statsSetMode==='direct'?'on':''}">Nur direkt</button>
     </div>`;
   const z = opt.zyklen || weeks || 1;
-  /* Das Radar beantwortet keine Frage, die die Balken nicht besser beantworten —
-     es zeigt dieselben Summen, nur ungenauer und ohne Zielbezug. Es bleibt
-     deshalb nur dort, wo es um das GROBE Verhältnis geht (mehrere Zyklen),
-     und verschwindet aus der Einzelzyklus-Ansicht, wo es nur Platz kostet. */
-  const radarKarte = z>1 ? `<div class="card"><h3>Muskel-Balance <span class="tiny">(grobes Verhältnis)</span></h3>${svgRadar(radar)}</div>` : '';
+  /* Das Radar steht in JEDEM Reiter — es war in V51 aus der Einzelzyklus-Ansicht
+     geflogen, weil es dort nur Rohsummen ohne Zielbezug zeigte. Statt es zu
+     streichen, hat es jetzt ein Zielband bekommen: jede Achse wird auf ihren
+     eigenen Korridor normiert, das grüne Band ist das Ziel. Damit beantwortet
+     es eine Frage, die die Balkenliste nicht beantwortet — nämlich die nach der
+     FORM: sitzt alles gleichmäßig im Band oder hängt eine Seite durch. */
+  const zielRadar = RADAR_AXES.map(([,,mult])=>groupTargetCycle(mult||1, z));
+  const radarKarte = `<div class="card"><h3>Muskel-Balance <span class="tiny">(grünes Band = Zielkorridor)</span></h3>${svgRadar(radar, zielRadar)}
+    <p class="tiny" style="margin-top:8px">Jede Achse ist auf ihren eigenen Korridor normiert. Blaue Fläche <b>im grünen Band</b> = Volumen passt · innen = zu wenig · außen = darüber.
+    ${z>1? `Gerechnet über ${z} ${z===1?'Zyklus':'Zyklen'}.`:'Gerechnet über einen Zyklus.'}</p></div>`;
   return toggle + radarKarte
     + `<div class="card"><h3 style="margin-bottom:8px">Sätze pro Muskelgruppe${opt.laufend? ' <span class="tiny">(laufender Zyklus, noch nicht fertig)</span>':''}</h3>${groupBars(mg, ws, z)}
     ${Object.keys(mg).length? `<details style="margin-top:8px"><summary class="tiny" style="cursor:pointer">Details pro Einzelmuskel anzeigen</summary><div style="margin-top:8px">${muscleBars(mg)}</div></details>`:''}</div>`;
