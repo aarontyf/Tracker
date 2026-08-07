@@ -1115,11 +1115,11 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
   <div class="mhd"><h2>Einstellungen &amp; Daten</h2><button class="iconbtn" data-close aria-label="Schließen" data-ico-close></button></div>
   <div class="card">
     <h3 style="margin-bottom:4px">Trainingsrhythmus</h3>
-    <p class="tiny" style="margin-bottom:8px">Ein <b>Zyklus</b> ist ein voller Durchgang durch deinen Plan: Push → Pull → Rest. Alle Ziele in der Statistik rechnen pro Zyklus, nicht pro Kalenderwoche — sonst schwanken die Werte nur, weil mal zwei und mal drei Einheiten in eine Woche fallen.</p>
+    <p class="tiny" style="margin-bottom:8px">Ein <b>Zyklus</b> ist ein voller Durchgang durch deinen Plan: <b>Ganzkörper-Push → Ganzkörper-Pull → Rest</b>. Alle Ziele in der Statistik rechnen pro Zyklus, nicht pro Kalenderwoche — sonst schwanken die Werte nur, weil mal zwei und mal drei Einheiten in eine Woche fallen.</p>
     <div class="row"><input type="number" id="set-goal" min="1" max="14" style="width:90px"><span class="sub">Einheiten pro Zyklus</span></div>
     <div class="row" style="margin-top:12px;justify-content:space-between">
       <div class="grow"><b style="font-size:15px">Beine im Zyklus</b>
-        <div class="tiny">Aus: Beine laufen nebenher und werden rollierend über 21 Tage gezeigt, ohne Ampel. An: Beine bekommen denselben Zielkorridor wie alles andere.</div></div>
+        <div class="tiny"><b>An</b> (Standard bei Ganzkörper-Push/Pull): Beine bekommen denselben Zielkorridor wie alles andere. <b>Aus</b>: Beine laufen nebenher und werden rollierend über 21 Tage gezeigt, ohne Ampel.</div></div>
       <button class="chip" id="set-beine">Aus</button>
     </div>
   </div>
@@ -1186,7 +1186,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V52 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V53 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -2449,7 +2449,10 @@ const exSlug = n=>'x-'+n.toLowerCase().replace(/[^a-z0-9äöüß]+/g,'-').replac
 const EXDB = EXDB_RAW.map(r=>({id:exSlug(r[0]), name:r[0], grp:r[1], eq:r[2], p:r[3], s:r[4]||[], al:(r[5]||'').toLowerCase(), uni:!!r[6]}));
 /* ================= KERN: STATE / DATUM / PR-LOGIK ================= */
 const LS_KEY = 'ironlog_v1';
-const SPLIT = ['Push','Pull','Legs','Push','Pull'];
+/* Zyklus = Ganzkörper-Push → Ganzkörper-Pull → Rest. Der Vorschlag kommt
+   inzwischen aus suggestType() über den laufenden Zyklus; SPLIT bleibt nur
+   noch als Beschriftung für den Split-Generator stehen. */
+const SPLIT = ['Push','Pull'];
 const WTYPES = ['Push','Pull','Legs','Andere'];
 
 let state = {
@@ -2875,7 +2878,12 @@ const AMPEL = {
    Der Schalter beineImZyklus schaltet sie später ohne Umbau scharf. */
 const LEG_GROUPS = ['Quadrizeps','Beinbeuger','Po','Waden'];
 const LEG_ROLL_DAYS = 21;
-function beineImZyklus(){ return !!state.settings.beineImZyklus; }
+/* STANDARD SEIT V53: Beine zählen im Zyklus.
+   Aaron fährt seit 08/2026 **Ganzkörper-Push / Ganzkörper-Pull** — Beine sind
+   damit fester Bestandteil jeder Einheit und keine Nebensache mehr. Wer sie
+   weiter nebenher trainiert, schaltet in den Einstellungen zurück; dann greift
+   wieder die rollierende 21-Tage-Ansicht ohne Ampel. */
+function beineImZyklus(){ return state.settings.beineImZyklus !== false; }
 function isLegGroup(g){ return !beineImZyklus() && LEG_GROUPS.indexOf(g) >= 0; }
 function legRolling(mode){
   const ab = Date.now() - LEG_ROLL_DAYS*864e5;
@@ -4773,9 +4781,9 @@ function svgBars(labels, values, fmt){
    Jetzt wird jede Achse auf IHREN Zielkorridor normiert: der graue Ring ist die
    Obergrenze, der innere die Untergrenze. Liegt die blaue Fläche im Band,
    stimmt das Volumen. Ohne Zielangaben fällt es auf die alte Darstellung zurück. */
-function svgRadar(pairs, ziel){
+function svgRadar(pairs, ziel, radarWs){
   const W=340,H=232,cx=170,cy=118,R=82,n=pairs.length;
-  if(!pairs.some(p=>p[1]>0)) return '<div class="empty">Keine Sätze in diesem Zeitraum</div>';
+  if(!pairs.some(p=>p[1]>0)) return (typeof radarWs!=='undefined'&&radarWs)? keineSaetze(radarWs) : '<div class="empty">Keine Sätze in diesem Zeitraum</div>';
   const norm = !!(ziel && ziel.length===n);
   /* Normiert: 1,0 = Obergrenze des Korridors. Bis 1,4 wird gezeichnet, darüber gedeckelt. */
   const val = i => norm? Math.min(1.4, (pairs[i][1]||0) / Math.max(1, ziel[i].hi)) : null;
@@ -4863,9 +4871,30 @@ function svgLine(pts, fmt, opts){
   </defs></svg>`;
   return `<div class="chart">${s}</div>`;
 }
-function muscleBars(m){
+/* Warum ist hier nichts? — statt eines nichtssagenden „Keine Sätze".
+   Ein leerer Bereich kann drei sehr verschiedene Ursachen haben, und der
+   Unterschied entscheidet, ob es ein Bedienfehler, eine Datenlücke oder ein
+   Programmfehler ist. Die App sagt jetzt, welche davon zutrifft. */
+function keineSaetze(ws){
+  if(!ws || !ws.length) return '<div class="empty">Keine Trainings in diesem Zeitraum</div>';
+  let uebungen=0, unbekannt=0, ohneSaetze=0, nurWarmup=0;
+  ws.forEach(w=>(w.exercises||[]).forEach(e=>{
+    uebungen++;
+    if(!getEx(e.exId)){ unbekannt++; return; }
+    const alle = (e.sets||[]).length;
+    if(!validSets(e).length){ if(alle) nurWarmup++; else ohneSaetze++; }
+  }));
+  const teile = [];
+  if(unbekannt)  teile.push(`<b>${unbekannt}</b> ${unbekannt===1?'Übung ist':'Übungen sind'} der App unbekannt (ID passt zu keinem Eintrag)`);
+  if(nurWarmup)  teile.push(`<b>${nurWarmup}</b> ${nurWarmup===1?'Übung hat':'Übungen haben'} nur Aufwärmsätze oder 0 Wiederholungen`);
+  if(ohneSaetze) teile.push(`<b>${ohneSaetze}</b> ${ohneSaetze===1?'Übung hat':'Übungen haben'} gar keine Sätze`);
+  return `<div class="empty"><b>Keine zählbaren Sätze</b>
+    ${ws.length} ${ws.length===1?'Training':'Trainings'} mit ${uebungen} ${uebungen===1?'Übung':'Übungen'} im Zeitraum.
+    ${teile.length? '<br>'+teile.join('<br>') : '<br>Woran es liegt, kann die App hier nicht erkennen — bitte melden.'}</div>`;
+}
+function muscleBars(m, ws){
   const entries = Object.entries(m).sort((a,b)=>b[1]-a[1]);
-  if(!entries.length) return '<div class="empty">Keine Sätze in diesem Zeitraum</div>';
+  if(!entries.length) return keineSaetze(ws);
   const max = entries[0][1];
   return entries.map(([k,v])=>`<div class="mbar"><span>${MUSCLES[k]}</span><span class="bar"><i style="width:${Math.round(v/max*100)}%"></i></span><span class="val">${v%1? v.toFixed(1).replace('.',','):v}</span></div>`).join('');
 }
@@ -4894,7 +4923,7 @@ function groupBars(m, ws, zyklen){
   const z = zyklen || 1;
   const all = sumGroups(m, SETGROUPS);
   const entries = all.filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
-  if(!entries.length) return '<div class="empty">Keine Sätze in diesem Zeitraum</div>';
+  if(!entries.length) return keineSaetze(ws);
   const defOf = g => SETGROUPS.find(x=>x[0]===g) || [g,[],1];
   const legRoll = LEG_GROUPS.some(g=>all.some(([x,v])=>x===g&&v>0)) || !beineImZyklus() ? legRolling(statsSetMode) : null;
 
@@ -4988,12 +5017,12 @@ function muscleSection(ws, weeks, opt){
      es eine Frage, die die Balkenliste nicht beantwortet — nämlich die nach der
      FORM: sitzt alles gleichmäßig im Band oder hängt eine Seite durch. */
   const zielRadar = RADAR_AXES.map(([,,mult])=>groupTargetCycle(mult||1, z));
-  const radarKarte = `<div class="card"><h3>Muskel-Balance <span class="tiny">(grünes Band = Zielkorridor)</span></h3>${svgRadar(radar, zielRadar)}
+  const radarKarte = `<div class="card"><h3>Muskel-Balance <span class="tiny">(grünes Band = Zielkorridor)</span></h3>${svgRadar(radar, zielRadar, ws)}
     <p class="tiny" style="margin-top:8px">Jede Achse ist auf ihren eigenen Korridor normiert. Blaue Fläche <b>im grünen Band</b> = Volumen passt · innen = zu wenig · außen = darüber.
     ${z>1? `Gerechnet über ${z} ${z===1?'Zyklus':'Zyklen'}.`:'Gerechnet über einen Zyklus.'}</p></div>`;
   return toggle + radarKarte
     + `<div class="card"><h3 style="margin-bottom:8px">Sätze pro Muskelgruppe${opt.laufend? ' <span class="tiny">(laufender Zyklus, noch nicht fertig)</span>':''}</h3>${groupBars(mg, ws, z)}
-    ${Object.keys(mg).length? `<details style="margin-top:8px"><summary class="tiny" style="cursor:pointer">Details pro Einzelmuskel anzeigen</summary><div style="margin-top:8px">${muscleBars(mg)}</div></details>`:''}</div>`;
+    ${Object.keys(mg).length? `<details style="margin-top:8px"><summary class="tiny" style="cursor:pointer">Details pro Einzelmuskel anzeigen</summary><div style="margin-top:8px">${muscleBars(mg, ws)}</div></details>`:''}</div>`;
 }
 document.addEventListener('click', e=>{
   const b = e.target.closest('[data-setmode]'); if(!b) return;
@@ -5130,7 +5159,7 @@ function renderAllStats(){
   /* Hier bewusst KEINE Zielampel: über die gesamte Historie ist ein
      Wochen- oder Zykluskorridor bedeutungslos. Nur die Verteilung zählt. */
   el.innerHTML = header + lead + kpis
-    + `<div class="card"><h3>Verteilung über alle Muskelgruppen <span class="tiny">(ohne Zielampel — über die gesamte Historie sagt ein Korridor nichts)</span></h3>${muscleBars(muscleSetsBy(ws, statsSetMode))}</div>`
+    + `<div class="card"><h3>Verteilung über alle Muskelgruppen <span class="tiny">(ohne Zielampel — über die gesamte Historie sagt ein Korridor nichts)</span></h3>${muscleBars(muscleSetsBy(ws, statsSetMode), ws)}</div>`
     + `<div class="card"><h3>Volumen pro Monat <span class="tiny">(Kalendermonate, rein beschreibend)</span></h3>${svgBars(mLabels, mVals, v=>fmtVol(v))}</div>`
     + prListHtml(ws);
 }
