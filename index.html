@@ -909,9 +909,9 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
   <section class="screen" id="scr-stats">
     <div class="hd"><h1>Statistik</h1></div>
     <div class="seg" id="stats-seg">
-      <button data-p="week" class="on">Woche</button>
-      <button data-p="month">Monat</button>
-      <button data-p="year">Jahr</button>
+      <button data-p="week" class="on">Zyklus</button>
+      <button data-p="month">5&nbsp;Zyklen</button>
+      <button data-p="year">20&nbsp;Zyklen</button>
       <button data-p="all">Gesamt</button>
       <button data-p="ex">Übung</button>
     </div>
@@ -1114,8 +1114,14 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
   <div class="grab"></div>
   <div class="mhd"><h2>Einstellungen &amp; Daten</h2><button class="iconbtn" data-close aria-label="Schließen" data-ico-close></button></div>
   <div class="card">
-    <h3 style="margin-bottom:4px">Wochenziel</h3>
-    <div class="row"><input type="number" id="set-goal" min="1" max="14" style="width:90px"><span class="sub">Workouts pro Woche</span></div>
+    <h3 style="margin-bottom:4px">Trainingsrhythmus</h3>
+    <p class="tiny" style="margin-bottom:8px">Ein <b>Zyklus</b> ist ein voller Durchgang durch deinen Plan: Push → Pull → Rest. Alle Ziele in der Statistik rechnen pro Zyklus, nicht pro Kalenderwoche — sonst schwanken die Werte nur, weil mal zwei und mal drei Einheiten in eine Woche fallen.</p>
+    <div class="row"><input type="number" id="set-goal" min="1" max="14" style="width:90px"><span class="sub">Einheiten pro Zyklus</span></div>
+    <div class="row" style="margin-top:12px;justify-content:space-between">
+      <div class="grow"><b style="font-size:15px">Beine im Zyklus</b>
+        <div class="tiny">Aus: Beine laufen nebenher und werden rollierend über 21 Tage gezeigt, ohne Ampel. An: Beine bekommen denselben Zielkorridor wie alles andere.</div></div>
+      <button class="chip" id="set-beine">Aus</button>
+    </div>
   </div>
   <div class="card">
     <h3 style="margin-bottom:4px">Pausen-Timer</h3>
@@ -1136,10 +1142,12 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <div class="card">
-    <h3 style="margin-bottom:8px">Wochenziel pro Muskelgruppe</h3>
+    <h3 style="margin-bottom:8px">Satzziel pro Muskel</h3>
     <div class="row"><input type="number" id="set-goallo" min="1" max="40" style="width:70px"><span class="sub">bis</span>
-      <input type="number" id="set-goalhi" min="1" max="60" style="width:70px"><span class="sub">Sätze/Woche</span></div>
-    <p class="tiny" style="margin-top:8px">Forschungsrichtwert für Muskelaufbau: etwa 10–20 harte Sätze pro Muskelgruppe und Woche.</p>
+      <input type="number" id="set-goalhi" min="1" max="60" style="width:70px"><span class="sub">Sätze pro <b>Woche</b></span></div>
+    <div class="tiny" id="set-goal-cycle" style="margin-top:6px"></div>
+    <p class="tiny" style="margin-top:8px">Forschungsrichtwert für Muskelaufbau: etwa 10–20 harte Sätze pro Muskel und Woche (Schoenfeld u. a.; Pelland et al. 2025 bestätigen den abnehmenden Grenzertrag). Die Statistik rechnet daraus den Zykluswert.<br>
+    Ab etwa <b>11 Sätzen pro Muskel und Einheit</b> ist kein zusätzlicher Zuwachs mehr messbar (Robinson/Pelland) — darüber meldet die Ampel „!".</p>
   </div>
   <div class="card">
     <h3 style="margin-bottom:4px">Backup</h3>
@@ -1178,7 +1186,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V50 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V51 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -2504,6 +2512,7 @@ function migrateState(){
    ohne es zu merken (z.B. wenn der Browser-Speicher voll ist). */
 let _saveWarned = false;
 function saveState(){
+  if(typeof invalidateCycles==='function') invalidateCycles();   // Zyklen neu berechnen lassen
   try{
     localStorage.setItem(LS_KEY, JSON.stringify(state));
     _saveWarned = false;
@@ -2739,6 +2748,157 @@ function muscleSetsBy(workouts, mode){
 }
 function muscleSets(workouts){ return muscleSetsBy(workouts, 'both'); }
 
+/* ═══════════════════ ZYKLEN ═══════════════════════════════════════════
+   Aarons Plan ab 08/2026: Push → Pull → Rest → wiederholen. Nominal 3 Tage.
+   Die Kalenderwoche ist damit als Maßstab unbrauchbar: mal fallen 2, mal 3
+   Einheiten hinein — das sind ±50 % Schwankung, ohne dass sich am Training
+   irgendetwas ändert. Jede Ampel, die auf Wochen rechnet, misst dann das
+   Datum statt das Training.
+
+   DEFINITION: Jede Push-Einheit beginnt einen Zyklus. Alles bis unmittelbar
+   vor die nächste Push-Einheit gehört dazu.
+
+   Warum genau diese Regel:
+   · Fällt ein Pull aus, bleibt der Zyklus bestehen und wird als unvollständig
+     gekennzeichnet — statt eine Grenze zu erfinden.
+   · Wird die Pause länger, wird der Zyklus länger. Das ist die Wahrheit.
+     Ab CYCLE_MAX_TAGE meldet die Anzeige es als Auffälligkeit.
+   · Ein eingeschobener Bein-Tag fällt in den laufenden Zyklus, ohne ihn zu teilen.
+   · Zwei Push hintereinander erzeugen zwei Zyklen, der erste ohne Pull.
+     Sichtbar statt versteckt.
+   · Einheiten vor der allerersten Push-Einheit bilden einen Vorlauf, der als
+     solcher markiert und aus Durchschnitten herausgehalten wird.  */
+const CYCLE_SOLL_TAGE = 3;
+const CYCLE_MIN_TAGE  = 2;
+const CYCLE_MAX_TAGE  = 5;
+const CYCLES_PER_WEEK = 7 / CYCLE_SOLL_TAGE;          // 2,333
+/* Robinson/Pelland, „Is There Too Much of a Good Thing?" (SportRxiv):
+   ab ~11 fraktionalen Sätzen pro Muskel und EINHEIT kein messbarer Vorteil mehr. */
+const SESSION_EFF_MAX = 11;
+
+let _cyCache = null, _cyKey = '';
+function invalidateCycles(){ _cyCache = null; }
+function dayNr(d){ const x = new Date(d); x.setHours(0,0,0,0); return Math.round(x.getTime()/864e5); }
+
+function cycles(){
+  const ws0 = state.workouts;
+  const key = ws0.length + '|' + ((ws0[0]||{}).id||'') + '|' + ((ws0[ws0.length-1]||{}).id||'') + '|' + ((ws0[ws0.length-1]||{}).date||'');
+  if(_cyCache && _cyKey === key) return _cyCache;
+  const ws = ws0.slice().sort((a,b)=> new Date(a.date) - new Date(b.date));
+  const out = [];
+  let cur = null;
+  ws.forEach(w=>{
+    if(w.type==='Push' || !cur){
+      cur = { n:0, von:w.date, bis:w.date, ws:[], vorlauf:(w.type!=='Push' && out.length===0) };
+      out.push(cur);
+    }
+    cur.ws.push(w); cur.bis = w.date;
+  });
+  const heute = dayNr(new Date());
+  out.forEach((c,i)=>{
+    const nx = out[i+1];
+    const start = dayNr(c.von);
+    c.tage = nx ? Math.max(1, dayNr(nx.von) - start)
+                : Math.max(1, heute - start + 1);
+    c.push = c.ws.filter(w=>w.type==='Push').length;
+    c.pull = c.ws.filter(w=>w.type==='Pull').length;
+    c.beine = c.ws.filter(w=>w.type==='Legs').length;
+    c.vollstaendig = c.push>0 && c.pull>0;
+    c.auffaellig = c.tage < CYCLE_MIN_TAGE || c.tage > CYCLE_MAX_TAGE;
+  });
+  /* Nur echte Zyklen werden nummeriert; der Vorlauf bekommt die 0. */
+  let nr = 0;
+  out.forEach(c=>{ c.n = c.vorlauf ? 0 : ++nr; });
+  /* Der letzte Zyklus läuft noch, solange er unvollständig ist ODER die
+     Solldauer noch nicht erreicht hat. Sonst würde die App am Push-Tag
+     jedes Mal „Rückstand" melden, obwohl der Zyklus noch gar nicht um ist. */
+  if(out.length){
+    const last = out[out.length-1];
+    last.laufend = !last.vollstaendig || last.tage < CYCLE_SOLL_TAGE;
+  }
+  _cyCache = out; _cyKey = key;
+  return out;
+}
+/* Abgeschlossene, wertbare Zyklen — ohne Vorlauf und ohne den laufenden */
+function closedCycles(){ return cycles().filter(c=>!c.vorlauf && !c.laufend); }
+function runningCycle(){ const a = cycles(); const l = a[a.length-1]; return (l && l.laufend)? l : null; }
+/* Die letzten n abgeschlossenen Zyklen, chronologisch */
+function lastCycles(n){ const a = closedCycles(); return n>0? a.slice(-n) : a; }
+function cycleWorkouts(cs){ return cs.reduce((a,c)=>a.concat(c.ws), []); }
+/* Zyklusnummer zu einem Datum — für die x-Achse der Diagramme */
+function cycleOfDate(dateStr){
+  const t = new Date(dateStr).getTime();
+  const a = cycles();
+  for(let i=a.length-1;i>=0;i--){ if(new Date(a[i].von).getTime() <= t) return a[i].n; }
+  return 0;
+}
+
+/* Zielkorridor pro Zyklus.
+   Herleitung: Die Literatur nennt 10–20 Sätze pro Muskel und WOCHE
+   (Schoenfeld u. a.; Pelland et al. 2025 bestätigen den abnehmenden
+   Grenzertrag). Bei 2,333 Zyklen pro Woche ergibt das 4,3–8,6 → 4–9
+   Sätze pro Muskel und Zyklus.
+   mult = feste Eigenschaft der Gruppe aus SETGROUPS (nicht die Zahl der
+   trainierten Teilmuskeln — genau das war der V50-Fehler). */
+function groupTargetCycle(mult, zyklen){
+  const S = state.settings;
+  const m = mult||1, z = zyklen||1;
+  const f = m * z / CYCLES_PER_WEEK;
+  return { lo: Math.round((S.setGoalLo||10)*f), hi: Math.round((S.setGoalHi||20)*f),
+           n: m, effMax: SESSION_EFF_MAX * m * z };
+}
+/* Vier Zustände statt drei. Der vierte („ineffizient") ist neu und ergibt
+   sich aus der Pro-Einheit-Grenze: weil jeder Muskel nur einmal pro Zyklus
+   drankommt, ist das Zyklusvolumen gleich dem Volumen EINER Einheit. */
+function setState4(v, t){
+  if(v > t.effMax) return 'ineffizient';
+  if(v > t.hi)     return 'drueber';
+  if(v >= t.lo)    return 'ziel';
+  return 'unter';
+}
+const AMPEL = {
+  unter:      {c:'var(--gold)',  z:'↓', t:'zu wenig'},
+  ziel:       {c:'var(--green)', z:'✓', t:'im Ziel'},
+  drueber:    {c:'var(--acc)',   z:'↑', t:'über dem Korridor'},
+  ineffizient:{c:'var(--red)',   z:'!', t:'über der Effizienzschwelle'}
+};
+
+/* Beine laufen bei Aaron außerhalb des Zyklus (mal am Rest-Tag, mal ein paar
+   Übungen an einem Push-/Pull-Tag). Eine Zyklus-Ampel wäre dort schlicht
+   falsch, weil die Beine gar nicht Teil des Zyklus sind. Sie werden deshalb
+   rollierend über 21 Tage gezeigt — sichtbar, aber unbewertet.
+   Der Schalter beineImZyklus schaltet sie später ohne Umbau scharf. */
+const LEG_GROUPS = ['Quadrizeps','Beinbeuger','Po','Waden'];
+const LEG_ROLL_DAYS = 21;
+function beineImZyklus(){ return !!state.settings.beineImZyklus; }
+function isLegGroup(g){ return !beineImZyklus() && LEG_GROUPS.indexOf(g) >= 0; }
+function legRolling(mode){
+  const ab = Date.now() - LEG_ROLL_DAYS*864e5;
+  const ws = state.workouts.filter(w=> new Date(w.date).getTime() >= ab);
+  return { m: muscleSetsBy(ws, mode||statsSetMode), tage: LEG_ROLL_DAYS, einheiten: ws.length };
+}
+
+/* Push/Pull-Balance über die Satzzahlen der jeweiligen Muskeln.
+   Ausgeglichenes Training liegt grob bei 1:1. Der Schwellenwert 1,5 ist
+   eine FAUSTREGEL, keine Studienlage — und wird in der Anzeige auch so
+   benannt. Dauerhaftes Übergewicht auf der Druckseite gilt als häufige
+   Begleiterscheinung von Schulterbeschwerden. */
+const PUSH_MUSCLES = ['chest_up','chest','chest_low','front_delt','side_delt','triceps'];
+const PULL_MUSCLES = ['lats','upper_back','lower_back','traps','rear_delt','biceps'];
+const PP_FAUSTREGEL = 1.5;
+function pushPullBalance(ws, mode){
+  const m = muscleSetsBy(ws, mode||statsSetMode);
+  const su = k => k.reduce((a,x)=>a+(m[x]||0), 0);
+  const p = su(PUSH_MUSCLES), z = su(PULL_MUSCLES);
+  if(p<=0 && z<=0) return {ok:false};
+  if(p<=0 || z<=0) return {ok:true, push:p, pull:z, ratio:null, seite: p>0?'Druck':'Zug', extrem:true};
+  const ratio = p/z;
+  return { ok:true, push:p, pull:z, ratio,
+           seite: ratio>1? 'Druck':'Zug',
+           mag: ratio>1? ratio : 1/ratio,
+           auffaellig: (ratio>PP_FAUSTREGEL || ratio<1/PP_FAUSTREGEL) };
+}
+
 /* ---------- e1RM (Epley, Wdh gedeckelt bei 20) ---------- */
 /* Epley: w·(1+r/30). Deckungsgleich mit Brzycki bis ~10 Wdh, darüber
    laufen alle gängigen Formeln auseinander (bei 15 Wdh 8 %, bei 20 Wdh 21 %
@@ -2855,7 +3015,7 @@ function progressionFor(exId, beforeTs){
     const dw = Math.round((w*0.9)*4)/4;
     return {kind:'deload', w:dw, r:o.lo, sets:nSets,
       txt:`Deload: ${nSets}×${o.lo} @ ${kg(dw)}`,
-      why:`${stall} Einheiten ohne neuen Bestwert. Eine Woche 10 % leichter und sauber ausführen — danach greift die Progression meist wieder.`};
+      why:`${stall} Einheiten ohne neuen Bestwert. Einen Zyklus lang 10 % leichter und sauber ausführen — danach greift die Progression meist wieder.`};
   }
   if(atTop || (avgRir!==null && avgRir>=3)){
     const bigJump = (avgRir!==null && avgRir>=4);
@@ -2869,7 +3029,7 @@ function progressionFor(exId, beforeTs){
   const targetR = Math.min(o.hi, minR + 1);
   return {kind:'reps', w:w, r:targetR, sets:nSets,
     txt:`${nSets}×${targetR} @ ${kg(w)}`,
-    why: stall>=2? `Seit ${stall} Einheiten kein neuer Bestwert — heute mindestens ${targetR} Wdh anpeilen, sonst nächste Woche Deload.`
+    why: stall>=2? `Seit ${stall} Einheiten kein neuer Bestwert — heute mindestens ${targetR} Wdh anpeilen, sonst im nächsten Zyklus Deload.`
                 : `Ziel ${o.lo}–${o.hi} Wdh: noch nicht am oberen Ende → gleiches Gewicht, eine Wdh mehr.`};
 }
 function fmtW(v){ v=+v||0; return (Math.round(v*100)/100).toString().replace('.',','); }
@@ -2897,10 +3057,19 @@ function warmupSets(work, bar){
   return out;
 }
 
-/* ---------- Split-Vorschlag: Position = Workouts diese Woche ---------- */
+/* ---------- Split-Vorschlag ----------
+   Alt: Position = Anzahl der Workouts in der laufenden Kalenderwoche, gegen
+   SPLIT = Push/Pull/Legs/Push/Pull. Mit Push/Pull/Rest war das schlicht falsch —
+   am Mittwoch nach zwei Einheiten schlug die App „Legs" vor, obwohl Legs im
+   Plan gar nicht mehr vorkommt, und am Montag begann sie stur wieder bei Push,
+   egal wo Aaron im Zyklus stand.
+   Neu: Der Vorschlag ergibt sich aus dem laufenden Zyklus — was fehlt, kommt. */
 function suggestType(){
-  const n = workoutsIn(weekRange(new Date())).length;
-  return SPLIT[n % SPLIT.length];
+  const c = runningCycle();
+  if(!c) return 'Push';                       // frischer Start oder Zyklus gerade zu
+  if(c.push>0 && c.pull===0) return 'Pull';   // Push steht, Pull fehlt
+  if(c.pull>0 && c.push===0) return 'Push';
+  return 'Push';                              // Zyklus voll → der nächste beginnt mit Push
 }
 
 /* ================= ACHIEVEMENT-ENGINE (auto-generiert pro Übung) ================= */
@@ -3321,13 +3490,22 @@ function renderHome(){
   const now = new Date();
   const [a,b] = weekRange(now);
   const bEnd = new Date(b); bEnd.setDate(bEnd.getDate()-1);
-  const wk = workoutsIn([a,b]);
+  /* Die Figur zeigt jetzt den LAUFENDEN ZYKLUS, nicht die Kalenderwoche.
+     Vorher setzte sie sich sonntags um 23:59 zurück — mitten im Zyklus, wenn
+     Push schon gemacht und Pull noch offen war. Der Körper wurde damit
+     regelmäßig ohne jeden Anlass wieder dunkel. */
+  const lauf = runningCycle();
+  const closed = closedCycles();
+  const zyk = lauf || closed[closed.length-1] || null;
+  const wk = zyk ? zyk.ws : [];
   const L = achLevel(), achN = Object.keys(state.ach||{}).length;
   const dayStreak = currentDayStreak(), wkStreak = currentWeekStreak();
 
   /* ── Kopf ── */
   $('#home-greet').textContent = greeting() + ', Aaron';
-  $('#home-week-label').innerHTML = `KW ${isoWeek(now)} · ${a.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})} – ${bEnd.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})}`
+  $('#home-week-label').innerHTML = (zyk
+      ? `Zyklus ${zyk.n} · Tag ${zyk.tage} · ${zyk.push? '✓':'○'} Push  ${zyk.pull? '✓':'○'} Pull`
+      : 'Noch kein Training — der erste Push startet Zyklus 1')
     + (dayStreak>1? ` &nbsp;·&nbsp; <span class="streak" style="color:var(--gold)"><span class="fl">${ICO.flame}</span>${dayStreak} in Folge</span>` : '');
 
   /* ── Figur ── */
@@ -3480,6 +3658,8 @@ $('#btn-settings').addEventListener('click',()=>{
   $('#set-defsets').value = state.settings.defSets||2;
   $('#set-goallo').value = state.settings.setGoalLo||10; $('#set-goalhi').value = state.settings.setGoalHi||20;
   $('#set-rir').textContent = state.settings.rir? 'An':'Aus'; $('#set-rir').classList.toggle('on', !!state.settings.rir);
+  $('#set-beine').textContent = beineImZyklus()? 'An':'Aus'; $('#set-beine').classList.toggle('on', beineImZyklus());
+  zeigeZyklusZiel();
   const bs = backupStatus();
   $('#set-lastbackup').innerHTML = state.settings.lastBackup
     ? `Letzte Sicherung: <b>${fmtDate(new Date(state.settings.lastBackup).toISOString())}</b>` +
@@ -3502,8 +3682,21 @@ $('#set-rest').addEventListener('change',()=>{ const v=Math.max(15,Math.min(600,
   const ds=Math.max(1,Math.min(10,+$('#set-defsets').value||2));
   Object.assign(state.settings,{repLo:lo,repHi:hi,defSets:ds,setGoalLo:glo,setGoalHi:ghi});
   $('#set-replo').value=lo; $('#set-rephi').value=hi; $('#set-defsets').value=ds; $('#set-goallo').value=glo; $('#set-goalhi').value=ghi;
-  saveState(); renderStats(); if(state.active) renderActive();
+  saveState(); zeigeZyklusZiel(); renderStats(); if(state.active) renderActive();
 }));
+/* Der abgeleitete Zykluswert muss direkt unter dem Wochenfeld stehen —
+   sonst rätselt man, woher die 4–9 in der Statistik kommen. */
+function zeigeZyklusZiel(){
+  const el = $('#set-goal-cycle'); if(!el) return;
+  const t1 = groupTargetCycle(1,1), t2 = groupTargetCycle(2,1);
+  el.innerHTML = `Daraus pro Zyklus (÷ ${CYCLES_PER_WEEK.toFixed(2).replace('.',',')}): <b>${t1.lo}–${t1.hi} Sätze</b> für die meisten Gruppen, <b>${t2.lo}–${t2.hi}</b> für Rücken und Schultern.`;
+}
+$('#set-beine').addEventListener('click',()=>{
+  state.settings.beineImZyklus = !state.settings.beineImZyklus; saveState(); haptic();
+  $('#set-beine').textContent = beineImZyklus()? 'An':'Aus'; $('#set-beine').classList.toggle('on', beineImZyklus());
+  renderStats();
+  toast(beineImZyklus()? 'Beine zählen jetzt im Zyklus' : 'Beine laufen wieder nebenher');
+});
 
 /* ================= TRAINING: START ================= */
 function renderTrain(){
@@ -4394,7 +4587,7 @@ function exAchCard(ex){
 }
 
 /* ================= EINSTELLUNGEN / DATEN ================= */
-$('#set-goal').addEventListener('change',()=>{ const v=Math.max(1,Math.min(14,+$('#set-goal').value||5)); state.settings.goal=v; $('#set-goal').value=v; saveState(); renderHome(); });
+$('#set-goal').addEventListener('change',()=>{ const v=Math.max(1,Math.min(14,+$('#set-goal').value||2)); state.settings.goal=v; $('#set-goal').value=v; saveState(); renderHome(); });
 $('#set-vaultmail').addEventListener('change',()=>{
   const el = $('#set-vaultmail'), v = el.value.trim();
   if(v && !validMail(v)){ el.classList.add('err'); toast('Das sieht nicht nach einer E-Mail-Adresse aus'); return; }
@@ -4661,47 +4854,69 @@ function muscleBars(m){
    obwohl kein einzelner Muskel über dem Ziel lag).
    Lösung: Der Korridor skaliert mit der Zahl der in dieser Gruppe
    tatsächlich trainierten Muskeln. */
-/* mult = fester Faktor aus SETGROUPS, NICHT die Zahl der trainierten Schlüssel.
-   Vorher wurde gezählt, wie viele Teilmuskeln Sätze abbekommen hatten — dadurch
-   stieg das Ziel, je gleichmäßiger jemand trainierte. Wer Brust nur mit Bankdrücken
-   machte, bekam Ziel 10–20; wer zusätzlich Schrägbank und Dips machte, plötzlich
-   30–60. Dieselbe Brust, dreifaches Ziel. */
-function groupTarget(mult, weeks){
-  const S = state.settings;
-  const f = (mult||1) * (weeks||1);
-  return { lo: (S.setGoalLo||10)*f, hi: (S.setGoalHi||20)*f, n: mult||1 };
-}
-function groupBars(m, ws, weeks){
+/* groupTarget(mult, weeks) — die Wochenvariante — ist mit der Umstellung auf
+   Zyklen ersatzlos entfallen. Der Nachfolger ist groupTargetCycle(mult, zyklen)
+   weiter oben; er leitet den Zykluswert aus demselben Wocheneinstellwert ab. */
+/* Satz-Balken.
+   Skalierung: JEDE ZEILE hat ihre eigene Skala (0 bis 1,6 × Korridor-Obergrenze).
+   Vorher lief alles über einen gemeinsamen Maximalwert — bei einer Skala bis 60
+   wurde „Unterarme 2" zu einem 3-%-Strich, aus dem sich nichts ablesen ließ.
+   Der Preis: Balkenlängen sind zwischen Zeilen nicht mehr vergleichbar. Das ist
+   der richtige Tausch, weil die Frage „bin ich in MEINEM Korridor?" lautet und
+   nicht „habe ich mehr Rücken- als Waden-Sätze?". Die absolute Zahl steht
+   ohnehin rechts. */
+function groupBars(m, ws, zyklen){
+  const z = zyklen || 1;
   const all = sumGroups(m, SETGROUPS);
   const entries = all.filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
   if(!entries.length) return '<div class="empty">Keine Sätze in diesem Zeitraum</div>';
   const defOf = g => SETGROUPS.find(x=>x[0]===g) || [g,[],1];
-  const maxHi = Math.max(...entries.map(([g])=>groupTarget(defOf(g)[2], weeks).hi));
-  const max = Math.max(entries[0][1], maxHi);
+  const legRoll = LEG_GROUPS.some(g=>all.some(([x,v])=>x===g&&v>0)) || !beineImZyklus() ? legRolling(statsSetMode) : null;
+
   const rows = entries.map(([g,v])=>{
-    const def = defOf(g), opt = !!def[3];
-    const t = groupTarget(def[2], weeks);
-    const drin = v>=t.lo && v<=t.hi;
-    /* Bei optionalen Gruppen (Unterarme) ist „zu wenig" kein Mangel, sondern normal */
-    const col  = drin? 'var(--green)' : v>t.hi? 'var(--red)' : opt? 'var(--txt3)' : 'var(--gold)';
-    const mark = drin? '✓' : v>t.hi? '↑' : opt? '' : '↓';
-    return `<div class="mbar big goal" data-grp="${esc(g)}" style="cursor:pointer" title="Ziel ${t.lo}–${t.hi} Sätze">
-      <span>${g}<span class="tiny" style="opacity:.6;display:block;margin-top:-2px">${opt?'freiwillig':'Ziel '+t.lo+'–'+t.hi}</span></span>
-      <span class="bar"><i style="width:${Math.round(Math.min(1,v/max)*100)}%;background:${col}"></i>
-        <b class="zone" style="left:${Math.round(t.lo/max*100)}%;width:${Math.round((t.hi-t.lo)/max*100)}%"></b></span>
-      <span class="val" style="color:${col}"><b>${v%1? v.toFixed(1).replace('.',','):v}</b> ${mark}</span>
+    const def = defOf(g), frei = !!def[3], bein = isLegGroup(g);
+    const t = groupTargetCycle(def[2], z);
+    const st = setState4(v, t);
+    const A = AMPEL[st];
+    const col = bein? 'var(--acc)' : frei? 'var(--txt3)' : A.c;
+    const zeichen = bein? '' : frei? '' : A.z;
+    const skala = Math.max(t.hi*1.6, v*1.05, 1);
+    const pos = x => Math.max(0, Math.min(100, x/skala*100));
+    const untertitel = bein
+      ? '<span style="color:var(--acc)">außerhalb des Zyklus</span>'
+      : frei ? 'freiwillig' : 'Ziel ' + t.lo + '–' + t.hi;
+    return `<div class="mbar big goal" data-grp="${esc(g)}" style="cursor:pointer" title="${bein?'Beine laufen außerhalb des Zyklus':'Ziel '+t.lo+'–'+t.hi+' Sätze'}">
+      <span>${g}<span class="tiny" style="opacity:.7;display:block;margin-top:-2px">${untertitel}</span></span>
+      <span class="bar"><i style="width:${pos(v)}%;background:${col}"></i>
+        ${bein||frei? '' : `<b class="zone" style="left:${pos(t.lo)}%;width:${pos(t.hi)-pos(t.lo)}%"></b>`}</span>
+      <span class="val" style="color:${col}"><b>${v%1? v.toFixed(1).replace('.',','):v}</b> ${zeichen}</span>
     </div>`;
   }).join('');
-  const missing = all.filter(([,v])=>v===0).map(([g])=>g);
-  /* Einzelmuskeln, die in einer sonst trainierten Gruppe leer ausgingen —
-     die verschwanden vorher hinter der Gruppensumme. Beispiel: Rücken sieht
-     bedient aus, der Trapez hat aber null Sätze bekommen. */
+
+  /* Bein-Gruppen dürfen NICHT unter „gar nicht trainiert" landen: sie sind
+     gar nicht Teil des Zyklus. Sonst meldet die App bei jedem Push-Zyklus
+     vier Mängel, obwohl Aaron vorgestern Beine gemacht hat. Sie erscheinen
+     stattdessen weiter unten in der rollierenden 21-Tage-Zeile. */
+  const missing = all.filter(([g,v])=>v===0 && !isLegGroup(g)).map(([g])=>g);
+  /* Einzelmuskeln, die in einer sonst trainierten Gruppe leer ausgingen. */
   const luecken = [];
-  all.forEach(([g,v])=>{ if(v<=0) return;
+  all.forEach(([g,v])=>{ if(v<=0 || isLegGroup(g)) return;
     defOf(g)[1].forEach(k=>{ if(!(m[k]>0) && MUSCLES[k]) luecken.push(MUSCLES[k]); });
   });
+  /* Immer alle vier Bein-Gruppen zeigen, auch die mit 0 — sonst sieht Aaron
+     nicht, WELCHE er vernachlässigt. Ohne Ampel, weil sie außerhalb des
+     Zyklus laufen und eine Zyklus-Bewertung dort schlicht falsch wäre. */
+  const beinRows = !beineImZyklus() && legRoll
+    ? LEG_GROUPS.map(g=>{ const keys=defOf(g)[1];
+        const v = keys.reduce((a,k)=>a+(legRoll.m[k]||0),0);
+        return `${g} <b style="color:${v>0?'var(--acc)':'var(--txt3)'}">${v>0? (v%1? v.toFixed(1).replace('.',','):v) : '0'}</b>`; })
+    : [];
   const S = state.settings;
-  return rows + `<p class="tiny" style="margin-top:8px">Ziel <b>${(S.setGoalLo||10)}–${(S.setGoalHi||20)} Sätze pro Muskel</b>${weeks>1?` und Woche (${weeks} Wochen gerechnet)`:' und Woche'}. Rücken und Schultern bestehen aus mehreren eigenständigen Muskeln — dort verdoppelt sich der Korridor. Die drei Brustanteile sind <b>ein</b> Muskel und zählen einfach.<br><span style="color:var(--gold)">↓ zu wenig</span> · <span style="color:var(--green)">✓ im Ziel</span> · <span style="color:var(--red)">↑ zu viel</span>${
+  const stufen = `<span style="color:var(--gold)">↓ zu wenig</span> · <span style="color:var(--green)">✓ im Ziel</span> · <span style="color:var(--acc)">↑ darüber</span> · <span style="color:var(--red)">! über der Effizienzschwelle</span>`;
+  return rows + `<p class="tiny" style="margin-top:8px">${stufen}<br>
+    Korridor: <b>${S.setGoalLo||10}–${S.setGoalHi||20} Sätze pro Muskel und Woche</b> ÷ ${CYCLES_PER_WEEK.toFixed(2).replace('.',',')} Zyklen = <b>${groupTargetCycle(1,1).lo}–${groupTargetCycle(1,1).hi} pro Zyklus</b>${z>1? ` · hier über ${z} Zyklen gerechnet`:''}. Rücken und Schultern zählen doppelt (mehrere eigenständige Muskeln), die drei Brustanteile sind <b>ein</b> Muskel.
+    Ab <b>${SESSION_EFF_MAX} Sätzen pro Muskel und Einheit</b> ist kein zusätzlicher Zuwachs mehr messbar (Robinson/Pelland) — darüber steht „!".${
+    beinRows.length? `<br><b style="color:var(--acc)">Beine, rollierend über ${LEG_ROLL_DAYS} Tage:</b> ${beinRows.join(' · ')} — unregelmäßig trainiert, deshalb ohne Ampel.`:''}${
     missing.length? '<br><b>Gar nicht trainiert:</b> '+missing.join(', '):''}${
     luecken.length? '<br><b>Ohne eigene Sätze innerhalb trainierter Gruppen:</b> '+[...new Set(luecken)].join(', '):''}<br>Gruppe antippen zeigt die Übungen.</p>`;
 }
@@ -4729,7 +4944,8 @@ function groupDetail(groupName, ws){
    Der Umschalter steht jetzt oben und gilt für die ganze Muskelsektion —
    sowohl das Radar (Muskel-Balance) als auch die Karte „Sätze pro Muskelgruppe". */
 let statsSetMode = 'direct';
-function muscleSection(ws, weeks){
+function muscleSection(ws, weeks, opt){
+  opt = opt || {};
   const mg = muscleSetsBy(ws, statsSetMode);            // ein Datensatz für Radar UND Balken
   const radar = sumGroups(mg, RADAR_AXES);
   /* Keine id — der Umschalter steht in JEDEM Statistik-Reiter. Eine feste id wäre
@@ -4739,9 +4955,14 @@ function muscleSection(ws, weeks){
       <button data-setmode="both" class="${statsSetMode==='both'?'on':''}">Direkt + indirekt</button>
       <button data-setmode="direct" class="${statsSetMode==='direct'?'on':''}">Nur direkt</button>
     </div>`;
-  return toggle
-    + `<div class="card"><h3>Muskel-Balance</h3>${svgRadar(radar)}</div>
-    <div class="card"><h3 style="margin-bottom:8px">Sätze pro Muskelgruppe</h3>${groupBars(mg, ws, weeks)}
+  const z = opt.zyklen || weeks || 1;
+  /* Das Radar beantwortet keine Frage, die die Balken nicht besser beantworten —
+     es zeigt dieselben Summen, nur ungenauer und ohne Zielbezug. Es bleibt
+     deshalb nur dort, wo es um das GROBE Verhältnis geht (mehrere Zyklen),
+     und verschwindet aus der Einzelzyklus-Ansicht, wo es nur Platz kostet. */
+  const radarKarte = z>1 ? `<div class="card"><h3>Muskel-Balance <span class="tiny">(grobes Verhältnis)</span></h3>${svgRadar(radar)}</div>` : '';
+  return toggle + radarKarte
+    + `<div class="card"><h3 style="margin-bottom:8px">Sätze pro Muskelgruppe${opt.laufend? ' <span class="tiny">(laufender Zyklus, noch nicht fertig)</span>':''}</h3>${groupBars(mg, ws, z)}
     ${Object.keys(mg).length? `<details style="margin-top:8px"><summary class="tiny" style="cursor:pointer">Details pro Einzelmuskel anzeigen</summary><div style="margin-top:8px">${muscleBars(mg)}</div></details>`:''}</div>`;
 }
 document.addEventListener('click', e=>{
@@ -4863,72 +5084,195 @@ function renderAllStats(){
     m0=m1;
   }
   if(mLabels.length>18){ mLabels=mLabels.slice(-18); mVals=mVals.slice(-18); }
+  const zAll = closedCycles();
+  const tage = Math.max(1, Math.round((Date.now()-first.getTime())/864e5));
   const header = `<div class="cnav" style="justify-content:center"><b>Seit Beginn · ${fmtDate(first)} – heute</b></div>`;
+  /* Kernfrage dieses Reiters: wie weit bin ich gekommen? — nicht „bin ich im Ziel?" */
+  const lead = leadCard(
+    `${ws.length} ${ws.length===1?'Training':'Trainings'} · ${fmtVol(vol)} bewegt · ${sets} Sätze.`, 'neutral',
+    `${tage} Tage seit dem ersten Eintrag${zAll.length? ` · ${zAll.length} abgeschlossene ${zAll.length===1?'Zyklus':'Zyklen'}`:''} · ${prc} ${prc===1?'Rekord':'Rekorde'}.`);
   const kpis = `<div class="kpis" style="margin-bottom:12px">
       <div class="kpi"><b>${ws.length}</b><span>Workouts</span></div>
       <div class="kpi"><b>${fmtVol(vol)}</b><span>Volumen</span></div>
       <div class="kpi"><b>${sets}</b><span>Sätze</span></div>
       <div class="kpi"><b class="pr">${prc}</b><span>PRs</span></div>
     </div>`;
-  el.innerHTML = header + kpis
-    + muscleSection(ws, weeks)
-    + `<div class="card"><h3>Volumen pro Monat</h3>${svgBars(mLabels, mVals, v=>fmtVol(v))}</div>`
+  /* Hier bewusst KEINE Zielampel: über die gesamte Historie ist ein
+     Wochen- oder Zykluskorridor bedeutungslos. Nur die Verteilung zählt. */
+  el.innerHTML = header + lead + kpis
+    + `<div class="card"><h3>Verteilung über alle Muskelgruppen <span class="tiny">(ohne Zielampel — über die gesamte Historie sagt ein Korridor nichts)</span></h3>${muscleBars(muscleSetsBy(ws, statsSetMode))}</div>`
+    + `<div class="card"><h3>Volumen pro Monat <span class="tiny">(Kalendermonate, rein beschreibend)</span></h3>${svgBars(mLabels, mVals, v=>fmtVol(v))}</div>`
     + prListHtml(ws);
 }
 function navRow(label, cb){ return {html:`<div class="cnav"><button class="iconbtn" data-nav="-1">‹</button><b>${label}</b><button class="iconbtn" data-nav="1">${''}›</button></div>`, wire(el){ el.querySelectorAll('[data-nav]').forEach(b=>b.addEventListener('click',()=>cb(+b.dataset.nav))); }}; }
 
+/* ── Klartext-Kopf ────────────────────────────────────────────────────
+   Jeder Reiter beantwortet EINE Frage, und zwar in einem Satz ganz oben.
+   Erst darunter Zahlen, dann Diagramme. Vorher stand in allen vier Reitern
+   dieselbe Zahlenwand — dieselbe Karte, die in „letzter Zyklus" und in
+   „Gesamt" völlig verschiedene Fragen beantworten sollte. */
+function leadCard(txt, ton, sub){
+  const c = ton==='gut'? 'var(--green)' : ton==='warn'? 'var(--gold)' : ton==='schlecht'? 'var(--red)' : 'var(--txt)';
+  return `<div class="card" style="padding:14px 16px">
+    <b style="font-size:var(--fs-lg);line-height:1.35;color:${c};display:block">${txt}</b>
+    ${sub? `<div class="tiny" style="margin-top:6px">${sub}</div>`:''}</div>`;
+}
+function emptyStats(titel, txt){
+  return `<div class="empty"><div class="big">${ICO.chart}</div><b>${titel}</b>${txt}</div>`;
+}
+function cycLabel(c){
+  const von = new Date(c.von).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'});
+  return (c.vorlauf? 'Vorlauf' : 'Zyklus '+c.n) + ' · ' + von + ' · ' + c.tage + (c.tage===1?' Tag':' Tage');
+}
+
+/* ══ REITER 1: ZYKLUS ══ Kernfrage: War der letzte Durchgang vollständig? */
+let cycOff = 0;                       // 0 = letzter abgeschlossener Zyklus
 function renderWeekStats(){
-  const anchor = new Date(); anchor.setDate(anchor.getDate()+weekOff*7);
-  const [a,b] = weekRange(anchor);
-  const ws = workoutsIn([a,b]);
-  const days = ['Mo','Di','Mi','Do','Fr','Sa','So'];
-  const dayVol = days.map((_,i)=>{ const d0=new Date(a); d0.setDate(a.getDate()+i); const d1=new Date(d0); d1.setDate(d0.getDate()+1);
-    return workoutsIn([d0,d1]).reduce((x,w)=>x+wVolume(w),0); });
-  const bEnd=new Date(b); bEnd.setDate(bEnd.getDate()-1);
-  const prevA = new Date(a); prevA.setDate(prevA.getDate()-7);
-  const prevWs = workoutsIn(weekRange(prevA));
-  const nav = navRow(`KW ${isoWeek(a)} · ${a.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})}–${bEnd.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})}${weekOff===0?' (aktuell)':''}`, d=>{ if(weekOff+d<=0){ weekOff+=d; renderWeekStats(); }});
   const el = $('#stats-week');
-  lastStatsWs = ws;
-  el.innerHTML = nav.html + kpiRow(ws, prevWs) + `<div class="tiny" style="margin:-8px 2px 8px">Vergleich zur Vorwoche</div>`
-    + muscleSection(ws, 1)
-    + `<div class="card"><h3>Volumen pro Tag</h3>${svgBars(days,dayVol,v=>fmtVol(v))}</div>`
-    + prListHtml(ws);
+  const closed = closedCycles();
+  const lauf = runningCycle();
+  if(!closed.length){
+    lastStatsWs = lauf? lauf.ws : [];
+    el.innerHTML = lauf
+      ? leadCard('Dein erster Zyklus läuft gerade.', 'neutral',
+          `${lauf.ws.length} ${lauf.ws.length===1?'Einheit':'Einheiten'} bisher${lauf.pull?'':' · Pull steht noch aus'}. Sobald der nächste Push beginnt, ist dieser Zyklus abgeschlossen und wird hier ausgewertet.`)
+        + muscleSection(lauf.ws, 1, {zyklen:1, laufend:true})
+      : emptyStats('Noch keine Trainings', 'Sobald du deinen ersten Push abschließt,<br>fängt Zyklus 1 an.');
+    return;
+  }
+  const i = Math.max(0, Math.min(closed.length-1, closed.length-1+cycOff));
+  const c = closed[i];
+  const vor = closed[i-1] || null;
+  lastStatsWs = c.ws;
+  const nav = navRow(cycLabel(c) + (i===closed.length-1? ' (letzter)':''),
+    d=>{ const ni = i+d; if(ni>=0 && ni<closed.length){ cycOff = ni-(closed.length-1); renderWeekStats(); } });
+
+  /* Klartext: vollständig? wo fehlt etwas? */
+  const m = muscleSetsBy(c.ws, statsSetMode);
+  const luecken = SETGROUPS.filter(([g,keys,mult])=>{
+    if(isLegGroup(g)) return false;
+    const v = keys.reduce((a,k)=>a+(m[k]||0),0);
+    return setState4(v, groupTargetCycle(mult,1))==='unter';
+  }).map(([g])=>g);
+  let txt, ton, sub;
+  if(!c.vollstaendig){
+    txt = `Zyklus ${c.n} war unvollständig — ${c.push? 'der Pull fehlt' : 'der Push fehlt'}.`;
+    ton = 'warn';
+    sub = `${c.push} Push · ${c.pull} Pull${c.beine?' · '+c.beine+' Beine':''} in ${c.tage} Tagen.`;
+  } else if(c.auffaellig){
+    txt = `Zyklus ${c.n} dauerte ${c.tage} Tage statt ${CYCLE_SOLL_TAGE}.`;
+    ton = 'warn';
+    sub = c.tage>CYCLE_MAX_TAGE
+      ? 'Das war eher eine Pause als ein Zyklus. Die Sätze unten verteilen sich entsprechend auf mehr Tage.'
+      : 'Sehr kurz — zwei Einheiten dicht hintereinander lassen dem Muskel wenig Zeit.';
+  } else if(!luecken.length){
+    txt = `Zyklus ${c.n} war vollständig. Jede Gruppe im Korridor.`;
+    ton = 'gut';
+    sub = `${c.push} Push · ${c.pull} Pull${c.beine?' · '+c.beine+' Beine':''} in ${c.tage} Tagen.`;
+  } else {
+    txt = `Zyklus ${c.n} war vollständig. ${luecken.length===1? luecken[0]+' lag' : luecken.slice(0,3).join(', ')+' lagen'} unter dem Korridor.`;
+    ton = 'neutral';
+    sub = `${c.push} Push · ${c.pull} Pull${c.beine?' · '+c.beine+' Beine':''} in ${c.tage} Tagen.`;
+  }
+
+  /* Volumen je Einheit statt je Kalendertag — leere Wochentage sagen bei
+     einem 3-Tage-Rhythmus gar nichts aus. */
+  const uLab = c.ws.map(w=>w.type.slice(0,2)+' '+new Date(w.date).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'}));
+  const uVol = c.ws.map(w=>wVolume(w));
+
+  el.innerHTML = nav.html
+    + leadCard(txt, ton, sub)
+    + (lauf && i===closed.length-1? `<div class="tiny" style="margin:-4px 2px 10px;color:var(--txt3)">Der aktuelle Zyklus läuft noch (${lauf.ws.length} ${lauf.ws.length===1?'Einheit':'Einheiten'}) und wird erst gewertet, wenn der nächste Push beginnt.</div>`:'')
+    + kpiRow(c.ws, vor? vor.ws : undefined)
+    + (vor? `<div class="tiny" style="margin:-8px 2px 8px">Vergleich zu Zyklus ${vor.n}</div>`:'')
+    + muscleSection(c.ws, 1, {zyklen:1})
+    + `<div class="card"><h3>Volumen je Einheit</h3>${svgBars(uLab,uVol,v=>fmtVol(v))}</div>`
+    + prListHtml(c.ws);
   nav.wire(el);
 }
-function renderMonthStats(){
-  const now=new Date(); const anchor=new Date(now.getFullYear(), now.getMonth()+monthOff, 1);
-  const [a,b]=monthRange(anchor); const ws=workoutsIn([a,b]);
-  const wkLabels=[], wkVals=[]; let cur=mondayOf(a);
-  while(cur<b){ const nxt=new Date(cur); nxt.setDate(cur.getDate()+7);
-    wkLabels.push('KW'+isoWeek(cur)); wkVals.push(workoutsIn([cur<a?a:cur, nxt>b?b:nxt]).reduce((x,w)=>x+wVolume(w),0)); cur=nxt; }
-  const prevWs = workoutsIn(monthRange(new Date(anchor.getFullYear(), anchor.getMonth()-1, 1)));
-  const nav = navRow(anchor.toLocaleDateString('de-DE',{month:'long',year:'numeric'})+(monthOff===0?' (aktuell)':''), d=>{ if(monthOff+d<=0){ monthOff+=d; renderMonthStats(); }});
-  const el=$('#stats-month');
+
+/* ══ REITER 2: 5 ZYKLEN ══ Kernfrage: Steigere ich mich? Stimmt die Balance? */
+function renderMonthStats(){ renderSpanStats($('#stats-month'), 5); }
+/* ══ REITER 3: 20 ZYKLEN ══ Kernfrage: Wo stehe ich verglichen mit vorher? */
+function renderYearStats(){ renderSpanStats($('#stats-year'), 20); }
+
+function renderSpanStats(el, n){
+  const closed = closedCycles();
+  if(closed.length < 2){
+    lastStatsWs = [];
+    el.innerHTML = emptyStats(`Noch zu wenig für ${n} Zyklen`,
+      `Abgeschlossen: ${closed.length}. Ab zwei Zyklen kann ich vergleichen,<br>ab vier einen Trend rechnen.`);
+    return;
+  }
+  const cs = closed.slice(-n);
+  const ws = cycleWorkouts(cs);
+  const vorher = closed.slice(-2*n, -n);
   lastStatsWs = ws;
-  el.innerHTML = nav.html + kpiRow(ws, prevWs) + `<div class="tiny" style="margin:-8px 2px 8px">Vergleich zum Vormonat</div>`
-    + muscleSection(ws, 4.3)
-    + `<div class="card"><h3>Volumen pro Woche</h3>${svgBars(wkLabels,wkVals,v=>fmtVol(v))}</div>`
+  const z = cs.length;
+
+  /* Klartext */
+  const vol = ws.reduce((a,w)=>a+wVolume(w),0) / z;
+  let txt, ton, sub;
+  if(vorher.length){
+    const volV = cycleWorkouts(vorher).reduce((a,w)=>a+wVolume(w),0) / vorher.length;
+    const d = volV>0? (vol-volV)/volV*100 : 0;
+    const richtung = d>5? 'gut' : d<-5? 'warn' : 'neutral';
+    txt = d>5  ? `Aufwärts: ${Math.round(d)} % mehr Volumen als in den ${vorher.length} Zyklen davor.`
+        : d<-5 ? `Abwärts: ${Math.round(-d)} % weniger Volumen als in den ${vorher.length} Zyklen davor.`
+        :        `Stabil — Volumen wie in den ${vorher.length} Zyklen davor.`;
+    ton = richtung;
+    sub = `Ø ${fmtVol(Math.round(vol))} pro Zyklus, vorher Ø ${fmtVol(Math.round(volV))}.`;
+  } else {
+    txt = `${z} ${z===1?'Zyklus':'Zyklen'} ausgewertet.`;
+    ton = 'neutral';
+    sub = `Ø ${fmtVol(Math.round(vol))} pro Zyklus. Für einen Vergleich brauche ich ${n} weitere Zyklen.`;
+  }
+  const unvoll = cs.filter(c=>!c.vollstaendig).length;
+  const lang   = cs.filter(c=>c.tage>CYCLE_MAX_TAGE).length;
+  if(unvoll||lang) sub += `<br>${unvoll? unvoll+' unvollständig':''}${unvoll&&lang?' · ':''}${lang? lang+' länger als '+CYCLE_MAX_TAGE+' Tage':''}.`;
+
+  const zLab = cs.map(c=>'Z'+c.n);
+  const zVol = cs.map(c=>c.ws.reduce((a,w)=>a+wVolume(w),0));
+  const zSet = cs.map(c=>c.ws.reduce((a,w)=>a+wSets(w),0));
+
+  el.innerHTML = leadCard(txt, ton, sub)
+    + kpiRow(ws, vorher.length? cycleWorkouts(vorher) : undefined)
+    + (vorher.length? `<div class="tiny" style="margin:-8px 2px 8px">Vergleich zu den ${vorher.length} Zyklen davor</div>`:'')
+    + pushPullCard(ws)
+    + muscleSection(ws, z, {zyklen:z})
+    + `<div class="card"><h3>Volumen je Zyklus</h3>${svgBars(zLab,zVol,v=>fmtVol(v))}</div>`
+    + `<div class="card"><h3>Sätze je Zyklus</h3>${svgBars(zLab,zSet,v=>v)}</div>`
+    + (n>=20? `<div class="card"><h3 style="margin-bottom:8px">Trainings-Kalender ${new Date().getFullYear()}</h3>${yearHeatmap(new Date().getFullYear())}</div>` : '')
     + prListHtml(ws);
-  nav.wire(el);
 }
-function renderYearStats(){
-  const now=new Date(); const anchor=new Date(now.getFullYear()+yearOff,0,1);
-  const [a,b]=yearRange(anchor); const ws=workoutsIn([a,b]);
-  const mLabels=['J','F','M','A','M','J','J','A','S','O','N','D'];
-  const mVol=mLabels.map((_,i)=>{ const m0=new Date(anchor.getFullYear(),i,1), m1=new Date(anchor.getFullYear(),i+1,1);
-    return workoutsIn([m0,m1]).reduce((x,w)=>x+wVolume(w),0); });
-  const mCnt=mLabels.map((_,i)=>{ const m0=new Date(anchor.getFullYear(),i,1), m1=new Date(anchor.getFullYear(),i+1,1);
-    return workoutsIn([m0,m1]).length; });
-  const nav = navRow(anchor.getFullYear()+(yearOff===0?' (aktuell)':''), d=>{ if(yearOff+d<=0){ yearOff+=d; renderYearStats(); }});
-  const el=$('#stats-year');
-  lastStatsWs = ws;
-  el.innerHTML = nav.html + kpiRow(ws)
-    + `<div class="card"><h3 style="margin-bottom:8px">Trainings-Kalender</h3>${yearHeatmap(anchor.getFullYear())}</div>`
-    + muscleSection(ws, 52)
-    + `<div class="card"><h3>Volumen pro Monat</h3>${svgBars(mLabels,mVol,v=>Math.round(v/1000)+'t')}</div>`
-    + `<div class="card"><h3>Workouts pro Monat</h3>${svgBars(mLabels,mCnt,v=>v)}</div>`;
-  nav.wire(el);
+
+/* Push/Pull-Balance — die Auswertung, die es bei festen Wochentagen nicht
+   geben konnte. Dauerhaftes Übergewicht auf der Druckseite gilt als häufige
+   Begleiterscheinung von Schulterbeschwerden. Der Schwellenwert ist eine
+   FAUSTREGEL und wird auch so benannt — keine erfundene Studienzahl. */
+function pushPullCard(ws){
+  const b = pushPullBalance(ws, statsSetMode);
+  if(!b.ok) return '';
+  if(b.extrem) return `<div class="card"><h3>Push/Pull-Balance</h3>
+    <p class="tiny">In diesem Zeitraum gibt es nur ${b.seite==='Druck'?'Druck':'Zug'}-Sätze. Ein Verhältnis lässt sich damit nicht bilden.</p></div>`;
+  const pct = Math.round(b.push/(b.push+b.pull)*100);
+  const col = b.auffaellig? 'var(--gold)' : 'var(--green)';
+  return `<div class="card"><h3 style="margin-bottom:8px">Push/Pull-Balance</h3>
+    <div class="bar" style="height:14px;position:relative;background:var(--s2);border-radius:var(--r-full,999px);overflow:hidden">
+      <i style="display:block;height:100%;width:${pct}%;background:${col}"></i>
+      <b style="position:absolute;left:50%;top:0;bottom:0;width:2px;background:var(--txt3);opacity:.7"></b>
+    </div>
+    <div class="row" style="justify-content:space-between;margin-top:6px">
+      <span class="tiny"><b>${b.push%1? b.push.toFixed(1).replace('.',','):b.push}</b> Druck</span>
+      <span class="tiny" style="color:var(--txt3)">Strich = 1:1</span>
+      <span class="tiny"><b>${b.pull%1? b.pull.toFixed(1).replace('.',','):b.pull}</b> Zug</span>
+    </div>
+    <p class="tiny" style="margin-top:8px">Verhältnis <b style="color:${col}">${b.ratio.toFixed(2).replace('.',',')} : 1</b> zugunsten ${b.seite==='Druck'?'der Druck-':'der Zug-'}Seite.
+    ${b.auffaellig
+      ? (b.seite==='Druck'
+          ? `Mehr als das ${PP_FAUSTREGEL}-fache auf der Druckseite. Anhaltendes Übergewicht beim Drücken wird häufig mit Schulterbeschwerden in Verbindung gebracht — ein Satz Rudern oder Face Pulls mehr pro Zyklus reicht meist. <b>Der Schwellenwert ist eine Faustregel, keine Studienzahl.</b>`
+          : `Deutliches Übergewicht auf der Zugseite. Unkritisch für die Schulter, aber die Brust bleibt zurück.`)
+      : 'Im ausgeglichenen Bereich.'}</p></div>`;
 }
 
 /* ══════════ ÜBUNGS-ANALYTIK ══════════════════════════════════════════
@@ -4950,8 +5294,18 @@ function exTrend(exId, from){
   const all = exHistory(exId);
   const h = (from>0)? all.slice(from) : all;
   if(h.length < TREND_MIN_SESSIONS) return {ok:false, need:TREND_MIN_SESSIONS-h.length, n:h.length, cut:from>0};
-  const t0 = new Date(h[0].date).getTime();
-  const pts = h.map(x=>({ x:(new Date(x.date).getTime()-t0)/(7*864e5), y:x.bestW }));  // x in Wochen
+  /* x-Achse in ZYKLEN, nicht in Wochen. Bei Push/Pull/Rest ist die Woche
+     kein sinnvoller Maßstab — die Steigung wäre je nach Kalenderlage
+     unterschiedlich, ohne dass sich am Training etwas ändert.
+     Rückfallebene: verschiebt sich innerhalb eines Zyklus nichts (alle
+     Punkte gleiche Zyklusnummer), wird auf Tage/3 ausgewichen, sonst
+     wäre sxx = 0 und es gäbe gar keine Aussage. */
+  const c0 = cycleOfDate(h[0].date);
+  let pts = h.map(x=>({ x: cycleOfDate(x.date) - c0, y: x.bestW }));
+  if(pts.every(p=>p.x===0)){
+    const t0 = new Date(h[0].date).getTime();
+    pts = h.map(x=>({ x:(new Date(x.date).getTime()-t0)/(CYCLE_SOLL_TAGE*864e5), y:x.bestW }));
+  }
   const n = pts.length;
   const sx = pts.reduce((a,p)=>a+p.x,0), sy = pts.reduce((a,p)=>a+p.y,0);
   const mx = sx/n, my = sy/n;
@@ -4964,8 +5318,9 @@ function exTrend(exId, from){
   /* Schutz gegen beschädigte Daten: ein ungültiges Datum macht aus jeder
      Rechnung NaN. Lieber gar keine Aussage als eine unsinnige. */
   if(!isFinite(slope) || !isFinite(r2)) return {ok:false, n, broken:true};
-  const weeks = pts[n-1].x || 1;
-  return {ok:true, n, slope, r2, weeks, from:h[0].bestW, to:h[n-1].bestW, cut:from>0,
+  const zyklen = pts[n-1].x || 1;                     // Spanne in Zyklen
+  return {ok:true, n, slope, r2, zyklen, weeks:zyklen/CYCLES_PER_WEEK,
+          from:h[0].bestW, to:h[n-1].bestW, cut:from>0,
           seit: h[0].date,
           solid: r2>=0.5, pct: h[0].bestW>0 ? (h[n-1].bestW-h[0].bestW)/h[0].bestW*100 : 0};
 }
@@ -5174,15 +5529,15 @@ function renderExStats(){
   if(brk && brk.at-chOff > 0) marks.push({i:brk.at-chOff, label:'Sprung'});
   const lastD  = new Date(h[h.length-1].date);
   const daysAgo= Math.floor((Date.now()-lastD.getTime())/864e5);
-  const wochen = Math.max(1, Math.round((Date.now()-new Date(h[0].date).getTime())/(7*864e5)));
+  const zykSpanne = Math.max(1, cycleOfDate(h[h.length-1].date) - cycleOfDate(h[0].date) + 1);
   const unsafeE1 = bests.maxReps > E1RM_RELIABLE_MAX;
 
   /* Statuszeile — eine Aussage, kein Diagramm */
   let status, statusCol;
   if(stall >= 3){ status = `Steht seit ${stall} Einheiten — Deload sinnvoll`; statusCol='var(--red)'; }
   else if(stall >= 2){ status = `Seit ${stall} Einheiten kein neuer Bestwert`; statusCol='var(--gold)'; }
-  else if(trend.ok && trend.solid && trend.slope > 0.05){ status = `Wird stärker · +${trend.slope.toFixed(1).replace('.',',')} kg pro Woche`; statusCol='var(--green)'; }
-  else if(trend.ok && trend.solid && trend.slope < -0.05){ status = `Geht zurück · ${trend.slope.toFixed(1).replace('.',',')} kg pro Woche`; statusCol='var(--red)'; }
+  else if(trend.ok && trend.solid && trend.slope > 0.05){ status = `Wird stärker · +${trend.slope.toFixed(1).replace('.',',')} kg pro Zyklus`; statusCol='var(--green)'; }
+  else if(trend.ok && trend.solid && trend.slope < -0.05){ status = `Geht zurück · ${trend.slope.toFixed(1).replace('.',',')} kg pro Zyklus`; statusCol='var(--red)'; }
   else if(trend.ok){ status = 'Stabil — noch kein klarer Trend'; statusCol='var(--txt2)'; }
   else if(trend.cut){ status = `Seit dem Wechsel erst ${trend.n} ${trend.n===1?'Einheit':'Einheiten'} — noch kein Trend`; statusCol='var(--txt3)'; }
   else { status = `Noch ${trend.need} ${trend.need===1?'Einheit':'Einheiten'}, dann zeige ich einen Trend`; statusCol='var(--txt3)'; }
@@ -5201,7 +5556,7 @@ function renderExStats(){
     <div class="card" style="padding:12px 16px">
       <div class="row" style="gap:8px"><span class="rdot" style="background:${statusCol}"></span>
         <b style="font-size:var(--fs-sub);color:${statusCol}">${status}</b></div>
-      <div class="tiny" style="margin-top:4px">${bests.sessions} ${bests.sessions===1?'Einheit':'Einheiten'} über ${wochen} ${wochen===1?'Woche':'Wochen'} · zuletzt vor ${daysAgo===0?'heute':daysAgo+(daysAgo===1?' Tag':' Tagen')} · trainiert ${esc(wirkung)}</div>
+      <div class="tiny" style="margin-top:4px">${bests.sessions} ${bests.sessions===1?'Einheit':'Einheiten'} über ${zykSpanne} ${zykSpanne===1?'Zyklus':'Zyklen'} · zuletzt vor ${daysAgo===0?'heute':daysAgo+(daysAgo===1?' Tag':' Tagen')} · trainiert ${esc(wirkung)}</div>
     </div>
 
     ${swLast? `<div class="card" style="border-color:rgba(255,176,32,.34);background:rgba(255,176,32,.07)">
@@ -5244,7 +5599,7 @@ function renderExStats(){
       ${svgLine(zPts.slice(-30), v=>Math.round(v)+' kg', {avg:trend.ok, fill:true, marks})}
       <p class="tiny" style="margin-top:8px">${
         trend.ok
-          ? `${trend.cut? `<b>Ab ${fmtDate(trend.seit)}</b> (${swLast?'Ausführungswechsel':'Sprung'}): ` : ''}${trend.from} → ${trend.to} kg${trend.cut?'':` in ${wochen} ${wochen===1?'Woche':'Wochen'}`}${trend.pct?` · <b style="color:${trend.pct>=0?'var(--green)':'var(--red)'}">${trend.pct>=0?'+':''}${trend.pct.toFixed(0)} %</b>`:''}${trend.solid? ` · Trend belastbar (R²&nbsp;${trend.r2.toFixed(2).replace('.',',')})` : ` · <span style="color:var(--txt3)">stark schwankend, Trendlinie mit Vorsicht (R²&nbsp;${trend.r2.toFixed(2).replace('.',',')})</span>`}${trend.cut? `<br>Die Einheiten davor sind ein anderer Maßstab und fließen nicht in die Steigung ein.`:''}`
+          ? `${trend.cut? `<b>Ab ${fmtDate(trend.seit)}</b> (${swLast?'Ausführungswechsel':'Sprung'}): ` : ''}${trend.from} → ${trend.to} kg${trend.cut?'':` über ${zykSpanne} ${zykSpanne===1?'Zyklus':'Zyklen'}`}${trend.pct?` · <b style="color:${trend.pct>=0?'var(--green)':'var(--red)'}">${trend.pct>=0?'+':''}${trend.pct.toFixed(0)} %</b>`:''}${trend.solid? ` · Trend belastbar (R²&nbsp;${trend.r2.toFixed(2).replace('.',',')})` : ` · <span style="color:var(--txt3)">stark schwankend, Trendlinie mit Vorsicht (R²&nbsp;${trend.r2.toFixed(2).replace('.',',')})</span>`}${trend.cut? `<br>Die Einheiten davor sind ein anderer Maßstab und fließen nicht in die Steigung ein.`:''}`
           : trend.cut
             ? `Seit dem ${swLast?'Wechsel':'Sprung'} am ${fmtDate(h[cut].date)} sind es erst ${trend.n} ${trend.n===1?'Einheit':'Einheiten'} — ab ${TREND_MIN_SESSIONS} rechne ich eine Steigung aus. Über den Sprung hinweg zu rechnen würde nur den Sprung messen.`
             : `Ab ${TREND_MIN_SESSIONS} Einheiten rechne ich hier eine belastbare Steigung aus — aktuell ${trend.n}.`
@@ -5686,10 +6041,15 @@ function refreshOnNewWeek(){
     if(typeof renderHome==='function') renderHome();     // rechnet weekMuscleMap neu + malt Figur
   }
 }
+/* Der Sonntags-Rollover ist entfallen. Die Figur zeigt jetzt den laufenden
+   Zyklus; der wechselt nicht zu einer festen Uhrzeit, sondern wenn Aaron den
+   nächsten Push startet — und dann rendert finishWorkout/startWorkout ohnehin
+   neu. Ein Mitternachts-Timer würde die Figur mitten im Zyklus leeren.
+   Der Tageswechsel wird trotzdem beobachtet, weil „Tag 2 von 3" sich ändert. */
 function scheduleWeekRollover(){
   const now = new Date();
-  const nextMon = weekRange(now)[1].getTime();           // nächster Montag 0 Uhr = Ende Sonntag
-  const ms = Math.min(Math.max(1000, nextMon - now.getTime()), 2147483000);
+  const mitternacht = new Date(now); mitternacht.setHours(24,0,5,0);
+  const ms = Math.min(Math.max(1000, mitternacht.getTime() - now.getTime()), 2147483000);
   setTimeout(()=>{ refreshOnNewWeek(); scheduleWeekRollover(); }, ms);
 }
 document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) refreshOnNewWeek(); });
@@ -5816,6 +6176,24 @@ function renderMissions(){
    Ruhetage (nicht geplante Wochentage) beeinflussen die Streak nie.
    Ein geplanter Trainingstag ohne abgeschlossenes Training beendet die Serie.
    Der heutige geplante Tag ist bis Mitternacht „offen" und bricht nicht ab. */
+/* ZYKLUS-SERIE — löst die alte Wochentags-Serie ab.
+   Die alte Rechnung verlangte feste Trainings-Wochentage im Profil. Bei
+   Push/Pull/Rest gibt es die nicht: der Push wandert jede Woche um einen Tag.
+   Die Serie war damit entweder dauerhaft 0 oder es erschien für immer der
+   „Trainingstage festlegen"-Hinweis.
+   Neu gezählt wird, wie viele abgeschlossene Zyklen in Folge VOLLSTÄNDIG
+   waren (mindestens ein Push und ein Pull) und nicht überlang. Der laufende
+   Zyklus bricht die Serie nicht — er ist ja noch nicht vorbei. */
+function zyklusStreak(){
+  const cs = closedCycles();
+  if(!cs.length) return 0;
+  let n = 0;
+  for(let i=cs.length-1; i>=0; i--){
+    if(cs[i].vollstaendig && cs[i].tage <= CYCLE_MAX_TAGE) n++;
+    else break;
+  }
+  return n;
+}
 function trainingsStreak(){
   const p = profil();
   const plan = Array.isArray(p.trainingsTage) ? p.trainingsTage.map(Number) : [];
@@ -5843,18 +6221,13 @@ function trainingsStreak(){
 let _lastStreak = null;
 function renderStreak(){
   const box = document.getElementById('home-streak'); if(!box) return;
-  const p = profil();
-  const s = trainingsStreak();
-  if(s===null){
-    // Profil ohne Trainingstage → dezenter Einrichten-Hinweis
-    box.innerHTML = `<button class="streakchip setup" id="streak-setup" title="Trainingstage festlegen">
-      <span class="fl">${ICO.flame}</span><span class="stx">Tage</span></button>`;
-    return;
-  }
+  /* Zählt vollständige Zyklen in Folge statt geplanter Wochentage —
+     bei Push/Pull/Rest gibt es keine festen Wochentage. */
+  const s = zyklusStreak();
   const bump = (_lastStreak!==null && s>_lastStreak);
   _lastStreak = s;
   box.innerHTML = `<button class="streakchip ${s===0?'zero':''} ${bump?'bump':''}" id="streak-setup"
-      title="${s} Trainingstage in Folge – tippen zum Anpassen">
+      title="${s} vollständige ${s===1?'Zyklus':'Zyklen'} in Folge (Push + Pull, höchstens ${CYCLE_MAX_TAGE} Tage)">
       <span class="fl">${ICO.flame}</span><span class="stx" data-count="${s}">${s}</span></button>`;
 }
 document.addEventListener('click', e=>{
