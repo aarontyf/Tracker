@@ -1178,7 +1178,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V48 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V50 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -1971,12 +1971,28 @@ function paintBodies(setsPerMuscle){
 }
 
 /* Gruppen für Statistik-Balken (fein) und Radar (grob) */
+/* [Anzeigename, Muskelschlüssel, Ziel-Faktor, optional?]
+   Der Faktor sagt, für WIE VIELE eigenständige Muskeln der Korridor gilt —
+   nicht, wie viele Schlüssel in der Liste stehen. Das ist der Unterschied
+   zwischen Regionen eines Muskels und getrennten Muskeln:
+
+   · Brust  = Regionen EINES Muskels (Pectoralis major, drei Anteile) → Faktor 1.
+     V45–V49 rechneten hier 3 × 10–20 = 30–60 Sätze pro Woche. Das ist keine
+     Empfehlung mehr, das ist ein Rezept für eine Verletzung.
+   · Rücken = Lat und der Trapez-/Oberrücken-Komplex sind eigenständig,
+     der untere Rücken bekommt bei Kreuzheben & Co. genug ab → Faktor 2.
+   · Schultern = drei Deltaköpfe, aber der vordere wird bei jedem Drücken
+     mitbedient und braucht selten eigenes Volumen → Faktor 2.
+   · Adduktoren/Abduktoren laufen bei Kniebeugen und Hüftarbeit mit und
+     bekommen deshalb keinen eigenen Korridor.
+   · Unterarme sind als „optional" markiert: wer nie direkt Unterarme trainiert,
+     macht nichts falsch — die App meldet dort deshalb keinen Mangel. */
 const SETGROUPS = [
-  ['Brust',['chest_up','chest','chest_low']], ['Rücken',['lats','upper_back','lower_back','traps']],
-  ['Schultern',['front_delt','side_delt','rear_delt']], ['Bizeps',['biceps']],
-  ['Trizeps',['triceps']], ['Unterarme',['forearms']], ['Bauch',['abs','obliques']],
-  ['Quadrizeps',['quads','adductors']], ['Beinbeuger',['hamstrings']],
-  ['Po',['glutes','abductors']], ['Waden',['calves']]
+  ['Brust',['chest_up','chest','chest_low'],1], ['Rücken',['lats','upper_back','lower_back','traps'],2],
+  ['Schultern',['front_delt','side_delt','rear_delt'],2], ['Bizeps',['biceps'],1],
+  ['Trizeps',['triceps'],1], ['Unterarme',['forearms'],1,true], ['Bauch',['abs','obliques'],1],
+  ['Quadrizeps',['quads','adductors'],1], ['Beinbeuger',['hamstrings'],1],
+  ['Po',['glutes','abductors'],1], ['Waden',['calves'],1]
 ];
 const RADAR_AXES = [
   ['Arme',['biceps','triceps','forearms']], ['Rücken',['lats','upper_back','lower_back','traps']],
@@ -2633,6 +2649,13 @@ function pushUniLog(exId, dateStr, uni){
   log.push({d:dateStr, uni:!!uni});
   log.sort((a,b)=> a.d<b.d? -1 : a.d>b.d? 1 : 0);
   setExOpt(exId, {uniLog:log});
+}
+/* Von der Statistik-Karte aus mit einem Tipp übernehmen */
+function applyUniSince(exId, dateStr){
+  setUniSince(exId, dateStr);
+  if(xoId===exId && $('#xo-unisince')) $('#xo-unisince').value = dateStr;
+  renderExStats();
+  toast('Ab '+fmtDate(dateStr)+' als einarmig gewertet');
 }
 /* Setzt „einseitig seit X" und räumt widersprüchliche Einträge weg:
    alles ab X wird zu einarmig, davor bleibt beidarmig. */
@@ -4175,10 +4198,16 @@ $('#xo-uni').addEventListener('click', async ()=>{
       {ok:'Trotzdem umstellen', tone:'warn'});
     if(!ok) return;
   }
+  const hatHistorie = exHistory(xoId).length > 0;
   setExOpt(xoId, {uni:!cur});
-  /* Wechsel mit Datum festhalten — sonst weiß die Statistik später nicht,
-     ab wann die Kurve eine andere Belastung zeigt */
-  pushUniLog(xoId, todayStamp(), !cur);
+  /* NUR bei einer Übung ohne Historie darf „ab heute" angenommen werden.
+     Wer schon Trainings gespeichert hat, hat im Studio meist längst umgestellt
+     und sagt es der App erst jetzt. Ein Eintrag mit heutigem Datum würde die
+     gesamte Vergangenheit fälschlich als „beidarmig" festschreiben — und damit
+     auch noch den Hinweis unterdrücken, dass das Datum fehlt.
+     Künftige Trainings tragen ihr Flag ohnehin selbst (finishWorkout). */
+  if(!hatHistorie) pushUniLog(xoId, todayStamp(), !cur);
+  else if(!cur) toast('Seit wann einarmig? Datum unten eintragen');
   /* laufendes Training sofort mitziehen, damit die Anzeige stimmt */
   if(state.active) state.active.exercises.forEach(e=>{ if(e.exId===xoId) delete e.uni; });
   $('#xo-uni').textContent = !cur? 'An':'Aus'; $('#xo-uni').classList.toggle('on', !cur);
@@ -4521,7 +4550,7 @@ function svgBars(labels, values, fmt){
   fmt = fmt || (v=>v);
   const W=340,H=152,padB=22,padT=18,padR=30,max=Math.max(...values,1);
   const n=values.length, bw=Math.min(30,(W-10-padR)/n*0.62), step=(W-10-padR)/n;
-  const tid='ct'+(++__cid);
+  const tid='ct'+(++__cid), gid='gbar'+__cid;
   let s = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
   [0.5,1].forEach(f=>{ const y=padT+(H-padB-padT)*(1-f);
     s+=`<line x1="0" y1="${y}" x2="${W-padR+4}" y2="${y}" stroke="#232833" stroke-width="1"/>`;
@@ -4530,12 +4559,13 @@ function svgBars(labels, values, fmt){
     const h=(H-padB-padT)*(v/max), x=5+step*i+(step-bw)/2, y=H-padB-h;
     s+=`<g style="cursor:pointer" onclick="chartTip('${tid}','${labels[i]}: ${String(fmt(v)).replace(/'/g,'')}')">`;
     s+=`<rect x="${5+step*i}" y="${padT}" width="${step}" height="${H-padB-padT}" fill="transparent"/>`;
-    s+=`<rect class="cbar" style="transform-origin:${(x+bw/2).toFixed(1)}px ${(H-padB)}px;animation-delay:${i*32}ms" x="${x}" y="${y}" width="${bw}" height="${Math.max(h,v>0?2:0)}" rx="3" fill="${v>0?'url(#gbar)':'rgba(255,255,255,.05)'}"/>`;
+    s+=`<rect class="cbar" style="transform-origin:${(x+bw/2).toFixed(1)}px ${(H-padB)}px;animation-delay:${i*32}ms" x="${x}" y="${y}" width="${bw}" height="${Math.max(h,v>0?2:0)}" rx="3" fill="${v>0?`url(#${gid})`:'rgba(255,255,255,.05)'}"/>`;
     if(v>0 && n<=7) s+=`<text x="${x+bw/2}" y="${y-4}" font-size="8.5" fill="#9aa3b2" text-anchor="middle">${fmt(v)}</text>`;
     s+=`<text x="${x+bw/2}" y="${H-8}" font-size="8.5" fill="#5f6877" text-anchor="middle">${labels[i]}</text></g>`;
   });
   s+=`<text id="${tid}" x="${W/2}" y="11" font-size="10" font-weight="700" fill="#CFE0FF" text-anchor="middle" opacity="0"></text>`;
-  s+=`<defs><linearGradient id="gbar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8FB8FF"/><stop offset="1" stop-color="#3A70DC"/></linearGradient></defs></svg>`;
+  /* Verlaufs-ID muss je Diagramm eindeutig sein — siehe Kommentar bei svgLine */
+  s+=`<defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8FB8FF"/><stop offset="1" stop-color="#3A70DC"/></linearGradient></defs></svg>`;
   return `<div class="chart">${s}</div>`;
 }
 /* Radar / Spider-Chart (6 Achsen) */
@@ -4565,14 +4595,20 @@ function svgLine(pts, fmt, opts){
   const span=(max-min)||1;
   const X=i=>pts.length===1? W/2 : padL+(W-padL-padR)*(i/(pts.length-1));
   const Y=v=>padT+(H-padT-padB)*(1-(v-min)/span);
-  const tid='ct'+(++__cid);
+  /* Die Verlaufs-IDs müssen je Diagramm eindeutig sein. Vorher hieß jeder Verlauf
+     „gline"/„gfill"/„gbar" — bei mehreren Diagrammen im Dokument löst url(#gbar)
+     immer den ERSTEN Treffer auf, und der lag in einem ausgeblendeten Statistik-
+     Reiter. WebKit löst Verläufe aus einem display:none-Teilbaum nicht auf →
+     die Balken wurden mit korrekter Geometrie, aber ohne Füllung gezeichnet.
+     (Gemessen: 5× #gbar im Dokument, der erste in einem unsichtbaren Panel.) */
+  const tid='ct'+(++__cid), gl='gline'+__cid, gf='gfill'+__cid;
   let d=pts.map((p,i)=>(i?'L':'M')+X(i).toFixed(1)+','+Y(p.y).toFixed(1)).join(' ');
   let s=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
   [max,(max+min)/2,min].forEach(v=>{ const y=Y(v); s+=`<line x1="0" y1="${y}" x2="${W-padR+4}" y2="${y}" stroke="#232833"/><text x="${W-padR+6}" y="${y+3}" font-size="8" fill="#5c6577">${fmt(v)}</text>`; });
-  if(opts.fill) s+=`<path d="${d} L${X(pts.length-1)},${H-padB} L${X(0)},${H-padB} Z" fill="url(#gfill)" stroke="none"/>`;
+  if(opts.fill) s+=`<path d="${d} L${X(pts.length-1)},${H-padB} L${X(0)},${H-padB} Z" fill="url(#${gf})" stroke="none"/>`;
   /* Länge des Streckenzugs für die Zeichen-Animation (stroke-dashoffset) */
   let len=0; for(let i=1;i<pts.length;i++){ const dx=X(i)-X(i-1), dy=Y(pts[i].y)-Y(pts[i-1].y); len+=Math.hypot(dx,dy); }
-  s+=`<path class="cline" style="--len:${Math.ceil(len)}" d="${d}" fill="none" stroke="url(#gline)" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>`;
+  s+=`<path class="cline" style="--len:${Math.ceil(len)}" d="${d}" fill="none" stroke="url(#${gl})" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>`;
   /* Senkrechte Marker — z.B. Wechsel beidarmig ↔ einarmig.
      Die Linie liegt zwischen dem letzten alten und dem ersten neuen Punkt,
      weil der Wechsel dazwischen stattfand und nicht auf einem Messpunkt. */
@@ -4604,8 +4640,8 @@ function svgLine(pts, fmt, opts){
   if(pts.length>1) s+=`<text x="${X(pts.length-1)}" y="${H-6}" font-size="8.5" fill="#9aa3b2" text-anchor="end">${pts[pts.length-1].l||''}</text>`;
   s+=`<text id="${tid}" x="${W/2}" y="11" font-size="10" font-weight="700" fill="#CFE0FF" text-anchor="middle" opacity="0"></text>`;
   s+=`<defs>
-    <linearGradient id="gline" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8FB8FF"/><stop offset="1" stop-color="#3A70DC"/></linearGradient>
-    <linearGradient id="gfill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(93,155,255,.28)"/><stop offset="1" stop-color="rgba(93,155,255,0)"/></linearGradient>
+    <linearGradient id="${gl}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8FB8FF"/><stop offset="1" stop-color="#3A70DC"/></linearGradient>
+    <linearGradient id="${gf}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(93,155,255,.28)"/><stop offset="1" stop-color="rgba(93,155,255,0)"/></linearGradient>
   </defs></svg>`;
   return `<div class="chart">${s}</div>`;
 }
@@ -4625,34 +4661,49 @@ function muscleBars(m){
    obwohl kein einzelner Muskel über dem Ziel lag).
    Lösung: Der Korridor skaliert mit der Zahl der in dieser Gruppe
    tatsächlich trainierten Muskeln. */
-function groupTarget(keys, m, weeks){
+/* mult = fester Faktor aus SETGROUPS, NICHT die Zahl der trainierten Schlüssel.
+   Vorher wurde gezählt, wie viele Teilmuskeln Sätze abbekommen hatten — dadurch
+   stieg das Ziel, je gleichmäßiger jemand trainierte. Wer Brust nur mit Bankdrücken
+   machte, bekam Ziel 10–20; wer zusätzlich Schrägbank und Dips machte, plötzlich
+   30–60. Dieselbe Brust, dreifaches Ziel. */
+function groupTarget(mult, weeks){
   const S = state.settings;
-  const lo1 = (S.setGoalLo||10), hi1 = (S.setGoalHi||20);
-  const trained = keys.filter(k => (m[k]||0) > 0).length || 1;
-  return { lo: lo1*trained*(weeks||1), hi: hi1*trained*(weeks||1), n: trained };
+  const f = (mult||1) * (weeks||1);
+  return { lo: (S.setGoalLo||10)*f, hi: (S.setGoalHi||20)*f, n: mult||1 };
 }
 function groupBars(m, ws, weeks){
   const all = sumGroups(m, SETGROUPS);
   const entries = all.filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
   if(!entries.length) return '<div class="empty">Keine Sätze in diesem Zeitraum</div>';
-  const keysOf = g => (SETGROUPS.find(x=>x[0]===g)||[null,[]])[1];
-  const maxHi = Math.max(...entries.map(([g])=>groupTarget(keysOf(g), m, weeks).hi));
+  const defOf = g => SETGROUPS.find(x=>x[0]===g) || [g,[],1];
+  const maxHi = Math.max(...entries.map(([g])=>groupTarget(defOf(g)[2], weeks).hi));
   const max = Math.max(entries[0][1], maxHi);
   const rows = entries.map(([g,v])=>{
-    const t = groupTarget(keysOf(g), m, weeks);
-    const col  = v>=t.lo && v<=t.hi? 'var(--green)' : v<t.lo? 'var(--gold)' : 'var(--red)';
-    const mark = v>=t.lo && v<=t.hi? '✓' : v<t.lo? '↓' : '↑';
-    const hint = t.n>1? ` title="${t.n} Muskeln · Ziel ${t.lo}–${t.hi}"`:'';
-    return `<div class="mbar big goal" data-grp="${esc(g)}" style="cursor:pointer"${hint}>
-      <span>${g}${t.n>1?`<span class="tiny" style="opacity:.65"> ·${t.n}</span>`:''}</span>
+    const def = defOf(g), opt = !!def[3];
+    const t = groupTarget(def[2], weeks);
+    const drin = v>=t.lo && v<=t.hi;
+    /* Bei optionalen Gruppen (Unterarme) ist „zu wenig" kein Mangel, sondern normal */
+    const col  = drin? 'var(--green)' : v>t.hi? 'var(--red)' : opt? 'var(--txt3)' : 'var(--gold)';
+    const mark = drin? '✓' : v>t.hi? '↑' : opt? '' : '↓';
+    return `<div class="mbar big goal" data-grp="${esc(g)}" style="cursor:pointer" title="Ziel ${t.lo}–${t.hi} Sätze">
+      <span>${g}<span class="tiny" style="opacity:.6;display:block;margin-top:-2px">${opt?'freiwillig':'Ziel '+t.lo+'–'+t.hi}</span></span>
       <span class="bar"><i style="width:${Math.round(Math.min(1,v/max)*100)}%;background:${col}"></i>
         <b class="zone" style="left:${Math.round(t.lo/max*100)}%;width:${Math.round((t.hi-t.lo)/max*100)}%"></b></span>
       <span class="val" style="color:${col}"><b>${v%1? v.toFixed(1).replace('.',','):v}</b> ${mark}</span>
     </div>`;
   }).join('');
   const missing = all.filter(([,v])=>v===0).map(([g])=>g);
+  /* Einzelmuskeln, die in einer sonst trainierten Gruppe leer ausgingen —
+     die verschwanden vorher hinter der Gruppensumme. Beispiel: Rücken sieht
+     bedient aus, der Trapez hat aber null Sätze bekommen. */
+  const luecken = [];
+  all.forEach(([g,v])=>{ if(v<=0) return;
+    defOf(g)[1].forEach(k=>{ if(!(m[k]>0) && MUSCLES[k]) luecken.push(MUSCLES[k]); });
+  });
   const S = state.settings;
-  return rows + `<p class="tiny" style="margin-top:8px">Ziel <b>${(S.setGoalLo||10)}–${(S.setGoalHi||20)} Sätze pro Muskel</b>${weeks>1?` und Woche (${weeks} Wochen gerechnet)`:' und Woche'} · bei Gruppen mit mehreren Muskeln (·2, ·3 …) skaliert der Korridor mit.<br><span style="color:var(--gold)">↓ zu wenig</span> · <span style="color:var(--green)">✓ im Ziel</span> · <span style="color:var(--red)">↑ viel</span>${missing.length? ' · <b>gar nicht trainiert:</b> '+missing.join(', '):''} · Gruppe antippen zeigt die Übungen.</p>`;
+  return rows + `<p class="tiny" style="margin-top:8px">Ziel <b>${(S.setGoalLo||10)}–${(S.setGoalHi||20)} Sätze pro Muskel</b>${weeks>1?` und Woche (${weeks} Wochen gerechnet)`:' und Woche'}. Rücken und Schultern bestehen aus mehreren eigenständigen Muskeln — dort verdoppelt sich der Korridor. Die drei Brustanteile sind <b>ein</b> Muskel und zählen einfach.<br><span style="color:var(--gold)">↓ zu wenig</span> · <span style="color:var(--green)">✓ im Ziel</span> · <span style="color:var(--red)">↑ zu viel</span>${
+    missing.length? '<br><b>Gar nicht trainiert:</b> '+missing.join(', '):''}${
+    luecken.length? '<br><b>Ohne eigene Sätze innerhalb trainierter Gruppen:</b> '+[...new Set(luecken)].join(', '):''}<br>Gruppe antippen zeigt die Übungen.</p>`;
 }
 /* Welche Übungen haben eine Muskelgruppe im Zeitraum trainiert? */
 function groupDetail(groupName, ws){
@@ -4681,7 +4732,10 @@ let statsSetMode = 'direct';
 function muscleSection(ws, weeks){
   const mg = muscleSetsBy(ws, statsSetMode);            // ein Datensatz für Radar UND Balken
   const radar = sumGroups(mg, RADAR_AXES);
-  const toggle = `<div class="seg segsm setmode-top" id="setmode-seg">
+  /* Keine id — der Umschalter steht in JEDEM Statistik-Reiter. Eine feste id wäre
+     vierfach vergeben; $('#setmode-seg') träfe immer nur den ersten. Die Bedienung
+     läuft ohnehin über Ereignis-Delegation an [data-setmode]. */
+  const toggle = `<div class="seg segsm setmode-top">
       <button data-setmode="both" class="${statsSetMode==='both'?'on':''}">Direkt + indirekt</button>
       <button data-setmode="direct" class="${statsSetMode==='direct'?'on':''}">Nur direkt</button>
     </div>`;
@@ -4993,15 +5047,19 @@ function exRepRange(exId){
       von Hand nachgetragen werden.
    3. Nichts davon → UNBEKANNT (null). Früher stand hier „beidarmig", dadurch
       meldete die App den Wechsel am ersten V44-Training statt am echten Datum. */
+/* Liefert {v, src} — src sagt, WIE sicher der Wert ist:
+   'log'      = ein protokollierter Eintrag deckt dieses Datum ab
+   'umkehr'   = nur erschlossen („einseitig seit 23.06." ⇒ davor beidarmig).
+                Die Umkehrung ist nötig, damit der Wechsel überhaupt als Wechsel
+                erkennbar wird — aber sie ist eine Annahme, keine Messung, und
+                muss deshalb zählbar bleiben. Sonst schreibt ein einziger Eintrag
+                mit heutigem Datum die gesamte Vergangenheit stumm fest. */
 function uniFromLog(log, dateStr){   /* log muss aufsteigend sortiert sein */
-  if(!log || !log.length) return null;
+  if(!log || !log.length) return {v:null, src:null};
   let v = null;
   for(const L of log){ if(L.d <= dateStr) v = !!L.uni; else break; }
-  /* Vor dem ersten protokollierten Wechsel galt zwangsläufig der andere Zustand:
-     „einseitig seit 23.06." heißt „davor beidarmig". Ohne diese Umkehrung wäre die
-     Zeit davor unbekannt und der Wechsel selbst würde nie als Wechsel erkannt. */
-  if(v === null) v = !log[0].uni;
-  return v;
+  if(v !== null) return {v, src:'log'};
+  return {v: !log[0].uni, src:'umkehr'};
 }
 function exModes(exId, h){
   const log = (exOpt(exId).uniLog || []).slice().sort((a,b)=> a.d<b.d? -1 : a.d>b.d? 1 : 0);
@@ -5016,24 +5074,44 @@ function exModes(exId, h){
     const list = byWid[x.wid] || [];
     const e = list[(used[x.wid] = (used[x.wid]||0))];
     used[x.wid]++;
-    if(e && e.uni!==undefined) return !!e.uni;
-    return uniFromLog(log, x.date);          // null = unbekannt
+    if(e && e.uni!==undefined) return !!e.uni;              // gemessen
+    return uniFromLog(log, x.date).v;                       // null = unbekannt
+  });
+}
+/* wie exModes, aber mit Herkunft je Einheit */
+function exModesSrc(exId, h){
+  const log = uniLogOf(exId);
+  const byWid = {};
+  state.workouts.forEach(w=>{
+    w.exercises.forEach(e=>{ if(e.exId===exId){ (byWid[w.id] = byWid[w.id] || []).push(e); } });
+  });
+  const used = {};
+  return h.map(x=>{
+    const list = byWid[x.wid] || [];
+    const e = list[(used[x.wid] = (used[x.wid]||0))];
+    used[x.wid]++;
+    if(e && e.uni!==undefined) return {v:!!e.uni, src:'flag'};
+    return uniFromLog(log, x.date);
   });
 }
 function exModeSwitches(exId){
   const h = exHistory(exId);
-  const out = {switches:[], h, unknown:0, firstKnown:-1};
+  const out = {switches:[], h, unknown:0, umkehr:0, firstKnown:-1};
   if(h.length < 2) return out;
-  const modes = exModes(exId, h);
-  out.unknown = modes.filter(m=>m===null).length;
-  out.firstKnown = modes.findIndex(m=>m!==null);
+  const ms = exModesSrc(exId, h);
+  out.unknown = ms.filter(m=>m.v===null).length;
+  /* Einheiten, deren Modus NUR aus der Umkehrung stammt — also aus einer Annahme.
+     Solange es davon welche gibt, fragt die App lieber nach, statt so zu tun,
+     als wüsste sie, wie damals trainiert wurde. */
+  out.umkehr = ms.filter(m=>m.src==='umkehr').length;
+  out.firstKnown = ms.findIndex(m=>m.v!==null);
   let prev = null;
-  modes.forEach((m,i)=>{
-    if(m===null) return;                     // Lücken überspringen, nicht als Wechsel werten
-    if(prev!==null && m!==prev){
-      out.switches.push({at:i, date:h[i].date, to: m?'einarmig':'beidarmig', uni:m});
+  ms.forEach((m,i)=>{
+    if(m.v===null) return;                   // Lücken überspringen, nicht als Wechsel werten
+    if(prev!==null && m.v!==prev){
+      out.switches.push({at:i, date:h[i].date, to: m.v?'einarmig':'beidarmig', uni:m.v});
     }
-    prev = m;
+    prev = m.v;
   });
   return out;
 }
@@ -5084,6 +5162,10 @@ function renderExStats(){
   /* Bekannter Wechsel schlägt bloßen Verdacht — nur wenn keiner protokolliert ist,
      suche ich selbst nach einem Niveausprung. */
   const brk    = swLast? null : exBreak(ex.id);
+  /* Übung steht auf einseitig, aber für ältere Einheiten fehlt eine belastbare
+     Angabe — entweder gar keine (unknown) oder nur eine erschlossene (umkehr).
+     Das ist der häufigste Fall: im Studio längst umgestellt, in der App erst jetzt. */
+  const fehlt  = uni && !swLast && (swi.unknown > 0 || swi.umkehr > 0);
   const cut    = swLast? swLast.at : (brk? brk.at : 0);
   const trend  = exTrend(ex.id, cut);
   /* Die Diagramme zeigen nur die letzten 30 Einheiten — Marker-Index entsprechend verschieben */
@@ -5130,19 +5212,22 @@ function renderExStats(){
           ? `Ab <b>${fmtDate(swLast.date)}</b> trainierst du <b>${swLast.to}</b>.`
           : `${swi.switches.length} Wechsel: ${swi.switches.map(s=>`${fmtDate(s.date)} → ${s.to}`).join(' · ')}.`
       } Im Diagramm siehst du ${swi.switches.length===1?'die Stelle':'die Stellen'} als gestrichelte Linie. Davor und danach sind unterschiedliche Belastungen — der Sprung ist kein Leistungsabfall. Für saubere Kurven eine eigene Übung anlegen.</div></div></div></div>`
+    : fehlt? `<div class="card" style="border-color:rgba(255,176,32,.34);background:rgba(255,176,32,.07)">
+      <div class="row" style="gap:8px;align-items:flex-start"><span class="bi" data-ico="alert" style="color:var(--gold);margin:0"></span>
+      <div><b style="font-size:var(--fs-sub);color:var(--gold)">Seit wann trainierst du einarmig?</b>
+      <div class="tiny" style="margin-top:2px">Die Übung steht auf <b>einseitig</b>, aber bei ${swi.unknown+swi.umkehr} von ${h.length} ${h.length===1?'Einheit':'Einheiten'} weiß die App nicht sicher, wie du damals trainiert hast — sie hat es früher nicht mitgespeichert. Ohne das Datum kann sie die Kurve nicht teilen.${
+        brk? `<br><br>Am <b>${fmtDate(brk.date)}</b> fällt das Gewicht von <b>${brk.from} kg</b> auf <b>${brk.to} kg</b> und bleibt dort. Wenn du an dem Tag umgestellt hast, reicht ein Tipp:` : ''}</div>
+      <div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap">${
+        brk? `<button class="btn btn-sm" onclick="applyUniSince('${ex.id}','${brk.date}')">Ab ${fmtDate(brk.date)}</button>`:''}
+        <button class="btn btn-ghost btn-sm" onclick="openExOpt('${ex.id}')">Anderes Datum</button></div>
+      </div></div></div>`
     : brk? `<div class="card" style="border-color:rgba(255,176,32,.34);background:rgba(255,176,32,.07)">
       <div class="row" style="gap:8px;align-items:flex-start"><span class="bi" data-ico="alert" style="color:var(--gold);margin:0"></span>
       <div><b style="font-size:var(--fs-sub);color:var(--gold)">Sprung am ${fmtDate(brk.date)}</b>
-      <div class="tiny" style="margin-top:2px">Das Gewicht fällt von <b>${brk.from} kg</b> auf <b>${brk.to} kg</b> und bleibt dort — das ist kein normaler schlechter Tag, sondern ein anderer Maßstab. Typisch für einen Wechsel auf <b>einarmig</b>, ein anderes Gerät oder eine andere Griffart.<br>
-      <b>Den Trend rechne ich deshalb erst ab diesem Tag</b> — quer über den Sprung käme nur Unsinn heraus.${
-        uni? '<br>Wenn du hier auf einarmig umgestellt hast: trag das Datum ein, dann beschrifte ich die Linie richtig.' : ''}</div>${
-        uni? `<button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="openExOpt('${ex.id}')">Datum eintragen</button>`:''}</div></div></div>`
-    : (uni && swi.unknown>0)? `<div class="card" style="border-color:rgba(255,176,32,.34);background:rgba(255,176,32,.07)">
-      <div class="row" style="gap:8px;align-items:flex-start"><span class="bi" data-ico="alert" style="color:var(--gold);margin:0"></span>
-      <div><b style="font-size:var(--fs-sub);color:var(--gold)">Wechseldatum fehlt</b>
-      <div class="tiny" style="margin-top:2px">Diese Übung ist auf <b>einseitig</b> gestellt, aber bei ${swi.unknown} von ${h.length} ${h.length===1?'Einheit':'Einheiten'} hat die App die Ausführung noch nicht mitgespeichert — das kam erst später dazu.<br>
-      Trag das Datum ein, ab dem du einarmig trainierst, dann markiere ich die Stelle im Diagramm.</div>
-      <button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="openExOpt('${ex.id}')">Datum eintragen</button></div></div></div>`:''}
+      <div class="tiny" style="margin-top:2px">Das Gewicht fällt von <b>${brk.from} kg</b> auf <b>${brk.to} kg</b> und bleibt dort — das ist kein normaler schlechter Tag, sondern ein anderer Maßstab. Typisch für ein anderes Gerät, eine andere Griffart oder einen Wechsel der Ausführung.<br>
+      <b>Den Trend rechne ich deshalb erst ab diesem Tag</b> — quer über den Sprung käme nur Unsinn heraus.</div></div></div></div>`
+    : (uni && swi.unknown===0 && !swi.switches.length && uniSinceOf(ex.id) && uniSinceOf(ex.id) <= h[0].date)
+      ? `<div class="card"><div class="tiny">Einarmig seit <b>${fmtDate(uniSinceOf(ex.id))}</b> — das liegt vor deinem ersten gespeicherten Training in dieser Übung. Alle Einheiten zählen als einarmig, deshalb gibt es keine Linie im Diagramm.</div></div>`:''}
 
     <div class="kpis" style="margin-bottom:12px">
       <div class="kpi"><b>${assist? bests.maxW+' kg' : isBW? (bests.maxW>0? '+'+bests.maxW+' kg' : bests.maxReps+' Wdh') : bests.maxW+' kg'}</b><span>${assist?'Best effektiv':isBW? (bests.maxW>0?'Best Zusatz':'Best Wdh') :'Best Gewicht'}</span></div>
