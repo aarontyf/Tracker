@@ -1042,6 +1042,12 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
         <div class="tiny">Beim Training bekommst du dann pro Satz zwei Wdh-Felder (L/R). Volumen zählt beide Seiten, Sätze pro Muskel bleiben gleich. Lässt du R leer, zählt links doppelt.</div></div>
       <button class="chip" id="xo-uni">Aus</button>
     </div>
+    <div id="xo-unisince-wrap" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--bd)">
+      <b style="font-size:13px">Einseitig seit</b>
+      <div class="tiny" style="margin:2px 0 8px">Ab diesem Datum zählt die App die Übung als einarmig. Nur nötig für Trainings von früher — bei allem, was du ab jetzt loggst, merkt sie es sich automatisch.</div>
+      <div class="row" style="gap:8px"><input type="date" id="xo-unisince" style="flex:1">
+        <button class="btn btn-ghost btn-sm" id="xo-unisince-clr">Löschen</button></div>
+    </div>
   </div>
   <div class="card">
     <h3 style="margin-bottom:8px">Wiederholungs-Ziel</h3>
@@ -1172,7 +1178,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V45 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V46 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -2609,6 +2615,34 @@ function setExOpt(exId, patch){
 }
 function exIsUni(exId){ return !!exOpt(exId).uni; }
 
+/* ---------- Protokoll der Ausführungs-Wechsel ----------
+   uniLog: [{d:'YYYY-MM-DD', uni:true|false}, …], aufsteigend sortiert.
+   Wird beim Umlegen des Schalters automatisch fortgeschrieben und lässt sich
+   für Trainings von vor V44 von Hand nachtragen. Ohne diesen Eintrag weiß die
+   App bei Altdaten schlicht nicht, wie du damals trainiert hast — und rät nicht. */
+function uniLogOf(exId){
+  return (exOpt(exId).uniLog || []).slice().sort((a,b)=> a.d<b.d? -1 : a.d>b.d? 1 : 0);
+}
+function uniSinceOf(exId){
+  const log = uniLogOf(exId);
+  for(let i=log.length-1; i>=0; i--){ if(log[i].uni) return log[i].d; }
+  return null;
+}
+function pushUniLog(exId, dateStr, uni){
+  const log = uniLogOf(exId).filter(L=>L.d!==dateStr);
+  log.push({d:dateStr, uni:!!uni});
+  log.sort((a,b)=> a.d<b.d? -1 : a.d>b.d? 1 : 0);
+  setExOpt(exId, {uniLog:log});
+}
+/* Setzt „einseitig seit X" und räumt widersprüchliche Einträge weg:
+   alles ab X wird zu einarmig, davor bleibt beidarmig. */
+function setUniSince(exId, dateStr){
+  const log = uniLogOf(exId).filter(L=>L.d < dateStr && !L.uni);
+  log.push({d:dateStr, uni:true});
+  setExOpt(exId, {uniLog:log});
+}
+function clearUniSince(exId){ setExOpt(exId, {uniLog:[]}); }
+
 /* ---------- Kennzahlen ----------
    Satz-Typen:  (leer)=Arbeitssatz · 'w'=Aufwärmen · 'd'=Dropset
    Aufwärmsätze zählen NICHT in Volumen, PRs, Muskelsätze und Progression. */
@@ -4042,6 +4076,10 @@ function openExOpt(exId){
   $('#xo-title').textContent = ex.name;
   $('#xo-uni').textContent = o.uni? 'An' : 'Aus';
   $('#xo-uni').classList.toggle('on', o.uni);
+  /* Datumsfeld nur zeigen, wenn einseitig an ist UND es überhaupt Historie gibt */
+  const hasHist = exHistory(exId).length > 0;
+  $('#xo-unisince-wrap').style.display = (o.uni && hasHist)? '' : 'none';
+  $('#xo-unisince').value = uniSinceOf(exId) || '';
   $('#xo-lo').value = o.lo; $('#xo-hi').value = o.hi; $('#xo-step').value = o.step;
   $('#xo-rest').value = (state.exOpt[exId]||{}).rest || 0;
   /* Alternativen: gleiche primäre Muskeln, anderes Gerät */
@@ -4075,11 +4113,36 @@ $('#xo-uni').addEventListener('click', async ()=>{
     if(!ok) return;
   }
   setExOpt(xoId, {uni:!cur});
+  /* Wechsel mit Datum festhalten — sonst weiß die Statistik später nicht,
+     ab wann die Kurve eine andere Belastung zeigt */
+  pushUniLog(xoId, todayStamp(), !cur);
   /* laufendes Training sofort mitziehen, damit die Anzeige stimmt */
   if(state.active) state.active.exercises.forEach(e=>{ if(e.exId===xoId) delete e.uni; });
   $('#xo-uni').textContent = !cur? 'An':'Aus'; $('#xo-uni').classList.toggle('on', !cur);
+  $('#xo-unisince-wrap').style.display = (!cur && exHistory(xoId).length>0)? '' : 'none';
+  $('#xo-unisince').value = uniSinceOf(xoId) || '';
   if(state.active) renderActive();
   renderHome();
+  if(exStatId===xoId) renderExStats();
+});
+$('#xo-unisince').addEventListener('change',()=>{
+  const v = $('#xo-unisince').value;
+  if(!v){ clearUniSince(xoId); }
+  else{
+    const h = exHistory(xoId);
+    if(h.length && v > h[h.length-1].date){
+      toast('Datum liegt nach deinem letzten Training');
+      $('#xo-unisince').value = uniSinceOf(xoId) || ''; return;
+    }
+    setUniSince(xoId, v);
+    toast('Ab '+fmtDate(v)+' als einarmig gewertet');
+  }
+  if(exStatId===xoId) renderExStats();
+});
+$('#xo-unisince-clr').addEventListener('click',()=>{
+  clearUniSince(xoId); $('#xo-unisince').value='';
+  if(exStatId===xoId) renderExStats();
+  toast('Wechseldatum gelöscht');
 });
 ['lo','hi','step'].forEach(k=>$('#xo-'+k).addEventListener('change',()=>{
   let lo = Math.max(1, Math.min(60, +$('#xo-lo').value||6));
@@ -4447,6 +4510,22 @@ function svgLine(pts, fmt, opts){
   /* Länge des Streckenzugs für die Zeichen-Animation (stroke-dashoffset) */
   let len=0; for(let i=1;i<pts.length;i++){ const dx=X(i)-X(i-1), dy=Y(pts[i].y)-Y(pts[i-1].y); len+=Math.hypot(dx,dy); }
   s+=`<path class="cline" style="--len:${Math.ceil(len)}" d="${d}" fill="none" stroke="url(#gline)" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>`;
+  /* Senkrechte Marker — z.B. Wechsel beidarmig ↔ einarmig.
+     Die Linie liegt zwischen dem letzten alten und dem ersten neuen Punkt,
+     weil der Wechsel dazwischen stattfand und nicht auf einem Messpunkt. */
+  if(opts.marks && opts.marks.length){
+    opts.marks.forEach(mk=>{
+      const i = mk.i;
+      if(!(i>=0 && i<pts.length)) return;
+      const x = i>0 ? (X(i)+X(i-1))/2 : X(0)+2;
+      s+=`<line x1="${x.toFixed(1)}" y1="${padT-8}" x2="${x.toFixed(1)}" y2="${H-padB}" stroke="#FFB020" stroke-width="1.4" stroke-dasharray="3 3" opacity=".9"/>`;
+      s+=`<circle cx="${x.toFixed(1)}" cy="${padT-8}" r="2.4" fill="#FFB020"/>`;
+      if(mk.label){
+        const rechts = x > W*0.62;
+        s+=`<text x="${(rechts? x-5 : x+5).toFixed(1)}" y="${padT+2}" font-size="8.5" font-weight="700" fill="#FFB020" text-anchor="${rechts?'end':'start'}">${mk.label}</text>`;
+      }
+    });
+  }
   if(opts.avg && pts.length>=3){
     const ad = pts.map((p,i)=>{ const a=Math.max(0,i-3), sub=pts.slice(a,i+1); const m=sub.reduce((x,q)=>x+q.y,0)/sub.length; return (i?'L':'M')+X(i).toFixed(1)+','+Y(m).toFixed(1); }).join(' ');
     s+=`<path d="${ad}" fill="none" stroke="#ffc94d" stroke-width="1.4" stroke-dasharray="4 3" opacity=".8"/>`;
@@ -4810,19 +4889,59 @@ function exRepRange(exId){
 }
 
 /* Wechsel beidarmig ↔ einarmig erkennen — dort bricht die Vergleichbarkeit.
-   Der Sprung wird gekennzeichnet, nicht geglättet. */
-function exModeSwitch(exId){
-  const h = exHistory(exId);
-  if(h.length < 2) return null;
-  const modes = h.map(x=>{
-    const w = state.workouts.find(w=>w.id===x.wid);
-    const e = w && w.exercises.find(e=>e.exId===exId);
-    return e ? entryIsUni(e) : false;
+   Der Sprung wird gekennzeichnet, nicht geglättet.
+
+   WICHTIG — drei Quellen, in dieser Reihenfolge:
+   1. e.uni am Eintrag selbst. Wird seit V44 bei JEDEM Training explizit gespeichert
+      (true UND false). Exakt, aber es gibt sie nur für neuere Einheiten.
+   2. uniLog in den Übungs-Einstellungen: [{d:'YYYY-MM-DD', uni:true}, …].
+      Wird beim Umlegen des Schalters geschrieben und kann für Altdaten
+      von Hand nachgetragen werden.
+   3. Nichts davon → UNBEKANNT (null). Früher stand hier „beidarmig", dadurch
+      meldete die App den Wechsel am ersten V44-Training statt am echten Datum. */
+function uniFromLog(log, dateStr){   /* log muss aufsteigend sortiert sein */
+  if(!log || !log.length) return null;
+  let v = null;
+  for(const L of log){ if(L.d <= dateStr) v = !!L.uni; else break; }
+  /* Vor dem ersten protokollierten Wechsel galt zwangsläufig der andere Zustand:
+     „einseitig seit 23.06." heißt „davor beidarmig". Ohne diese Umkehrung wäre die
+     Zeit davor unbekannt und der Wechsel selbst würde nie als Wechsel erkannt. */
+  if(v === null) v = !log[0].uni;
+  return v;
+}
+function exModes(exId, h){
+  const log = (exOpt(exId).uniLog || []).slice().sort((a,b)=> a.d<b.d? -1 : a.d>b.d? 1 : 0);
+  /* Einträge in derselben Reihenfolge einsammeln wie exHistory sie erzeugt —
+     .find() würde bei zweimal derselben Übung im selben Workout immer den ersten treffen */
+  const byWid = {};
+  state.workouts.forEach(w=>{
+    w.exercises.forEach(e=>{ if(e.exId===exId){ (byWid[w.id] = byWid[w.id] || []).push(e); } });
   });
-  for(let i=1;i<modes.length;i++){
-    if(modes[i]!==modes[i-1]) return {at:i, date:h[i].date, to: modes[i]?'einarmig':'beidarmig'};
-  }
-  return null;
+  const used = {};
+  return h.map(x=>{
+    const list = byWid[x.wid] || [];
+    const e = list[(used[x.wid] = (used[x.wid]||0))];
+    used[x.wid]++;
+    if(e && e.uni!==undefined) return !!e.uni;
+    return uniFromLog(log, x.date);          // null = unbekannt
+  });
+}
+function exModeSwitches(exId){
+  const h = exHistory(exId);
+  const out = {switches:[], h, unknown:0, firstKnown:-1};
+  if(h.length < 2) return out;
+  const modes = exModes(exId, h);
+  out.unknown = modes.filter(m=>m===null).length;
+  out.firstKnown = modes.findIndex(m=>m!==null);
+  let prev = null;
+  modes.forEach((m,i)=>{
+    if(m===null) return;                     // Lücken überspringen, nicht als Wechsel werten
+    if(prev!==null && m!==prev){
+      out.switches.push({at:i, date:h[i].date, to: m?'einarmig':'beidarmig', uni:m});
+    }
+    prev = m;
+  });
+  return out;
 }
 
 /* ---------- Übungs-Statistik ---------- */
@@ -4864,7 +4983,11 @@ function renderExStats(){
   const rr     = exRepRange(ex.id);
   const stall  = plateauCount(ex.id);
   const prog   = progressionFor(ex.id);
-  const swi    = exModeSwitch(ex.id);
+  const swi    = exModeSwitches(ex.id);
+  /* Die Diagramme zeigen nur die letzten 30 Einheiten — Marker-Index entsprechend verschieben */
+  const chOff  = Math.max(0, h.length-30);
+  const marks  = swi.switches.map(s=>({i:s.at-chOff, label:s.to})).filter(m=>m.i>0);
+  const swLast = swi.switches.length? swi.switches[swi.switches.length-1] : null;
   const lastD  = new Date(h[h.length-1].date);
   const daysAgo= Math.floor((Date.now()-lastD.getTime())/864e5);
   const wochen = Math.max(1, Math.round((Date.now()-new Date(h[0].date).getTime())/(7*864e5)));
@@ -4896,10 +5019,20 @@ function renderExStats(){
       <div class="tiny" style="margin-top:4px">${bests.sessions} ${bests.sessions===1?'Einheit':'Einheiten'} über ${wochen} ${wochen===1?'Woche':'Wochen'} · zuletzt vor ${daysAgo===0?'heute':daysAgo+(daysAgo===1?' Tag':' Tagen')} · trainiert ${esc(wirkung)}</div>
     </div>
 
-    ${swi? `<div class="card" style="border-color:rgba(255,176,32,.34);background:rgba(255,176,32,.07)">
+    ${swLast? `<div class="card" style="border-color:rgba(255,176,32,.34);background:rgba(255,176,32,.07)">
       <div class="row" style="gap:8px;align-items:flex-start"><span class="bi" data-ico="alert" style="color:var(--gold);margin:0"></span>
       <div><b style="font-size:var(--fs-sub);color:var(--gold)">Ausführung gewechselt</b>
-      <div class="tiny" style="margin-top:2px">Ab ${fmtDate(swi.date)} als <b>${swi.to}</b> geloggt. Davor und danach sind unterschiedliche Belastungen — der Sprung im Verlauf ist kein Leistungsabfall. Für saubere Kurven eine eigene Übung anlegen.</div></div></div></div>`:''}
+      <div class="tiny" style="margin-top:2px">${
+        swi.switches.length===1
+          ? `Ab <b>${fmtDate(swLast.date)}</b> trainierst du <b>${swLast.to}</b>.`
+          : `${swi.switches.length} Wechsel: ${swi.switches.map(s=>`${fmtDate(s.date)} → ${s.to}`).join(' · ')}.`
+      } Im Diagramm siehst du ${swi.switches.length===1?'die Stelle':'die Stellen'} als gestrichelte Linie. Davor und danach sind unterschiedliche Belastungen — der Sprung ist kein Leistungsabfall. Für saubere Kurven eine eigene Übung anlegen.</div></div></div></div>`
+    : (uni && swi.unknown>0)? `<div class="card" style="border-color:rgba(255,176,32,.34);background:rgba(255,176,32,.07)">
+      <div class="row" style="gap:8px;align-items:flex-start"><span class="bi" data-ico="alert" style="color:var(--gold);margin:0"></span>
+      <div><b style="font-size:var(--fs-sub);color:var(--gold)">Wechseldatum fehlt</b>
+      <div class="tiny" style="margin-top:2px">Diese Übung ist auf <b>einseitig</b> gestellt, aber bei ${swi.unknown} von ${h.length} ${h.length===1?'Einheit':'Einheiten'} hat die App die Ausführung noch nicht mitgespeichert — das kam erst später dazu. Deshalb kann ich den Sprung im Verlauf nicht einordnen.<br>
+      Trag das Datum ein, ab dem du einarmig trainierst, dann markiere ich die Stelle im Diagramm.</div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="openExOpt('${ex.id}')">Datum eintragen</button></div></div></div>`:''}
 
     <div class="kpis" style="margin-bottom:12px">
       <div class="kpi"><b>${assist? bests.maxW+' kg' : isBW? (bests.maxW>0? '+'+bests.maxW+' kg' : bests.maxReps+' Wdh') : bests.maxW+' kg'}</b><span>${assist?'Best effektiv':isBW? (bests.maxW>0?'Best Zusatz':'Best Wdh') :'Best Gewicht'}</span></div>
@@ -4912,8 +5045,8 @@ function renderExStats(){
 
     <div class="card">
       <h3>${assist? 'Effektive Last pro Einheit' : isBW&&bests.maxW>0? 'Zusatzgewicht pro Einheit' : 'Arbeitsgewicht pro Einheit'}
-        <span class="tiny">(schwerster Satz${trend.ok?' · gestrichelt = Ø-Trend':''})</span></h3>
-      ${svgLine(zPts.slice(-30), v=>Math.round(v)+' kg', {avg:trend.ok, fill:true})}
+        <span class="tiny">(schwerster Satz${trend.ok?' · gelb gestrichelt = Ø-Trend':''}${marks.length?' · senkrecht = Ausführung gewechselt':''})</span></h3>
+      ${svgLine(zPts.slice(-30), v=>Math.round(v)+' kg', {avg:trend.ok, fill:true, marks})}
       <p class="tiny" style="margin-top:8px">${
         trend.ok
           ? `${trend.from} → ${trend.to} kg in ${wochen} ${wochen===1?'Woche':'Wochen'}${trend.pct?` · <b style="color:${trend.pct>=0?'var(--green)':'var(--red)'}">${trend.pct>=0?'+':''}${trend.pct.toFixed(0)} %</b>`:''}${trend.solid? ` · Trend belastbar (R²&nbsp;${trend.r2.toFixed(2).replace('.',',')})` : ` · <span style="color:var(--txt3)">stark schwankend, Trendlinie mit Vorsicht (R²&nbsp;${trend.r2.toFixed(2).replace('.',',')})</span>`}`
@@ -4934,7 +5067,7 @@ function renderExStats(){
       <p class="tiny">Noch keine Aussage möglich — dafür brauche ich ${bal.need||BALANCE_MIN_SESSIONS} Einheiten, in denen du <b>beide Seiten getrennt</b> einträgst.</p></div>` : ''}
 
     <div class="card"><h3>Volumen pro Einheit ${isBW&&!assist?'<span class="tiny">(inkl. Körpergewicht)</span>':''}</h3>
-      ${svgLine(vPts.slice(-30),v=>fmtVol(v),{fill:true})}
+      ${svgLine(vPts.slice(-30),v=>fmtVol(v),{fill:true, marks})}
       <p class="tiny" style="margin-top:8px">Volumen = Gewicht × Wiederholungen, Aufwärmsätze ausgenommen${uni?', beide Seiten gezählt':''}. Steigt es ohne mehr Gewicht, machst du mehr Arbeit bei gleicher Intensität.</p>
     </div>
 
