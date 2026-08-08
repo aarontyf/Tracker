@@ -400,6 +400,10 @@ details.erkl>summary::-webkit-details-marker{display:none}
 details.erkl>summary::after{content:'›';margin-left:6px;display:inline-block;transition:transform var(--dur-2) var(--ease)}
 details.erkl[open]>summary::after{transform:rotate(90deg)}
 details.erkl>div{margin-top:6px;color:var(--txt2)}
+/* Im Training kompakter — dort zählt jede Zeile */
+details.erkl.warum{margin-top:2px}
+details.erkl.warum>summary{font-size:var(--fs-tiny);min-height:0;padding:2px 0}
+details.erkl.warum>div{font-size:var(--fs-tiny);margin-top:2px}
 
 /* ─── CHARTS ─────────────────────────────────────────────────────── */
 .chart{width:100%;margin-top:var(--sp2)}
@@ -1140,6 +1144,11 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
   <div class="card">
     <h3 style="margin-bottom:4px">Pausen-Timer</h3>
     <div class="row"><input type="number" id="set-rest" min="15" max="600" step="15" style="width:90px"><span class="sub">Sekunden (pro Übung überschreibbar)</span></div>
+    <div class="row" style="justify-content:space-between;margin-top:10px">
+      <div class="grow"><b style="font-size:15px">Ton am Ende</b>
+        <div class="tiny">Zwei kurze Töne, zusätzlich zur Vibration.</div></div>
+      <button class="chip" id="set-restsound">An</button>
+    </div>
   </div>
   <div class="card">
     <h3 style="margin-bottom:8px">Trainingsstil</h3>
@@ -1207,7 +1216,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V55 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V56 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -3734,6 +3743,8 @@ $('#btn-settings').addEventListener('click',()=>{
   $('#set-goallo').value = state.settings.setGoalLo||10; $('#set-goalhi').value = state.settings.setGoalHi||20;
   $('#set-rir').textContent = state.settings.rir? 'An':'Aus'; $('#set-rir').classList.toggle('on', !!state.settings.rir);
   $('#set-beine').textContent = beineImZyklus()? 'An':'Aus'; $('#set-beine').classList.toggle('on', beineImZyklus());
+  const tonAn = state.settings.restSound !== false;
+  $('#set-restsound').textContent = tonAn? 'An':'Aus'; $('#set-restsound').classList.toggle('on', tonAn);
   zeigeZyklusZiel();
   const bs = backupStatus();
   $('#set-lastbackup').innerHTML = state.settings.lastBackup
@@ -3749,6 +3760,15 @@ $('#set-rir').addEventListener('click',()=>{
   if(state.active) renderActive();
 });
 $('#set-rest').addEventListener('change',()=>{ const v=Math.max(15,Math.min(600,+$('#set-rest').value||90)); state.settings.rest=v; $('#set-rest').value=v; saveState(); toast('Pause: '+v+' Sek.'); });
+$('#set-restsound').addEventListener('click',()=>{
+  const an = state.settings.restSound === false;      // war aus → jetzt an
+  state.settings.restSound = an;
+  $('#set-restsound').textContent = an? 'An':'Aus';
+  $('#set-restsound').classList.toggle('on', an);
+  saveState(); haptic();
+  if(an) pausenTon();                                  // gleich einmal hören
+  toast(an? 'Ton am Pausenende: an' : 'Ton am Pausenende: aus');
+});
 ['replo','rephi','defsets','goallo','goalhi'].forEach(k=>$('#set-'+k).addEventListener('change',()=>{
   let lo=Math.max(1,Math.min(30,+$('#set-replo').value||6)), hi=Math.max(1,Math.min(40,+$('#set-rephi').value||9));
   if(hi<lo) hi=lo;
@@ -3856,6 +3876,42 @@ function startWorkout(type, tplId){
 }
 
 /* ================= TRAINING: AKTIV ================= */
+/* ── PAUSENSIGNAL ──────────────────────────────────────────────────────
+   Bis V55 vibrierte die App am Pausenende nur. Mit Kopfhörern oder wenn
+   das Handy auf der Bank liegt, merkt man das nicht.
+   Der Ton wird erzeugt, nicht geladen — eine Audiodatei wäre eine externe
+   Abhängigkeit, und die Datei muss eine einzige bleiben.
+   iOS lässt Audio erst nach einer Nutzergeste zu: der Context wird deshalb
+   beim ersten Antippen vorbereitet, nicht beim Start. */
+let _audio = null;
+function audioBereit(){
+  if(_audio) { if(_audio.state === 'suspended') _audio.resume().catch(()=>{}); return; }
+  try{
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(AC) _audio = new AC();
+  }catch(_){}
+}
+function pausenTon(){
+  if(state.settings.restSound === false) return;      // abschaltbar, Standard an
+  try{
+    audioBereit();
+    if(!_audio || _audio.state !== 'running') return;
+    /* Zwei kurze Töne — als Signal erkennbar, ohne im Studio zu erschrecken */
+    [0, 0.18].forEach((versatz, i)=>{
+      const o = _audio.createOscillator(), g = _audio.createGain();
+      o.type = 'sine';
+      o.frequency.value = i ? 1046.5 : 784;           // G5, dann C6
+      o.connect(g); g.connect(_audio.destination);
+      const t0 = _audio.currentTime + versatz;
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(0.22, t0 + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.15);
+      o.start(t0); o.stop(t0 + 0.16);
+    });
+  }catch(_){}
+}
+document.addEventListener('pointerdown', audioBereit, {once:false, passive:true});
+
 let tickerI = null, restEnd = null;
 function startTicker(){ stopTicker(); tickerI = setInterval(tick, 1000); tick(); }
 function stopTicker(){ if(tickerI){ clearInterval(tickerI); tickerI=null; } }
@@ -3866,7 +3922,7 @@ function tick(){
   const btn = $('#btn-rest');
   if(restEnd){
     const left = Math.ceil((restEnd-Date.now())/1000);
-    if(left<=0){ restEnd=null; btn.classList.remove('hot'); btn.innerHTML=ICO.timer+' Pause'; toast('Pause vorbei — weiter 💪'); haptic('error'); }
+    if(left<=0){ restEnd=null; btn.classList.remove('hot'); btn.innerHTML=ICO.timer+' Pause'; toast('Pause vorbei — weiter 💪'); haptic('error'); pausenTon(); }
     else { btn.classList.add('hot'); btn.textContent='⏱ '+Math.floor(left/60)+':'+String(left%60).padStart(2,'0'); }
   }
 }
@@ -3899,15 +3955,26 @@ function renderActive(){
     const prevTxt = prev? prev.sets.map(fmtS).join(' · ') : null;
     const prog = progressionFor(e.exId, new Date(a.date).getTime());
     return `<div class="excard" data-ei="${ei}">
-      <div class="exhd">${a.exercises.length>1?`<div class="exreorder"><button class="rord" data-exup="${ei}" ${ei===0?'disabled':''} title="nach oben">▲</button><button class="rord" data-exdown="${ei}" ${ei===a.exercises.length-1?'disabled':''} title="nach unten">▼</button></div>`:''}<div class="grow"><b>${esc(e.name)}</b><div class="musctags">${ex?esc(exMuscleLabel(ex)):''}${isBW?' · <b style="color:var(--acc2)">„+kg" = Zusatzgewicht</b>':''}${assist?` · <b style="color:var(--acc2)">Maschinen-Hilfe: mehr kg = leichter${myBw?` · effektiv ${myBw} kg − Hilfe`:''}</b>`:''}${o.uni?' · <b style="color:var(--acc2)">einseitig — Wdh L/R getrennt</b>':''}</div></div>
+      <div class="exhd">${a.exercises.length>1?`<div class="exreorder"><button class="rord" data-exup="${ei}" ${ei===0?'disabled':''} title="nach oben">▲</button><button class="rord" data-exdown="${ei}" ${ei===a.exercises.length-1?'disabled':''} title="nach unten">▼</button></div>`:''}<div class="grow"><b>${esc(e.name)}</b>${
+        /* ── V55/B: Muskelnamen raus ──────────────────────────────────────
+           „Mittlere Brust · Vord. Schulter, Trizeps" stand über JEDER Übung.
+           Beim Loggen weiß man, was man gerade macht — das ist Deko, die
+           Platz kostet. Die Hinweise zur EINGABE bleiben: sie erklären, was
+           die Zahl im Feld bedeutet, und ohne sie trägt man Falsches ein. */
+        (isBW||assist||o.uni)? `<div class="musctags">${isBW?'<b style="color:var(--acc2)">„+kg" = Zusatzgewicht</b>':''}${assist?`<b style="color:var(--acc2)">mehr kg = leichter${myBw?` · ${myBw} kg − Hilfe`:''}</b>`:''}${o.uni?`${isBW||assist?' · ':''}<b style="color:var(--acc2)">Wdh L/R getrennt</b>`:''}</div>`:''}</div>
         <button class="iconbtn" data-calc="${ei}" style="width:32px;height:32px" aria-label="Scheiben-Rechner">${ICO.scale}</button>
         <button class="iconbtn" data-exopt="${ei}" style="width:32px;height:32px">${ICO.gear}</button>
         <button class="iconbtn" data-rmex="${ei}" style="width:32px;height:32px">${ICO.trash}</button></div>
       ${prog? `<div class="progbox"><div class="grow"><div class="tiny up" style="color:var(--acc2);letter-spacing:1px">Heute empfohlen</div>
-          <b style="font-size:15px">${prog.txt}</b><div class="tiny" style="margin-top:2px">${esc(prog.why)}</div></div>
+          <b style="font-size:15px">${prog.txt}</b>
+          <details class="erkl warum"><summary>Warum?</summary><div>${esc(prog.why)}</div></details></div>
           <button class="btn btn-acc btn-sm" data-applyprog="${ei}">Übernehmen</button></div>`:''}
-      ${prevTxt? `<div class="prevline">Letztes Mal: ${prevTxt}${bests&&bests.maxW>0? ` &nbsp;·&nbsp; Best: <b>${isBW?'+':''}${bests.maxW} kg</b>`:''}</div>`:`<div class="prevline">Erstes Mal — such dir ein Gewicht, mit dem ${o.lo}–${o.hi} Wdh sauber gehen 🚀</div>`}
-      <div class="sethead ${useRir?'rir':''} ${uni?'uni':''}"><span>#</span><span>Letztes Mal · Tippen = übernehmen</span><span title="${assist?'Hilfe der Maschine — mehr kg macht die Übung leichter':''}">${assist?'−kg Hilfe':isBW?'+kg':'kg'}</span>${uni?'<span title="Wdh linke Seite">Wdh L</span><span title="Wdh rechte Seite">Wdh R</span>':'<span>Wdh</span>'}${useRir?'<span title="Reps in Reserve">RIR</span>':''}<span></span></div>
+      ${/* „Letztes Mal: 67×8 · 67×8 · 67×8 · 67×8" wiederholte, was ohnehin in
+           jeder Vorwert-Pille steht. Es bleibt der Bestwert — die einzige
+           Zahl hier, die man sonst nirgends sieht. */
+        prevTxt? (bests&&bests.maxW>0? `<div class="prevline">Best <b>${isBW?'+':''}${bests.maxW} kg</b> · ${prev.sets.length} ${prev.sets.length===1?'Satz':'Sätze'} zuletzt</div>`:'')
+               : `<div class="prevline">Erstes Mal — Gewicht suchen, mit dem ${o.lo}–${o.hi} Wdh sauber gehen</div>`}
+      <div class="sethead ${useRir?'rir':''} ${uni?'uni':''}"><span>#</span><span>Zuletzt</span><span title="${assist?'Hilfe der Maschine — mehr kg macht die Übung leichter':''}">${assist?'−kg Hilfe':isBW?'+kg':'kg'}</span>${uni?'<span title="Wdh linke Seite">Wdh L</span><span title="Wdh rechte Seite">Wdh R</span>':'<span>Wdh</span>'}${useRir?'<span title="Reps in Reserve">RIR</span>':''}<span></span></div>
       ${e.sets.map((s,si)=>{
         const ps = prev && prev.sets[si];
         const filled = (+s.r||0)>0 || (+s.rr||0)>0;
@@ -5108,6 +5175,17 @@ function muscleSection(ws, weeks, opt){
     + `<div class="card"><h3 style="margin-bottom:8px">Sätze pro Muskelgruppe${opt.laufend? ' <span class="tiny">(laufender Zyklus, noch nicht fertig)</span>':''}</h3>${groupBars(mg, ws, z)}
     ${Object.keys(mg).length? `<details style="margin-top:8px"><summary class="tiny" style="cursor:pointer">Details pro Einzelmuskel anzeigen</summary><div style="margin-top:8px">${muscleBars(mg, ws)}</div></details>`:''}</div>`;
 }
+/* Kalender nachreichen, sobald er aufgeklappt wird — einmal pro Aufbau.
+   „toggle" steigt nicht auf, deshalb in der Capture-Phase abfangen. */
+document.addEventListener('toggle', e=>{
+  const d = e.target;
+  if(!d.matches || !d.matches('details[data-heatmap]') || !d.open) return;
+  const ziel = d.querySelector('div');
+  if(!ziel || ziel.dataset.fertig) return;
+  ziel.innerHTML = yearHeatmap(+d.dataset.heatmap);
+  ziel.dataset.fertig = '1';
+}, true);
+
 document.addEventListener('click', e=>{
   const b = e.target.closest('[data-setmode]'); if(!b) return;
   if(statsSetMode===b.dataset.setmode) return;
@@ -5385,7 +5463,12 @@ function renderSpanStats(el, n){
     + muscleSection(ws, z, {zyklen:z})
     + `<div class="card"><h3>Volumen je Zyklus</h3>${svgBars(zLab,zVol,v=>fmtVol(v))}</div>`
     + `<div class="card"><h3>Sätze je Zyklus</h3>${svgBars(zLab,zSet,v=>v)}</div>`
-    + (n>=20? `<div class="card"><h3 style="margin-bottom:8px">Trainings-Kalender ${new Date().getFullYear()}</h3>${yearHeatmap(new Date().getFullYear())}</div>` : '')
+    /* Der Kalender allein erzeugt 371 <rect> und war damit der teuerste
+       Einzelposten dieses Reiters — er kostete rund 30 der 116 ms, bei jedem
+       Öffnen, auch wenn niemand hinsah. Er wird jetzt erst gebaut, wenn er
+       aufgeklappt wird. Er bleibt erreichbar, nur nicht mehr vorab bezahlt. */
+    + (n>=20? `<div class="card"><h3 style="margin-bottom:8px">Trainings-Kalender ${new Date().getFullYear()}</h3>
+        <details class="erkl" data-heatmap="${new Date().getFullYear()}"><summary>Kalender anzeigen</summary><div></div></details></div>` : '')
     + prListHtml(ws);
 }
 
