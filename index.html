@@ -1186,7 +1186,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V53 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V54 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -2521,6 +2521,7 @@ function migrateState(){
 let _saveWarned = false;
 function saveState(){
   if(typeof invalidateCycles==='function') invalidateCycles();   // Zyklen neu berechnen lassen
+  if(typeof invalidateCuts==='function')   invalidateCuts();     // Schnittpunkte ebenso — sie hängen an Workouts UND exOpt
   try{
     localStorage.setItem(LS_KEY, JSON.stringify(state));
     _saveWarned = false;
@@ -2994,8 +2995,48 @@ function detectPRs(w){
    Wdh zurück auf das untere Ende. Sonst gleiches Gewicht, eine Wdh mehr.
    Bei Körpergewichtsübungen ohne Zusatzgewicht: erst Wdh steigern, dann Zusatz.  */
 /* Plateau: seit N Sessions kein neuer Bestwert (e1RM) → Zahl der Stagnations-Sessions */
+/* ── AB WO IST DIE HISTORIE VERGLEICHBAR? ───────────────────────────────
+   Die eine Wahrheit für alle Rechnungen, die über die Zeit laufen.
+   Ein PROTOKOLLIERTER Ausführungswechsel schlägt einen bloß vermuteten
+   Niveausprung — wo Aaron es der App gesagt hat, wird nicht geraten.
+   Rückgabe: Index in der vollen Historie. 0 = alles vergleichbar. */
+/* Gecacht wie cycles(): exModeSwitches und exBreak laufen je einmal über die
+   gesamte Historie, und progressionFor ruft das im Trainingsbildschirm für JEDE
+   Übung auf. Ohne Cache kostete ein Bildschirm mit acht Übungen bei 300
+   Workouts 77 ms statt 31 ms — und das wächst mit der Datenmenge.
+   Invalidierung in saveState(), genau wie bei den Zyklen. */
+let _cutCache = null, _cutKey = '';
+function invalidateCuts(){ _cutCache = null; }
+function exCutIndex(exId){
+  const ws = state.workouts;
+  const key = ws.length + '|' + ((ws[ws.length-1]||{}).id||'') + '|' + ((ws[ws.length-1]||{}).date||'');
+  if(!_cutCache || _cutKey !== key){ _cutCache = {}; _cutKey = key; }
+  if(_cutCache[exId] !== undefined) return _cutCache[exId];
+  const sw = exModeSwitches(exId).switches;
+  const v = sw.length? sw[sw.length-1].at : (exBreak(exId) || {at:0}).at;
+  return (_cutCache[exId] = v);
+}
+/* Einheiten seit dem letzten Bestwert.
+   Schneidet am Strukturbruch — sonst zählt die Funktion über einen Wechsel
+   hinweg, bei dem sich der Maßstab geändert hat. Genau das ist passiert:
+   Nach dem Wechsel auf einarmig wird der alte e1RM nie wieder erreicht, die
+   App meldete deshalb dauerhaft Stillstand und schlug einen Deload vor,
+   während sich das Gewicht pro Seite jede Einheit steigerte (24→25→26→27 kg).
+   Dieselbe Ursache wie die Regression über den Bruch in V46; exTrend hatte
+   den Schnitt bereits, plateauCount nicht. */
 function plateauCount(exId, beforeTs){
-  const h = exHistory(exId, beforeTs);
+  /* Der Schnitt wird auf der VOLLEN Historie bestimmt — ein Index aus einer
+     bereits gekürzten Liste zeigt auf die falsche Einheit. Daraus wird ein
+     DATUM, denn nur das überlebt das Kürzen auf einen Stichtag. */
+  const alle = exHistory(exId);
+  const ab = exCutIndex(exId);
+  const abDate = (ab > 0 && alle[ab]) ? alle[ab].date : null;
+  let h = beforeTs ? alle.filter(x=> new Date(x.date).getTime() < beforeTs) : alle;
+  /* Ein Sprung, der NACH dem Stichtag liegt, war damals noch nicht bekannt und
+     darf die Rückschau nicht verändern — sonst zeigt ein altes Training im
+     Verlauf plötzlich einen anderen Vorschlag als an dem Tag, an dem es lief. */
+  if(abDate && (!beforeTs || new Date(abDate).getTime() < beforeTs))
+    h = h.filter(x=> x.date >= abDate);
   if(h.length < 3) return 0;
   let best = 0, since = 0;
   h.forEach(x=>{ const v = x.bestE>0? x.bestE : x.maxReps;
@@ -5580,7 +5621,11 @@ function renderExStats(){
      Angabe — entweder gar keine (unknown) oder nur eine erschlossene (umkehr).
      Das ist der häufigste Fall: im Studio längst umgestellt, in der App erst jetzt. */
   const fehlt  = uni && !swLast && (swi.unknown > 0 || swi.umkehr > 0);
-  const cut    = swLast? swLast.at : (brk? brk.at : 0);
+  /* Eine Wahrheit für den Schnittpunkt — dieselbe Funktion, die auch
+     plateauCount benutzt. Nicht hier nachbauen: liefen die beiden Stellen
+     auseinander, stünde in der Statuszeile wieder etwas anderes als in der
+     Sprung-Karte darunter. */
+  const cut    = exCutIndex(ex.id);
   const trend  = exTrend(ex.id, cut);
   /* Die Diagramme zeigen nur die letzten 30 Einheiten — Marker-Index entsprechend verschieben */
   const chOff  = Math.max(0, h.length-30);

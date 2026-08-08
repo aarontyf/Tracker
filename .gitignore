@@ -1,0 +1,33 @@
+# ══════════════════════════════════════════════════════════════════════
+# WHITELIST — erst alles sperren, dann einzeln freigeben.
+#
+# Warum andersherum als üblich: Dieser Ordner liegt im Obsidian-Vault und
+# enthält Projektnotizen, Testsuiten und 11 MB node_modules. Das Repo ist
+# ÖFFENTLICH (GitHub Pages). Eine normale Sperrliste vergisst irgendwann
+# etwas — eine Freigabeliste kann das nicht.
+#
+# Neue Datei soll hochgeladen werden? Hier eine Zeile mit ! ergänzen.
+# Sonst passiert nichts, egal was im Ordner liegt.
+# ══════════════════════════════════════════════════════════════════════
+
+# 1) Alles sperren
+*
+
+# 2) In Ordner überhaupt erst hineinschauen dürfen (sonst greift ! darin nicht)
+!*/
+
+# 3) Die Auslieferung — und nur die
+!index.html
+!sw.js
+!manifest.webmanifest
+!icon-180.png
+!icon-192.png
+!icon-512.png
+!icon-512-maskable.png
+!.gitignore
+
+# 4) Ausdrücklich draußen, auch wenn oben etwas passen würde:
+#    Unterordner mit alten Ständen und der Testaufbau.
+Backup*/
+Redesign/
+tests/
