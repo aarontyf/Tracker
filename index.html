@@ -384,8 +384,22 @@ path[data-m].r3{fill:var(--fig-3);stroke:rgba(0,0,0,.40)}
 .mbar .val{text-align:right;color:var(--txt2);font-variant-numeric:tabular-nums}
 .mbar.big{grid-template-columns:100px 1fr 56px;margin-bottom:8px;font-size:13px}
 .mbar.big .bar{height:12px}
-.mbar.goal{cursor:pointer;border-radius:var(--r-sm);padding:3px 4px;margin-left:-4px;margin-right:-4px;transition:background var(--dur-2) var(--ease)}
+.mbar.goal{cursor:pointer;border-radius:var(--r-sm);padding:3px 4px;margin-left:-4px;margin-right:-4px;transition:background var(--dur-2) var(--ease);
+  grid-template-columns:100px 1fr 56px 10px}
 .mbar.goal:active{background:var(--s2)}
+/* Chevron statt des Satzes „Gruppe antippen zeigt die Übungen" */
+.mbar .chev{color:var(--txt3);font-weight:700;line-height:1;text-align:right}
+/* Gruppe kam im Zeitraum nicht vor: sichtbar, aber zurückgenommen.
+   Ersetzt die Prosa-Zeile „Gar nicht trainiert: …" unter der Karte. */
+.mbar.leer{opacity:.55}
+.mbar.leer .bar{background:rgba(255,255,255,.04)}
+/* Aufklapper für die Herleitung — zugeklappt kostet er eine Zeile */
+details.erkl{margin-top:6px}
+details.erkl>summary{cursor:pointer;color:var(--acc);list-style:none;min-height:var(--hit-min);display:flex;align-items:center}
+details.erkl>summary::-webkit-details-marker{display:none}
+details.erkl>summary::after{content:'›';margin-left:6px;display:inline-block;transition:transform var(--dur-2) var(--ease)}
+details.erkl[open]>summary::after{transform:rotate(90deg)}
+details.erkl>div{margin-top:6px;color:var(--txt2)}
 
 /* ─── CHARTS ─────────────────────────────────────────────────────── */
 .chart{width:100%;margin-top:var(--sp2)}
@@ -1146,8 +1160,15 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     <div class="row"><input type="number" id="set-goallo" min="1" max="40" style="width:70px"><span class="sub">bis</span>
       <input type="number" id="set-goalhi" min="1" max="60" style="width:70px"><span class="sub">Sätze pro <b>Woche</b></span></div>
     <div class="tiny" id="set-goal-cycle" style="margin-top:6px"></div>
-    <p class="tiny" style="margin-top:8px">Forschungsrichtwert für Muskelaufbau: etwa 10–20 harte Sätze pro Muskel und Woche (Schoenfeld u. a.; Pelland et al. 2025 bestätigen den abnehmenden Grenzertrag). Die Statistik rechnet daraus den Zykluswert.<br>
-    Ab etwa <b>11 Sätzen pro Muskel und Einheit</b> ist kein zusätzlicher Zuwachs mehr messbar (Robinson/Pelland) — darüber meldet die Ampel „!".</p>
+    <p class="tiny" style="margin-top:8px">Richtwert: <b>10–20 harte Sätze pro Muskel und Woche</b>. Ab etwa <b>11 Sätzen pro Muskel und Einheit</b> ist kein Zuwachs mehr messbar — darüber meldet die Ampel „!".</p>
+    <!-- Die vier Quellen standen bis V55 nirgends in der App, nur die Namen.
+         Hier ist ihr Platz: einmal, mit Adresse, nachprüfbar. -->
+    <details class="erkl"><summary>Quellen</summary><div>
+      <a href="https://pubmed.ncbi.nlm.nih.gov/41343037/" target="_blank" rel="noopener">Pelland et al. 2025, <i>Sports Medicine</i></a> — Dosis-Wirkung, abnehmender Grenzertrag<br>
+      <a href="https://sportrxiv.org/index.php/server/preprint/view/537" target="_blank" rel="noopener">Robinson &amp; Pelland, <i>Is There Too Much of a Good Thing?</i></a> — die 11-Sätze-Schwelle pro Einheit<br>
+      <a href="https://pubmed.ncbi.nlm.nih.gov/27433992/" target="_blank" rel="noopener">Schoenfeld, Ogborn &amp; Krieger 2017</a> — Satzzahl und Muskelwachstum<br>
+      <a href="https://pubmed.ncbi.nlm.nih.gov/30558493/" target="_blank" rel="noopener">Schoenfeld, Grgic &amp; Krieger 2019</a> — Trainingsfrequenz
+    </div></details>
   </div>
   <div class="card">
     <h3 style="margin-bottom:4px">Backup</h3>
@@ -1186,7 +1207,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V54 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V55 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -4968,36 +4989,38 @@ function groupBars(m, ws, zyklen){
   const defOf = g => SETGROUPS.find(x=>x[0]===g) || [g,[],1];
   const legRoll = LEG_GROUPS.some(g=>all.some(([x,v])=>x===g&&v>0)) || !beineImZyklus() ? legRolling(statsSetMode) : null;
 
-  const rows = entries.map(([g,v])=>{
+  /* Eine Zeile. `leer` = die Gruppe kam im Zeitraum gar nicht vor.
+     Solche Gruppen standen früher als Prosa darunter („Gar nicht trainiert:
+     Waden, Bauch"). Eine gedämpfte Zeile mit 0 in derselben Liste sagt
+     dasselbe, braucht keinen Satz und steht an der Stelle, wo man sie sucht. */
+  const zeile = ([g,v], leer) => {
     const def = defOf(g), frei = !!def[3], bein = isLegGroup(g);
     const t = groupTargetCycle(def[2], z);
-    const st = setState4(v, t);
-    const A = AMPEL[st];
-    const col = bein? 'var(--acc)' : frei? 'var(--txt3)' : A.c;
-    const zeichen = bein? '' : frei? '' : A.z;
+    const A = AMPEL[setState4(v, t)];
+    const col = leer? 'var(--txt3)' : bein? 'var(--acc)' : frei? 'var(--txt3)' : A.c;
+    const zeichen = (bein || frei)? '' : A.z;
     const skala = Math.max(t.hi*1.6, v*1.05, 1);
     const pos = x => Math.max(0, Math.min(100, x/skala*100));
     const untertitel = bein
       ? '<span style="color:var(--acc)">außerhalb des Zyklus</span>'
       : frei ? 'freiwillig' : 'Ziel ' + t.lo + '–' + t.hi;
-    return `<div class="mbar big goal" data-grp="${esc(g)}" style="cursor:pointer" title="${bein?'Beine laufen außerhalb des Zyklus':'Ziel '+t.lo+'–'+t.hi+' Sätze'}">
+    return `<div class="mbar big goal${leer?' leer':''}" data-grp="${esc(g)}" style="cursor:pointer" title="${bein?'Beine laufen außerhalb des Zyklus':'Ziel '+t.lo+'–'+t.hi+' Sätze'}">
       <span>${g}<span class="tiny" style="opacity:.7;display:block;margin-top:-2px">${untertitel}</span></span>
       <span class="bar"><i style="width:${pos(v)}%;background:${col}"></i>
         ${bein||frei? '' : `<b class="zone" style="left:${pos(t.lo)}%;width:${pos(t.hi)-pos(t.lo)}%"></b>`}</span>
       <span class="val" style="color:${col}"><b>${v%1? v.toFixed(1).replace('.',','):v}</b> ${zeichen}</span>
+      <span class="chev" aria-hidden="true">›</span>
     </div>`;
-  }).join('');
+  };
+  /* Optionale Gruppen (Unterarme) bleiben draußen, wenn sie 0 sind — dort ist
+     0 kein Mangel. Bein-Gruppen ebenso, solange sie außerhalb des Zyklus laufen. */
+  const fehlend = all.filter(([g,v])=>v===0 && !isLegGroup(g) && !defOf(g)[3]);
+  const rows = entries.map(e=>zeile(e,false)).join('') + fehlend.map(e=>zeile(e,true)).join('');
 
   /* Bein-Gruppen dürfen NICHT unter „gar nicht trainiert" landen: sie sind
      gar nicht Teil des Zyklus. Sonst meldet die App bei jedem Push-Zyklus
      vier Mängel, obwohl Aaron vorgestern Beine gemacht hat. Sie erscheinen
      stattdessen weiter unten in der rollierenden 21-Tage-Zeile. */
-  const missing = all.filter(([g,v])=>v===0 && !isLegGroup(g)).map(([g])=>g);
-  /* Einzelmuskeln, die in einer sonst trainierten Gruppe leer ausgingen. */
-  const luecken = [];
-  all.forEach(([g,v])=>{ if(v<=0 || isLegGroup(g)) return;
-    defOf(g)[1].forEach(k=>{ if(!(m[k]>0) && MUSCLES[k]) luecken.push(MUSCLES[k]); });
-  });
   /* Immer alle vier Bein-Gruppen zeigen, auch die mit 0 — sonst sieht Aaron
      nicht, WELCHE er vernachlässigt. Ohne Ampel, weil sie außerhalb des
      Zyklus laufen und eine Zyklus-Bewertung dort schlicht falsch wäre. */
@@ -5007,13 +5030,29 @@ function groupBars(m, ws, zyklen){
         return `${g} <b style="color:${v>0?'var(--acc)':'var(--txt3)'}">${v>0? (v%1? v.toFixed(1).replace('.',','):v) : '0'}</b>`; })
     : [];
   const S = state.settings;
-  const stufen = `<span style="color:var(--gold)">↓ zu wenig</span> · <span style="color:var(--green)">✓ im Ziel</span> · <span style="color:var(--acc)">↑ darüber</span> · <span style="color:var(--red)">! über der Effizienzschwelle</span>`;
-  return rows + `<p class="tiny" style="margin-top:8px">${stufen}<br>
-    Korridor: <b>${S.setGoalLo||10}–${S.setGoalHi||20} Sätze pro Muskel und Woche</b> ÷ ${CYCLES_PER_WEEK.toFixed(2).replace('.',',')} Zyklen = <b>${groupTargetCycle(1,1).lo}–${groupTargetCycle(1,1).hi} pro Zyklus</b>${z>1? ` · hier über ${z} Zyklen gerechnet`:''}. Rücken und Schultern zählen doppelt (mehrere eigenständige Muskeln), die drei Brustanteile sind <b>ein</b> Muskel.
-    Ab <b>${SESSION_EFF_MAX} Sätzen pro Muskel und Einheit</b> ist kein zusätzlicher Zuwachs mehr messbar (Robinson/Pelland) — darüber steht „!".${
-    beinRows.length? `<br><b style="color:var(--acc)">Beine, rollierend über ${LEG_ROLL_DAYS} Tage:</b> ${beinRows.join(' · ')} — unregelmäßig trainiert, deshalb ohne Ampel.`:''}${
-    missing.length? '<br><b>Gar nicht trainiert:</b> '+missing.join(', '):''}${
-    luecken.length? '<br><b>Ohne eigene Sätze innerhalb trainierter Gruppen:</b> '+[...new Set(luecken)].join(', '):''}<br>Gruppe antippen zeigt die Übungen.</p>`;
+  const t1 = groupTargetCycle(1,1), tz = groupTargetCycle(1,z);
+  /* ── TEXTDIÄT (V55) ────────────────────────────────────────────────────
+     Vorher standen hier bis zu 681 Zeichen unter den Balken: Ampel-Legende,
+     Herleitung des Korridors, Effizienzschwelle, „Gar nicht trainiert",
+     „Ohne eigene Sätze" und „Gruppe antippen zeigt die Übungen" — auf dem
+     iPhone ein halber Bildschirm für sechs Zahlen.
+     Was davon wohin ging:
+       Legende          → weg. „Rücken · Ziel 9–17 · 5 ↓" erklärt sich selbst.
+       Gar nicht trainiert → gedämpfte 0-Zeile in der Liste (siehe oben)
+       Ohne eigene Sätze  → in die Aufschlüsselung beim Antippen
+       Gruppe antippen    → Chevron › an jeder Zeile
+       Herleitung         → hinter „Wie wird gerechnet?", zugeklappt
+       Quellen            → einmal in den Einstellungen, mit URLs */
+  const beinZeile = beinRows.length
+    ? `<div class="tiny" style="margin-top:8px"><b style="color:var(--acc)">Beine · ${LEG_ROLL_DAYS} Tage:</b> ${beinRows.join(' · ')}</div>`
+    : '';
+  return rows + beinZeile + `<p class="tiny" style="margin-top:8px;color:var(--txt3)">Ziel <b>${t1.lo}–${t1.hi}</b> Sätze pro Muskel und Zyklus${z>1? ` · hier <b>${tz.lo}–${tz.hi}</b> über ${z} Zyklen`:''}.
+    <details class="erkl"><summary>Wie wird gerechnet?</summary><div>
+      <b>${S.setGoalLo||10}–${S.setGoalHi||20} Sätze pro Muskel und Woche</b> ÷ ${CYCLES_PER_WEEK.toFixed(2).replace('.',',')} Zyklen = <b>${t1.lo}–${t1.hi} pro Zyklus</b>. Rücken und Schultern zählen doppelt (mehrere eigenständige Muskeln), die drei Brustanteile sind <b>ein</b> Muskel.<br>
+      Ab <b>${SESSION_EFF_MAX} Sätzen pro Muskel und Einheit</b> ist kein zusätzlicher Zuwachs mehr messbar (Robinson/Pelland) — darüber steht „!".${
+      beinRows.length? `<br>Beine laufen außerhalb des Zyklus und werden rollierend über ${LEG_ROLL_DAYS} Tage gezeigt — unregelmäßig trainiert, deshalb ohne Ampel.`:''}<br>
+      Die Quellen stehen in den Einstellungen unter „Satzziele".
+    </div></details></p>`;
 }
 /* Welche Übungen haben eine Muskelgruppe im Zeitraum trainiert? */
 function groupDetail(groupName, ws){
@@ -5058,9 +5097,13 @@ function muscleSection(ws, weeks, opt){
      es eine Frage, die die Balkenliste nicht beantwortet — nämlich die nach der
      FORM: sitzt alles gleichmäßig im Band oder hängt eine Seite durch. */
   const zielRadar = RADAR_AXES.map(([,,mult])=>groupTargetCycle(mult||1, z));
-  const radarKarte = `<div class="card"><h3>Muskel-Balance <span class="tiny">(grünes Band = Zielkorridor)</span></h3>${svgRadar(radar, zielRadar, ws)}
-    <p class="tiny" style="margin-top:8px">Jede Achse ist auf ihren eigenen Korridor normiert. Blaue Fläche <b>im grünen Band</b> = Volumen passt · innen = zu wenig · außen = darüber.
-    ${z>1? `Gerechnet über ${z} ${z===1?'Zyklus':'Zyklen'}.`:'Gerechnet über einen Zyklus.'}</p></div>`;
+  const radarKarte = `<div class="card"><h3>Muskel-Balance</h3>${svgRadar(radar, zielRadar, ws)}
+    <p class="tiny" style="margin-top:8px;color:var(--txt3)">Fläche <b>im grünen Band</b> = Volumen passt${z>1? ` · ${z} Zyklen`:''}.
+    <details class="erkl"><summary>Wie lese ich das?</summary><div>
+      Jede Achse ist auf ihren eigenen Zielkorridor normiert — eine Achse mit vier Muskeln braucht mehr Sätze für dieselbe Position.
+      Innerhalb des Bandes stimmt das Volumen, innen ist es zu wenig, außen darüber.
+      Gerechnet über ${z} ${z===1?'Zyklus':'Zyklen'}.
+    </div></details></p></div>`;
   return toggle + radarKarte
     + `<div class="card"><h3 style="margin-bottom:8px">Sätze pro Muskelgruppe${opt.laufend? ' <span class="tiny">(laufender Zyklus, noch nicht fertig)</span>':''}</h3>${groupBars(mg, ws, z)}
     ${Object.keys(mg).length? `<details style="margin-top:8px"><summary class="tiny" style="cursor:pointer">Details pro Einzelmuskel anzeigen</summary><div style="margin-top:8px">${muscleBars(mg, ws)}</div></details>`:''}</div>`;
@@ -5367,12 +5410,12 @@ function pushPullCard(ws){
       <span class="tiny" style="color:var(--txt3)">Strich = 1:1</span>
       <span class="tiny"><b>${b.pull%1? b.pull.toFixed(1).replace('.',','):b.pull}</b> Zug</span>
     </div>
-    <p class="tiny" style="margin-top:8px">Verhältnis <b style="color:${col}">${b.ratio.toFixed(2).replace('.',',')} : 1</b> zugunsten ${b.seite==='Druck'?'der Druck-':'der Zug-'}Seite.
-    ${b.auffaellig
-      ? (b.seite==='Druck'
-          ? `Mehr als das ${PP_FAUSTREGEL}-fache auf der Druckseite. Anhaltendes Übergewicht beim Drücken wird häufig mit Schulterbeschwerden in Verbindung gebracht — ein Satz Rudern oder Face Pulls mehr pro Zyklus reicht meist. <b>Der Schwellenwert ist eine Faustregel, keine Studienzahl.</b>`
-          : `Deutliches Übergewicht auf der Zugseite. Unkritisch für die Schulter, aber die Brust bleibt zurück.`)
-      : 'Im ausgeglichenen Bereich.'}</p></div>`;
+    <p class="tiny" style="margin-top:8px">Verhältnis <b style="color:${col}">${b.ratio.toFixed(2).replace('.',',')} : 1</b> zugunsten ${b.seite==='Druck'?'der Druck-':'der Zug-'}Seite${b.auffaellig? ' — <b>auffällig</b>' : ' — ausgeglichen'}.
+    ${b.auffaellig? `<details class="erkl"><summary>Was heißt das?</summary><div>${
+      b.seite==='Druck'
+        ? `Mehr als das ${PP_FAUSTREGEL}-fache auf der Druckseite. Anhaltendes Übergewicht beim Drücken wird häufig mit Schulterbeschwerden in Verbindung gebracht — ein Satz Rudern oder Face Pulls mehr pro Zyklus reicht meist.<br><b>Der Schwellenwert ist eine Faustregel, keine Studienzahl.</b>`
+        : `Deutliches Übergewicht auf der Zugseite. Unkritisch für die Schulter, aber die Brust bleibt zurück.<br><b>Der Schwellenwert ist eine Faustregel, keine Studienzahl.</b>`
+    }</div></details>` : ''}</p></div>`;
 }
 
 /* ══════════ ÜBUNGS-ANALYTIK ══════════════════════════════════════════
@@ -5670,12 +5713,18 @@ function renderExStats(){
         swi.switches.length===1
           ? `Ab <b>${fmtDate(swLast.date)}</b> trainierst du <b>${swLast.to}</b>.`
           : `${swi.switches.length} Wechsel: ${swi.switches.map(s=>`${fmtDate(s.date)} → ${s.to}`).join(' · ')}.`
-      } Im Diagramm siehst du ${swi.switches.length===1?'die Stelle':'die Stellen'} als gestrichelte Linie. Davor und danach sind unterschiedliche Belastungen — der Sprung ist kein Leistungsabfall. Für saubere Kurven eine eigene Übung anlegen.</div></div></div></div>`
+      }<details class="erkl"><summary>Was bedeutet das?</summary><div>
+        Im Diagramm ${swi.switches.length===1?'ist die Stelle':'sind die Stellen'} als gestrichelte Linie markiert. Davor und danach sind unterschiedliche Belastungen — der Sprung ist kein Leistungsabfall.<br>
+        Für saubere Kurven eine eigene Übung anlegen.
+      </div></details></div></div></div></div>`
     : fehlt? `<div class="card" style="border-color:rgba(255,176,32,.34);background:rgba(255,176,32,.07)">
       <div class="row" style="gap:8px;align-items:flex-start"><span class="bi" data-ico="alert" style="color:var(--gold);margin:0"></span>
       <div><b style="font-size:var(--fs-sub);color:var(--gold)">Seit wann trainierst du einarmig?</b>
-      <div class="tiny" style="margin-top:2px">Die Übung steht auf <b>einseitig</b>, aber bei ${swi.unknown+swi.umkehr} von ${h.length} ${h.length===1?'Einheit':'Einheiten'} weiß die App nicht sicher, wie du damals trainiert hast — sie hat es früher nicht mitgespeichert. Ohne das Datum kann sie die Kurve nicht teilen.${
-        brk? `<br><br>Am <b>${fmtDate(brk.date)}</b> fällt das Gewicht von <b>${brk.from} kg</b> auf <b>${brk.to} kg</b> und bleibt dort. Wenn du an dem Tag umgestellt hast, reicht ein Tipp:` : ''}</div>
+      <div class="tiny" style="margin-top:2px">Für ${swi.unknown+swi.umkehr} von ${h.length} ${h.length===1?'Einheit':'Einheiten'} fehlt die Angabe.${
+        brk? ` Am <b>${fmtDate(brk.date)}</b> fällt das Gewicht von <b>${brk.from}</b> auf <b>${brk.to} kg</b>.` : ''}
+        <details class="erkl"><summary>Warum fragt die App?</summary><div>
+          Die Übung steht auf <b>einseitig</b>, aber für ältere Einheiten wurde die Ausführung früher nicht mitgespeichert. Ohne das Datum kann die App die Kurve nicht teilen und würde den Wechsel als Leistungsabfall lesen.
+        </div></details></div>
       <div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap">${
         brk? `<button class="btn btn-sm" onclick="applyUniSince('${ex.id}','${brk.date}')">Ab ${fmtDate(brk.date)}</button>`:''}
         <button class="btn btn-ghost btn-sm" onclick="openExOpt('${ex.id}')">Anderes Datum</button></div>
@@ -5683,8 +5732,11 @@ function renderExStats(){
     : brk? `<div class="card" style="border-color:rgba(255,176,32,.34);background:rgba(255,176,32,.07)">
       <div class="row" style="gap:8px;align-items:flex-start"><span class="bi" data-ico="alert" style="color:var(--gold);margin:0"></span>
       <div><b style="font-size:var(--fs-sub);color:var(--gold)">Sprung am ${fmtDate(brk.date)}</b>
-      <div class="tiny" style="margin-top:2px">Das Gewicht fällt von <b>${brk.from} kg</b> auf <b>${brk.to} kg</b> und bleibt dort — das ist kein normaler schlechter Tag, sondern ein anderer Maßstab. Typisch für ein anderes Gerät, eine andere Griffart oder einen Wechsel der Ausführung.<br>
-      <b>Den Trend rechne ich deshalb erst ab diesem Tag</b> — quer über den Sprung käme nur Unsinn heraus.</div></div></div></div>`
+      <div class="tiny" style="margin-top:2px">Das Gewicht fällt von <b>${brk.from} kg</b> auf <b>${brk.to} kg</b> und bleibt dort. <b>Der Trend rechnet ab hier.</b>
+      <details class="erkl"><summary>Warum?</summary><div>
+        Das ist kein normaler schlechter Tag, sondern ein anderer Maßstab — typisch für ein anderes Gerät, eine andere Griffart oder einen Wechsel der Ausführung.
+        Quer über den Sprung gerechnet käme nur der Sprung heraus, nicht der Fortschritt.
+      </div></details></div></div></div></div>`
     : (uni && swi.unknown===0 && !swi.switches.length && uniSinceOf(ex.id) && uniSinceOf(ex.id) <= h[0].date)
       ? `<div class="card"><div class="tiny">Einarmig seit <b>${fmtDate(uniSinceOf(ex.id))}</b> — das liegt vor deinem ersten gespeicherten Training in dieser Übung. Alle Einheiten zählen als einarmig, deshalb gibt es keine Linie im Diagramm.</div></div>`:''}
 
