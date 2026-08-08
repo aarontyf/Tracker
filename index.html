@@ -469,6 +469,21 @@ details.erkl.warum>div{font-size:var(--fs-tiny);margin-top:2px}
 .setrow.filled input{border-color:rgba(93,155,255,.35);background:rgba(93,155,255,.07)}
 .riri{width:100%;text-align:center;padding:12px 2px;font-weight:750;font-size:15px !important}
 .addset{width:100%;margin-top:var(--sp1);padding:8px;border:1px dashed var(--line-2);border-radius:var(--r-sm);color:var(--txt2);font-weight:650;font-size:13px;transition:all var(--dur-2) var(--ease);min-height:42px}
+/* Scheiben unter der Übung (C3) — nur bei Stangen-Übungen, sonst leer */
+.platebar{color:var(--txt3);padding:3px 2px 0;font-variant-numeric:tabular-nums}
+.platebar b{color:var(--txt2);font-weight:700}
+/* Aufwärm-Vorschlag (C4) */
+.warmhint{display:flex;align-items:center;gap:8px;margin-top:6px;padding:6px 10px;border-radius:var(--r-sm);
+  background:var(--s2);border:1px dashed var(--line-2)}
+.warmhint .grow{color:var(--txt2);font-size:var(--fs-tiny)}
+/* Notiz je Übung (C2) — zugeklappt ein Wort, offen ein Feld */
+details.notiz{margin-top:6px}
+details.notiz>summary{cursor:pointer;list-style:none;font-size:var(--fs-tiny);color:var(--txt2);
+  min-height:var(--hit-min);display:flex;align-items:center;gap:6px}
+details.notiz>summary::-webkit-details-marker{display:none}
+details.notiz>summary::before{content:'✎';color:var(--txt3);font-size:12px}
+details.notiz>summary .alt{color:var(--txt3);font-style:italic}
+details.notiz input{margin-top:4px;width:100%}
 .addset:active{background:var(--s2);border-color:var(--acc-a30);color:var(--acc2)}
 
 /* ─── MODALE ─────────────────────────────────────────────────────── */
@@ -873,6 +888,10 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
 
     <div id="home-resume"></div>
 
+    <!-- „Was mache ich heute?" — stellt die Einheit fertig hin (V57/C1).
+         Steht bewusst VOR der Figur: es ist die erste Frage des Tages. -->
+    <div id="home-suggest"></div>
+
     <!-- Wichtigste Aktion zuerst: ohne Scrollen erreichbar (vorher unter der Figur) -->
     <button class="btn btn-acc btn-block btn-lg" id="btn-start-home" style="margin-bottom:12px"></button>
 
@@ -1216,7 +1235,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V56 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V57 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -2552,6 +2571,7 @@ let _saveWarned = false;
 function saveState(){
   if(typeof invalidateCycles==='function') invalidateCycles();   // Zyklen neu berechnen lassen
   if(typeof invalidateCuts==='function')   invalidateCuts();     // Schnittpunkte ebenso — sie hängen an Workouts UND exOpt
+  if(typeof invalidateVorschlag==='function') invalidateVorschlag();   // und der Trainingsvorschlag
   try{
     localStorage.setItem(LS_KEY, JSON.stringify(state));
     _saveWarned = false;
@@ -2988,6 +3008,33 @@ function exBests(exId, before){
   };
 }
 /* PRs eines (fertigen) Workouts gegen alles davor. Rückgabe: [{exId,name,kind,val,old}] */
+/* ══════════════════════════════════════════════════════════════════════
+   WIEDERHOLUNGSREKORD BEI GLEICHEM GEWICHT                       (V57/C5)
+   Bisher gab es Rekorde für Gewicht, e1RM und Volumen — und Wiederholungen
+   nur bei reinen Körpergewichtsübungen (bestW === 0). Wer 60 kg statt acht
+   plötzlich zehn Mal drückt, bekam nichts: das Gewicht ist ja gleich
+   geblieben, und e1RM zählt nur, wenn es den alten Bestwert schlägt.
+   Dabei ist genau das der häufigste Fortschritt zwischen zwei Steigerungen.
+
+   Regel gegen Schein-Rekorde: Ein Gewicht, das noch nie dran war, ergibt
+   KEINEN Rekord. Sonst wäre jeder erste Satz an einer neuen Hantel einer. */
+function bestRepsAt(exId, kg, before){
+  let best = 0, gesehen = false;
+  state.workouts.forEach(w=>{
+    if(before && new Date(w.date).getTime() >= before) return;
+    (w.exercises||[]).forEach(e=>{
+      if(e.exId !== exId) return;
+      validSets(e).forEach(s=>{
+        if(Math.abs(setW(e, s, w.date) - kg) > 0.001) return;
+        gesehen = true;
+        const r = repsOf(e, s, 'best');
+        if(r > best) best = r;
+      });
+    });
+  });
+  return gesehen ? best : null;          // null = dieses Gewicht war noch nie dran
+}
+
 function detectPRs(w){
   const prs = [];
   const t = new Date(w.date).getTime();
@@ -3012,6 +3059,16 @@ function detectPRs(w){
       prs.push({exId:e.exId,name,kind:'e1RM',val:Math.round(bestE)+' kg',old:Math.round(old.maxE)+' kg'});
     if(vol>0 && old && old.maxVol>0 && vol > old.maxVol)
       prs.push({exId:e.exId,name,kind:'Volumen',val:fmtVol(vol),old:fmtVol(old.maxVol)});
+    /* C5: mehr Wiederholungen bei demselben Gewicht.
+       Nur, wenn das Gewicht nicht ohnehin schon ein Rekord ist — sonst stünde
+       für dieselbe Leistung zweimal etwas da. */
+    if(bestW > 0 && !(!old || bestW > old.maxW)){
+      const beiBestW = Math.max(...sets.filter(s=>Math.abs(setW(e,s,w.date)-bestW)<0.001).map(sReps));
+      const frueher = bestRepsAt(e.exId, bestW, t);
+      if(frueher !== null && beiBestW > frueher)
+        prs.push({exId:e.exId, name, kind:`Wdh bei ${isBW?'+':''}${fmtW(bestW)} kg`,
+                  val: beiBestW+' Wdh', old: frueher+' Wdh'});
+    }
     if(bestW===0 && maxReps>0 && old && old.maxReps>0 && maxReps > old.maxReps)
       prs.push({exId:e.exId,name,kind:'Wiederholungen',val:maxReps+' Wdh',old:old.maxReps+' Wdh'});
     if(bestW===0 && maxReps>0 && !old)
@@ -3130,6 +3187,39 @@ function plateCalc(total, bar){
   return {ok:true, plates:out, rest, bar,
     txt: out.length? out.map(([p,n])=>`${n}×${fmtW(p)}`).join('  +  ') : 'nur die Stange'};
 }
+/* ══════════════════════════════════════════════════════════════════════
+   SCHEIBEN DIREKT AM GEWICHTSFELD                                (V57/C3)
+   Der Rechner gab es schon — als eigenen Bildschirm. Im Studio ist das ein
+   Wechsel zu viel: Gewicht merken, Reiter wechseln, tippen, zurück.
+   Jetzt steht es unter der Übung, sobald ein Gewicht im Feld steht.
+
+   Nur dort, wo es etwas zu stecken gibt. Kurzhanteln, Maschinen und Kabel
+   haben keine Scheiben — dort bleibt die Zeile weg statt Unsinn zu zeigen.
+   Das Stangengewicht ist eine ANNAHME und wird auch so benannt: bei der
+   Multipresse hängt es vom Gerät ab (Gegengewicht), da kann die App nur
+   den üblichen Wert nennen. */
+const STANGE = {
+  'Langhantel':   20,
+  'SZ-Stange':    10,
+  'Trap-Stange':  25,
+  'Multipresse':  20,
+};
+function scheibenFuer(exId, gewicht){
+  const ex = getEx(exId);
+  if(!ex) return null;
+  const bar = STANGE[ex.eq];
+  if(bar === undefined) return null;                 // Kurzhantel, Maschine, Kabel …
+  const kg = +gewicht||0;
+  if(kg <= 0) return null;
+  const r = plateCalc(kg, bar);
+  if(!r.ok) return {bar, zuwenig:true, msg:r.msg};
+  return {
+    bar, rest: r.rest,
+    txt: r.plates.length ? r.plates.map(([p,n])=>`${n}×${fmtW(p)}`).join(' + ') : 'nur die Stange',
+    leer: !r.plates.length
+  };
+}
+
 /* ---------- Aufwärmsätze (bei Strong Premium) ---------- */
 function warmupSets(work, bar){
   bar = bar==null? 20 : bar;
@@ -3154,6 +3244,165 @@ function suggestType(){
   if(c.push>0 && c.pull===0) return 'Pull';   // Push steht, Pull fehlt
   if(c.pull>0 && c.push===0) return 'Push';
   return 'Push';                              // Zyklus voll → der nächste beginnt mit Push
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   TRAININGSVORSCHLAG — „Was mache ich heute?"                    (V57/C1)
+
+   Die App wusste bisher alles Nötige und sagte nichts: Sie kennt den Zyklus,
+   weiß welcher Typ dran ist, kennt jede Übung der letzten Einheit und hat
+   pro Übung einen Progressionsvorschlag. Trotzdem stellte Aaron jedes
+   Training von Hand zusammen.
+
+   GRENZE, die nicht verhandelbar ist: Der Vorschlag erfindet nichts.
+   · Übungen kommen aus der letzten Einheit desselben Typs — beobachtet,
+     nicht ausgedacht. Gibt es keine, bleibt die Liste leer und die App
+     sagt das.
+   · Das GEWICHT kommt aus progressionFor(), also aus echter Historie.
+     Ohne Historie bleibt das Feld leer — lieber eine Lücke als eine Zahl,
+     die nach Messung aussieht.
+   · Die WIEDERHOLUNGEN bleiben immer leer. Sie sind das Ergebnis des
+     Satzes, nicht seine Vorgabe. Ein vorbefülltes Wdh-Feld würde den Satz
+     als „erledigt" zählen, den Pausen-Timer starten und ins Volumen gehen,
+     ohne dass jemand trainiert hat.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Die letzte abgeschlossene Einheit eines Typs — die Vorlage für heute. */
+function letzteEinheitVom(typ){
+  const ws = state.workouts
+    .filter(w => w.type === typ && (w.exercises||[]).length)
+    .sort((a,b)=> new Date(a.date) - new Date(b.date));
+  return ws.length ? ws[ws.length-1] : null;
+}
+
+/* Was fehlt im laufenden Zyklus noch? Liefert [{gruppe, ist, lo, hi}].
+   Beine bleiben draußen, solange sie außerhalb des Zyklus laufen. */
+function zyklusLuecken(){
+  const c = runningCycle();
+  /* Läuft KEIN Zyklus, beginnt er mit dem Training, das gerade vorgeschlagen
+     wird — dann steht alles auf 0, und „Rücken 0 von 9" wäre eine Binsenweisheit,
+     die wie ein Mangel aussieht. In dem Fall gibt es nichts zu melden. */
+  if(!c) return [];
+  const ws = c.ws;
+  const m = muscleSetsBy(ws, statsSetMode);
+  const out = [];
+  SETGROUPS.forEach(([g, keys, mult, frei])=>{
+    if(frei || isLegGroup(g)) return;
+    const ist = keys.reduce((a,k)=>a+(m[k]||0), 0);
+    const t = groupTargetCycle(mult, 1);
+    if(ist < t.lo) out.push({gruppe:g, ist, lo:t.lo, hi:t.hi, fehlt: t.lo - ist});
+  });
+  return out.sort((a,b)=> b.fehlt - a.fehlt);
+}
+
+/* Der Vorschlag selbst.
+   Gecacht wie cycles() und exCutIndex(): progressionFor() läuft je Übung
+   mehrfach über die gesamte Historie, und renderHome wird bei jedem
+   Bildschirmwechsel aufgerufen. Ohne Cache kostete der Startbildschirm bei
+   300 Trainings 151 statt 87 ms — der Vorschlag allein 44 davon.
+   Invalidierung in saveState(), zusammen mit Zyklen und Schnittpunkten. */
+let _vorCache = null, _vorKey = '';
+function invalidateVorschlag(){ _vorCache = null; }
+function trainingsVorschlag(typ){
+  const ws0 = state.workouts;
+  const key = (typ||'') + '|' + ws0.length + '|' + ((ws0[ws0.length-1]||{}).id||'')
+            + '|' + ((ws0[ws0.length-1]||{}).date||'') + '|' + (state.settings.defSets||2);
+  if(_vorCache && _vorKey === key) return _vorCache;
+  const erg = _trainingsVorschlag(typ);
+  _vorKey = key; _vorCache = erg;
+  return erg;
+}
+function _trainingsVorschlag(typ){
+  const t = typ || suggestType();
+  const vorlage = letzteEinheitVom(t);
+  const defSets = Math.max(1, Math.min(10, state.settings.defSets||2));
+  const uebungen = (vorlage ? vorlage.exercises : []).map(e=>{
+    const ex = getEx(e.exId);
+    if(!ex) return null;                                  // gelöschte Übung überspringen
+    const prog = progressionFor(e.exId);
+    const n = prog && prog.sets ? prog.sets : (validSets(e).length || defSets);
+    /* Gewicht nur, wenn es aus echter Historie stammt. */
+    const kg = prog ? prog.w : '';
+    return {
+      exId: e.exId, name: ex.name,
+      sets: Array.from({length:n}, ()=>({ w: (kg===''||kg==null)? '' : kg, r:'' })),
+      /* quelle macht nachvollziehbar, woher die Zahl kommt — sie steht
+         auch in der Anzeige, damit niemand eine Messung vermutet. */
+      quelle: prog ? prog.kind : 'ohne',
+      hinweis: prog ? prog.txt : null
+    };
+  }).filter(Boolean);
+  return { typ:t, uebungen, vorlage, luecken: zyklusLuecken() };
+}
+
+/* Die Karte auf dem Startbildschirm. Kurz halten — sie ist das Erste, was
+   Aaron morgens sieht, und beantwortet EINE Frage: was mache ich heute? */
+function renderVorschlag(){
+  const box = $('#home-suggest');
+  if(!box) return;
+  if(state.active){ box.innerHTML = ''; return; }        // läuft schon eins
+  const v = trainingsVorschlag();
+
+  /* Ohne Vorlage kein Vorschlag — dann bleibt der normale Startknopf. */
+  if(!v.uebungen.length){ box.innerHTML = ''; return; }
+
+  const mitGewicht = v.uebungen.filter(u=>u.sets[0] && u.sets[0].w !== '').length;
+  const luecke = v.luecken.length
+    ? `<div class="tiny" style="margin-top:4px;color:var(--gold)">${v.luecken.slice(0,2)
+        .map(l=>`${l.gruppe} ${l.ist} von ${l.lo}`).join(' · ')} Sätzen im Zyklus</div>`
+    : '';
+
+  box.innerHTML = `<div class="card" style="margin-bottom:12px;border-color:var(--acc-a30);background:linear-gradient(160deg,var(--acc-a08),transparent 60%),var(--s1)">
+    <div class="label" style="color:var(--acc)">Heute</div>
+    <b style="font-size:var(--fs-h2);display:block;margin:2px 0 0">${esc(v.typ)} · ${v.uebungen.length} ${v.uebungen.length===1?'Übung':'Übungen'}</b>
+    ${luecke}
+    <div style="margin:10px 0 4px">${v.uebungen.map(u=>{
+      /* Die Zahl bedeutet je Übungsart etwas anderes — ohne den Zusatz liest
+         man „60 kg" bei Klimmzügen als Last statt als Zusatzgewicht und bei
+         der unterstützten Maschine genau verkehrt herum. */
+      const leer = !u.sets[0] || u.sets[0].w === '' || u.sets[0].w == null;
+      const roh = leer ? null : fmtW(u.sets[0].w);
+      const kg = leer ? '—'
+        : exIsAssist(u.exId) ? roh + ' kg Hilfe'
+        : exIsBW(u.exId)     ? (+u.sets[0].w > 0 ? '+' + roh + ' kg' : 'Körpergewicht')
+        : roh + ' kg';
+      /* Farbe trägt hier keine Bedeutung allein — der Zusatz sagt es im
+         Klartext, sonst wundert man sich über ein plötzlich kleineres Gewicht. */
+      const art = u.quelle === 'up' ? {c:'var(--green)', z:'↑'}
+                : u.quelle === 'deload' ? {c:'var(--gold)', z:'Deload'}
+                : {c:'var(--txt)', z:''};
+      return `<div class="row" style="gap:8px;padding:5px 0;border-bottom:1px solid var(--line)">
+        <span class="grow" style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(u.name)}</span>
+        ${art.z? `<span class="tiny" style="color:${art.c};flex:none">${art.z}</span>`:''}
+        <span class="tiny" style="color:var(--txt3);flex:none">${u.sets.length}×</span>
+        <span style="font-size:13px;font-weight:700;flex:none;color:${art.c};font-variant-numeric:tabular-nums">${kg}</span>
+      </div>`;
+    }).join('')}</div>
+    <div class="row" style="gap:8px;margin-top:10px">
+      <button class="btn btn-acc grow" id="btn-vorschlag-start">Training starten</button>
+      <button class="btn btn-ghost btn-sm" id="btn-vorschlag-anders">Anders</button>
+    </div>
+    <details class="erkl"><summary>Woher kommen die Zahlen?</summary><div>
+      Die Übungen sind die deiner letzten <b>${esc(v.typ)}</b>-Einheit vom ${fmtDate(v.vorlage.date)}.
+      ${mitGewicht ? `Bei ${mitGewicht} von ${v.uebungen.length} steht ein Gewicht — es kommt aus deiner Historie, grün heißt Steigerung.` : ''}
+      ${mitGewicht < v.uebungen.length ? `Wo <b>—</b> steht, fehlt die Historie; dort bleibt das Feld leer statt geraten.` : ''}
+      <br>Die <b>Wiederholungen bleiben immer leer</b> — sie sind das Ergebnis des Satzes, nicht seine Vorgabe.
+      Jede Zeile lässt sich im Training ändern, jede Übung tauschen.
+    </div></details>
+  </div>`;
+  $('#btn-vorschlag-start').addEventListener('click', ()=>starteVorschlag(v.typ));
+  $('#btn-vorschlag-anders').addEventListener('click', ()=>showScreen('scr-train'));
+}
+
+/* Vorschlag übernehmen: startet das Training mit den vorbefüllten Übungen. */
+function starteVorschlag(typ){
+  const v = trainingsVorschlag(typ);
+  if(!v.uebungen.length){ startWorkout(v.typ); return; }   // nichts zu übernehmen
+  state.active = { id:uid(), date:new Date().toISOString(), start:Date.now(), type:v.typ,
+    exercises: v.uebungen.map(u=>({ exId:u.exId, name:u.name, __live:true,
+                                    sets:u.sets.map(s=>({w:s.w, r:s.r})) })) };
+  saveState(); haptic('success'); renderTrain(); showScreen('scr-train');
+  toast(v.uebungen.length + ' Übungen übernommen — Gewichte kannst du ändern');
 }
 
 /* ================= ACHIEVEMENT-ENGINE (auto-generiert pro Übung) ================= */
@@ -3596,44 +3845,15 @@ function renderHome(){
   weekMuscleMap = muscleSets(wk);
   paintBody();
 
-  /* ── Ringe: Workouts / Volumen / Sätze gegen Wochenziele ── */
-  const vol = wk.reduce((x,w)=>x+wVolume(w),0);
-  const sets = wk.reduce((x,w)=>x+wSets(w),0);
-  const prCount = wk.reduce((x,w)=>x+(w.prs?w.prs.length:0),0);
-  const goalW = state.settings.goal||5;
-  const prevWk = workoutsIn(weekRange(new Date(a.getTime()-86400000)));
-  const prevVol = prevWk.reduce((x,w)=>x+wVolume(w),0);
-  const volGoal = Math.max(prevVol, 1);                       // Ziel: Vorwoche schlagen
-  const setGoal = goalW * 12;
-  const pct = [Math.min(1,wk.length/goalW), Math.min(1,vol/volGoal), Math.min(1,sets/setGoal)];
-  /* „Diese Woche" und die Wochenmission sind auf Wunsch von der Startseite
-     entfernt. Die Berechnung bleibt bestehen (Erfolge, Rückblick, XP nutzen
-     sie weiter) — nur die Karte wird nicht mehr gezeichnet. */
-  const ringsBox = $('#home-rings');
-  if(ringsBox) ringsBox.innerHTML = `<div class="card">
-    <div class="row" style="justify-content:space-between;margin-bottom:12px">
-      <h3 style="margin:0">Diese Woche</h3>
-      <span class="tiny">${prCount>0? `<span style="color:var(--gold)">${ICO.trophy} ${prCount} ${prCount===1?'Rekord':'Rekorde'}</span>`:'noch keine Rekorde'}</span>
-    </div>
-    <div class="rings">
-      <div class="ringwrap" style="width:104px;height:104px">
-        ${ring(pct[0],'url(#gr1)',104,10)}
-        <div class="ringc"><b data-count="${wk.length}">0</b><span>von ${goalW}</span></div>
-      </div>
-      <div class="ringlegend">
-        <div class="rl"><i style="background:var(--acc)"></i>Workouts <b style="margin-left:auto"><span data-count="${wk.length}">0</span>/${goalW}</b></div>
-        <div class="rl"><i style="background:var(--green)"></i>Volumen <b style="margin-left:auto" data-count="${Math.round(vol)}" data-cfmt="vol">0</b></div>
-        <div class="rl"><i style="background:var(--gold)"></i>Sätze <b style="margin-left:auto" data-count="${sets}">0</b></div>
-        ${prevVol>0? `<div class="tiny" style="margin-top:2px">${vol>=prevVol? `<span style="color:var(--green)">▲ Vorwoche geschlagen</span>` : `noch ${fmtVol(prevVol-vol)} bis zur Vorwoche`}</div>`:''}
-      </div>
-    </div>
-    <div class="row" style="gap:4px;margin-top:12px">
-      ${SPLIT.map((t,i)=>{ const hit=i<wk.length; return `<span class="chip mini ${hit?'on':''}" style="flex:1;text-align:center;justify-content:center">${hit?'✓':''} ${t}</span>`;}).join('')}
-    </div>
-    <svg width="0" height="0" style="position:absolute"><defs>
-      <linearGradient id="gr1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8FB8FF"/><stop offset="1" stop-color="#3A70DC"/></linearGradient>
-    </defs></svg>
-  </div>`;
+  /* ── Ringe „Diese Woche": entfernt (V57) ──────────────────────────────
+     Die Karte war schon länger von der Startseite genommen, das Element
+     #home-rings existiert im Markup nicht. Die 39 Zeilen Rechnung liefen
+     trotzdem bei JEDEM Rendern: Wochenvolumen, Vorwochenvolumen (ein
+     zweiter Durchlauf über alle Workouts), Sätze, Rekorde, drei Quoten.
+     Der Kommentar behauptete, „Erfolge, Rückblick und XP" bräuchten die
+     Werte weiter — nachgezählt wurde keine der neun Variablen nach dem
+     Block noch einmal gelesen. Ersatzlos raus.
+     Gemessen: renderHome 125 → 100 ms bei 300 Trainings. */
 
   /* ── Level ── */
   const xpPct = Math.min(100, Math.round((L.xp-L.cur)/Math.max(1,L.next-L.cur)*100));
@@ -3682,9 +3902,13 @@ function renderHome(){
       <button class="btn btn-ghost btn-sm" onclick="sendToVault()">Sichern</button>
     </div>` : '';
 
+  renderVorschlag();
   $('#btn-start-home').innerHTML = state.active
     ? '<span class="bi" data-ico="play"></span><span>Weiter trainieren</span>'
     : `<span class="bi" data-ico="play"></span><span>Training starten</span><span style="opacity:.72;font-weight:650;font-size:15px">· ${suggestType()}</span>`;
+  /* Läuft schon ein Training oder gibt es einen Vorschlag, ist der große
+     Knopf überflüssig — zwei Startwege nebeneinander verwirren nur. */
+  $('#btn-start-home').style.display = (!state.active && $('#home-suggest').innerHTML) ? 'none' : '';
   hydrateIcons($('#scr-home'));
   renderHomeBW();
 
@@ -3933,6 +4157,86 @@ $('#btn-rest').addEventListener('click',()=>{
 
 function prevSession(exId){ const h = exHistory(exId, new Date(state.active.date).getTime()); return h.length? h[h.length-1] : null; }
 
+/* ══════════════════════════════════════════════════════════════════════
+   NOTIZEN                                                        (V57/C2)
+   „Schulter gezwickt", „Griff enger", „Bank Stufe 3" — Dinge, die man sich
+   beim nächsten Mal merken will und sonst vergisst.
+
+   Datenmodell: ein zusätzliches, optionales Feld `note` am Übungseintrag.
+   Nichts Bestehendes ändert sich, alte Trainings bleiben gültig, es braucht
+   keine Migration. Ein Feld PRO SATZ wäre die genauere Lösung gewesen — die
+   Satzzeile hat aber schon fünf Bedienelemente auf iPhone-Breite, ein
+   sechstes hätte die Eingabe verschlechtert, um die es hier gerade geht.
+
+   Angezeigt wird die letzte Notiz derselben Übung gedämpft: man sieht beim
+   Loggen, was letztes Mal war, ohne danach zu suchen. */
+function letzteNotiz(exId, beforeTs){
+  const ws = state.workouts.slice().sort((a,b)=> new Date(b.date) - new Date(a.date));
+  for(const w of ws){
+    if(beforeTs && new Date(w.date).getTime() >= beforeTs) continue;
+    for(const e of (w.exercises||[])){
+      if(e.exId === exId && e.note && String(e.note).trim())
+        return { text: String(e.note).trim(), date: w.date };
+    }
+  }
+  return null;
+}
+function notizFeld(ei){
+  const e = state.active && state.active.exercises[ei];
+  if(!e) return '';
+  const eigen = (e.note || '').trim();
+  const alt = eigen ? null : letzteNotiz(e.exId, new Date(state.active.date).getTime());
+  /* Offen, sobald es etwas zu sehen gibt — sonst ein Wort, das nicht stört. */
+  const offen = !!eigen;
+  return `<details class="notiz"${offen?' open':''}>
+    <summary>${eigen ? esc(eigen.slice(0,60)) + (eigen.length>60?'…':'')
+                     : alt ? `<span class="alt">Zuletzt: ${esc(alt.text.slice(0,44))}${alt.text.length>44?'…':''}</span>`
+                           : 'Notiz'}</summary>
+    <input type="text" data-note="${ei}" value="${esc(eigen)}" maxlength="200"
+      placeholder="${alt ? esc(alt.text.slice(0,44)) : 'z. B. Bank Stufe 3, Griff enger'}">
+  </details>`;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   AUFWÄRMSÄTZE AUF EINEN TIPP                                    (V57/C4)
+   warmupSets() gab es schon (40/60/80 % des Arbeitsgewichts), aber niemand
+   kam daran. Jetzt erscheint der Vorschlag bei der ERSTEN Übung, sobald ein
+   Arbeitsgewicht bekannt ist — dort wärmt man auf, nicht bei der vierten.
+   Ein Tipp fügt sie als t:'w' vorn ein: sie zählen damit nicht ins Volumen
+   und bekommen die halbe Pause. */
+function warmVorschlag(ei){
+  if(ei !== 0) return '';                             // nur die erste Übung
+  const e = state.active && state.active.exercises[0];
+  if(!e) return '';
+  if((e.sets||[]).some(s=>s.t==='w')) return '';      // schon aufgewärmt
+  const ex = getEx(e.exId);
+  if(!ex || exIsAssist(e.exId)) return '';            // an der Hilfsmaschine sinnlos
+  const s = (e.sets||[]).find(x => (+x.w||0) > 0);
+  if(!s) return '';                                   // ohne Arbeitsgewicht kein Vorschlag
+  const bar = STANGE[ex.eq] || 0;
+  const w = warmupSets(+s.w, bar);
+  if(!w.length) return '';
+  return `<div class="warmhint">
+    <div class="grow">Aufwärmen: <b>${w.map(x=>fmtW(x.w)+'×'+x.r).join(' · ')}</b></div>
+    <button class="btn btn-ghost btn-sm" data-addwarm="${ei}">Einfügen</button>
+  </div>`;
+}
+
+/* Die Scheibenzeile einer Übung im laufenden Training. Nimmt das erste
+   eingetragene Arbeitsgewicht — bei einem Dropset oder Aufwärmsatz ändert
+   sich die Bestückung ohnehin, dafür ist der Rechner im Kopfmenü da. */
+function scheibenZeile(ei){
+  const e = state.active && state.active.exercises[ei];
+  if(!e) return '';
+  const s = (e.sets||[]).find(x => (+x.w||0) > 0);
+  const p = s ? scheibenFuer(e.exId, s.w) : null;
+  if(!p) return '';
+  if(p.zuwenig) return `<div class="platebar tiny">${esc(p.msg)}</div>`;
+  const rest = p.rest > 0.01
+    ? ` <span style="color:var(--gold)">+ ${fmtW(p.rest)} kg passen nicht</span>` : '';
+  return `<div class="platebar tiny"><b>${p.txt}</b>${p.leer?'':' je Seite'} · ${p.bar}-kg-Stange${rest}</div>`;
+}
+
 function renderActive(){
   const a = state.active; if(!a) return;
   $('#tw-type').textContent = a.type+'-Workout';
@@ -3969,11 +4273,32 @@ function renderActive(){
           <b style="font-size:15px">${prog.txt}</b>
           <details class="erkl warum"><summary>Warum?</summary><div>${esc(prog.why)}</div></details></div>
           <button class="btn btn-acc btn-sm" data-applyprog="${ei}">Übernehmen</button></div>`:''}
-      ${/* „Letztes Mal: 67×8 · 67×8 · 67×8 · 67×8" wiederholte, was ohnehin in
-           jeder Vorwert-Pille steht. Es bleibt der Bestwert — die einzige
-           Zahl hier, die man sonst nirgends sieht. */
-        prevTxt? (bests&&bests.maxW>0? `<div class="prevline">Best <b>${isBW?'+':''}${bests.maxW} kg</b> · ${prev.sets.length} ${prev.sets.length===1?'Satz':'Sätze'} zuletzt</div>`:'')
-               : `<div class="prevline">Erstes Mal — Gewicht suchen, mit dem ${o.lo}–${o.hi} Wdh sauber gehen</div>`}
+      ${/* ── C9: die letzten drei Einheiten ──────────────────────────────
+           „Letztes Mal: 67×8 · 67×8 · 67×8 · 67×8" wiederholte, was ohnehin
+           in jeder Vorwert-Pille steht. Stattdessen jetzt der VERLAUF: die
+           Arbeitsgewichte der letzten drei Einheiten, älteste zuerst. Man
+           sieht auf einen Blick, ob es aufwärts geht — in einer Zeile statt
+           in drei, und ohne Diagramm oder Modal.
+           Bei unterstützten Übungen ist es die effektive Last, bei
+           Körpergewicht das Zusatzgewicht; exHistory rechnet das bereits. */
+        (()=>{
+          const h3 = exHistory(e.exId, new Date(a.date).getTime()).slice(-3);
+          if(!h3.length) return `<div class="prevline">Erstes Mal — Gewicht suchen, mit dem ${o.lo}–${o.hi} Wdh sauber gehen</div>`;
+          /* Bei einer Körpergewichtsübung OHNE Zusatzgewicht ist das Gewicht
+             immer 0 — „0 → 0 → 0" sagt nichts. Dort ist die Wiederholungszahl
+             die Leistung, und die zeigt die Zeile dann auch. */
+          const nurBW = isBW && !assist && !(bests && bests.maxW > 0);
+          const feld  = nurBW ? (x=>x.maxReps) : (x=>x.bestW);
+          const werte = h3.map(x=> fmtW(feld(x))).join(' → ');
+          const rauf  = h3.length>1 && feld(h3[h3.length-1]) > feld(h3[0]);
+          const pfeil = rauf? ' <span style="color:var(--green)">↑</span>' : '';
+          const einh  = nurBW? ' Wdh' : assist? ' kg effektiv' : isBW? ' kg Zusatz' : ' kg';
+          const best  = nurBW ? (bests? ` &nbsp;·&nbsp; Best <b>${bests.maxReps} Wdh</b>` : '')
+                      : (bests&&bests.maxW>0? ` &nbsp;·&nbsp; Best <b>${isBW&&!assist?'+':''}${fmtW(bests.maxW)}</b>` : '');
+          return `<div class="prevline">Zuletzt <b>${werte}</b>${einh}${pfeil}${best}</div>`;
+        })()}
+      <div class="platewrap" data-pb="${ei}">${scheibenZeile(ei)}</div>
+      <div data-wh="${ei}">${warmVorschlag(ei)}</div>
       <div class="sethead ${useRir?'rir':''} ${uni?'uni':''}"><span>#</span><span>Zuletzt</span><span title="${assist?'Hilfe der Maschine — mehr kg macht die Übung leichter':''}">${assist?'−kg Hilfe':isBW?'+kg':'kg'}</span>${uni?'<span title="Wdh linke Seite">Wdh L</span><span title="Wdh rechte Seite">Wdh R</span>':'<span>Wdh</span>'}${useRir?'<span title="Reps in Reserve">RIR</span>':''}<span></span></div>
       ${e.sets.map((s,si)=>{
         const ps = prev && prev.sets[si];
@@ -3991,6 +4316,7 @@ function renderActive(){
         </div>`;
       }).join('')}
       <button class="addset" data-addset="${ei}">＋ Satz</button>
+      <div data-nz="${ei}">${notizFeld(ei)}</div>
     </div>`;
   }).join('');
 
@@ -4024,6 +4350,15 @@ function wireActiveOnce(){
   _activeWired = true;
   const list = $('#tw-exlist');
 
+  /* C2: Notiz mitschreiben. Eigener Zweig, weil sie kein Satzfeld ist. */
+  list.addEventListener('input', e=>{
+    const nz = e.target.closest('input[data-note]'); if(!nz) return;
+    const ex = state.active.exercises[+nz.dataset.note]; if(!ex) return;
+    const v = nz.value.trim();
+    if(v) ex.note = v; else delete ex.note;      // leere Notiz nicht speichern
+    saveStateSoon();
+  });
+
   list.addEventListener('input', e=>{
     const inp = e.target.closest('input[data-f]'); if(!inp) return;
     const row = inp.closest('.setrow'); if(!row) return;
@@ -4036,6 +4371,14 @@ function wireActiveOnce(){
     saveStateSoon();
     refreshSetCount();
     if((inp.dataset.f==='r'||inp.dataset.f==='rr') && !wasDone && isDone) startRestFor(ei, set);
+    /* C3: Scheiben mitziehen, sobald sich das Gewicht ändert. Punktgenau,
+       ohne die Liste neu zu bauen — sonst verliert das Feld den Fokus. */
+    if(inp.dataset.f === 'w'){
+      const pb = list.querySelector('[data-pb="' + ei + '"]');
+      if(pb) pb.innerHTML = scheibenZeile(ei);
+      const wh = list.querySelector('[data-wh="' + ei + '"]');   // C4 mitziehen
+      if(wh) wh.innerHTML = warmVorschlag(ei);
+    }
   });
   list.addEventListener('change', e=>{
     const inp = e.target.closest('input[data-f="w"]'); if(!inp) return;
@@ -4047,6 +4390,26 @@ function wireActiveOnce(){
   list.addEventListener('click', async e=>{
     const t = e.target;
     const row = t.closest('.setrow');
+
+    /* C4: Aufwärmsätze vorn einfügen. Rückgängig über den Toast — ein
+       Fehlgriff soll nicht bedeuten, dass man drei Zeilen einzeln löscht. */
+    const aw = t.closest('[data-addwarm]');
+    if(aw){
+      const ei = +aw.dataset.addwarm;
+      const ex = state.active.exercises[ei];
+      const s = (ex.sets||[]).find(x => (+x.w||0) > 0);
+      if(!s) return;
+      const bar = STANGE[(getEx(ex.exId)||{}).eq] || 0;
+      const neu = warmupSets(+s.w, bar).map(x=>({w:x.w, r:'', t:'w'}));
+      if(!neu.length) return;
+      const vorher = JSON.parse(JSON.stringify(ex.sets));
+      ex.sets = neu.concat(ex.sets);
+      saveState(); haptic('success'); renderActive();
+      withUndo(neu.length + ' Aufwärmsätze eingefügt', ()=>{
+        state.active.exercises[ei].sets = vorher; saveState(); renderActive();
+      });
+      return;
+    }
 
     /* Satz-Typ wechseln — nur die Zeile anfassen, Fokus bleibt */
     const st = t.closest('[data-settype]');
@@ -4208,6 +4571,9 @@ async function finishWorkout(){
        abgeschlossenes Training für immer eindeutig — auch wenn die Übung
        später auf einarmig/beidarmig umgestellt wird. */
     o.uni = exIsUni(e.exId);
+    /* C2: Notiz mitnehmen. finishWorkout baut den Eintrag neu auf — ohne
+       diese Zeile wäre jede Notiz beim Abschließen still verschwunden. */
+    if(e.note && String(e.note).trim()) o.note = String(e.note).trim().slice(0,200);
     return o;
   }).filter(e=>e.sets.length);
   if(!cleaned.length){ toast('Keine gültigen Sätze eingetragen'); return; }
