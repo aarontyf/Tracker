@@ -1199,7 +1199,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V60 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V61 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -5961,24 +5961,44 @@ function exTrend(exId, from){
 
 /* Niveausprung im Verlauf finden — ohne zu behaupten, woher er kommt.
    Ein einzelner schlechter Tag ist KEIN Sprung: das Niveau davor und danach
-   muss sich dauerhaft verschoben haben, sonst wird der Ausreißer ignoriert. */
+   muss sich dauerhaft verschoben haben, sonst wird der Ausreißer ignoriert.
+
+   ── V61: eine PROZENTUALE Schwelle allein reicht nicht ──────────────────
+   Bei Klimmzügen mit Zusatzgewicht meldete die App „Sprung am 30.07. — das
+   Gewicht fällt von 5 kg auf 7,5 kg". Zwei Fehler in einem Satz:
+     · Es fiel nicht, es stieg.
+     · Und es war überhaupt kein Sprung, sondern ein einziger normaler
+       Steigerungsschritt. 5 → 7,5 kg sind +50 %, aber eben nur 2,5 kg.
+   Je kleiner das Ausgangsgewicht, desto größer wird jeder Schritt in Prozent.
+   Bei einem Zusatzgewicht von 5 kg ist die 25-%-Schwelle nach 1,25 kg
+   gerissen — bei 100 kg Bankdrücken bräuchte es 25 kg.
+
+   Deshalb muss ein Sprung jetzt BEIDES sein: prozentual deutlich UND
+   absolut größer als das, was man normal auflegt. Maßstab dafür ist der
+   Gewichtssprung der Übung selbst (exOpt().step) — drei Schritte am Stück
+   macht niemand aus Versehen. */
 const BREAK_MIN_PCT = 25;
+const BREAK_MIN_STEPS = 3;        // in Vielfachen des üblichen Gewichtssprungs
 function exBreak(exId){
   const h = exHistory(exId);
   if(h.length < 3) return null;
+  const step = +exOpt(exId).step || 2.5;
+  const minAbs = Math.max(BREAK_MIN_STEPS * step, 5);   // nie unter 5 kg
   const mean = a => a.length? a.reduce((s,v)=>s+v,0)/a.length : 0;
   let best = null;
   for(let i=1;i<h.length;i++){
     const a = h[i-1].bestW, b = h[i].bestW;
     if(!(a>0)) continue;
-    const step = (b-a)/a*100;
-    if(Math.abs(step) < BREAK_MIN_PCT) continue;
+    if(Math.abs(b-a) < minAbs) continue;               // zu klein für einen Maßstabswechsel
+    const stepPct = (b-a)/a*100;
+    if(Math.abs(stepPct) < BREAK_MIN_PCT) continue;
     const mB = mean(h.slice(0,i).map(x=>x.bestW)), mA = mean(h.slice(i).map(x=>x.bestW));
     if(!(mB>0)) continue;
     const shift = (mA-mB)/mB*100;                       // hält das neue Niveau an?
     if(Math.abs(shift) < BREAK_MIN_PCT) continue;       // nein → Ausreißer, kein Sprung
     if(!best || Math.abs(shift) > Math.abs(best.shift))
-      best = {at:i, date:h[i].date, step, shift, from:a, to:b};
+      best = {at:i, date:h[i].date, step:stepPct, shift, from:a, to:b,
+              richtung: b < a ? 'runter' : 'rauf', minAbs};
   }
   return best;
 }
@@ -6212,7 +6232,7 @@ function renderExStats(){
       <div class="row" style="gap:8px;align-items:flex-start"><span class="bi" data-ico="alert" style="color:var(--gold);margin:0"></span>
       <div><b style="font-size:var(--fs-sub);color:var(--gold)">Seit wann trainierst du einarmig?</b>
       <div class="tiny" style="margin-top:2px">Für ${swi.unknown+swi.umkehr} von ${h.length} ${h.length===1?'Einheit':'Einheiten'} fehlt die Angabe.${
-        brk? ` Am <b>${fmtDate(brk.date)}</b> fällt das Gewicht von <b>${brk.from}</b> auf <b>${brk.to} kg</b>.` : ''}
+        brk? ` Am <b>${fmtDate(brk.date)}</b> ${brk.richtung==='runter'?'fällt':'steigt'} das Gewicht von <b>${fmtW(brk.from)}</b> auf <b>${fmtW(brk.to)} kg</b>.` : ''}
         <details class="erkl"><summary>Warum fragt die App?</summary><div>
           Die Übung steht auf <b>einseitig</b>, aber für ältere Einheiten wurde die Ausführung früher nicht mitgespeichert. Ohne das Datum kann die App die Kurve nicht teilen und würde den Wechsel als Leistungsabfall lesen.
         </div></details></div>
@@ -6223,7 +6243,7 @@ function renderExStats(){
     : brk? `<div class="card" style="border-color:rgba(255,176,32,.34);background:rgba(255,176,32,.07)">
       <div class="row" style="gap:8px;align-items:flex-start"><span class="bi" data-ico="alert" style="color:var(--gold);margin:0"></span>
       <div><b style="font-size:var(--fs-sub);color:var(--gold)">Sprung am ${fmtDate(brk.date)}</b>
-      <div class="tiny" style="margin-top:2px">Das Gewicht fällt von <b>${brk.from} kg</b> auf <b>${brk.to} kg</b> und bleibt dort. <b>Der Trend rechnet ab hier.</b>
+      <div class="tiny" style="margin-top:2px">Das Gewicht ${brk.richtung==='runter'?'fällt':'steigt'} von <b>${fmtW(brk.from)} kg</b> auf <b>${fmtW(brk.to)} kg</b> und bleibt dort. <b>Der Trend rechnet ab hier.</b>
       <details class="erkl"><summary>Warum?</summary><div>
         Das ist kein normaler schlechter Tag, sondern ein anderer Maßstab — typisch für ein anderes Gerät, eine andere Griffart oder einen Wechsel der Ausführung.
         Quer über den Sprung gerechnet käme nur der Sprung heraus, nicht der Fortschritt.
