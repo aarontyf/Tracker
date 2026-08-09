@@ -1107,6 +1107,13 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
 <div class="mback" id="modal-settings"><div class="modal">
   <div class="grab"></div>
   <div class="mhd"><h2>Einstellungen &amp; Daten</h2><button class="iconbtn" data-close aria-label="Schließen" data-ico-close></button></div>
+  <!-- Der Name stand bis V59 fest im Code. Für eine App, die weitergegeben
+       wird, muss er hierher — und darf leer bleiben dürfen. -->
+  <div class="card">
+    <h3 style="margin-bottom:4px">Dein Name</h3>
+    <input type="text" id="set-name" maxlength="24" autocomplete="given-name" spellcheck="false"
+           placeholder="wird nur zur Begrüßung benutzt">
+  </div>
   <div class="card">
     <h3 style="margin-bottom:4px">Trainingsrhythmus</h3>
     <p class="tiny" style="margin-bottom:8px">Ein <b>Zyklus</b> ist ein voller Durchgang durch deinen Plan: <b>Ganzkörper-Push → Ganzkörper-Pull → Rest</b>. Alle Ziele in der Statistik rechnen pro Zyklus, nicht pro Kalenderwoche — sonst schwanken die Werte nur, weil mal zwei und mal drei Einheiten in eine Woche fallen.</p>
@@ -1192,7 +1199,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V59 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V60 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -2490,12 +2497,14 @@ function loadState(){
 const RENAME_MAP = {"x-chest-press-maschine":"x-brustpresse-maschine","x-incline-chest-press-maschine":"x-schrägbank-brustpresse-maschine","x-decline-chest-press-maschine":"x-negativ-brustpresse-maschine","x-chest-press-kabel-sitzend":"x-brustpresse-kabel-sitzend","x-bankdrücken-smith-machine":"x-bankdrücken-multipresse","x-schrägbankdrücken-smith-machine":"x-schrägbankdrücken-multipresse","x-butterfly-pec-deck-maschine":"x-butterfly-maschine","x-cable-fly-hoch-tief":"x-kabelzug-fliegende-hoch-tief","x-cable-fly-mitte":"x-kabelzug-fliegende-mitte","x-cable-fly-tief-hoch":"x-kabelzug-fliegende-tief-hoch","x-cable-fly-einarmig":"x-kabelzug-fliegende-einarmig","x-dip-maschine":"x-dip-maschine","x-svend-press-platte":"x-plattendrücken-vor-der-brust","x-floor-press-langhantel":"x-bodendrücken-langhantel","x-floor-press-kurzhantel":"x-bodendrücken-kurzhantel","x-landmine-press-brust":"x-landmine-drücken-brust","x-guillotine-press":"x-guillotine-bankdrücken","x-squeeze-press-kurzhantel":"x-enges-kurzhanteldrücken","x-squeeze-press-schrägbank":"x-enges-kurzhanteldrücken-schrägbank","x-chest-press-band":"x-brustdrücken-band","x-band-fly":"x-fliegende-band","x-pullover-kurzhantel":"x-überzüge-kurzhantel","x-chin-ups-untergriff":"x-klimmzüge-untergriff","x-chin-ups-mit-gewicht":"x-klimmzüge-untergriff-mit-gewicht","x-pulldown-maschine-plate-loaded":"x-latzug-maschine-scheiben","x-straight-arm-pulldown-kabel":"x-überzüge-am-kabel-gestreckte-arme","x-rope-pullover-kabel":"x-seilzug-überzüge","x-pendlay-row":"x-pendlay-rudern","x-t-bar-rudern":"x-t-stangen-rudern","x-t-bar-rudern-brustauflage":"x-t-stangen-rudern-brustauflage","x-seal-row":"x-rudern-in-bauchlage","x-rudermaschine-plate-loaded":"x-rudermaschine-scheiben","x-high-row-maschine":"x-rudern-von-oben-maschine","x-low-row-maschine":"x-rudern-von-unten-maschine","x-rudern-smith-machine":"x-rudern-multipresse","x-inverted-row":"x-umgekehrtes-rudern","x-meadows-row":"x-meadows-rudern","x-landmine-row":"x-landmine-rudern","x-kroc-row":"x-kroc-rudern","x-kreuzheben-trap-bar":"x-kreuzheben-trap-stange","x-kreuzheben-snatch-grip":"x-kreuzheben-reißgriff","x-rack-pulls":"x-teilkreuzheben-aus-dem-rack","x-reverse-hyperextension":"x-umgekehrter-rückenstrecker","x-superman":"x-superman-bauchlage","x-shrugs-langhantel":"x-schulterheben-langhantel","x-shrugs-kurzhantel":"x-schulterheben-kurzhantel","x-shrugs-smith-machine":"x-schulterheben-multipresse","x-shrugs-trap-bar":"x-schulterheben-trap-stange","x-shrugs-kabel":"x-schulterheben-kabel","x-arnold-press":"x-arnold-drücken","x-shoulder-press-maschine":"x-schulterpresse-maschine","x-schulterdrücken-smith-machine":"x-schulterdrücken-multipresse","x-push-press":"x-schulterdrücken-mit-schwung","x-landmine-press-schulter":"x-landmine-drücken-schulter","x-landmine-press-einarmig":"x-landmine-drücken-einarmig","x-z-press":"x-z-drücken-am-boden-sitzend","x-viking-press":"x-viking-drücken","x-lean-in-seitheben":"x-seitheben-angelehnt","x-reverse-flys-kurzhantel":"x-umgekehrte-fliegende-kurzhantel","x-reverse-pec-deck-maschine":"x-umgekehrtes-butterfly-maschine","x-reverse-cable-fly":"x-umgekehrte-fliegende-kabel","x-face-pulls-kabel":"x-gesichtsziehen-kabel","x-face-pulls-band":"x-gesichtsziehen-band","x-band-pull-aparts":"x-band-auseinanderziehen","x-cuban-rotation":"x-kubanische-rotation","x-bus-driver":"x-lenkrad-drehen-scheibe","x-bradford-press":"x-bradford-drücken","x-preacher-curls-sz-stange":"x-preacher-curls-sz-stange","x-preacher-curls-kurzhantel":"x-preacher-curls-kurzhantel","x-hammer-preacher-curls":"x-hammer-preacher-curls","x-preacher-curl-maschine":"x-preacher-curl-maschine","x-high-cable-curls":"x-kabel-curls-von-oben","x-bayesian-curls-kabel":"x-kabel-curls-hinter-dem-körper","x-spider-curls":"x-spider-curls-vorgebeugt","x-drag-curls":"x-zieh-curls-am-körper-entlang","x-zottman-curls":"x-zottman-curls","x-21s-langhantel":"x-21er-curls-langhantel","x-waiter-curls":"x-kellner-curls","x-jm-press":"x-jm-drücken","x-skull-crushers-sz-stange":"x-stirndrücken-sz-stange","x-skull-crushers-kurzhantel":"x-stirndrücken-kurzhantel","x-overhead-extension-kabel-seil":"x-trizepsdrücken-über-kopf-kabel-seil","x-kickbacks-kabel":"x-trizeps-rückdrücken-kabel","x-kickbacks-kurzhantel":"x-trizeps-rückdrücken-kurzhantel","x-bench-dips":"x-bank-dips","x-trizeps-maschine":"x-trizeps-maschine","x-overhead-triceps-extension-maschine":"x-trizepsdrücken-über-kopf-maschine","x-seated-dip-maschine":"x-dip-maschine-sitzend","x-tate-press":"x-tate-drücken","x-french-press-sitzend-sz":"x-französisches-drücken-sitzend-sz","x-enges-bankdrücken-smith":"x-enges-bankdrücken-multipresse","x-wrist-curls-langhantel":"x-handgelenk-curls-langhantel","x-reverse-wrist-curls":"x-handgelenk-curls-obergriff","x-wrist-curls-kurzhantel":"x-handgelenk-curls-kurzhantel","x-wrist-curls-hinter-rücken":"x-handgelenk-curls-hinter-dem-rücken","x-farmer-s-walk":"x-gewichte-tragen-farmers-walk","x-plate-pinch":"x-scheiben-kneifgriff","x-dead-hang":"x-hängen-an-der-stange","x-wrist-roller":"x-unterarm-roller","x-kniebeugen-low-bar":"x-kniebeugen-tiefe-auflage","x-box-squats":"x-kniebeugen-auf-box","x-pause-squats":"x-kniebeugen-mit-pause","x-goblet-squats":"x-kelch-kniebeugen","x-kniebeugen-smith-machine":"x-kniebeugen-multipresse","x-hack-squat-maschine":"x-hackenschmidt-maschine","x-pendulum-squat-maschine":"x-pendel-kniebeugenmaschine","x-v-squat-maschine":"x-v-kniebeugenmaschine","x-bulgarian-split-squats":"x-bulgarische-kniebeugen","x-split-squats":"x-geteilte-kniebeugen","x-curtsy-lunges":"x-überkreuz-ausfallschritte","x-step-ups":"x-aufsteiger-auf-box","x-sissy-squats":"x-sissy-kniebeugen","x-belt-squats":"x-gürtel-kniebeugen","x-zercher-squats":"x-zercher-kniebeugen","x-pistol-squats":"x-einbeinige-kniebeugen-pistol","x-stiff-leg-deadlift":"x-gestrecktes-kreuzheben","x-einbeiniges-rdl":"x-einbeiniges-rumänisches-kreuzheben","x-nordic-curls":"x-nordische-beinbeuger","x-glute-ham-raise":"x-beinbeuger-rückenstrecker-ghr","x-good-mornings":"x-guten-morgen-beugen","x-rdl-smith-machine":"x-rumänisches-kreuzheben-multipresse","x-beincurl-gymnastikball":"x-beinbeuger-gymnastikball","x-beincurl-slider":"x-beinbeuger-slider","x-hip-thrust-langhantel":"x-hüftstoß-langhantel","x-hip-thrust-maschine":"x-hüftstoß-maschine","x-hip-thrust-smith-machine":"x-hüftstoß-multipresse","x-glute-bridge":"x-beckenheben","x-glute-bridge-einbeinig":"x-beckenheben-einbeinig","x-b-stance-hip-thrust":"x-hüftstoß-versetzter-stand","x-kickbacks-kabel-glute":"x-beinrückheben-kabel","x-kickback-maschine":"x-beinrückheben-maschine","x-donkey-kicks":"x-eselstritte","x-fire-hydrants":"x-beinabspreizen-vierfüßler","x-frog-pumps":"x-frosch-beckenheben","x-sumo-squats":"x-sumo-kniebeugen","x-cable-pull-throughs":"x-durchziehen-am-kabel","x-band-side-walks":"x-seitschritte-mit-band","x-clamshells":"x-muschel-öffnen-seitlich-liegend","x-copenhagen-plank":"x-kopenhagener-seitstütz","x-wadenheben-smith-machine":"x-wadenheben-multipresse","x-donkey-calf-raises":"x-esel-wadenheben","x-tibialis-raises":"x-schienbeinheben","x-crunches":"x-crunches-bauchpressen","x-hanging-leg-raises":"x-beinheben-hängend","x-hanging-knee-raises":"x-knieheben-hängend","x-beinheben-captain-s-chair":"x-beinheben-beinhebemaschine","x-reverse-crunches":"x-umgekehrte-crunches","x-v-ups":"x-v-aufrichter","x-toes-to-bar":"x-zehen-zur-stange","x-ab-wheel-rollouts":"x-bauchroller-ab-wheel","x-plank-sek-als-wdh":"x-unterarmstütz-sek-als-wdh","x-plank-mit-gewicht":"x-unterarmstütz-mit-gewicht","x-side-plank-sek-als-wdh":"x-seitstütz-sek-als-wdh","x-russian-twists":"x-russische-drehungen","x-woodchopper-kabel-hoch-tief":"x-holzhacker-kabel-hoch-tief","x-woodchopper-kabel-tief-hoch":"x-holzhacker-kabel-tief-hoch","x-pallof-press":"x-pallof-drücken-anti-rotation","x-dead-bugs":"x-toter-käfer","x-bird-dogs":"x-vierfüßler-diagonal","x-mountain-climbers":"x-bergsteiger","x-dragon-flags":"x-drachenfahne","x-hollow-hold-sek-als-wdh":"x-hohlkörper-halten-sek-als-wdh","x-l-sit-sek-als-wdh":"x-l-sitz-sek-als-wdh","x-suitcase-carry":"x-koffertragen-einseitig","x-power-cleans":"x-umsetzen-power-clean","x-hang-cleans":"x-umsetzen-aus-dem-hang","x-clean-jerk":"x-umsetzen-stoßen","x-snatch":"x-reißen","x-kettlebell-swings":"x-kettlebell-schwünge","x-kettlebell-clean-press":"x-kettlebell-umsetzen-drücken","x-thrusters":"x-kniebeuge-mit-drücken-thruster","x-sled-push":"x-schlitten-schieben","x-sled-pull":"x-schlitten-ziehen","x-battle-ropes":"x-schwungseile","x-turkish-get-ups":"x-türkisches-aufstehen","x-cross-body-hammer-curls":"x-hammer-curls-quer-zum-körper","x-reverse-curls-sz-stange":"x-umgekehrte-curls-sz-stange","x-reverse-curls-langhantel":"x-umgekehrte-curls-langhantel","x-bizeps-curl-maschine":"x-bizeps-curl-maschine","x-crunch-maschine":"x-crunch-maschine","x-thruster-kniebeuge-drücken":"x-kniebeuge-mit-drücken-thruster","x-scottcurls-sz-stange":"x-preacher-curls-sz-stange","x-scottcurls-kurzhantel":"x-preacher-curls-kurzhantel","x-hammer-scottcurls":"x-hammer-preacher-curls","x-scottcurl-maschine":"x-preacher-curl-maschine"};
 /* Migration: alte Positions-IDs (e12) → Namens-IDs; V7: englische → deutsche Übungsnamen */
 function migrateState(){
-  /* V37: Sicherungs-Empfänger war früher fest im Code. Bestehende Installationen
-     übernehmen ihn einmalig, damit der Ein-Tipp-Versand weiter funktioniert.
-     Neue Installationen tragen ihn selbst ein. */
-  if(state.settings && state.settings.vaultMail === undefined && state.workouts && state.workouts.length){
-    state.settings.vaultMail = 'jeetunaaron750@gmail.com';
-  }
+  /* V60: Die Übernahme des Sicherungs-Empfängers ist entfallen.
+     Sie stammte aus V37 und trug eine feste Mailadresse in jede Installation
+     ein, die Trainings hatte — gedacht als einmalige Übernahme für die eigene
+     App. Sobald jemand anderes die App benutzt, greift dieselbe Bedingung
+     nach dem ersten Training: Die Sicherung dieses Menschen wäre an eine
+     fremde Adresse gegangen, ohne dass er es merkt.
+     Wer die Adresse braucht, trägt sie in den Einstellungen ein — dort steht
+     sie ohnehin schon, seit V37 durchgelaufen ist. */
   const remap = id=>{
     if(typeof id!=='string') return id;
     if(/^e\d+$/.test(id)){ const ex=EXDB[+id.slice(1)]; id = ex? ex.id : id; }
@@ -3195,6 +3204,25 @@ function warmupSets(work, bar){
    Plan gar nicht mehr vorkommt, und am Montag begann sie stur wieder bei Push,
    egal wo Aaron im Zyklus stand.
    Neu: Der Vorschlag ergibt sich aus dem laufenden Zyklus — was fehlt, kommt. */
+/* ══════════════════════════════════════════════════════════════════════
+   PASST DER PLAN ÜBERHAUPT ZUR ZYKLUS-LOGIK?                     (V60/F)
+   Ein Zyklus beginnt mit einer Push-Einheit. Wer anders trainiert —
+   Ganzkörper, Oberkörper/Unterkörper, nur Beine — hat nie einen Push, und
+   die App zeigte trotzdem „Zyklus 0 · Tag 19 · ○ Push ○ Pull" und „Dein
+   erster Zyklus läuft gerade". Nach sechs Einheiten und drei Wochen.
+   Das ist keine Lücke, das ist eine falsche Behauptung. Sie sagt jetzt
+   stattdessen, dass sie diesen Plan nicht auswerten kann. */
+function planPasstZuZyklen(){
+  const ws = state.workouts;
+  if(!ws.length) return true;                 // noch nichts da — nichts zu behaupten
+  return ws.some(w => w.type === 'Push');
+}
+function planHinweis(){
+  const n = state.workouts.length;
+  return `${n} ${n===1?'Einheit':'Einheiten'} aufgezeichnet, aber keine als <b>Push</b> angelegt. `
+       + `Die Zyklus-Auswertung richtet sich nach dem Wechsel Push → Pull — ohne Push gibt es keinen Zyklus.`;
+}
+
 function suggestType(){
   const c = runningCycle();
   if(!c) return 'Push';                       // frischer Start oder Zyklus gerade zu
@@ -3792,8 +3820,13 @@ function renderHome(){
   const dayStreak = currentDayStreak(), wkStreak = currentWeekStreak();
 
   /* ── Kopf ── */
-  $('#home-greet').textContent = greeting() + ', Aaron';
-  $('#home-week-label').innerHTML = (zyk
+  /* Der Name kam bis V59 fest aus dem Code — jeder wurde mit „Aaron" begrüßt.
+     Jetzt aus den Einstellungen; ohne Eintrag bleibt es beim reinen Gruß. */
+  const wer = (state.settings.name||'').trim();
+  $('#home-greet').textContent = greeting() + (wer? ', ' + wer : '');
+  $('#home-week-label').innerHTML = (!planPasstZuZyklen()
+      ? `<span style="color:var(--gold)">Kein Push aufgezeichnet — ohne ihn zählt die App keine Zyklen</span>`
+      : zyk
       ? `Zyklus ${zyk.n} · Tag ${zyk.tage} · ${zyk.push? '✓':'○'} Push  ${zyk.pull? '✓':'○'} Pull`
       : 'Noch kein Training — der erste Push startet Zyklus 1')
     + (dayStreak>1? ` &nbsp;·&nbsp; <span class="streak" style="color:var(--gold)"><span class="fl">${ICO.flame}</span>${dayStreak} in Folge</span>` : '');
@@ -3915,6 +3948,7 @@ $('#scr-home').addEventListener('click', e=>{
 $('#btn-start-home').addEventListener('click',()=>showScreen('scr-train'));
 $('#btn-settings').addEventListener('click',()=>{
   $('#set-goal').value = state.settings.goal;
+  $('#set-name').value = state.settings.name || '';
   $('#set-vaultmail').value = state.settings.vaultMail || '';
   hydrateIcons($('#modal-settings'));
   $('#set-rest').value = state.settings.rest||90;
@@ -3938,6 +3972,13 @@ $('#set-rir').addEventListener('click',()=>{
   state.settings.rir = !state.settings.rir; saveState();
   $('#set-rir').textContent = state.settings.rir?'An':'Aus'; $('#set-rir').classList.toggle('on', !!state.settings.rir);
   if(state.active) renderActive();
+});
+$('#set-name').addEventListener('change',()=>{
+  const v = $('#set-name').value.trim().slice(0,24);
+  if(v) state.settings.name = v; else delete state.settings.name;
+  $('#set-name').value = v;
+  saveState(); renderHome();
+  toast(v? 'Hallo, '+v+'!' : 'Name entfernt');
 });
 $('#set-rest').addEventListener('change',()=>{ const v=Math.max(15,Math.min(600,+$('#set-rest').value||90)); state.settings.rest=v; $('#set-rest').value=v; saveState(); toast('Pause: '+v+' Sek.'); });
 $('#set-restsound').addEventListener('click',()=>{
@@ -5707,6 +5748,19 @@ function renderWeekStats(){
   const el = $('#stats-week');
   const closed = closedCycles();
   const lauf = runningCycle();
+  /* Kein Push in der ganzen Historie: Der Plan passt nicht zur Zyklus-Logik.
+     Vorher stand hier „Dein erster Zyklus läuft gerade" — auch nach zwanzig
+     Einheiten. Die Sätze pro Muskel stimmen trotzdem und werden gezeigt. */
+  if(!planPasstZuZyklen()){
+    const alle = state.workouts;
+    lastStatsWs = alle;
+    el.innerHTML = leadCard('Für deinen Plan kann ich keine Zyklen zählen.', 'warn', planHinweis())
+      + `<div class="card"><h3 style="margin-bottom:8px">Sätze pro Muskelgruppe <span class="tiny">(über alle ${alle.length} Einheiten)</span></h3>
+         ${groupBars(muscleSetsBy(alle, statsSetMode), alle, 1)}</div>`
+      + `<div class="card"><div class="tiny">Trage deine Einheiten als <b>Push</b> und <b>Pull</b> ein, dann rechnet die Statistik in Zyklen.
+         Der Reiter <b>Gesamt</b> funktioniert unabhängig davon — er kommt ohne Zyklen aus.</div></div>`;
+    return;
+  }
   if(!closed.length){
     lastStatsWs = lauf? lauf.ws : [];
     el.innerHTML = lauf
