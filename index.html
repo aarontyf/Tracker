@@ -38,7 +38,12 @@
   --acc:#5D9BFF;
   --acc2:#8FB8FF;
   --acc-deep:#1A47C7;
-  --on-acc:#FFFFFF;   /* Schrift auf Volt-Flächen — 15,6:1 */
+  /* Schrift auf dem Akzent-Verlauf (#3A70DC → --acc-deep): 4,63:1 am hellen
+     Ende, 7,58:1 am dunklen. Über 4,5:1, aber ohne Reserve — wird der Verlauf
+     heller, kippt es. NICHT auf reines --acc legen, das wären nur 2,76:1.
+     (Hier stand bis V58 „15,6:1". Der Wert kommt in keiner Kombination vor
+     und hat eine Reserve suggeriert, die es nicht gibt.) */
+  --on-acc:#FFFFFF;
   /* Touch-Ziel-Norm (WCAG 2.2 · 2.5.8 = 24px, Apple HIG = 44px) */
   --hit-min:24px; --hit-comfort:44px;
   --accdark:#0E2350;
@@ -132,7 +137,7 @@ h3{font-size:15px;font-weight:650;letter-spacing:-.012em}
 .acc{color:var(--acc)}
 .up{text-transform:uppercase;letter-spacing:.09em;font-size:10px;font-weight:650;color:var(--txt3)}
 /* Zahlen laufen nicht mehr — Tabellenziffern überall, wo gezählt wird */
-.num,.kpi b,.timer,.val,.htable td,.lvlbadge b,.stat-v{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+.kpi b,.timer,.val,.htable td,.lvlbadge b{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
 
 /* ─── LAYOUT ─────────────────────────────────────────────────────── */
 .app{max-width:620px;margin:0 auto;padding:calc(var(--sp3) + env(safe-area-inset-top)) var(--sp4) calc(82px + env(safe-area-inset-bottom))}
@@ -206,7 +211,7 @@ h3>.bi svg{width:15px;height:15px}
    dem iPhone nach dem Tippen „kleben". */
 @media (hover:hover) and (pointer:fine){
   .btn-acc:hover{filter:brightness(1.07)}
-  .btn-ghost:hover,.btn-secondary:hover{background:var(--s3);border-color:var(--line-3)}
+  .btn-ghost:hover{background:var(--s3);border-color:var(--line-3)}
   .btn-danger:hover{background:rgba(255,77,69,.18)}
   .iconbtn:hover{background:var(--s3);color:var(--txt)}
   .chip:hover:not(.on){background:var(--s3);border-color:var(--line-2);color:var(--txt)}
@@ -247,7 +252,6 @@ h3>.bi svg{width:15px;height:15px}
 
 /* ─── KPI / STAT-KACHELN ─────────────────────────────────────────── */
 .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--sp2)}
-.kpis.k3{grid-template-columns:repeat(3,1fr)}
 .kpi{
   background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.012)),var(--s1);
   border:1px solid var(--line);border-radius:var(--r-md);padding:12px 4px;text-align:center;
@@ -258,20 +262,14 @@ h3>.bi svg{width:15px;height:15px}
 .kpi .pr{color:var(--gold)}
 .kdelta{display:block;font-style:normal;font-size:10px;font-weight:750;margin-top:3px;letter-spacing:-.01em}
 
-/* ─── PROGRESS-RINGE (Dashboard) ─────────────────────────────────── */
-.rings{display:flex;align-items:center;gap:var(--sp5)}
-.ringwrap{position:relative;flex:none}
-.ringwrap svg{display:block;transform:rotate(-90deg)}
-.ringwrap .ringc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
-.ringwrap .ringc b{font-size:20px;font-weight:800;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
-.ringwrap .ringc span{font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.08em;font-weight:650}
+/* ─── RINGE ───────────────────────────────────────────────────────────
+   Der Rahmen der Wochen-Ringe (.rings, .ringwrap, .ringc, .ringlegend, .rl)
+   ist mit V58 entfallen: Die Karte „Diese Woche" wurde in V57 aus renderHome
+   genommen, die elf Regeln trafen seither auf nichts mehr.
+   ring-track und ring-bar bleiben — die ring()-Funktion zeichnet damit auch
+   den Level-Fortschritt. */
 .ring-track{stroke:rgba(255,255,255,.07)}
 .ring-bar{stroke-linecap:round;transition:stroke-dashoffset var(--dur-4) var(--ease)}
-.ringlegend{display:flex;flex-direction:column;gap:8px;flex:1;min-width:0}
-.rl{display:flex;align-items:center;gap:8px;font-size:13px}
-.rl i{width:9px;height:9px;border-radius:3px;flex:none}
-.rl b{font-variant-numeric:tabular-nums;font-weight:750}
-.rl span{color:var(--txt3);margin-left:auto;font-size:11.5px}
 
 /* ─── HERO (Startbildschirm) ─────────────────────────────────────── */
 .hero{
@@ -371,7 +369,6 @@ path[data-m].r3{fill:var(--fig-3);stroke:rgba(0,0,0,.40)}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 .empty b{color:var(--txt2);display:block;font-size:15px;margin-bottom:4px;font-weight:650}
 /* Skeleton */
-.sk{background:linear-gradient(90deg,var(--s2) 25%,var(--s3) 37%,var(--s2) 63%);background-size:400% 100%;animation:shimmer 1.4s linear infinite;border-radius:var(--r-sm)}
 @keyframes shimmer{from{background-position:100% 0}to{background-position:-100% 0}}
 
 /* ─── BALKEN ─────────────────────────────────────────────────────── */
@@ -469,6 +466,9 @@ details.erkl.warum>div{font-size:var(--fs-tiny);margin-top:2px}
 .setrow.filled input{border-color:rgba(93,155,255,.35);background:rgba(93,155,255,.07)}
 .riri{width:100%;text-align:center;padding:12px 2px;font-weight:750;font-size:15px !important}
 .addset{width:100%;margin-top:var(--sp1);padding:8px;border:1px dashed var(--line-2);border-radius:var(--r-sm);color:var(--txt2);font-weight:650;font-size:13px;transition:all var(--dur-2) var(--ease);min-height:42px}
+/* Erläuterung, die zum Kennzahlenblock gehört („Vergleich zu Zyklus 7").
+   Sitzt im Fluss statt mit margin:-8px hochgezogen zu werden. */
+.kpihint{margin:4px 2px 12px;color:var(--txt3)}
 /* Scheiben unter der Übung (C3) — nur bei Stangen-Übungen, sonst leer */
 .platebar{color:var(--txt3);padding:3px 2px 0;font-variant-numeric:tabular-nums}
 .platebar b{color:var(--txt2);font-weight:700}
@@ -481,7 +481,7 @@ details.notiz{margin-top:6px}
 details.notiz>summary{cursor:pointer;list-style:none;font-size:var(--fs-tiny);color:var(--txt2);
   min-height:var(--hit-min);display:flex;align-items:center;gap:6px}
 details.notiz>summary::-webkit-details-marker{display:none}
-details.notiz>summary::before{content:'✎';color:var(--txt3);font-size:12px}
+details.notiz>summary::before{content:'✎';color:var(--txt3);font-size:var(--fs-tiny)}
 details.notiz>summary .alt{color:var(--txt3);font-style:italic}
 details.notiz input{margin-top:4px;width:100%}
 .addset:active{background:var(--s2);border-color:var(--acc-a30);color:var(--acc2)}
@@ -1235,7 +1235,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V57 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V58 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -5247,6 +5247,35 @@ window.chartTip = function(tid, txt){
   el.textContent = txt; el.setAttribute('opacity','1');
   clearTimeout(el.__t); el.__t = setTimeout(()=>el.setAttribute('opacity','0'), 2600);
 };
+/* ══════════════════════════════════════════════════════════════════════
+   DIAGRAMM-PALETTE                                                (V58/D)
+   Die SVG-Bausteine brachten ihre eigenen Farben mit — 24 rohe Hex-Werte,
+   die nirgends im Design-System standen:
+     · ein anderes Blau als die Oberfläche (#4C8DFF gegen --acc #5D9BFF)
+     · vier verschiedene Grautöne für Beschriftungen (#5c6577, #5f6877,
+       #9aa3b2, #98a2b5) — praktisch dieselbe Farbe, viermal getippt
+     · ein eigenes Gelb für die Trendlinie
+   Drei davon lagen UNTER dem WCAG-Mindestkontrast: die Achsenbeschriftungen
+   mit 3,17:1 und 3,31:1 gegen die Kartenfläche. k1 hat das nie bemerkt,
+   weil es die Tokens prüft — und die Diagramme benutzten keine.
+
+   Schreibweise var(--x,#fallback): SVG-Attribute lösen CSS-Variablen in
+   allen Zielbrowsern auf, der Fallback ist die Absicherung. Dasselbe Muster
+   nutzte svgRadar schon bei var(--s1,#101319).
+
+   NICHT hierher gehören RARITY (Seltenheitsstufen der Erfolge) und die
+   Konfetti-Farben: Das sind eigene Bedeutungsskalen, keine Diagrammfarben. */
+const C = {
+  linie:  'var(--acc,#5D9BFF)',      // Datenlinie, Punkte
+  hell:   'var(--acc2,#8FB8FF)',     // Verlauf hell, letzter Punkt
+  achse:  'var(--txt3,#7C8699)',     // Achsen- und Balkenbeschriftung  (war 3,17:1)
+  wert:   'var(--txt2,#A3ADBF)',     // Werte über den Balken
+  titel:  'var(--txt,#F4F6FA)',      // Tooltip
+  gitter: 'var(--s3,#1F242E)',       // Hilfslinien, leere Flächen
+  ziel:   'var(--green,#30D158)',    // Zielband
+  trend:  'var(--gold,#FFB020)',     // gleitender Durchschnitt
+};
+
 function svgBars(labels, values, fmt){
   fmt = fmt || (v=>v);
   const W=340,H=152,padB=22,padT=18,padR=30,max=Math.max(...values,1);
@@ -5254,19 +5283,20 @@ function svgBars(labels, values, fmt){
   const tid='ct'+(++__cid), gid='gbar'+__cid;
   let s = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
   [0.5,1].forEach(f=>{ const y=padT+(H-padB-padT)*(1-f);
-    s+=`<line x1="0" y1="${y}" x2="${W-padR+4}" y2="${y}" stroke="#232833" stroke-width="1"/>`;
-    s+=`<text x="${W-padR+6}" y="${y+3}" font-size="8" fill="#5c6577">${fmt(Math.round(max*f))}</text>`; });
+    s+=`<line x1="0" y1="${y}" x2="${W-padR+4}" y2="${y}" stroke="${C.gitter}" stroke-width="1"/>`;
+    /* 8 px waren an der Lesbarkeitsgrenze und mit 3,17:1 unter dem Kontrastminimum */
+    s+=`<text x="${W-padR+6}" y="${y+3}" font-size="9" fill="${C.achse}">${fmt(Math.round(max*f))}</text>`; });
   values.forEach((v,i)=>{
     const h=(H-padB-padT)*(v/max), x=5+step*i+(step-bw)/2, y=H-padB-h;
     s+=`<g style="cursor:pointer" onclick="chartTip('${tid}','${labels[i]}: ${String(fmt(v)).replace(/'/g,'')}')">`;
     s+=`<rect x="${5+step*i}" y="${padT}" width="${step}" height="${H-padB-padT}" fill="transparent"/>`;
     s+=`<rect class="cbar" style="transform-origin:${(x+bw/2).toFixed(1)}px ${(H-padB)}px;animation-delay:${i*32}ms" x="${x}" y="${y}" width="${bw}" height="${Math.max(h,v>0?2:0)}" rx="3" fill="${v>0?`url(#${gid})`:'rgba(255,255,255,.05)'}"/>`;
-    if(v>0 && n<=7) s+=`<text x="${x+bw/2}" y="${y-4}" font-size="8.5" fill="#9aa3b2" text-anchor="middle">${fmt(v)}</text>`;
-    s+=`<text x="${x+bw/2}" y="${H-8}" font-size="8.5" fill="#5f6877" text-anchor="middle">${labels[i]}</text></g>`;
+    if(v>0 && n<=7) s+=`<text x="${x+bw/2}" y="${y-4}" font-size="9" fill="${C.wert}" text-anchor="middle">${fmt(v)}</text>`;
+    s+=`<text x="${x+bw/2}" y="${H-8}" font-size="9" fill="${C.achse}" text-anchor="middle">${labels[i]}</text></g>`;
   });
-  s+=`<text id="${tid}" x="${W/2}" y="11" font-size="10" font-weight="700" fill="#CFE0FF" text-anchor="middle" opacity="0"></text>`;
+  s+=`<text id="${tid}" x="${W/2}" y="11" font-size="10" font-weight="700" fill="${C.titel}" text-anchor="middle" opacity="0"></text>`;
   /* Verlaufs-ID muss je Diagramm eindeutig sein — siehe Kommentar bei svgLine */
-  s+=`<defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8FB8FF"/><stop offset="1" stop-color="#3A70DC"/></linearGradient></defs></svg>`;
+  s+=`<defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${C.hell}"/><stop offset="1" stop-color="${C.linie}"/></linearGradient></defs></svg>`;
   return `<div class="chart">${s}</div>`;
 }
 /* Radar / Spider-Chart (6 Achsen) */
@@ -5285,25 +5315,27 @@ function svgRadar(pairs, ziel, radarWs){
   const max=Math.max(...pairs.map(p=>p[1]),1);
   const pt=(i,f)=>{ const a=Math.PI*2*i/n-Math.PI/2; return [(cx+Math.cos(a)*R*f).toFixed(1),(cy+Math.sin(a)*R*f).toFixed(1)]; };
   let s=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
-  [0.33,0.66,1].forEach(f=>{ s+=`<polygon points="${pairs.map((_,i)=>pt(i,f).join(',')).join(' ')}" fill="none" stroke="#1c2230" stroke-width="1"/>`; });
-  pairs.forEach((_,i)=>{ const [x,y]=pt(i,1); s+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#1c2230" stroke-width="1"/>`; });
+  [0.33,0.66,1].forEach(f=>{ s+=`<polygon points="${pairs.map((_,i)=>pt(i,f).join(',')).join(' ')}" fill="none" stroke="${C.gitter}" stroke-width="1"/>`; });
+  pairs.forEach((_,i)=>{ const [x,y]=pt(i,1); s+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="${C.gitter}" stroke-width="1"/>`; });
   if(norm){
     const skala = 1.4;
     const ringLo = pairs.map((_,i)=>pt(i, (ziel[i].lo/Math.max(1,ziel[i].hi))/skala).join(',')).join(' ');
     const ringHi = pairs.map((_,i)=>pt(i, 1/skala).join(',')).join(' ');
     s+=`<polygon points="${ringHi}" fill="rgba(48,209,88,.10)" stroke="none"/>`;
     s+=`<polygon points="${ringLo}" fill="var(--s1,#101319)" stroke="none"/>`;
-    s+=`<polygon points="${ringLo}" fill="none" stroke="#30D158" stroke-width="1.2" stroke-dasharray="3 3" opacity=".75"/>`;
-    s+=`<polygon points="${ringHi}" fill="none" stroke="#30D158" stroke-width="1.2" stroke-dasharray="3 3" opacity=".75"/>`;
+    /* Klassen statt Farbwerten: die Bauteile bleiben auffindbar, auch wenn
+       sich die Palette ändert. Vorher hingen die Prüfungen an „#4C8DFF". */
+    s+=`<polygon class="radar-band" points="${ringLo}" fill="none" stroke="${C.ziel}" stroke-width="1.2" stroke-dasharray="3 3" opacity=".75"/>`;
+    s+=`<polygon class="radar-band" points="${ringHi}" fill="none" stroke="${C.ziel}" stroke-width="1.2" stroke-dasharray="3 3" opacity=".75"/>`;
   }
   const f_ = i => norm? val(i)/1.4 : (pairs[i][1]||0)/max;
-  s+=`<polygon points="${pairs.map((p,i)=>pt(i,f_(i)).join(',')).join(' ')}" fill="rgba(93,155,255,.28)" stroke="#4C8DFF" stroke-width="2" stroke-linejoin="round"/>`;
-  pairs.forEach((p,i)=>{ if(p[1]>0){ const [x,y]=pt(i,f_(i)); s+=`<circle cx="${x}" cy="${y}" r="3" fill="#8FB8FF"/>`; } });
+  s+=`<polygon class="radar-data" points="${pairs.map((p,i)=>pt(i,f_(i)).join(',')).join(' ')}" fill="rgba(93,155,255,.28)" stroke="${C.linie}" stroke-width="2" stroke-linejoin="round"/>`;
+  pairs.forEach((p,i)=>{ if(p[1]>0){ const [x,y]=pt(i,f_(i)); s+=`<circle cx="${x}" cy="${y}" r="3" fill="${C.hell}"/>`; } });
   pairs.forEach((p,i)=>{
     const [x,y]=pt(i,1.22);
     const anch = Math.abs(x-cx)<12? 'middle' : (x>cx? 'start':'end');
-    s+=`<text x="${x}" y="${+y+3}" font-size="10" font-weight="600" fill="#98a2b5" text-anchor="${anch}">${p[0]}</text>`;
-    if(p[1]>0) s+=`<text x="${x}" y="${+y+14}" font-size="8.5" fill="#5c6577" text-anchor="${anch}">${p[1]%1? p[1].toFixed(1).replace('.',','):p[1]}</text>`;
+    s+=`<text x="${x}" y="${+y+3}" font-size="10" font-weight="600" fill="${C.wert}" text-anchor="${anch}">${p[0]}</text>`;
+    if(p[1]>0) s+=`<text x="${x}" y="${+y+14}" font-size="9" fill="${C.achse}" text-anchor="${anch}">${p[1]%1? p[1].toFixed(1).replace('.',','):p[1]}</text>`;
   });
   s+='</svg>';
   return `<div class="chart">${s}</div>`;
@@ -5325,7 +5357,7 @@ function svgLine(pts, fmt, opts){
   const tid='ct'+(++__cid), gl='gline'+__cid, gf='gfill'+__cid;
   let d=pts.map((p,i)=>(i?'L':'M')+X(i).toFixed(1)+','+Y(p.y).toFixed(1)).join(' ');
   let s=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
-  [max,(max+min)/2,min].forEach(v=>{ const y=Y(v); s+=`<line x1="0" y1="${y}" x2="${W-padR+4}" y2="${y}" stroke="#232833"/><text x="${W-padR+6}" y="${y+3}" font-size="8" fill="#5c6577">${fmt(v)}</text>`; });
+  [max,(max+min)/2,min].forEach(v=>{ const y=Y(v); s+=`<line x1="0" y1="${y}" x2="${W-padR+4}" y2="${y}" stroke="${C.gitter}"/><text x="${W-padR+6}" y="${y+3}" font-size="9" fill="${C.achse}">${fmt(v)}</text>`; });
   if(opts.fill) s+=`<path d="${d} L${X(pts.length-1)},${H-padB} L${X(0)},${H-padB} Z" fill="url(#${gf})" stroke="none"/>`;
   /* Länge des Streckenzugs für die Zeichen-Animation (stroke-dashoffset) */
   let len=0; for(let i=1;i<pts.length;i++){ const dx=X(i)-X(i-1), dy=Y(pts[i].y)-Y(pts[i-1].y); len+=Math.hypot(dx,dy); }
@@ -5338,30 +5370,30 @@ function svgLine(pts, fmt, opts){
       const i = mk.i;
       if(!(i>=0 && i<pts.length)) return;
       const x = i>0 ? (X(i)+X(i-1))/2 : X(0)+2;
-      s+=`<line x1="${x.toFixed(1)}" y1="${padT-8}" x2="${x.toFixed(1)}" y2="${H-padB}" stroke="#FFB020" stroke-width="1.4" stroke-dasharray="3 3" opacity=".9"/>`;
-      s+=`<circle cx="${x.toFixed(1)}" cy="${padT-8}" r="2.4" fill="#FFB020"/>`;
+      s+=`<line x1="${x.toFixed(1)}" y1="${padT-8}" x2="${x.toFixed(1)}" y2="${H-padB}" stroke="${C.trend}" stroke-width="1.4" stroke-dasharray="3 3" opacity=".9"/>`;
+      s+=`<circle cx="${x.toFixed(1)}" cy="${padT-8}" r="2.4" fill="${C.trend}"/>`;
       if(mk.label){
         const rechts = x > W*0.62;
-        s+=`<text x="${(rechts? x-5 : x+5).toFixed(1)}" y="${padT+2}" font-size="8.5" font-weight="700" fill="#FFB020" text-anchor="${rechts?'end':'start'}">${mk.label}</text>`;
+        s+=`<text x="${(rechts? x-5 : x+5).toFixed(1)}" y="${padT+2}" font-size="9" font-weight="700" fill="${C.trend}" text-anchor="${rechts?'end':'start'}">${mk.label}</text>`;
       }
     });
   }
   if(opts.avg && pts.length>=3){
     const ad = pts.map((p,i)=>{ const a=Math.max(0,i-3), sub=pts.slice(a,i+1); const m=sub.reduce((x,q)=>x+q.y,0)/sub.length; return (i?'L':'M')+X(i).toFixed(1)+','+Y(m).toFixed(1); }).join(' ');
-    s+=`<path d="${ad}" fill="none" stroke="#ffc94d" stroke-width="1.4" stroke-dasharray="4 3" opacity=".8"/>`;
+    s+=`<path d="${ad}" fill="none" stroke="${C.trend}" stroke-width="1.4" stroke-dasharray="4 3" opacity=".8"/>`;
   }
   pts.forEach((p,i)=>{
     const last=i===pts.length-1;
     s+=`<g style="cursor:pointer" onclick="chartTip('${tid}','${(p.l||'')}: ${String(fmt(p.y)).replace(/'/g,'')}')">`;
     s+=`<circle cx="${X(i)}" cy="${Y(p.y)}" r="10" fill="transparent"/>`;
-    if(last) s+=`<circle cx="${X(i)}" cy="${Y(p.y)}" r="7" fill="#ffc94d" opacity=".18"/>`;
-    s+=`<circle cx="${X(i)}" cy="${Y(p.y)}" r="${last?4:2.6}" fill="${last?'#ffc94d':'#4C8DFF'}"/></g>`;
+    if(last) s+=`<circle cx="${X(i)}" cy="${Y(p.y)}" r="7" fill="${C.trend}" opacity=".18"/>`;
+    s+=`<circle cx="${X(i)}" cy="${Y(p.y)}" r="${last?4:2.6}" fill="${last?C.trend:C.linie}"/></g>`;
   });
-  s+=`<text x="${X(0)}" y="${H-6}" font-size="8.5" fill="#5f6877">${pts[0].l||''}</text>`;
-  if(pts.length>1) s+=`<text x="${X(pts.length-1)}" y="${H-6}" font-size="8.5" fill="#9aa3b2" text-anchor="end">${pts[pts.length-1].l||''}</text>`;
-  s+=`<text id="${tid}" x="${W/2}" y="11" font-size="10" font-weight="700" fill="#CFE0FF" text-anchor="middle" opacity="0"></text>`;
+  s+=`<text x="${X(0)}" y="${H-6}" font-size="9" fill="${C.achse}">${pts[0].l||''}</text>`;
+  if(pts.length>1) s+=`<text x="${X(pts.length-1)}" y="${H-6}" font-size="9" fill="${C.wert}" text-anchor="end">${pts[pts.length-1].l||''}</text>`;
+  s+=`<text id="${tid}" x="${W/2}" y="11" font-size="10" font-weight="700" fill="${C.titel}" text-anchor="middle" opacity="0"></text>`;
   s+=`<defs>
-    <linearGradient id="${gl}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8FB8FF"/><stop offset="1" stop-color="#3A70DC"/></linearGradient>
+    <linearGradient id="${gl}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${C.hell}"/><stop offset="1" stop-color="${C.linie}"/></linearGradient>
     <linearGradient id="${gf}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(93,155,255,.28)"/><stop offset="1" stop-color="rgba(93,155,255,0)"/></linearGradient>
   </defs></svg>`;
   return `<div class="chart">${s}</div>`;
@@ -5588,17 +5620,23 @@ function delta(cur, prev){
   if(!isFinite(p) || p===0) return `<i class="kdelta" style="color:var(--txt3)">±0%</i>`;
   return `<i class="kdelta" style="color:${p>0?'var(--green)':'var(--red)'}">${p>0?'▲':'▼'} ${p>0?'+':''}${p}%</i>`;
 }
-function kpiRow(ws, prevWs){
+/* `hinweis` gehört zum Kennzahlenblock — etwa „Vergleich zu Zyklus 7".
+   Vorher stand dieser Satz als eigenes <div> DARUNTER und wurde mit
+   margin:-8px wieder herangezogen. Solche Gegenkorrekturen sind der Beweis,
+   dass der Baustein die falsche Grenze hatte: Der Satz erklärt die Pfeile in
+   den Kacheln, also gehört er in denselben Block. Vier Stellen weniger, an
+   denen das Raster durchbrochen wird. */
+function kpiRow(ws, prevWs, hinweis){
   const vol=ws.reduce((a,w)=>a+wVolume(w),0), sets=ws.reduce((a,w)=>a+wSets(w),0);
   const prc=ws.reduce((a,w)=>a+(w.prs?w.prs.length:0),0);
   const pv = prevWs? prevWs.reduce((a,w)=>a+wVolume(w),0) : 0;
   const psets = prevWs? prevWs.reduce((a,w)=>a+wSets(w),0) : 0;
-  return `<div class="kpis" style="margin-bottom:12px">
+  return `<div class="kpis"${hinweis? '' : ' style="margin-bottom:12px"'}>
     <div class="kpi"><b>${ws.length}</b><span>Workouts</span>${prevWs?delta(ws.length,prevWs.length):''}</div>
     <div class="kpi"><b>${fmtVol(vol)}</b><span>Volumen</span>${delta(vol,pv)}</div>
     <div class="kpi"><b>${sets}</b><span>Sätze</span>${delta(sets,psets)}</div>
     <div class="kpi"><b class="pr">${prc}</b><span>PRs</span></div>
-  </div>`;
+  </div>${hinweis? `<div class="kpihint tiny">${hinweis}</div>` : ''}`;
 }
 function prListHtml(ws){
   const prs = ws.flatMap(w=>(w.prs||[]).map(p=>({...p,date:w.date})));
@@ -5623,13 +5661,16 @@ function yearHeatmap(year){
     if(d.getFullYear()>year) continue;
     const k = d.toISOString().slice(0,10);
     const v = byDay[k]||0;
-    const col = v===0? '#151a23' : v<8? '#1B3A72' : v<14? '#2F6BFF' : '#7AA8FF';
+    /* Sequenzielle Skala: dunkel = wenig, hell = viel. Der leere Tag nimmt
+       die Eingabefläche des Designs, die Stufen bleiben eine eigene Skala —
+       sie tragen eine Menge, keine Zustandsbedeutung wie die Ampel. */
+    const col = v===0? 'var(--s2,#171B23)' : v<8? '#1B3A72' : v<14? '#2F6BFF' : '#7AA8FF';
     if(d.getFullYear()===year && d.getDate()<=7 && r===0) months[d.getMonth()] = c*(cell+gap);
     s += `<rect x="${c*(cell+gap)}" y="${r*(cell+gap)+14}" width="${cell}" height="${cell}" rx="2" fill="${col}">`
        + `<title>${d.toLocaleDateString('de-DE')}${v? ': '+v+' Sätze':''}</title></rect>`;
   }
   ['J','F','M','A','M','J','J','A','S','O','N','D'].forEach((m,i)=>{
-    if(months[i]!==undefined) s += `<text x="${months[i]}" y="9" font-size="8" fill="#5c6577">${m}</text>`;
+    if(months[i]!==undefined) s += `<text x="${months[i]}" y="9" font-size="9" fill="${C.achse}">${m}</text>`;
   });
   s += '</svg>';
   const days = Object.keys(byDay).length;
@@ -5770,8 +5811,7 @@ function renderWeekStats(){
   el.innerHTML = nav.html
     + leadCard(txt, ton, sub)
     + (lauf && i===closed.length-1? `<div class="tiny" style="margin:-4px 2px 10px;color:var(--txt3)">Der aktuelle Zyklus läuft noch (${lauf.ws.length} ${lauf.ws.length===1?'Einheit':'Einheiten'}) und wird erst gewertet, wenn der nächste Push beginnt.</div>`:'')
-    + kpiRow(c.ws, vor? vor.ws : undefined)
-    + (vor? `<div class="tiny" style="margin:-8px 2px 8px">Vergleich zu Zyklus ${vor.n}</div>`:'')
+    + kpiRow(c.ws, vor? vor.ws : undefined, vor? `Vergleich zu Zyklus ${vor.n}` : null)
     + muscleSection(c.ws, 1, {zyklen:1})
     + `<div class="card"><h3>Volumen je Einheit</h3>${svgBars(uLab,uVol,v=>fmtVol(v))}</div>`
     + prListHtml(c.ws);
@@ -5823,8 +5863,8 @@ function renderSpanStats(el, n){
   const zSet = cs.map(c=>c.ws.reduce((a,w)=>a+wSets(w),0));
 
   el.innerHTML = leadCard(txt, ton, sub)
-    + kpiRow(ws, vorher.length? cycleWorkouts(vorher) : undefined)
-    + (vorher.length? `<div class="tiny" style="margin:-8px 2px 8px">Vergleich zu den ${vorher.length} Zyklen davor</div>`:'')
+    + kpiRow(ws, vorher.length? cycleWorkouts(vorher) : undefined,
+             vorher.length? `Vergleich zu den ${vorher.length} Zyklen davor` : null)
     + pushPullCard(ws)
     + muscleSection(ws, z, {zyklen:z})
     + `<div class="card"><h3>Volumen je Zyklus</h3>${svgBars(zLab,zVol,v=>fmtVol(v))}</div>`
@@ -6189,13 +6229,13 @@ function renderExStats(){
     : (uni && swi.unknown===0 && !swi.switches.length && uniSinceOf(ex.id) && uniSinceOf(ex.id) <= h[0].date)
       ? `<div class="card"><div class="tiny">Einarmig seit <b>${fmtDate(uniSinceOf(ex.id))}</b> — das liegt vor deinem ersten gespeicherten Training in dieser Übung. Alle Einheiten zählen als einarmig, deshalb gibt es keine Linie im Diagramm.</div></div>`:''}
 
-    <div class="kpis" style="margin-bottom:12px">
+    <div class="kpis"${unsafeE1? '' : ' style="margin-bottom:12px"'}>
       <div class="kpi"><b>${assist? bests.maxW+' kg' : isBW? (bests.maxW>0? '+'+bests.maxW+' kg' : bests.maxReps+' Wdh') : bests.maxW+' kg'}</b><span>${assist?'Best effektiv':isBW? (bests.maxW>0?'Best Zusatz':'Best Wdh') :'Best Gewicht'}</span></div>
       <div class="kpi"><b>${isBW&&!assist? bests.maxReps+' Wdh' : Math.round(bests.maxE)+' kg'}</b><span>${isBW&&!assist?'Best Wdh':'Best e1RM'}${unsafeE1?' *':''}</span></div>
       <div class="kpi"><b>${fmtVol(bests.maxVol)}</b><span>Best Volumen</span></div>
       <div class="kpi"><b>${bests.sessions}</b><span>Einheiten</span></div>
     </div>
-    ${unsafeE1? `<p class="tiny" style="margin:-8px 2px 12px">* Der beste Satz hatte ${bests.maxReps} Wdh. Über ${E1RM_RELIABLE_MAX} Wdh streuen alle 1RM-Formeln stark — die Zahl ist eine grobe Näherung.</p>`:''}
+    ${unsafeE1? `<div class="kpihint tiny">* Der beste Satz hatte ${bests.maxReps} Wdh. Über ${E1RM_RELIABLE_MAX} Wdh streuen alle 1RM-Formeln stark — die Zahl ist eine grobe Näherung.</div>`:''}
     ${maxes}
 
     <div class="card">
