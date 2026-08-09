@@ -237,6 +237,12 @@ h3>.bi svg{width:15px;height:15px}
 }
 .chip:active{transform:scale(.95)}
 .chip.on{background:var(--acc-a16);border-color:var(--acc-a30);color:var(--acc2);box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
+/* Aufklapp-Hinweis unter Coach-Karten („Wie die Werte zustande kommen").
+   Wurde beim Entfernen der Missionen versehentlich mitgelöscht und
+   wiederhergestellt — die Klasse wird an zwei Stellen weiter benutzt. */
+.mnote{margin-top:var(--sp3);border-top:1px solid var(--line);padding-top:var(--sp2)}
+.mnote summary{font-size:13px;color:var(--txt3);cursor:pointer}
+.mnote p{font-size:13px;line-height:1.5;color:var(--txt3);margin:8px 0 0}
 .chip.mini{padding:4px 8px;font-size:11.5px;min-height:0}
 /* Segment-Control mit gleitender Pille */
 .seg{position:relative;display:flex;background:var(--s2);border:1px solid var(--line);border-radius:var(--r-md);padding:4px;gap:0;margin-bottom:var(--sp4)}
@@ -683,9 +689,6 @@ details.notiz input{margin-top:4px;width:100%}
 .exmeta{display:flex;flex-wrap:wrap;gap:4px}
 .exmeta span{font-size:10px;color:var(--txt3);background:var(--s1);border:1px solid var(--line);
   border-radius:var(--r-full);padding:2px 8px}
-.mnote{margin-top:var(--sp3);border-top:1px solid var(--line);padding-top:var(--sp2)}
-.mnote summary{font-size:13px;color:var(--txt3);cursor:pointer}
-.mnote p{font-size:13px;line-height:1.5;color:var(--txt3);margin:8px 0 0}
 path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
 .bodywrap path[data-m]{cursor:pointer}
 
@@ -768,22 +771,6 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
 .hometitel{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;color:var(--acc);
   background:color-mix(in srgb,var(--acc) 14%,transparent);border:1px solid color-mix(in srgb,var(--acc) 30%,transparent);
   border-radius:var(--r-full);padding:3px 8px;font-weight:650;letter-spacing:.02em}
-.missblock{margin-bottom:12px}
-.missblock .mbh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
-.missblock .mbh b{font-size:15px} .missblock .mbh span{font-size:11.5px;color:var(--txt3)}
-.misscard{display:flex;align-items:center;gap:12px;background:var(--s2);border:1px solid var(--line);
-  border-radius:var(--r-md);padding:12px 12px;margin-bottom:8px;transition:border-color var(--dur-2) var(--ease)}
-.misscard.done{border-color:color-mix(in srgb,var(--green,#30D158) 55%,var(--line))}
-.missic{flex:0 0 auto;width:30px;height:30px;border-radius:var(--r-full);background:var(--s1);
-  display:flex;align-items:center;justify-content:center;font-size:15px}
-.misscard.done .missic{background:var(--green,#30D158);color:#04120a}
-.missmain{flex:1;min-width:0}
-.missmain b{display:block;font-size:13px;font-weight:650}
-.missbar{height:5px;background:var(--s1);border-radius:var(--r-full);overflow:hidden;margin-top:4px}
-.missbar i{display:block;height:100%;background:var(--acc);border-radius:var(--r-full);transition:width var(--dur-4) var(--ease)}
-.misscard.done .missbar i{background:var(--green,#30D158)}
-.missx{flex:0 0 auto;font-size:11.5px;color:var(--txt3);font-variant-numeric:tabular-nums;font-weight:650}
-.misscard.done .missx{color:var(--green,#30D158)}
 /* ═══ Trainings-Streak (Flamme im Kopfbereich) ═══ */
 .streakchip{display:inline-flex;align-items:center;gap:4px;height:38px;padding:0 12px;cursor:pointer;
   background:linear-gradient(135deg,color-mix(in srgb,#ff7a1a 22%,var(--s2)),var(--s2));
@@ -813,36 +800,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
 .seg.setmode-top{display:flex;width:100%;margin-bottom:12px}
 .seg.setmode-top button{flex:1}
 /* ═══ Wochenrückblick ═══ */
-.rvhead{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--sp2);margin-bottom:var(--sp3)}
-.rvhr{display:flex;align-items:flex-start;gap:var(--sp2)}
-.rvhead h2{font-size:20px;margin:2px 0 0}
-.rvtitel{text-align:right}
-.rvtitel b{display:block;font-size:15px;color:var(--acc)}
-.rvtitel span{font-size:11.5px;color:var(--txt3)}
-.rvkpis{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:var(--sp3)}
-.rvk{background:var(--s2);border:1px solid var(--line);border-radius:var(--r-md);padding:12px}
-.rvk>b{display:block;font-size:20px;font-variant-numeric:tabular-nums;line-height:1}
-.rvk>span{font-size:11.5px;color:var(--txt3);text-transform:uppercase;letter-spacing:.05em}
-.rvd{display:block;font-size:11.5px;margin-top:4px}
 .rvd.up{color:var(--green,#30D158)} .rvd.down{color:var(--txt3)} .rvd.flat{color:var(--txt3)}
-.rvsec{margin-bottom:var(--sp3)}
-.rvsec h5{font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin:0 0 8px}
-.rvbar{display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:4px}
-.rvbar span{flex:0 0 96px;color:var(--txt2)}
-.rvbar i{flex:1;height:7px;background:var(--s2);border-radius:var(--r-full);overflow:hidden}
-.rvbar i b{display:block;height:100%;background:var(--acc);border-radius:var(--r-full);transition:width var(--dur-4) var(--ease)}
-.rvbar em{flex:0 0 30px;text-align:right;font-style:normal;font-variant-numeric:tabular-nums;color:var(--txt3)}
-.rvmiss{display:flex;align-items:center;gap:12px;background:var(--s2);border:1px solid var(--line);
-  border-radius:var(--r-md);padding:12px 12px;margin-bottom:8px}
-.rvmiss.done{border-color:color-mix(in srgb,var(--green,#30D158) 55%,var(--line))}
-.rvmi{flex:0 0 auto;width:28px;height:28px;border-radius:var(--r-full);background:var(--s1);
-  display:flex;align-items:center;justify-content:center;font-size:15px}
-.rvmiss.done .rvmi{background:var(--green,#30D158);color:#04120a}
-.rvmbar{height:5px;background:var(--s1);border-radius:var(--r-full);overflow:hidden;margin-top:4px}
-.rvmbar i{display:block;height:100%;background:var(--acc);border-radius:var(--r-full)}
-.rvmiss.done .rvmbar i{background:var(--green,#30D158)}
-.rvmx{flex:0 0 auto;font-size:11.5px;color:var(--txt3);font-variant-numeric:tabular-nums;font-weight:650}
-.rvmiss.done .rvmx{color:var(--green,#30D158)}
 
 </style>
 </head>
@@ -1014,7 +972,6 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
 
 <div class="mback" id="modal-summary"><div class="modal" id="summary-body"></div></div>
 
-<div class="mback" id="modal-review"><div class="modal" id="review-body"></div></div>
 <div class="mback" id="modal-onboard"><div class="modal" id="ob-body"></div></div>
 <div class="mback" id="modal-muscle"><div class="modal" id="muscle-body"></div></div>
 <div class="mback" id="modal-detail"><div class="modal" id="detail-body"></div></div>
@@ -1235,7 +1192,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V58 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V59 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -3857,7 +3814,6 @@ function renderHome(){
 
   /* ── Level ── */
   const xpPct = Math.min(100, Math.round((L.xp-L.cur)/Math.max(1,L.next-L.cur)*100));
-  renderMissions();
   renderStreak();
   const _titel = titelFuer(L.lvl), _nt = naechsterTitel(L.lvl);
   $('#home-level').innerHTML = `<div class="levelcard card tap" style="margin-bottom:12px" onclick="haptic();renderAchModal();openModal('#modal-ach')" role="button" tabindex="0">
@@ -4586,7 +4542,6 @@ async function finishWorkout(){
   state.active = null;
   saveState(); stopTicker();
   const freshAch = evalAchievements([...new Set(cleaned.map(e=>e.exId))]);
-  missionenPruefen();
   const lvlAfter = achLevel().lvl;
   makeSnapshot('nach Training');          // Sicherungspunkt direkt nach dem Abschluss
   haptic('success');
@@ -4603,12 +4558,6 @@ function showSummary(w, freshAch, newLevel){
       <div class="lvlbadge" style="margin:0 auto 8px;width:60px;height:60px"><b style="font-size:20px">${newLevel}</b><span>LEVEL</span></div>
       <b style="font-size:17px">Level ${newLevel} erreicht!</b>
       <div class="tiny" style="margin-top:3px">Neuer Titel: <b style="color:var(--acc)">${titelFuer(newLevel)}</b></div></div>` : '';
-  /* Frisch erfüllte Missionen in der Zusammenfassung feiern */
-  const freshMiss = (typeof missionenPruefen==='function') ? missionenPruefen() : [];
-  const missHtml = (freshMiss&&freshMiss.length)? `
-    <h3 style="margin:12px 0 8px">${ICO.check} Missionen erfüllt (+${freshMiss.reduce((a,m)=>a+m.xp,0)} XP)</h3>
-    ${freshMiss.map(m=>`<div class="achnew"><span style="font-size:20px">${m.icon}</span>
-      <div class="grow"><b style="font-size:13px">${esc(m.txt)}</b></div><span class="rvmx" style="color:var(--green,#30D158)">+${m.xp} XP</span></div>`).join('')}` : '';
   const achHtml = (freshAch&&freshAch.length)? `
     <h3 style="margin:12px 0 8px">${ICO.trophy} Neue Erfolge (+${freshAch.reduce((a,d)=>a+d.xp,0)} XP)</h3>
     ${freshAch.slice(0,12).map(d=>`<div class="achnew"><span style="font-size:20px">${ACH_CAT[d.cat][0]}</span>
@@ -4642,7 +4591,6 @@ function showSummary(w, freshAch, newLevel){
     ${cmp}
     ${prHtml}
     ${achHtml}
-    ${missHtml}
     <h3 style="margin:16px 0 8px">Trainierte Muskeln</h3>
     <div class="chips">${mchips}</div>
     <div style="height:18px"></div>
@@ -6720,102 +6668,21 @@ function naechsterTitel(lvl){
   return null;
 }
 
-/* — Wochen-Missionen: drei Aufgaben pro Woche, deterministisch aus der
-     Wochennummer gewählt (stabil bis Montag), Fortschritt live aus den
-     Wochendaten, XP einmalig beim Erfüllen. — */
-const MISSION_POOL = [
-  {id:'sessions3', txt:'3 Trainings abschließen', ziel:3, xp:60, icon:'🗓️',
-    val:wk=>wk.workouts.length},
-  {id:'sessions4', txt:'4 Trainings abschließen', ziel:4, xp:90, icon:'🗓️',
-    val:wk=>wk.workouts.length},
-  {id:'vol', txt:'20 t Gesamtvolumen bewegen', ziel:20000, xp:80, icon:'📦',
-    val:wk=>wk.vol, fmt:v=>fmtVol(v)},
-  {id:'sets60', txt:'60 Arbeitssätze sammeln', ziel:60, xp:70, icon:'🔢',
-    val:wk=>wk.sets},
-  {id:'pr', txt:'einen neuen persönlichen Rekord', ziel:1, xp:100, icon:'🏆',
-    val:wk=>wk.prs},
-  {id:'legs', txt:'10 Sätze Beine (Quad + Beinbeuger)', ziel:10, xp:70, icon:'🦵',
-    val:wk=>(wk.musc.quads||0)+(wk.musc.hamstrings||0)},
-  {id:'back', txt:'12 Sätze Rücken (Lat + oberer Rücken)', ziel:12, xp:70, icon:'🔙',
-    val:wk=>(wk.musc.lats||0)+(wk.musc.upper_back||0)},
-  {id:'push', txt:'12 Sätze Drücken (Brust + Schulter)', ziel:12, xp:70, icon:'💪',
-    val:wk=>(wk.musc.chest||0)+(wk.musc.chest_up||0)+(wk.musc.front_delt||0)+(wk.musc.side_delt||0)},
-  {id:'reps200', txt:'200 Wiederholungen ausführen', ziel:200, xp:60, icon:'🔁',
-    val:wk=>wk.reps},
-  {id:'days3', txt:'an 3 verschiedenen Tagen trainieren', ziel:3, xp:70, icon:'📆',
-    val:wk=>wk.days}
-];
-/* Wochendaten für Missionen und Rückblick — reine Berechnung, kein Zustand */
-function wochenDaten(montag){
-  const start = montag!=null ? montag : weekKey(new Date());
-  const end = start + 7*86400000;
-  const ws = state.workouts.filter(w=>{ const t=new Date(w.date).getTime(); return t>=start && t<end; });
-  const musc = muscleSets(ws);
-  return { start, workouts:ws,
-    vol: ws.reduce((a,w)=>a+wVolume(w),0),
-    sets: ws.reduce((a,w)=>a+wSets(w),0),
-    reps: ws.reduce((a,w)=>a+wReps(w),0),
-    prs: ws.reduce((a,w)=>a+((w.prs||[]).length),0),
-    days: new Set(ws.map(w=>w.date.slice(0,10))).size,
-    musc };
-}
-/* Deterministische Auswahl: Wochennummer als Startindex, drei verschiedene */
-function wochenMissionen(montag){
-  const start = montag!=null ? montag : weekKey(new Date());
-  const woche = Math.floor(start/(7*86400000));
-  const idx=[], n=MISSION_POOL.length;
-  for(let i=0;i<3;i++) idx.push((woche*3 + i*4 + (woche%3)) % n);
-  const eindeutig = [...new Set(idx)];
-  let f=0; while(eindeutig.length<3){ const k=(woche+f++)%n; if(!eindeutig.includes(k)) eindeutig.push(k); }
-  const wk = wochenDaten(start);
-  return eindeutig.slice(0,3).map(i=>{
-    const m = MISSION_POOL[i];
-    const v = Math.min(m.val(wk), m.ziel*2);
-    const done = m.val(wk) >= m.ziel;
-    return {...m, cur:m.val(wk), erfuellt:done, pct:Math.min(100, Math.round(m.val(wk)/m.ziel*100))};
-  });
-}
-/* XP für frisch erfüllte Missionen gutschreiben (einmal je Woche+Mission).
-   Läuft beim Rendern der Startseite und nach jedem Workout. */
-function missionenPruefen(){
-  if(!state.missionsXP) state.missionsXP = {};
-  const start = weekKey(new Date());
-  let neu = [];
-  wochenMissionen(start).forEach(m=>{
-    const key = start+'|'+m.id;
-    if(m.erfuellt && !state.missionsXP[key]){
-      state.missionsXP[key] = m.xp; neu.push(m);
-    }
-  });
-  if(neu.length){
-    /* Als Pseudo-Achievement ablegen, damit die XP in Level einfließen */
-    neu.forEach(m=>{ state.ach['m|'+start+'|'+m.id] = {d:new Date().toISOString(), xp:m.xp}; });
-    saveState();
-  }
-  return neu;
-}
-
-/* — Wochenrückblick: eigener Screen, aus den Wochendaten berechnet,
-     Vergleich zur Vorwoche gibt den Zahlen Bedeutung. — */
-/* Missionskarte auf der Startseite + Rückblick-Öffner */
-function renderMissions(){
-  const box = document.getElementById('home-missions'); if(!box) return;
-  missionenPruefen();
-  const miss = wochenMissionen();
-  const fertig = miss.filter(m=>m.erfuellt).length;
-  box.innerHTML = `<div class="card missblock" style="margin-bottom:12px">
-    <div class="mbh"><b>Diese Woche</b>
-      <button class="linkbtn" style="padding:0" onclick="haptic();renderReview();openModal('#modal-review')">Rückblick ansehen →</button></div>
-    ${miss.map(m=>`<div class="misscard ${m.erfuellt?'done':''}">
-      <span class="missic">${m.erfuellt?'✓':m.icon}</span>
-      <div class="missmain"><b>${m.txt}</b>
-        <div class="missbar"><i style="width:${m.pct}%"></i></div></div>
-      <span class="missx">${m.erfuellt?'+'+m.xp+' XP':(m.fmt?m.fmt(m.cur):m.cur)+' / '+(m.fmt?m.fmt(m.ziel):m.ziel)}</span>
-    </div>`).join('')}
-    ${fertig===miss.length? '<div class="tiny" style="text-align:center;color:var(--green,#30D158);margin-top:4px">Alle Missionen erfüllt — stark!</div>':''}
-  </div>`;
-}
-
+/* — Wochen-Missionen und Wochenrückblick: mit V59 ersatzlos entfernt. ————
+   Beide waren gebaut, aber unerreichbar: renderMissions() stieg in Zeile 1
+   aus, weil das Element #home-missions im Markup nicht existierte — und der
+   einzige Knopf zum Rückblick saß in genau diesem Block. 48 Zeilen fertiger
+   Rückblick, den nie jemand sehen konnte.
+   Dazu kam ein inhaltlicher Bruch: Beide rechneten in KALENDERWOCHEN, dem
+   Maßstab, den die Statistik ausdrücklich verworfen hat (mal zwei, mal drei
+   Einheiten pro Woche — ±50 % Schwankung ohne Änderung am Training).
+   Entfernt: MISSION_POOL, wochenDaten, wochenMissionen, missionenPruefen,
+   renderMissions, renderReview und das Modal #modal-review.
+   NICHT entfernt: die bereits vergebenen XP. Sie liegen als Pseudo-Erfolge
+   mit dem Präfix 'm|' in state.ach und fließen weiter ins Level — das Level
+   bleibt damit unverändert. state.missionsXP wird nicht mehr geschrieben,
+   aber auch nicht gelöscht: Trainingsdaten fasst eine Aufräumaktion nicht an.
+   weekKey() bleibt — die Erfolge brauchen es weiter. */
 /* ═══ Trainings-Streak nach festen Wochentagen ══════════════════════════
    Basis sind ausschließlich die im Profil festgelegten Trainingstage.
    Ruhetage (nicht geplante Wochentage) beeinflussen die Streak nie.
@@ -6878,55 +6745,6 @@ function renderStreak(){
 document.addEventListener('click', e=>{
   if(e.target.closest('#streak-setup')){ haptic(); openOnboard(false); }
 });
-
-function renderReview(){
-  const box = document.getElementById('review-body'); if(!box) return;
-  const jetzt = wochenDaten(), start = jetzt.start;
-  const vor = wochenDaten(start - 7*86400000);
-  const miss = wochenMissionen(start);
-  const L = achLevel();
-  const delta = (a,b,fmt)=>{ const d=a-b; if(!b && !a) return '';
-    const s = d>0?'up':d<0?'down':'flat';
-    const txt = d===0?'gleich wie Vorwoche':(d>0?'+':'−')+(fmt?fmt(Math.abs(d)):Math.abs(d))+' zur Vorwoche';
-    return `<span class="rvd ${s}">${d>0?'▲':d<0?'▼':'■'} ${txt}</span>`; };
-  const musc = Object.entries(jetzt.musc).sort((a,b)=>b[1]-a[1]);
-  const maxSet = musc.length? musc[0][1] : 1;
-  const datum = new Date(start);
-  const bis = new Date(start+6*86400000);
-  const fD = d=>d.toLocaleDateString('de-DE',{day:'numeric',month:'short'});
-
-  box.innerHTML = `
-    <div class="grab"></div>
-    <div class="rvhead">
-      <div><span class="tiny">Wochenrückblick</span><h2>${fD(datum)} – ${fD(bis)}</h2></div>
-      <div class="rvhr">
-        <div class="rvtitel"><b>${titelFuer(L.lvl)}</b><span>Level ${L.lvl}</span></div>
-        <button class="iconbtn" data-close aria-label="Schließen" data-ico-close></button>
-      </div>
-    </div>
-    ${jetzt.workouts.length===0 ? `<div class="card" style="text-align:center;padding:24px">
-        <div class="big">${ICO.inbox}</div><b>Noch kein Training diese Woche</b>
-        <p class="tiny">Sobald du loslegst, siehst du hier deinen Fortschritt.</p></div>` : `
-    <div class="rvkpis">
-      <div class="rvk"><b>${jetzt.workouts.length}</b><span>Trainings</span>${delta(jetzt.workouts.length,vor.workouts.length)}</div>
-      <div class="rvk"><b>${fmtVol(jetzt.vol)}</b><span>Volumen</span>${delta(jetzt.vol,vor.vol,fmtVol)}</div>
-      <div class="rvk"><b>${jetzt.sets}</b><span>Sätze</span>${delta(jetzt.sets,vor.sets)}</div>
-      <div class="rvk"><b>${jetzt.prs}</b><span>neue PRs</span>${delta(jetzt.prs,vor.prs)}</div>
-    </div>
-    <div class="rvsec"><h5>Sätze pro Muskelgruppe</h5>
-      <div class="rvbars">${musc.map(([k,v])=>`<div class="rvbar">
-        <span>${MUSCLES[k]}</span><i><b style="width:${Math.round(v/maxSet*100)}%"></b></i>
-        <em>${v%1?v.toFixed(1).replace('.',','):v}</em></div>`).join('') || '<p class="tiny">—</p>'}</div></div>`}
-    <div class="rvsec"><h5>Wochen-Missionen</h5>
-      ${miss.map(m=>`<div class="rvmiss ${m.erfuellt?'done':''}">
-        <span class="rvmi">${m.erfuellt?'✓':m.icon}</span>
-        <div class="grow"><b>${m.txt}</b>
-          <div class="rvmbar"><i style="width:${m.pct}%"></i></div></div>
-        <span class="rvmx">${m.erfuellt?'+'+m.xp+' XP':(m.fmt?m.fmt(m.cur):m.cur)+'/'+(m.fmt?m.fmt(m.ziel):m.ziel)}</span>
-      </div>`).join('')}</div>
-    <details class="mnote"><summary>Wie werden Missionen gewählt?</summary>
-      <p>Drei Aufgaben pro Woche, fest bis Montag. Erfüllte Missionen bringen einmalig XP und fließen in dein Level ein. Sie passen sich nicht an — so bleibt der Vergleich über Wochen fair.</p></details>`;
-}
 
 /* Beim ersten Start einmalig anbieten — nur wenn noch nichts eingerichtet ist */
 setTimeout(()=>{ if(!(state.profile&&state.profile.done) && !state.workouts.length && !localStorage.getItem('ft_ob_seen')){
