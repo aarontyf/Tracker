@@ -56,10 +56,35 @@
   --red:#FF4D45;
   --purple:#A78BFA;
   --teal:#4FD1E8;
-  /* Muskel-Heatmap — Figur: dunkel = wenig, hell = viel */
+  /* Muskel-Heatmap — Figur: dunkel = wenig, hell = viel.
+     Nur noch für den Muskelatlas (.mfig) und Hervorhebungen. Die Figur auf
+     der Startseite färbt seit V62 nach dem Zielkorridor, siehe --fig-g*. */
   --fig-body:#22262E; --fig-line:#333947;
   --fig-1:#3E77C4; --fig-2:#5FA0F0; --fig-3:#A8CEFF;
   --fig-r0:#FF4D45; --fig-r1:#FF9F0A;
+  /* ── Figur am ZIELKORRIDOR (V62) ──────────────────────────────────────
+     Bis V61 war die Rampe 0 · 1–3 · 4–8 · 9+ Sätze. Die hellste Stufe begann
+     damit genau dort, wo der Korridor (4–9) endet — rein zufällig. Die Figur
+     beantwortete „wo habe ich am meisten gemacht", nicht „stimmt das".
+
+     EINE Richtung für beide Modi: BERNSTEIN = dran, BLAU = versorgt.
+     Gemessen gegen die Kartenfläche --s1 #101319:
+       g0 11,58:1 · g1 6,40:1 · g2 7,25:1 · g3 3,50:1 · g4 5,67:1
+     Alle über 3:1 (WCAG 1.4.11, grafische Objekte).
+
+     Warum „im Ziel" blau ist und nicht grün: Bernstein #FFC24D und Grün
+     #30D158 fallen bei Protanopie auf #cece4c bzw. #c1c159 zusammen — ΔE 11,9.
+     Das ist ausgerechnet das wichtigste Paar („gar nichts" gegen „passt").
+     Bernstein gegen Blau kommt dort auf ΔE 66. */
+  --fig-g0:#FFC24D;   /* 0 Sätze in der Gruppe — gar nicht dran gewesen */
+  --fig-g1:#D98324;   /* unter dem Korridor                            */
+  --fig-g2:#4FA8F0;   /* im Korridor                                   */
+  --fig-g3:#2E6FA8;   /* über dem Korridor, noch effizient             */
+  --fig-g4:#FF4D45;   /* über der Effizienzgrenze                      */
+  /* Rand für die Stufe „zu viel". Muss sich mit mindestens 3:1 von der
+     Füllung #FF4D45 abheben, sonst ist er als zweiter Träger wertlos.
+     Ein zartes Rosé #FFE0DE schafft nur 2,65:1 — es bleibt Weiß (3,28:1). */
+  --fig-rim:#FFFFFF;
   /* ── TYPO-SKALA: 9 Stufen statt 31 gewachsener Größen ──────────────
      Eine Skala ist der Unterschied zwischen „selbstgebaut" und „System".
      --fs-input bleibt bewusst bei 16px: darunter zoomt iOS beim Antippen. */
@@ -300,6 +325,18 @@ h3>.bi svg{width:15px;height:15px}
 .bodywrap>div{flex:1 1 0;min-width:0;max-width:270px;transition:transform var(--dur-4) var(--ease)}
 .bodywrap svg{width:100%;height:auto;display:block;margin:0 auto}
 .bodywrap .lbl{text-align:center;font-size:10px;color:var(--txt3);margin-top:var(--sp1);text-transform:uppercase;letter-spacing:.1em;font-weight:650}
+/* Die Antwort über der Figur. Bis V61 stand hier ein Untertitel in
+   Hilfstextgröße, der zudem die Unwahrheit sagte: „Diese Woche (Mo–So) ·
+   Reset Sonntag Mitternacht", während längst der laufende Zyklus gemalt wurde.
+   Er saß außerdem mit margin:-4px am Umschalter — einer der vier negativen
+   Ränder, die belegen, dass das Raster nicht trägt. Beides weg. */
+#body-sub{
+  position:relative;z-index:1;text-align:center;margin:0 0 var(--sp2);
+  font-size:var(--fs-body);line-height:1.35;color:var(--txt2);min-height:20px;
+}
+#body-sub b{font-weight:650;color:var(--txt)}
+#body-sub[data-art="dran"] b{color:var(--fig-g0)}      /* 11,58:1 auf --s1 */
+#body-sub[data-art="zuviel"] b{color:var(--fig-g4)}    /*  5,67:1 auf --s1 */
 /* Vorlage: Körper und Muskeln in derselben Farbe, getrennt durch dünne, etwas
    hellere Konturlinien — nicht durch dunkle Lücken. Das erzeugt die feine
    Anatomiezeichnung statt einer Flächenoptik. */
@@ -307,13 +344,32 @@ h3>.bi svg{width:15px;height:15px}
 path[data-m]{fill:var(--fig-body);stroke:var(--fig-line);stroke-width:.6;stroke-linejoin:round;
   transition:fill var(--dur-4) var(--ease);
   transition-delay:calc(var(--md,0) * 26ms)}
-path[data-m].m1{fill:var(--fig-1);stroke:rgba(0,0,0,.40)}
-path[data-m].m2{fill:var(--fig-2);stroke:rgba(0,0,0,.40)}
-path[data-m].m3{fill:var(--fig-3);stroke:rgba(0,0,0,.40)}
-path[data-m].r0{fill:var(--fig-r0);stroke:rgba(0,0,0,.40)}
-path[data-m].r1{fill:var(--fig-r1);stroke:rgba(0,0,0,.40)}
-path[data-m].r2{fill:var(--fig-2);stroke:rgba(0,0,0,.40)}
-path[data-m].r3{fill:var(--fig-3);stroke:rgba(0,0,0,.40)}
+/* ── Volumen gegen den Korridor ──────────────────────────────────────────
+   ZWEITER TRÄGER neben der Farbe, damit die Figur ohne Farbsehen lesbar
+   bleibt (WCAG 1.4.1). Das schwächste Paar ist g1 gegen g4 — Bernstein
+   gegen Rot fällt bei Deuteranopie auf ΔE 10,5 zusammen. Deshalb:
+     g0  gestrichelte Kontur — „hier war gar nichts"
+     g4  heller Rand, doppelt so dick — „das ist zu viel"
+   Beides überlebt einen Graustufendruck. */
+path[data-m].g0{fill:var(--fig-g0);stroke:rgba(0,0,0,.50);stroke-dasharray:2.6 1.9}
+path[data-m].g1{fill:var(--fig-g1);stroke:rgba(0,0,0,.40)}
+path[data-m].g2{fill:var(--fig-g2);stroke:rgba(0,0,0,.40)}
+path[data-m].g3{fill:var(--fig-g3);stroke:rgba(0,0,0,.40)}
+path[data-m].g4{fill:var(--fig-g4);stroke:var(--fig-rim);stroke-width:1.3}
+/* ── Erholung — DIESELBEN vier Farben, dieselbe Richtung ────────────────
+   Bis V61 war es hier umgekehrt: rot = wenig erholt = schlecht, hellblau =
+   gut. Im Volumen-Modus bedeutete hell dagegen „viel". Ein Umschalter, zwei
+   gegenläufige Bedeutungen. Jetzt heißt Bernstein in beiden Modi „das ist
+   dran" und Blau „versorgt, in Ruhe lassen". */
+path[data-m].e3{fill:var(--fig-g0);stroke:rgba(0,0,0,.40)}
+path[data-m].e2{fill:var(--fig-g1);stroke:rgba(0,0,0,.40)}
+path[data-m].e1{fill:var(--fig-g2);stroke:rgba(0,0,0,.40)}
+path[data-m].e0{fill:var(--fig-g3);stroke:rgba(0,0,0,.40)}
+/* Nach dem Training: genau die Muskeln, die eben gearbeitet haben, leuchten
+   einmal auf — gestaffelt über --md, damit es über den Körper läuft. */
+@keyframes muskelWach{0%{filter:brightness(1)}30%{filter:brightness(1.75)}100%{filter:brightness(1)}}
+path[data-m].fresh{animation:muskelWach 1.5s var(--ease-io) both;
+  animation-delay:calc(var(--md,0) * 40ms)}
 .deco{fill:none;stroke:var(--fig-line);stroke-width:.7;pointer-events:none;stroke-linecap:round}
 .deco2{display:none}
 .legend{display:flex;gap:var(--sp3);justify-content:center;margin-top:var(--sp3);flex-wrap:wrap}
@@ -386,6 +442,10 @@ path[data-m].r3{fill:var(--fig-3);stroke:rgba(0,0,0,.40)}
 .mbar .zone{position:absolute;top:0;bottom:0;background:rgba(255,255,255,.10);border-left:1px solid var(--line-3);border-right:1px solid var(--line-3);pointer-events:none}
 .mbar .val{text-align:right;color:var(--txt2);font-variant-numeric:tabular-nums}
 .mbar.big{grid-template-columns:100px 1fr 56px;margin-bottom:8px;font-size:13px}
+/* „Ziel 9–17" unter dem Gruppennamen. Stand bis V61 mit margin-top:-2px da —
+   gemeint war engerer Zeilenabstand, gebaut war ein Sonderfall im Raster.
+   line-height ist das Werkzeug dafür. */
+.mbar .grpsub{opacity:.7;display:block;line-height:1.05}
 .mbar.big .bar{height:12px}
 .mbar.goal{cursor:pointer;border-radius:var(--r-sm);padding:3px 4px;margin-left:-4px;margin-right:-4px;transition:background var(--dur-2) var(--ease);
   grid-template-columns:100px 1fr 56px 10px}
@@ -648,6 +708,14 @@ details.notiz input{margin-top:4px;width:100%}
   padding:var(--sp2);text-align:center}
 .mkpi b{display:block;font-size:17px;font-variant-numeric:tabular-nums}
 .mkpi span{font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em}
+/* Urteil im Atlas — derselbe Satz, den auch die Farbe der Figur erzählt.
+   Der Balken links wiederholt nur die Farbe; die Aussage steht im Text. */
+.aturteil{margin:0 0 var(--sp3);padding:var(--sp2) var(--sp3);
+  border-left:3px solid var(--fig-g2);border-radius:0 var(--r-md) var(--r-md) 0;
+  background:var(--s2);font-size:var(--fs-sub);color:var(--txt2);line-height:1.4}
+.aturteil b{color:var(--txt)}
+.aturteil[data-art="g0"],.aturteil[data-art="g1"]{border-left-color:var(--fig-g0)}
+.aturteil[data-art="g4"]{border-left-color:var(--fig-g4)}
 .msec{margin-bottom:var(--sp3)}
 .msec h5,.exsec h5{font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin:0 0 4px}
 .msec p,.msec li,.exsec li{font-size:13px;line-height:1.55;color:var(--txt2)}
@@ -768,7 +836,9 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
 .plday small{display:block;font-size:11.5px;color:var(--txt3);margin-top:4px;line-height:1.5}
 
 /* ═══ Motivation ═══ */
-.hometitel{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;color:var(--acc);
+/* 13px wie das .tiny daneben in derselben Zeile. Stand auf 11,5px und war
+   damit die fünfte Schriftgröße der Startseite — für ein einziges Wort. */
+.hometitel{display:inline-flex;align-items:center;gap:4px;font-size:13px;color:var(--acc);
   background:color-mix(in srgb,var(--acc) 14%,transparent);border:1px solid color-mix(in srgb,var(--acc) 30%,transparent);
   border-radius:var(--r-full);padding:3px 8px;font-weight:650;letter-spacing:.02em}
 /* ═══ Trainings-Streak (Flamme im Kopfbereich) ═══ */
@@ -855,11 +925,15 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
 
     <!-- HERO: die Figur ist die Identität der App -->
       <section class="hero" aria-label="Muskelübersicht">
-      <div class="seg" style="margin-bottom:12px">
-        <button id="bm-week" class="on">Diese Woche</button>
+      <div class="seg" style="margin-bottom:10px">
+        <!-- hieß bis V61 „Diese Woche". Gemalt wurde aber immer schon der
+             laufende Zyklus — der Umschalter hat das Gegenteil behauptet. -->
+        <button id="bm-week" class="on">Volumen</button>
         <button id="bm-rec">Erholung</button>
       </div>
-      <div class="tiny" id="body-sub" style="text-align:center;margin:-4px 0 4px;min-height:16px"></div>
+      <!-- Die Antwort in Worten. Zweiter Träger neben der Farbe und zugleich
+           das, was Aaron in einer Sekunde lesen soll. -->
+      <p id="body-sub"></p>
       <div class="bodywrap" id="bodystage">
         <div><div id="bodyFront"></div><div class="lbl">Vorne</div></div>
         <div><div id="bodyBack"></div><div class="lbl">Hinten</div></div>
@@ -1199,7 +1273,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V61 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V62 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -1980,15 +2054,101 @@ function initParallax(){
     }, {passive:true});
   }
 }
-/* Färbt beide Figuren nach Sätzen pro Muskel: {chest: 12.5, ...} */
-function paintBodies(setsPerMuscle){
-  document.querySelectorAll('path[data-m]').forEach(p=>{
-    const v = setsPerMuscle[p.dataset.m] || 0;
-    p.classList.remove('m1','m2','m3');
-    if(v >= 9) p.classList.add('m3');
-    else if(v >= 4) p.classList.add('m2');
-    else if(v > 0) p.classList.add('m1');
+const FIG_CLASSES = ['g0','g1','g2','g3','g4','e0','e1','e2','e3'];
+/* Setzt genau eine Stufe an einem Pfad und fasst ihn sonst nicht an.
+   Vorher stand hier classList.remove(…neun Klassen…) für jeden der 152 Pfade
+   bei jedem Rendern — 1.368 Aufrufe, gemessen 26,7 ms allein fürs Umfärben.
+   Jetzt wird nur angefasst, was sich wirklich ändert; bei unverändertem
+   Stand kostet ein zweites Rendern gar nichts mehr. */
+function setFigClass(p, soll){
+  /* Die zuletzt gesetzte Stufe steht am Element selbst — ein Lesen statt bis
+     zu neun classList.contains(). Nur paintBody und miniFigure fassen diese
+     Klassen an, und miniFigure arbeitet auf Klonen. */
+  const ist = p._figCls !== undefined ? p._figCls
+            : (FIG_CLASSES.find(c => p.classList.contains(c)) || null);
+  if(ist === soll){ p._figCls = soll; return; }
+  if(ist)  p.classList.remove(ist);
+  if(soll) p.classList.add(soll);
+  p._figCls = soll;
+}
+/* .fresh liegt nur direkt nach einem Training auf den Pfaden. Erste Fassung
+   räumte per querySelectorAll('path.fresh') auf — GEMESSEN war das teurer als
+   das, was es sparen sollte: eine zweite Abfrage über den ganzen Teilbaum bei
+   JEDEM Malen, auch wenn es nichts zu räumen gab (paintBody 32 → 35 ms).
+   Jetzt merkt sich ein Schalter, ob überhaupt etwas gesetzt wurde. */
+let figFreshAn = false;
+function clearFresh(){
+  if(!figFreshAn) return;
+  document.querySelectorAll('#bodystage path.fresh').forEach(p=>p.classList.remove('fresh'));
+  figFreshAn = false;
+}
+/* Zustand JE GRUPPE gegen den Zielkorridor — NICHT je Muskelschlüssel.
+   Bis V61 färbte die Figur jeden Schlüssel einzeln nach seinen Rohsätzen.
+   Gemessen an Aarons Daten stand dieselbe Stufe „1–3 Sätze" damit
+   gleichzeitig für zwei Wahrheiten:
+     traps      1 Satz → dunkelblau, Rücken gesamt 15,5 von 9–17  → im Ziel
+     hamstrings 1 Satz → dunkelblau, Beinbeuger    1,0 von 4–9    → unter
+   Und die hellste Stufe (9+) kam nie vor, weil sich 15,5 Rückensätze auf
+   vier Schlüssel verteilen und keiner allein 9 erreicht.
+
+   Der Korridor gilt pro GRUPPE. Ein Ziel darf nicht davon abhängen, wie die
+   Arbeit aufgeteilt wurde — genau der Fehler aus V45. Also bekommen alle
+   Schlüssel einer Gruppe den Zustand DER GRUPPE.
+
+   Gerechnet wird nichts Neues: muscleSets() liefert die Sätze,
+   groupTargetCycle() den Korridor, setState4() das Urteil. Neu ist nur,
+   welche Farbe daraus wird. */
+function figureGroupState(setsPerMuscle, zyklen){
+  const out = {};
+  SETGROUPS.forEach(([label, keys, mult, optional])=>{
+    const sum = keys.reduce((a,k)=>a + (+setsPerMuscle[k] || 0), 0);
+    const t   = groupTargetCycle(mult, zyklen || 1);
+    const st  = setState4(sum, t);
+    /* Optionale Gruppen (Unterarme) melden nie einen Mangel — die App tut das
+       an keiner anderen Stelle, und Bernstein hieße „hol das nach". Sie
+       bleiben deshalb entweder unbemalt (nichts zu sagen) oder blau
+       („versorgt, nichts zu tun"). Zu viel wird trotzdem gemeldet. */
+    let cls;
+    if(optional)      cls = st==='ineffizient' ? 'g4' : (sum>0 ? 'g2' : null);
+    else if(sum===0)  cls = 'g0';
+    else              cls = {unter:'g1', ziel:'g2', drueber:'g3', ineffizient:'g4'}[st];
+    keys.forEach(k => out[k] = {cls, sum, lo:t.lo, hi:t.hi, effMax:t.effMax,
+                                label, optional:!!optional, zustand:st});
   });
+  return out;
+}
+/* Färbt beide Figuren. Erwartet {chest: 12.5, …} wie bisher. */
+function paintBodies(setsPerMuscle, zyklen){
+  const gs = figureGroupState(setsPerMuscle, zyklen);
+  clearFresh();
+  document.querySelectorAll('#bodystage path[data-m]').forEach(p=>{
+    const g = gs[p.dataset.m];
+    setFigClass(p, (g && g.cls) || null);
+  });
+  return gs;
+}
+/* Die Antwort in einem Satz — der zweite Träger neben der Farbe.
+   Wer Farben schlecht unterscheidet, liest hier trotzdem, was ansteht. */
+function figureVerdict(gs, hatDaten){
+  if(!hatDaten) return {text:'Noch nichts aufgezeichnet — der erste Push färbt die Figur.', art:'leer'};
+  const seen = new Set(), dran = [], zuViel = [];
+  SETGROUPS.forEach(([label, keys, mult, optional])=>{
+    const g = gs[keys[0]]; if(!g || seen.has(label)) return;
+    seen.add(label);
+    if(g.cls==='g4') zuViel.push(label);
+    else if(!optional && (g.cls==='g0' || g.cls==='g1')) dran.push([label, g.lo - g.sum]);
+  });
+  dran.sort((a,b)=>b[1]-a[1]);
+  if(zuViel.length && !dran.length)
+    return {text:`Alles im Korridor — <b>${zuViel.join(' · ')}</b> sogar über der Effizienzgrenze.`, art:'zuviel'};
+  if(!dran.length) return {text:'Alle Gruppen im Korridor. Weiter so.', art:'ziel'};
+  /* Bis fünf Gruppen ausschreiben — das passt in eine Zeile und deckt den
+     häufigsten Fall ab (Aaron hat aktuell genau fünf offene Gruppen).
+     Darüber wäre die Zeile länger als das, was sie beantworten soll. */
+  const zeig = dran.slice(0,5).map(d=>d[0]);
+  const rest = dran.length - zeig.length;
+  return {text:`Dran: <b>${zeig.join(' · ')}</b>${rest? ` und ${rest} weitere` : ''}`,
+          art:'dran', gruppen:dran.map(d=>d[0])};
 }
 
 /* Gruppen für Statistik-Balken (fein) und Radar (grob) */
@@ -3909,33 +4069,55 @@ function renderHome(){
   });
   syncAllSegs();
 }
-/* Figur: Wochensätze oder Erholung */
-let weekMuscleMap = {}, recMap = {}, bodyMode = 'week';
+/* Figur: Sätze im Zyklus gegen den Korridor — oder Erholung */
+let weekMuscleMap = {}, recMap = {}, bodyMode = 'week', figState = {}, figFresh = null;
+/* Eine Legende für beide Modi. Vier Punkte statt vier Punkte plus Erklärsatz:
+   die Bedeutung steht ohnehin im Klartext über der Figur. */
+function figLegend(rec){
+  const s = (v,t)=>`<span><i class="dot" style="background:var(--fig-${v})"></i>${t}</span>`;
+  return rec
+    ? s('g0','bereit') + s('g1','fast') + s('g2','müde') + s('g3','platt')
+    : s('g0','nichts') + s('g1','zu wenig') + s('g2','im Ziel') + s('g3','mehr');
+}
 function paintBody(){
+  const hatDaten = (weekMuscleMap && Object.keys(weekMuscleMap).length > 0);
   if(bodyMode==='rec'){
     recMap = recoveryMap();
-    document.querySelectorAll('path[data-m]').forEach(p=>{
-      const v = recMap[p.dataset.m]; p.classList.remove('m1','m2','m3','r1','r2','r3');
-      p.classList.add(v>=85? 'r3' : v>=60? 'r2' : v>=35? 'r1' : 'r0');
+    clearFresh();
+    document.querySelectorAll('#bodystage path[data-m]').forEach(p=>{
+      const v = recMap[p.dataset.m];
+      /* Richtung wie im Volumen-Modus: Bernstein = dran, Blau = in Ruhe lassen. */
+      setFigClass(p, v>=85? 'e3' : v>=60? 'e2' : v>=35? 'e1' : 'e0');
     });
     const g = recoveryGroups(recMap).sort((a,b)=>b[1]-a[1]);
     const fresh = g.filter(x=>x[1]>=80).map(x=>x[0]);
-    $('#body-sub').innerHTML = fresh.length? `Frisch und bereit: <b style="color:var(--green)">${fresh.join(' · ')}</b>` : 'Alles noch in Erholung — heute leichter oder Pausentag.';
-    $('#body-legend').innerHTML = `<span><i class="dot" style="background:var(--fig-r0)"></i>&lt;35 %</span>
-      <span><i class="dot" style="background:var(--fig-r1)"></i>35–60 %</span>
-      <span><i class="dot" style="background:var(--fig-2)"></i>60–85 %</span>
-      <span><i class="dot" style="background:var(--fig-3)"></i>85 %+</span>`;
+    $('#body-sub').innerHTML = fresh.length
+      ? `Bereit: <b>${fresh.join(' · ')}</b>`
+      : 'Alles noch in Erholung — heute leichter oder Pausentag.';
+    $('#body-legend').innerHTML = figLegend(true);
     $('#body-reclist').innerHTML = `<div style="margin-top:12px">` + g.map(([n,v],i)=>`
-      <div class="mbar"><span>${n}</span><span class="bar"><i style="width:${v}%;animation-delay:${i*45}ms;background:${v>=85?'var(--fig-3)':v>=60?'var(--fig-2)':v>=35?'var(--fig-r1)':'var(--fig-r0)'}"></i></span><span class="val">${v} %</span></div>`).join('') + `</div>
+      <div class="mbar"><span>${n}</span><span class="bar"><i style="width:${v}%;animation-delay:${i*45}ms;background:${v>=85?'var(--fig-g0)':v>=60?'var(--fig-g1)':v>=35?'var(--fig-g2)':'var(--fig-g3)'}"></i></span><span class="val">${v} %</span></div>`).join('') + `</div>
       <p class="tiny" style="margin-top:8px">Ermüdung klingt über 2–5 Tage ab — je mehr Sätze, desto länger.</p>`;
   } else {
-    document.querySelectorAll('path[data-m]').forEach(p=>p.classList.remove('r0','r1','r2','r3'));
-    paintBodies(weekMuscleMap);
-    $('#body-sub').textContent = 'Diese Woche (Mo–So) · Reset Sonntag Mitternacht';
-    $('#body-legend').innerHTML = `<span><i class="dot" style="background:var(--fig-body)"></i>0 Sätze</span>
-      <span><i class="dot" style="background:var(--fig-1)"></i>1–3</span>
-      <span><i class="dot" style="background:var(--fig-2)"></i>4–8</span>
-      <span><i class="dot" style="background:var(--fig-3);box-shadow:0 0 6px rgba(93,155,255,.7)"></i>9+ <span class="tiny">(heller = mehr)</span></span>`;
+    /* Ohne eine einzige Einheit im Zyklus hat die Figur nichts zu sagen —
+       dann bleibt sie grau statt den ganzen Körper als Mangel zu melden. */
+    figState = hatDaten ? paintBodies(weekMuscleMap, 1) : {};
+    if(!hatDaten){ clearFresh();
+      document.querySelectorAll('#bodystage path[data-m]').forEach(p=>setFigClass(p, null)); }
+    if(figFresh){
+      /* Erzwungener Umbruch: paintBodies() hat .fresh eben erst entfernt.
+         Ohne das fasst der Browser Entfernen und Hinzufügen zusammen und die
+         Animation liefe ab dem zweiten Training nicht mehr. */
+      void $('#bodystage').offsetWidth;
+      document.querySelectorAll('#bodystage path[data-m]').forEach(p=>{
+        if(figFresh.has(p.dataset.m)){ p.classList.add('fresh'); figFreshAn = true; }
+      });
+      figFresh = null;                       // einmalig, nicht bei jedem Rendern
+    }
+    const v = figureVerdict(figState, hatDaten);
+    $('#body-sub').innerHTML = v.text;
+    $('#body-sub').dataset.art = v.art;
+    $('#body-legend').innerHTML = hatDaten ? figLegend(false) : '';
     $('#body-reclist').innerHTML = '';
   }
 }
@@ -4582,6 +4764,10 @@ async function finishWorkout(){
   state.workouts.push(w);
   state.active = null;
   saveState(); stopTicker();
+  /* Der beste Augenblick, den die App zu vergeben hat: Beim nächsten Blick auf
+     die Startseite leuchten genau die Muskeln auf, die eben gearbeitet haben.
+     Einmalig — die Marke wird beim Malen verbraucht, nicht nach einer Uhr. */
+  figFresh = new Set(cleaned.flatMap(e=>{ const x = getEx(e.exId); return x? x.p.concat(x.s||[]) : []; }));
   const freshAch = evalAchievements([...new Set(cleaned.map(e=>e.exId))]);
   const lvlAfter = achLevel().lvl;
   makeSnapshot('nach Training');          // Sicherungspunkt direkt nach dem Abschluss
@@ -4614,7 +4800,9 @@ function showSummary(w, freshAch, newLevel){
   /* Vergleich zum letzten gleichartigen Workout — gibt der Zahl Bedeutung */
   const prevSame = state.workouts.filter(x=>x.type===w.type && x.id!==w.id).slice(-1)[0];
   const dVol = prevSame? wVolume(w)-wVolume(prevSame) : 0;
-  const cmp = prevSame? `<div class="tiny" style="text-align:center;margin:-4px 0 12px">
+  /* Gehört zum Kennzahlenblock darüber — also .kpihint statt eines negativen
+     Rands, der den Satz nachträglich wieder heranzieht (wie in V58 gelernt). */
+  const cmp = prevSame? `<div class="tiny kpihint" style="text-align:center">
       ${dVol>0? `<span style="color:var(--green)">▲ ${fmtVol(dVol)} mehr als beim letzten ${esc(w.type)}</span>`
         : dVol<0? `<span style="color:var(--txt3)">▼ ${fmtVol(-dVol)} weniger als beim letzten ${esc(w.type)}</span>`
         : 'gleiches Volumen wie beim letzten Mal'}</div>` : '';
@@ -5459,7 +5647,7 @@ function groupBars(m, ws, zyklen){
       ? '<span style="color:var(--acc)">außerhalb des Zyklus</span>'
       : frei ? 'freiwillig' : 'Ziel ' + t.lo + '–' + t.hi;
     return `<div class="mbar big goal${leer?' leer':''}" data-grp="${esc(g)}" style="cursor:pointer" title="${bein?'Beine laufen außerhalb des Zyklus':'Ziel '+t.lo+'–'+t.hi+' Sätze'}">
-      <span>${g}<span class="tiny" style="opacity:.7;display:block;margin-top:-2px">${untertitel}</span></span>
+      <span>${g}<span class="tiny grpsub">${untertitel}</span></span>
       <span class="bar"><i style="width:${pos(v)}%;background:${col}"></i>
         ${bein||frei? '' : `<b class="zone" style="left:${pos(t.lo)}%;width:${pos(t.hi)-pos(t.lo)}%"></b>`}</span>
       <span class="val" style="color:${col}"><b>${v%1? v.toFixed(1).replace('.',','):v}</b> ${zeichen}</span>
@@ -5810,9 +5998,15 @@ function renderWeekStats(){
   const uLab = c.ws.map(w=>w.type.slice(0,2)+' '+new Date(w.date).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'}));
   const uVol = c.ws.map(w=>wVolume(w));
 
+  /* Der Hinweis auf den laufenden Zyklus stand bis V61 als eigenes <div>
+     darunter und wurde mit margin:-4px wieder an die Karte herangezogen.
+     Er gehört inhaltlich in die Karte — leadCard nimmt ihn als Untertitel. */
+  const subPlus = (lauf && i===closed.length-1)
+    ? sub + ` Der aktuelle Zyklus läuft noch (${lauf.ws.length} ${lauf.ws.length===1?'Einheit':'Einheiten'}) und wird erst gewertet, wenn der nächste Push beginnt.`
+    : sub;
+
   el.innerHTML = nav.html
-    + leadCard(txt, ton, sub)
-    + (lauf && i===closed.length-1? `<div class="tiny" style="margin:-4px 2px 10px;color:var(--txt3)">Der aktuelle Zyklus läuft noch (${lauf.ws.length} ${lauf.ws.length===1?'Einheit':'Einheiten'}) und wird erst gewertet, wenn der nächste Push beginnt.</div>`:'')
+    + leadCard(txt, ton, subPlus)
     + kpiRow(c.ws, vor? vor.ws : undefined, vor? `Vergleich zu Zyklus ${vor.n}` : null)
     + muscleSection(c.ws, 1, {zyklen:1})
     + `<div class="card"><h3>Volumen je Einheit</h3>${svgBars(uLab,uVol,v=>fmtVol(v))}</div>`
@@ -7297,13 +7491,41 @@ function miniFigure(key){
   return ['bodyFront','bodyBack'].map(id=>{
     const src=document.getElementById(id).firstElementChild; if(!src) return '';
     const c=src.cloneNode(true);
+    /* Der Klon bringt SÄMTLICHE id-Attribute mit — buildBody vergibt für jeden
+       Muskel eine (<g id="front-lats_left">). Sobald der Atlas offen war,
+       standen dieselben 60 ids zweimal im Dokument. Genau die Konstellation,
+       die den Unsichtbare-Balken-Fehler erzeugt hat: url(#…) trifft den
+       ERSTEN Treffer, und der kann in einem display:none-Zweig liegen.
+       Gefunden von f1, gemeldet seit V45 als Muster, hier ungeprüft geblieben,
+       weil z2 die ids nur bei geschlossenem Atlas zählt. */
+    c.removeAttribute('id');
+    c.querySelectorAll('[id]').forEach(e=>e.removeAttribute('id'));
     c.querySelectorAll('path[data-m]').forEach(p=>{
-      p.classList.remove('m1','m2','m3','r0','r1','r2','r3');
+      p.classList.remove(...FIG_CLASSES, 'fresh');
       if(p.dataset.m===key) p.classList.add('sel');
     });
     c.querySelectorAll('.deco,.deco2').forEach(p=>p.remove());
     return `<div>${c.outerHTML}</div>`;
   }).join('');
+}
+/* Antippen soll etwas BEANTWORTEN, nicht nur eine Zahl zeigen.
+   Bis V61 stand im Atlas „Sätze diese Woche: 1" — richtig gezählt, aber
+   ohne Aussage. Ob 1 Satz viel oder wenig ist, hängt an der Gruppe: für
+   die Waden ist 1 fast nichts, für den Trapez im Rücken-Korridor egal.
+   Deshalb hier derselbe Satz, den auch die Farbe erzählt. */
+function atlasUrteil(key){
+  if(!weekMuscleMap || !Object.keys(weekMuscleMap).length) return '';
+  const gs = figureGroupState(weekMuscleMap, 1), g = gs[key];
+  if(!g) return '';
+  const fehlt = Math.round((g.lo - g.sum) * 10) / 10;
+  const txt = g.optional
+      ? `<b>${g.label}</b> hat keinen Korridor — direkt trainieren ist Kür.`
+    : g.cls==='g0' ? `<b>${g.label}</b> war in diesem Zyklus nicht dran. Korridor ${g.lo}–${g.hi} Sätze.`
+    : g.cls==='g1' ? `<b>${g.label}</b>: ${fmtW(g.sum)} von ${g.lo}–${g.hi} Sätzen — es fehlen ${fmtW(fehlt)}.`
+    : g.cls==='g3' ? `<b>${g.label}</b>: ${fmtW(g.sum)} Sätze, über dem Korridor ${g.lo}–${g.hi}. Noch effizient.`
+    : g.cls==='g4' ? `<b>${g.label}</b>: ${fmtW(g.sum)} Sätze — über der Effizienzgrenze von ${g.effMax}.`
+    :                `<b>${g.label}</b>: ${fmtW(g.sum)} von ${g.lo}–${g.hi} Sätzen — im Korridor.`;
+  return `<p class="aturteil" data-art="${g.cls||''}">${txt}</p>`;
 }
 function renderAtlas(){
   const key=atlasKey; if(!key) return;
@@ -7318,7 +7540,8 @@ function renderAtlas(){
     <div class="mhead"><div><h3>${MUSCLES[key]}</h3><p class="tiny">${inf.lat||''}</p></div>
       <button class="ic" data-close aria-label="Schließen" data-ico-close></button></div>
     <div class="mfig">${miniFigure(key)}</div>
-    <div class="mkpi"><div><b>${woche%1? woche.toFixed(1).replace('.',','):woche}</b><span>Sätze diese Woche</span></div>
+    ${atlasUrteil(key)}
+    <div class="mkpi"><div><b>${woche%1? woche.toFixed(1).replace('.',','):woche}</b><span>Sätze im Zyklus</span></div>
       ${erh!=null?`<div><b>${erh} %</b><span>erholt</span></div>`:''}
       <div><b>${list.length}</b><span>Übungen</span></div></div>
     ${inf.fn?`<div class="msec"><h5>Funktion</h5><p>${inf.fn}</p></div>`:''}
