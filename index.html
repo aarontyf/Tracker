@@ -293,14 +293,12 @@ h3>.bi svg{width:15px;height:15px}
 .kpi .pr{color:var(--gold)}
 .kdelta{display:block;font-style:normal;font-size:10px;font-weight:750;margin-top:3px;letter-spacing:-.01em}
 
-/* ─── RINGE ───────────────────────────────────────────────────────────
-   Der Rahmen der Wochen-Ringe (.rings, .ringwrap, .ringc, .ringlegend, .rl)
-   ist mit V58 entfallen: Die Karte „Diese Woche" wurde in V57 aus renderHome
-   genommen, die elf Regeln trafen seither auf nichts mehr.
-   ring-track und ring-bar bleiben — die ring()-Funktion zeichnet damit auch
-   den Level-Fortschritt. */
-.ring-track{stroke:rgba(255,255,255,.07)}
-.ring-bar{stroke-linecap:round;transition:stroke-dashoffset var(--dur-4) var(--ease)}
+/* ─── RINGE — vollständig entfallen (V64) ────────────────────────────
+   V58 hatte den Rahmen entfernt (.rings, .ringwrap, .ringc, .ringlegend)
+   und .ring-track/.ring-bar stehen lassen mit der Begründung, ring()
+   zeichne damit den Level-Fortschritt. Nachgemessen: ring() wurde von
+   NIEMANDEM mehr aufgerufen. Der Level-Balken ist eine .xpbar, kein Ring.
+   Die Funktion und die zwei Regeln sind jetzt raus. */
 
 /* ─── HERO (Startbildschirm) ─────────────────────────────────────── */
 .hero{
@@ -534,16 +532,9 @@ details.erkl.warum>div{font-size:var(--fs-tiny);margin-top:2px}
   font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--txt3);
   font-weight:650;padding-bottom:4px;border-bottom:1px solid var(--line)}
 .planhd span:nth-child(2),.planhd span:nth-child(3){text-align:center}
-.typegrid{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp3)}
-.typebtn{
-  position:relative;overflow:hidden;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.012)),var(--s1);
-  border:1px solid var(--line);border-radius:var(--r);padding:20px 12px;text-align:center;font-weight:750;font-size:15px;letter-spacing:-.02em;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.05);transition:transform var(--dur-1) var(--ease),border-color var(--dur-2) var(--ease);
-}
-.typebtn:active{transform:scale(.975)}
-.typebtn small{display:block;font-weight:500;font-size:11.5px;color:var(--txt3);margin-top:4px;letter-spacing:0}
-.typebtn.hot{border-color:var(--acc-a30);background:linear-gradient(160deg,rgba(93,155,255,.16),rgba(93,155,255,.02)),var(--s1);box-shadow:var(--glow),inset 0 1px 0 rgba(255,255,255,.08)}
-.typebtn.hot small{color:var(--acc2)}
+/* .typegrid und .typebtn gehörten zum Raster „Push / Pull / Legs / Andere",
+   das die Wochenleiste in V63 ersetzt hat. Sechs Regeln ohne Treffer —
+   entfernt V64. */
 .wbar{position:sticky;top:0;z-index:30;background:rgba(0,0,0,.72);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
   margin:calc(-1 * (var(--sp3) + env(safe-area-inset-top))) calc(-1 * var(--sp4)) var(--sp3);
   padding:calc(var(--sp3) + env(safe-area-inset-top)) var(--sp4) var(--sp3);
@@ -775,8 +766,12 @@ details.notiz input{margin-top:4px;width:100%}
 .msec p,.msec li,.exsec li{font-size:13px;line-height:1.55;color:var(--txt2)}
 .msec ul,.exsec ul,.exsec ol{margin:0;padding-left:16px}
 .msec li,.exsec li{margin-bottom:4px}
+/* --fs-input, nicht 15px: unter 16px zoomt iOS beim Antippen ins Feld und
+   springt danach nicht zurück. Das Suchfeld im Muskelatlas war das einzige,
+   das die Regel gerissen hat — gefunden bei der Durchsicht, k1 prüft bisher
+   nur den Token, nicht jedes einzelne Feld. */
 .msearch input{width:100%;background:var(--s2);border:1px solid var(--line);border-radius:var(--r-md);
-  color:var(--txt1);padding:12px 12px;font-size:15px;-webkit-appearance:none}
+  color:var(--txt1);padding:12px 12px;font-size:var(--fs-input);-webkit-appearance:none}
 .mfilters{display:flex;flex-wrap:wrap;gap:4px;margin:var(--sp2) 0 var(--sp3)}
 .mfilters .chip{background:var(--s2);border:1px solid var(--line);color:var(--txt2);border-radius:var(--r-full);
   padding:8px 12px;font-size:13px;cursor:pointer;transition:all var(--dur-2) var(--ease)}
@@ -910,8 +905,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
 .streakchip .stx{letter-spacing:.01em}
 .streakchip.zero{filter:grayscale(.6);opacity:.7;background:var(--s2);border-color:var(--line)}
 .streakchip.zero .fl{animation:none;filter:none;opacity:.6}
-.streakchip.setup{background:var(--s2);border-color:var(--line);font-weight:650;font-size:13px;color:var(--txt2)}
-.streakchip.setup .stx{font-weight:650}
+/* .streakchip.setup: der Knopf bekommt nur „zero" und „bump" — entfernt V64. */
 .streakchip.bump{animation:streakBump .6s var(--spring)}
 @keyframes flameFlicker{0%,100%{transform:scale(1) rotate(-3deg)}45%{transform:scale(1.14) rotate(3deg)}70%{transform:scale(.97) rotate(-1deg)}}
 @keyframes streakBump{0%{transform:scale(1)}35%{transform:scale(1.22)}100%{transform:scale(1)}}
@@ -923,8 +917,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
 .seg.segsm button{font-size:13px;padding:4px 12px}
 .seg.setmode-top{display:flex;width:100%;margin-bottom:12px}
 .seg.setmode-top button{flex:1}
-/* ═══ Wochenrückblick ═══ */
-.rvd.up{color:var(--green,#30D158)} .rvd.down{color:var(--txt3)} .rvd.flat{color:var(--txt3)}
+/* .rvd gehörte zum Wochenrückblick, der in V59 entfallen ist — raus V64. */
 
 </style>
 </head>
@@ -951,7 +944,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
   <button class="iconbtn" id="hint-close" style="width:30px;height:30px" aria-label="Hinweis ausblenden" data-ico-close></button>
 </div>
 
-<div class="app">
+<div class="app" role="main">
 
   <!-- ================= HOME ================= -->
   <section class="screen on" id="scr-home">
@@ -1080,15 +1073,15 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
 
 <!-- ================= NAV ================= -->
 <nav class="nav" aria-label="Hauptnavigation"><div class="inner">
-  <button data-s="scr-home" class="on" aria-label="Startseite"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a2 2 0 01-2 2h-4v-7h-6v7H5a2 2 0 01-2-2z"/></svg>Start</button>
-  <button data-s="scr-train" aria-label="Training"><svg viewBox="0 0 24 24"><path d="M6.5 6.5v11M17.5 6.5v11M2 9.5v5M22 9.5v5M4.25 8v8M19.75 8v8M6.5 12h11"/></svg>Training</button>
-  <button data-s="scr-stats" aria-label="Statistik"><svg viewBox="0 0 24 24"><path d="M3 21h18M7 21V9M12 21V3M17 21v-8"/></svg>Statistik</button>
-  <button data-s="scr-hist" aria-label="Verlauf"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>Verlauf</button>
-  <button data-s="scr-lib" aria-label="Übungen"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20M4 19.5A2.5 2.5 0 006.5 22H20V2H6.5A2.5 2.5 0 004 4.5z"/></svg>Übungen</button>
+  <button data-s="scr-home" class="on" aria-label="Startseite"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-8 9 8v9a2 2 0 01-2 2h-4v-7h-6v7H5a2 2 0 01-2-2z"/></svg>Start</button>
+  <button data-s="scr-train" aria-label="Training"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5v11M17.5 6.5v11M2 9.5v5M22 9.5v5M4.25 8v8M19.75 8v8M6.5 12h11"/></svg>Training</button>
+  <button data-s="scr-stats" aria-label="Statistik"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21h18M7 21V9M12 21V3M17 21v-8"/></svg>Statistik</button>
+  <button data-s="scr-hist" aria-label="Verlauf"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>Verlauf</button>
+  <button data-s="scr-lib" aria-label="Übungen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 016.5 17H20M4 19.5A2.5 2.5 0 006.5 22H20V2H6.5A2.5 2.5 0 004 4.5z"/></svg>Übungen</button>
 </div></nav>
 
 <!-- ================= MODALS ================= -->
-<div class="mback" id="modal-picker"><div class="modal">
+<div class="mback" id="modal-picker"><div class="modal" role="dialog" aria-modal="true">
   <div class="grab"></div>
   <div class="mhd"><h2>Übung wählen</h2><button class="iconbtn" data-close aria-label="Schließen" data-ico-close></button></div>
   <input type="search" id="pick-search" placeholder="Suchen…">
@@ -1106,19 +1099,19 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
   <button class="btn btn-ghost btn-block" id="cf-cancel">Abbrechen</button>
 </div></div>
 
-<div class="mback" id="modal-summary"><div class="modal" id="summary-body"></div></div>
+<div class="mback" id="modal-summary"><div class="modal" id="summary-body" role="dialog" aria-modal="true" aria-label="Trainings-Zusammenfassung"></div></div>
 
-<div class="mback" id="modal-onboard"><div class="modal" id="ob-body"></div></div>
-<div class="mback" id="modal-muscle"><div class="modal" id="muscle-body"></div></div>
-<div class="mback" id="modal-detail"><div class="modal" id="detail-body"></div></div>
+<div class="mback" id="modal-onboard"><div class="modal" id="ob-body" role="dialog" aria-modal="true" aria-label="Einrichtung"></div></div>
+<div class="mback" id="modal-muscle"><div class="modal" id="muscle-body" role="dialog" aria-modal="true" aria-label="Muskelatlas"></div></div>
+<div class="mback" id="modal-detail"><div class="modal" id="detail-body" role="dialog" aria-modal="true" aria-label="Details"></div></div>
 
-<div class="mback" id="modal-custom"><div class="modal">
+<div class="mback" id="modal-custom"><div class="modal" role="dialog" aria-modal="true">
   <div class="grab"></div>
   <div class="mhd"><h2>Eigene Übung</h2><button class="iconbtn" data-close aria-label="Schließen" data-ico-close></button></div>
   <label class="tiny up">Name</label>
   <input id="cx-name" placeholder="z.B. Incline Chest Press Maschine" style="margin:4px 0 12px">
   <label class="tiny up">Gerät</label>
-  <select id="cx-equip" style="margin:4px 0 12px"></select>
+  <select id="cx-equip" style="margin:4px 0 12px" aria-label="Gerät"></select>
   <label class="tiny up">Primäre Muskeln (voll gezählt)</label>
   <div class="chips" id="cx-prim" style="margin:4px 0 12px"></div>
   <label class="tiny up">Sekundäre Muskeln (halb gezählt)</label>
@@ -1126,7 +1119,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
   <button class="btn btn-acc btn-block" id="cx-save">Speichern</button>
 </div></div>
 
-<div class="mback" id="modal-backup"><div class="modal" style="max-width:460px">
+<div class="mback" id="modal-backup"><div class="modal" role="dialog" aria-modal="true" aria-label="Sicherung" style="max-width:460px">
   <div class="grab"></div>
   <div style="text-align:center;padding:4px 0 4px">
     <span class="bi" data-ico="shield" style="margin:0 auto 4px;display:flex" aria-hidden="true"></span>
@@ -1142,14 +1135,14 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
   <p class="tiny" style="text-align:center;margin-top:12px">Die App legt zusätzlich automatisch Sicherungspunkte auf dem Gerät an — die helfen aber nicht, wenn Safari die Website-Daten löscht.</p>
 </div></div>
 
-<div class="mback" id="modal-calc"><div class="modal">
+<div class="mback" id="modal-calc"><div class="modal" role="dialog" aria-modal="true">
   <div class="grab"></div>
   <div class="mhd"><h2><span class="bi" data-ico="scale"></span>Rechner</h2><button class="iconbtn" data-close aria-label="Schließen" data-ico-close></button></div>
   <div class="card">
     <h3 style="margin-bottom:8px">Scheiben pro Seite</h3>
     <div class="row">
       <input type="text" inputmode="decimal" id="pc-total" placeholder="Gesamtgewicht z.B. 82,5" style="flex:1">
-      <select id="pc-bar" style="width:120px">
+      <select id="pc-bar" style="width:120px" aria-label="Gewicht der Stange">
         <option value="20">Stange 20 kg</option><option value="15">Stange 15 kg</option>
         <option value="10">Stange 10 kg</option><option value="7">SZ 7 kg</option><option value="0">ohne Stange</option>
       </select>
@@ -1163,7 +1156,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
   </div>
 </div></div>
 
-<div class="mback" id="modal-exopt"><div class="modal">
+<div class="mback" id="modal-exopt"><div class="modal" role="dialog" aria-modal="true">
   <div class="grab"></div>
   <div class="mhd"><h2 id="xo-title">Übung einstellen</h2><button class="iconbtn" data-close aria-label="Schließen" data-ico-close></button></div>
   <div class="card">
@@ -1175,36 +1168,36 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     <div id="xo-unisince-wrap" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--bd)">
       <b style="font-size:13px">Einseitig seit</b>
       <div class="tiny" style="margin:2px 0 8px">Ab diesem Datum zählt die App die Übung als einarmig. Nur nötig für Trainings von früher — bei allem, was du ab jetzt loggst, merkt sie es sich automatisch.</div>
-      <div class="row" style="gap:8px"><input type="date" id="xo-unisince" style="flex:1">
+      <div class="row" style="gap:8px"><input type="date" id="xo-unisince" style="flex:1" aria-label="Einseitig seit diesem Datum">
         <button class="btn btn-ghost btn-sm" id="xo-unisince-clr">Löschen</button></div>
     </div>
   </div>
   <div class="card">
     <h3 style="margin-bottom:8px">Sätze pro Training</h3>
-    <div class="row"><input type="number" id="xo-sets" min="1" max="12" style="width:76px"><span class="sub">Sätze</span>
+    <div class="row"><input type="number" id="xo-sets" min="1" max="12" style="width:76px" aria-label="Sätze pro Training"><span class="sub">Sätze</span>
       <button class="btn btn-ghost btn-sm" id="xo-sets-std" style="margin-left:auto">Standard</button></div>
     <p class="tiny" style="margin-top:8px" id="xo-sets-hint"></p>
   </div>
   <div class="card">
     <h3 style="margin-bottom:8px">Wiederholungs-Ziel</h3>
-    <div class="row"><input type="number" id="xo-lo" min="1" max="60" style="width:76px"><span class="sub">bis</span>
-      <input type="number" id="xo-hi" min="1" max="60" style="width:76px"><span class="sub">Wdh</span></div>
+    <div class="row"><input type="number" id="xo-lo" min="1" max="60" style="width:76px" aria-label="Wiederholungen, unterer Wert"><span class="sub">bis</span>
+      <input type="number" id="xo-hi" min="1" max="60" style="width:76px" aria-label="Wiederholungen, oberer Wert"><span class="sub">Wdh</span></div>
     <p class="tiny" style="margin-top:8px">Sind alle Sätze am oberen Wert, schlägt die App mehr Gewicht vor.</p>
   </div>
   <div class="card">
     <h3 style="margin-bottom:8px">Gewichtssprung</h3>
-    <div class="row"><input type="number" id="xo-step" min="0.25" max="20" step="0.25" style="width:90px"><span class="sub">kg pro Steigerung</span></div>
+    <div class="row"><input type="number" id="xo-step" min="0.25" max="20" step="0.25" style="width:90px" aria-label="Gewichtssprung in Kilogramm"><span class="sub">kg pro Steigerung</span></div>
     <p class="tiny" style="margin-top:8px">Kurzhanteln meist 2 kg (nächstes Paar), Langhantel 2,5 kg, schwere Übungen 5 kg.</p>
   </div>
   <div class="card">
     <h3 style="margin-bottom:8px">Pause für diese Übung</h3>
-    <div class="row"><input type="number" id="xo-rest" min="0" max="600" step="15" style="width:90px"><span class="sub">Sek. (0 = globale Vorgabe)</span></div>
+    <div class="row"><input type="number" id="xo-rest" min="0" max="600" step="15" style="width:90px" aria-label="Pause in Sekunden"><span class="sub">Sek. (0 = globale Vorgabe)</span></div>
   </div>
   <div class="card" id="xo-alt"></div>
   <button class="btn btn-ghost btn-block btn-sm" id="xo-reset">Auf Standard zurücksetzen</button>
 </div></div>
 
-<div class="mback" id="modal-bw"><div class="modal">
+<div class="mback" id="modal-bw"><div class="modal" role="dialog" aria-modal="true">
   <div class="grab"></div>
   <div class="mhd"><h2><span class="bi" data-ico="trend"></span>Körpergewicht</h2><button class="iconbtn" data-close aria-label="Schließen" data-ico-close></button></div>
   <div class="card">
@@ -1226,13 +1219,13 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
   <div id="ms-out"></div>
 </div></div>
 
-<div class="mback" id="modal-ach"><div class="modal">
+<div class="mback" id="modal-ach"><div class="modal" role="dialog" aria-modal="true">
   <div class="grab"></div>
   <div class="mhd"><h2><span class="bi" data-ico="trophy"></span>Erfolge</h2><button class="iconbtn" data-close aria-label="Schließen" data-ico-close></button></div>
   <div id="ach-body"></div>
 </div></div>
 
-<div class="mback" id="modal-routine"><div class="modal">
+<div class="mback" id="modal-routine"><div class="modal" role="dialog" aria-modal="true">
   <div class="grab"></div>
   <div class="mhd"><h2 id="rt-title">Workout erstellen</h2><button class="iconbtn" data-close aria-label="Schließen" data-ico-close></button></div>
   <label class="tiny up">Name</label>
@@ -1246,7 +1239,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
   <button class="btn btn-acc btn-block" id="rt-save">Workout speichern</button>
 </div></div>
 
-<div class="mback" id="modal-settings"><div class="modal">
+<div class="mback" id="modal-settings"><div class="modal" role="dialog" aria-modal="true">
   <div class="grab"></div>
   <div class="mhd"><h2>Einstellungen &amp; Daten</h2><button class="iconbtn" data-close aria-label="Schließen" data-ico-close></button></div>
   <!-- Der Name stand bis V59 fest im Code. Für eine App, die weitergegeben
@@ -1259,7 +1252,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
   <div class="card">
     <h3 style="margin-bottom:4px">Trainingsrhythmus</h3>
     <p class="tiny" style="margin-bottom:8px">Ein <b>Zyklus</b> ist ein voller Durchgang durch deinen Plan: <b>Ganzkörper-Push → Ganzkörper-Pull → Rest</b>. Alle Ziele in der Statistik rechnen pro Zyklus, nicht pro Kalenderwoche — sonst schwanken die Werte nur, weil mal zwei und mal drei Einheiten in eine Woche fallen.</p>
-    <div class="row"><input type="number" id="set-goal" min="1" max="14" style="width:90px"><span class="sub">Einheiten pro Zyklus</span></div>
+    <div class="row"><input type="number" id="set-goal" min="1" max="14" style="width:90px" aria-label="Einheiten pro Zyklus"><span class="sub">Einheiten pro Zyklus</span></div>
     <div class="row" style="margin-top:12px;justify-content:space-between">
       <div class="grow"><b style="font-size:15px">Beine im Zyklus</b>
         <div class="tiny"><b>An</b> (Standard bei Ganzkörper-Push/Pull): Beine bekommen denselben Zielkorridor wie alles andere. <b>Aus</b>: Beine laufen nebenher und werden rollierend über 21 Tage gezeigt, ohne Ampel.</div></div>
@@ -1268,7 +1261,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
   </div>
   <div class="card">
     <h3 style="margin-bottom:4px">Pausen-Timer</h3>
-    <div class="row"><input type="number" id="set-rest" min="15" max="600" step="15" style="width:90px"><span class="sub">Sekunden (pro Übung überschreibbar)</span></div>
+    <div class="row"><input type="number" id="set-rest" min="15" max="600" step="15" style="width:90px" aria-label="Pause in Sekunden"><span class="sub">Sekunden (pro Übung überschreibbar)</span></div>
     <div class="row" style="justify-content:space-between;margin-top:10px">
       <div class="grow"><b style="font-size:15px">Ton am Ende</b>
         <div class="tiny">Zwei kurze Töne, zusätzlich zur Vibration.</div></div>
@@ -1277,9 +1270,9 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
   </div>
   <div class="card">
     <h3 style="margin-bottom:8px">Trainingsstil</h3>
-    <div class="row" style="margin-bottom:8px"><input type="number" id="set-replo" min="1" max="30" style="width:70px"><span class="sub">bis</span>
-      <input type="number" id="set-rephi" min="1" max="40" style="width:70px"><span class="sub">Wdh (Standard)</span></div>
-    <div class="row"><input type="number" id="set-defsets" min="1" max="10" style="width:70px"><span class="sub">Sätze pro Übung (Vorgabe)</span></div>
+    <div class="row" style="margin-bottom:8px"><input type="number" id="set-replo" min="1" max="30" style="width:70px" aria-label="Wiederholungen, unterer Wert"><span class="sub">bis</span>
+      <input type="number" id="set-rephi" min="1" max="40" style="width:70px" aria-label="Wiederholungen, oberer Wert"><span class="sub">Wdh (Standard)</span></div>
+    <div class="row"><input type="number" id="set-defsets" min="1" max="10" style="width:70px" aria-label="Sätze pro Übung, Vorgabe"><span class="sub">Sätze pro Übung (Vorgabe)</span></div>
     <p class="tiny" style="margin-top:8px">Gilt für neue Übungen. Bauch/Waden und Isolation liegen automatisch etwas höher, schwere Grundübungen etwas tiefer.</p>
   </div>
   <div class="card">
@@ -1291,8 +1284,8 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
   </div>
   <div class="card">
     <h3 style="margin-bottom:8px">Satzziel pro Muskel</h3>
-    <div class="row"><input type="number" id="set-goallo" min="1" max="40" style="width:70px"><span class="sub">bis</span>
-      <input type="number" id="set-goalhi" min="1" max="60" style="width:70px"><span class="sub">Sätze pro <b>Woche</b></span></div>
+    <div class="row"><input type="number" id="set-goallo" min="1" max="40" style="width:70px" aria-label="Satzziel pro Woche, unterer Wert"><span class="sub">bis</span>
+      <input type="number" id="set-goalhi" min="1" max="60" style="width:70px" aria-label="Satzziel pro Woche, oberer Wert"><span class="sub">Sätze pro <b>Woche</b></span></div>
     <div class="tiny" id="set-goal-cycle" style="margin-top:6px"></div>
     <p class="tiny" style="margin-top:8px">Richtwert: <b>10–20 harte Sätze pro Muskel und Woche</b>. Ab etwa <b>11 Sätzen pro Muskel und Einheit</b> ist kein Zuwachs mehr messbar — darüber meldet die Ampel „!".</p>
     <!-- Die vier Quellen standen bis V55 nirgends in der App, nur die Namen.
@@ -1317,7 +1310,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
       <button class="btn btn-ghost btn-sm grow" id="btn-export"><span class="bi" data-ico="down"></span>Datei</button>
       <button class="btn btn-ghost btn-sm grow" id="btn-csv"><span class="bi" data-ico="chart"></span>CSV</button>
       <button class="btn btn-ghost btn-sm grow" id="btn-import"><span class="bi" data-ico="upload"></span>Import</button>
-      <input type="file" id="import-file" accept=".json" style="display:none">
+      <input type="file" id="import-file" accept=".json" style="display:none" aria-label="Sicherungsdatei auswählen" tabindex="-1">
     </div>
     <p class="tiny" style="margin-top:8px">CSV lässt sich in Excel öffnen — eine Zeile pro Satz.</p>
   </div>
@@ -1341,7 +1334,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V63 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V64 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -1588,7 +1581,7 @@ function movePattern(e){
 }
 function moveIcon(e, size){
   const k = movePattern(e), [ , d] = MOVE_ICON[k] || MOVE_ICON.other;
-  return `<svg class="mvicon" viewBox="0 0 24 24" width="${size||26}" height="${size||26}" fill="none"
+  return `<svg class="mvicon" aria-hidden="true" viewBox="0 0 24 24" width="${size||26}" height="${size||26}" fill="none"
     stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
 }
 
@@ -2048,8 +2041,11 @@ function buildBody(muscDefs, decoDefs, sil, pre){
   const tr = (g,mir)=>{ const t=[mir?M:'', GT[g||'']||''].filter(Boolean).join(' ');
                         return t? ` transform="${t}"` : ''; };
   const uid = 'b'+(buildBody.n=(buildBody.n||0)+1);
-  let s = '<svg viewBox="-30 12 320 546" xmlns="http://www.w3.org/2000/svg">'
-    + '';
+  /* Die Figur trägt die Aussage im Bild. Ihr Klartext steht in #body-sub —
+     darauf verweist die Beschriftung, statt 152 Pfade einzeln zu benennen. */
+  const ansicht = pre==='front' ? 'Vorderansicht' : 'Rückansicht';
+  let s = `<svg viewBox="-30 12 320 546" xmlns="http://www.w3.org/2000/svg" role="img"`
+    + ` aria-label="Muskelfigur, ${ansicht}. Der Klartext dazu steht über der Figur.">`;
   sil.forEach(([d0,g,c])=>{
     const d = remap(d0, modeOf(g));
     s += `<path class="base" d="${d}"${tr(g,false)}/>`;
@@ -2723,8 +2719,71 @@ function loadState(){
          Keine Migration, die Trainingsdaten anfassen könnte. */
       if(!state.plan || typeof state.plan !== 'object') state.plan={}; }
   }catch(e){ console.warn('load fail', e); }
-  migrateState();
+  /* V64: Erst die Form geradeziehen, dann migrieren.
+     Gemessen: sechs Zustandsformen legten die App komplett lahm — ein
+     Workout ohne `exercises`, `sets` als Text statt Liste, `null` in der
+     Übungs- oder Satzliste, `active` ohne `exercises`. In jedem Fall flog
+     eine Ausnahme, BEVOR irgendetwas gerendert wurde: weißer Bildschirm.
+     Und weil migrateState() bisher außerhalb des try stand, war schon der
+     Start nicht mehr zu retten — Aarons Daten lagen unversehrt im Speicher,
+     nur kam niemand mehr an sie heran.
+     Deshalb doppelt abgesichert: reparieren, und selbst dann noch fangen. */
+  repariereState();
+  try{ migrateState(); }
+  catch(e){ console.warn('migrate fail', e); }
   saveState();
+}
+/* Zieht die FORM der Daten gerade — nie den Inhalt.
+   Regel: Es wird nur ersetzt, was ohnehin keinen Wert tragen kann
+   (null, falscher Typ, fehlende Liste). Ein einziger echter Satz geht
+   dabei nicht verloren. Wurde etwas repariert, gibt es vorher einen
+   Sicherungspunkt — so verlangt es Regel 6. */
+function repariereState(){
+  let n = 0;
+  /* Der UNREPARIERTE Stand, bevor irgendetwas angefasst wird. makeSnapshot()
+     serialisiert den aktuellen Zustand — nach der Reparatur aufgerufen würde
+     es den reparierten sichern und wäre als Rückweg wertlos. */
+  let vorher = null;
+  try{ vorher = JSON.stringify(state); }catch(_){}
+  const liste = v => Array.isArray(v) ? v : (v==null ? [] : (n++, []));
+  const objekt = v => (v && typeof v==='object' && !Array.isArray(v)) ? v : (n++, {});
+
+  if(!Array.isArray(state.workouts)) { state.workouts = []; n++; }
+  const heileEinheit = w => {
+    if(!w || typeof w!=='object') { n++; return null; }
+    w.exercises = liste(w.exercises).map(e=>{
+      if(!e || typeof e!=='object') { n++; return null; }
+      e.sets = liste(e.sets).map(s=> (s && typeof s==='object') ? s : (n++, {w:0, r:0}));
+      return e;
+    }).filter(Boolean);
+    return w;
+  };
+  state.workouts = state.workouts.map(heileEinheit).filter(Boolean);
+  if(state.active) state.active = heileEinheit(state.active);
+
+  state.templates = liste(state.templates).filter(t=>t && typeof t==='object')
+                      .map(t=>{ t.exIds = liste(t.exIds); return t; });
+  state.customEx   = liste(state.customEx).filter(x=>x && typeof x==='object' && x.id);
+  state.bodyweight = liste(state.bodyweight).filter(x=>x && typeof x==='object');
+  state.measures   = liste(state.measures).filter(x=>x && typeof x==='object');
+  state.exOpt      = objekt(state.exOpt);
+  state.ach        = objekt(state.ach);
+  state.settings   = objekt(state.settings);
+  if(!state.plan || typeof state.plan!=='object' || Array.isArray(state.plan)){ state.plan = {}; n++; }
+
+  if(n){
+    console.warn('Zustand repariert:', n, 'Stellen');
+    try{
+      if(vorher && vorher.length < 900000 && typeof snapshots==='function'){
+        const list = snapshots();
+        const zahl = Array.isArray(state.workouts)? state.workouts.length : 0;
+        list.push({t:Date.now(), reason:'vor Reparatur', wk:zahl, data:vorher});
+        while(list.length > SNAP_MAX) list.shift();
+        writeSnapshots(list);
+      }
+    }catch(_){}
+  }
+  return n;
 }
 const RENAME_MAP = {"x-chest-press-maschine":"x-brustpresse-maschine","x-incline-chest-press-maschine":"x-schrägbank-brustpresse-maschine","x-decline-chest-press-maschine":"x-negativ-brustpresse-maschine","x-chest-press-kabel-sitzend":"x-brustpresse-kabel-sitzend","x-bankdrücken-smith-machine":"x-bankdrücken-multipresse","x-schrägbankdrücken-smith-machine":"x-schrägbankdrücken-multipresse","x-butterfly-pec-deck-maschine":"x-butterfly-maschine","x-cable-fly-hoch-tief":"x-kabelzug-fliegende-hoch-tief","x-cable-fly-mitte":"x-kabelzug-fliegende-mitte","x-cable-fly-tief-hoch":"x-kabelzug-fliegende-tief-hoch","x-cable-fly-einarmig":"x-kabelzug-fliegende-einarmig","x-dip-maschine":"x-dip-maschine","x-svend-press-platte":"x-plattendrücken-vor-der-brust","x-floor-press-langhantel":"x-bodendrücken-langhantel","x-floor-press-kurzhantel":"x-bodendrücken-kurzhantel","x-landmine-press-brust":"x-landmine-drücken-brust","x-guillotine-press":"x-guillotine-bankdrücken","x-squeeze-press-kurzhantel":"x-enges-kurzhanteldrücken","x-squeeze-press-schrägbank":"x-enges-kurzhanteldrücken-schrägbank","x-chest-press-band":"x-brustdrücken-band","x-band-fly":"x-fliegende-band","x-pullover-kurzhantel":"x-überzüge-kurzhantel","x-chin-ups-untergriff":"x-klimmzüge-untergriff","x-chin-ups-mit-gewicht":"x-klimmzüge-untergriff-mit-gewicht","x-pulldown-maschine-plate-loaded":"x-latzug-maschine-scheiben","x-straight-arm-pulldown-kabel":"x-überzüge-am-kabel-gestreckte-arme","x-rope-pullover-kabel":"x-seilzug-überzüge","x-pendlay-row":"x-pendlay-rudern","x-t-bar-rudern":"x-t-stangen-rudern","x-t-bar-rudern-brustauflage":"x-t-stangen-rudern-brustauflage","x-seal-row":"x-rudern-in-bauchlage","x-rudermaschine-plate-loaded":"x-rudermaschine-scheiben","x-high-row-maschine":"x-rudern-von-oben-maschine","x-low-row-maschine":"x-rudern-von-unten-maschine","x-rudern-smith-machine":"x-rudern-multipresse","x-inverted-row":"x-umgekehrtes-rudern","x-meadows-row":"x-meadows-rudern","x-landmine-row":"x-landmine-rudern","x-kroc-row":"x-kroc-rudern","x-kreuzheben-trap-bar":"x-kreuzheben-trap-stange","x-kreuzheben-snatch-grip":"x-kreuzheben-reißgriff","x-rack-pulls":"x-teilkreuzheben-aus-dem-rack","x-reverse-hyperextension":"x-umgekehrter-rückenstrecker","x-superman":"x-superman-bauchlage","x-shrugs-langhantel":"x-schulterheben-langhantel","x-shrugs-kurzhantel":"x-schulterheben-kurzhantel","x-shrugs-smith-machine":"x-schulterheben-multipresse","x-shrugs-trap-bar":"x-schulterheben-trap-stange","x-shrugs-kabel":"x-schulterheben-kabel","x-arnold-press":"x-arnold-drücken","x-shoulder-press-maschine":"x-schulterpresse-maschine","x-schulterdrücken-smith-machine":"x-schulterdrücken-multipresse","x-push-press":"x-schulterdrücken-mit-schwung","x-landmine-press-schulter":"x-landmine-drücken-schulter","x-landmine-press-einarmig":"x-landmine-drücken-einarmig","x-z-press":"x-z-drücken-am-boden-sitzend","x-viking-press":"x-viking-drücken","x-lean-in-seitheben":"x-seitheben-angelehnt","x-reverse-flys-kurzhantel":"x-umgekehrte-fliegende-kurzhantel","x-reverse-pec-deck-maschine":"x-umgekehrtes-butterfly-maschine","x-reverse-cable-fly":"x-umgekehrte-fliegende-kabel","x-face-pulls-kabel":"x-gesichtsziehen-kabel","x-face-pulls-band":"x-gesichtsziehen-band","x-band-pull-aparts":"x-band-auseinanderziehen","x-cuban-rotation":"x-kubanische-rotation","x-bus-driver":"x-lenkrad-drehen-scheibe","x-bradford-press":"x-bradford-drücken","x-preacher-curls-sz-stange":"x-preacher-curls-sz-stange","x-preacher-curls-kurzhantel":"x-preacher-curls-kurzhantel","x-hammer-preacher-curls":"x-hammer-preacher-curls","x-preacher-curl-maschine":"x-preacher-curl-maschine","x-high-cable-curls":"x-kabel-curls-von-oben","x-bayesian-curls-kabel":"x-kabel-curls-hinter-dem-körper","x-spider-curls":"x-spider-curls-vorgebeugt","x-drag-curls":"x-zieh-curls-am-körper-entlang","x-zottman-curls":"x-zottman-curls","x-21s-langhantel":"x-21er-curls-langhantel","x-waiter-curls":"x-kellner-curls","x-jm-press":"x-jm-drücken","x-skull-crushers-sz-stange":"x-stirndrücken-sz-stange","x-skull-crushers-kurzhantel":"x-stirndrücken-kurzhantel","x-overhead-extension-kabel-seil":"x-trizepsdrücken-über-kopf-kabel-seil","x-kickbacks-kabel":"x-trizeps-rückdrücken-kabel","x-kickbacks-kurzhantel":"x-trizeps-rückdrücken-kurzhantel","x-bench-dips":"x-bank-dips","x-trizeps-maschine":"x-trizeps-maschine","x-overhead-triceps-extension-maschine":"x-trizepsdrücken-über-kopf-maschine","x-seated-dip-maschine":"x-dip-maschine-sitzend","x-tate-press":"x-tate-drücken","x-french-press-sitzend-sz":"x-französisches-drücken-sitzend-sz","x-enges-bankdrücken-smith":"x-enges-bankdrücken-multipresse","x-wrist-curls-langhantel":"x-handgelenk-curls-langhantel","x-reverse-wrist-curls":"x-handgelenk-curls-obergriff","x-wrist-curls-kurzhantel":"x-handgelenk-curls-kurzhantel","x-wrist-curls-hinter-rücken":"x-handgelenk-curls-hinter-dem-rücken","x-farmer-s-walk":"x-gewichte-tragen-farmers-walk","x-plate-pinch":"x-scheiben-kneifgriff","x-dead-hang":"x-hängen-an-der-stange","x-wrist-roller":"x-unterarm-roller","x-kniebeugen-low-bar":"x-kniebeugen-tiefe-auflage","x-box-squats":"x-kniebeugen-auf-box","x-pause-squats":"x-kniebeugen-mit-pause","x-goblet-squats":"x-kelch-kniebeugen","x-kniebeugen-smith-machine":"x-kniebeugen-multipresse","x-hack-squat-maschine":"x-hackenschmidt-maschine","x-pendulum-squat-maschine":"x-pendel-kniebeugenmaschine","x-v-squat-maschine":"x-v-kniebeugenmaschine","x-bulgarian-split-squats":"x-bulgarische-kniebeugen","x-split-squats":"x-geteilte-kniebeugen","x-curtsy-lunges":"x-überkreuz-ausfallschritte","x-step-ups":"x-aufsteiger-auf-box","x-sissy-squats":"x-sissy-kniebeugen","x-belt-squats":"x-gürtel-kniebeugen","x-zercher-squats":"x-zercher-kniebeugen","x-pistol-squats":"x-einbeinige-kniebeugen-pistol","x-stiff-leg-deadlift":"x-gestrecktes-kreuzheben","x-einbeiniges-rdl":"x-einbeiniges-rumänisches-kreuzheben","x-nordic-curls":"x-nordische-beinbeuger","x-glute-ham-raise":"x-beinbeuger-rückenstrecker-ghr","x-good-mornings":"x-guten-morgen-beugen","x-rdl-smith-machine":"x-rumänisches-kreuzheben-multipresse","x-beincurl-gymnastikball":"x-beinbeuger-gymnastikball","x-beincurl-slider":"x-beinbeuger-slider","x-hip-thrust-langhantel":"x-hüftstoß-langhantel","x-hip-thrust-maschine":"x-hüftstoß-maschine","x-hip-thrust-smith-machine":"x-hüftstoß-multipresse","x-glute-bridge":"x-beckenheben","x-glute-bridge-einbeinig":"x-beckenheben-einbeinig","x-b-stance-hip-thrust":"x-hüftstoß-versetzter-stand","x-kickbacks-kabel-glute":"x-beinrückheben-kabel","x-kickback-maschine":"x-beinrückheben-maschine","x-donkey-kicks":"x-eselstritte","x-fire-hydrants":"x-beinabspreizen-vierfüßler","x-frog-pumps":"x-frosch-beckenheben","x-sumo-squats":"x-sumo-kniebeugen","x-cable-pull-throughs":"x-durchziehen-am-kabel","x-band-side-walks":"x-seitschritte-mit-band","x-clamshells":"x-muschel-öffnen-seitlich-liegend","x-copenhagen-plank":"x-kopenhagener-seitstütz","x-wadenheben-smith-machine":"x-wadenheben-multipresse","x-donkey-calf-raises":"x-esel-wadenheben","x-tibialis-raises":"x-schienbeinheben","x-crunches":"x-crunches-bauchpressen","x-hanging-leg-raises":"x-beinheben-hängend","x-hanging-knee-raises":"x-knieheben-hängend","x-beinheben-captain-s-chair":"x-beinheben-beinhebemaschine","x-reverse-crunches":"x-umgekehrte-crunches","x-v-ups":"x-v-aufrichter","x-toes-to-bar":"x-zehen-zur-stange","x-ab-wheel-rollouts":"x-bauchroller-ab-wheel","x-plank-sek-als-wdh":"x-unterarmstütz-sek-als-wdh","x-plank-mit-gewicht":"x-unterarmstütz-mit-gewicht","x-side-plank-sek-als-wdh":"x-seitstütz-sek-als-wdh","x-russian-twists":"x-russische-drehungen","x-woodchopper-kabel-hoch-tief":"x-holzhacker-kabel-hoch-tief","x-woodchopper-kabel-tief-hoch":"x-holzhacker-kabel-tief-hoch","x-pallof-press":"x-pallof-drücken-anti-rotation","x-dead-bugs":"x-toter-käfer","x-bird-dogs":"x-vierfüßler-diagonal","x-mountain-climbers":"x-bergsteiger","x-dragon-flags":"x-drachenfahne","x-hollow-hold-sek-als-wdh":"x-hohlkörper-halten-sek-als-wdh","x-l-sit-sek-als-wdh":"x-l-sitz-sek-als-wdh","x-suitcase-carry":"x-koffertragen-einseitig","x-power-cleans":"x-umsetzen-power-clean","x-hang-cleans":"x-umsetzen-aus-dem-hang","x-clean-jerk":"x-umsetzen-stoßen","x-snatch":"x-reißen","x-kettlebell-swings":"x-kettlebell-schwünge","x-kettlebell-clean-press":"x-kettlebell-umsetzen-drücken","x-thrusters":"x-kniebeuge-mit-drücken-thruster","x-sled-push":"x-schlitten-schieben","x-sled-pull":"x-schlitten-ziehen","x-battle-ropes":"x-schwungseile","x-turkish-get-ups":"x-türkisches-aufstehen","x-cross-body-hammer-curls":"x-hammer-curls-quer-zum-körper","x-reverse-curls-sz-stange":"x-umgekehrte-curls-sz-stange","x-reverse-curls-langhantel":"x-umgekehrte-curls-langhantel","x-bizeps-curl-maschine":"x-bizeps-curl-maschine","x-crunch-maschine":"x-crunch-maschine","x-thruster-kniebeuge-drücken":"x-kniebeuge-mit-drücken-thruster","x-scottcurls-sz-stange":"x-preacher-curls-sz-stange","x-scottcurls-kurzhantel":"x-preacher-curls-kurzhantel","x-hammer-scottcurls":"x-hammer-preacher-curls","x-scottcurl-maschine":"x-preacher-curl-maschine"};
 /* Migration: alte Positions-IDs (e12) → Namens-IDs; V7: englische → deutsche Übungsnamen */
@@ -2814,14 +2873,9 @@ function mondayOf(d){
   return x;
 }
 function weekRange(anchor){ const a = mondayOf(anchor); const b = new Date(a); b.setDate(a.getDate()+7); return [a,b]; }
-function isoWeek(d){
-  const x = new Date(d); x.setHours(0,0,0,0);
-  x.setDate(x.getDate()+3-((x.getDay()+6)%7));
-  const jan4 = new Date(x.getFullYear(),0,4);
-  return 1 + Math.round(((x-jan4)/86400000 - 3 + ((jan4.getDay()+6)%7))/7);
-}
-function monthRange(anchor){ const a=new Date(anchor.getFullYear(),anchor.getMonth(),1); const b=new Date(anchor.getFullYear(),anchor.getMonth()+1,1); return [a,b]; }
-function yearRange(anchor){ const a=new Date(anchor.getFullYear(),0,1); const b=new Date(anchor.getFullYear()+1,0,1); return [a,b]; }
+/* isoWeek/monthRange/yearRange sind mit dem Umstieg auf Zyklen (V51) unnötig
+   geworden — die Kalenderwoche ist als Maßstab ausdrücklich verworfen.
+   Entfernt V64, nachdem gemessen war, dass sie niemand mehr aufruft. */
 function inRange(dateStr,[a,b]){ const t=new Date(dateStr).getTime(); return t>=a.getTime() && t<b.getTime(); }
 function workoutsIn(range){ return state.workouts.filter(w=>inRange(w.date,range)); }
 function fmtDur(ms){ const m=Math.round(ms/60000); return m>=60? Math.floor(m/60)+'h '+(m%60)+'min' : m+' min'; }
@@ -3089,6 +3143,10 @@ function cycles(){
 function closedCycles(){ return cycles().filter(c=>!c.vorlauf && !c.laufend); }
 function runningCycle(){ const a = cycles(); const l = a[a.length-1]; return (l && l.laufend)? l : null; }
 /* Die letzten n abgeschlossenen Zyklen, chronologisch */
+/* lastCycles(n) steht seit V49 in der Projektanweisung als Zyklus-Funktion,
+   wird aber von keiner Stelle aufgerufen — renderSpanStats schneidet selbst
+   mit closedCycles().slice(-n). Bleibt bewusst stehen: die Anweisung nennt
+   sie, und sie ist die naheliegende Schnittstelle für den nächsten Reiter. */
 function lastCycles(n){ const a = closedCycles(); return n>0? a.slice(-n) : a; }
 function cycleWorkouts(cs){ return cs.reduce((a,c)=>a.concat(c.ws), []); }
 /* Zyklusnummer zu einem Datum — für die x-Achse der Diagramme */
@@ -3176,7 +3234,8 @@ function pushPullBalance(ws, mode){
    Abweichung). Ab 12 Wdh ist die Schätzung deshalb als unsicher zu kennzeichnen. */
 const E1RM_RELIABLE_MAX = 12;
 function e1rm(w,r){ w=+w||0; r=Math.min(+r||0,20); if(w<=0||r<=0) return 0; if(r===1) return w; return w*(1+r/30); }
-function e1rmReliable(reps){ return (+reps||0) <= E1RM_RELIABLE_MAX; }
+/* e1rmReliable() wurde nie aufgerufen — die Prüfung steht direkt dort, wo
+   sie zählt (renderExStats vergleicht bests.maxReps). Entfernt V64. */
 
 /* ---------- Übungs-Historie & PRs ---------- */
 /* Alle Sessions einer Übung, älteste zuerst: [{date,wid,sets,vol,bestW,bestE,maxReps}] */
@@ -3502,7 +3561,8 @@ function isoZuDatum(iso){ const [y,m,d]=String(iso).split('-').map(Number); retu
 function tagPlus(iso, n){ const x = isoZuDatum(iso); x.setDate(x.getDate()+n); return isoTag(x); }
 function tageDiff(a, b){ return Math.round((isoZuDatum(b) - isoZuDatum(a)) / 864e5); }
 function planAmTag(iso){ const p = (state.plan||{})[iso]; return (p && p.type)? p : null; }
-function workoutAmTag(iso){ return state.workouts.filter(w=>isoTag(w.date)===iso); }
+/* workoutAmTag() ist in V63 entstanden und wurde nie gebraucht — belegteTage()
+   sammelt dasselbe in einem Durchgang für die ganze Leiste. Entfernt V64. */
 /* Push → Pull → Rest → Push. Legs und Andere brechen die Kette bewusst ab:
    sie sind im Zyklus nicht vorgesehen, also wird auch nichts vorhergesagt. */
 function naechsterTyp(t){ return t==='Push'? 'Pull' : t==='Pull'? 'Rest' : t==='Rest'? 'Push' : null; }
@@ -3906,7 +3966,7 @@ function haptic(kind){
 
 /* Ripple auf jedem Button — einmal global statt pro Element */
 document.addEventListener('pointerdown', e=>{
-  const b = e.target.closest('.btn, .typebtn, .pad button');
+  const b = e.target.closest('.btn, .pad button');
   if(!b || REDUCED) return;
   const r = b.getBoundingClientRect();
   const d = Math.max(r.width, r.height);
@@ -3979,7 +4039,7 @@ function celebrate(intensity){
   setTimeout(()=>{ host.classList.remove('on'); host.innerHTML=''; }, 3600);
 }
 /* SVG-Icon-Set (statt Emojis) */
-const _i = p=>`<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+const _i = p=>`<svg aria-hidden="true" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
 const ICO = {
   gear:  _i('<circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 00.34 1.87l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.7 1.7 0 00-1.87-.34 1.7 1.7 0 00-1.03 1.56V21a2 2 0 11-4 0v-.09a1.7 1.7 0 00-1.11-1.56 1.7 1.7 0 00-1.87.34l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.7 1.7 0 00.34-1.87 1.7 1.7 0 00-1.56-1.03H3a2 2 0 110-4h.09a1.7 1.7 0 001.56-1.11 1.7 1.7 0 00-.34-1.87l-.06-.06a2 2 0 112.83-2.83l.06.06a1.7 1.7 0 001.87.34h.01A1.7 1.7 0 0010 4.09V4a2 2 0 114 0v.09a1.7 1.7 0 001.03 1.56h.01a1.7 1.7 0 001.87-.34l.06-.06a2 2 0 112.83 2.83l-.06.06a1.7 1.7 0 00-.34 1.87v.01a1.7 1.7 0 001.56 1.03H21a2 2 0 110 4h-.09a1.7 1.7 0 00-1.56 1.03z"/>'),
   trophy:_i('<path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 01-10 0zM7 5H4a1 1 0 00-1 1c0 2.5 1.5 4 4 4.5M17 5h3a1 1 0 011 1c0 2.5-1.5 4-4 4.5"/>'),
@@ -4134,17 +4194,11 @@ function showScreen(id){
 $$('.nav button').forEach(b=>b.addEventListener('click',()=>{ haptic(); showScreen(b.dataset.s); }));
 
 /* ================= HOME ================= */
-/* Progress-Ring: Radius/Umfang vorberechnet, Füllstand per stroke-dashoffset */
-function ring(pct, color, size, stroke){
-  size = size||96; stroke = stroke||9;
-  const r = (size-stroke)/2, c = 2*Math.PI*r;
-  const off = c * (1 - Math.min(1, pct));
-  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" aria-hidden="true">
-    <circle class="ring-track" cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke-width="${stroke}"/>
-    <circle class="ring-bar" cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="${stroke}"
-      stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${c.toFixed(1)}" data-off="${off.toFixed(1)}"/>
-  </svg>`;
-}
+/* ring() zeichnete die Fortschrittsringe der Startseite. Die Karte ist in
+   V57 entfallen („Diese Woche"), die Funktion blieb stehen. Entfernt V64 —
+   samt der vier CSS-Regeln .rings/.ringwrap/.ringc/.ringlegend, die
+   ebenfalls nur noch für sie da waren. Die Animation der .ring-bar in
+   renderHome läuft ins Leere und ist ebenfalls raus. */
 function greeting(){
   const h = new Date().getHours();
   return h<5? 'Gute Nacht' : h<11? 'Guten Morgen' : h<14? 'Mahlzeit' : h<18? 'Guten Tag' : h<23? 'Guten Abend' : 'Gute Nacht';
@@ -4249,7 +4303,6 @@ function renderHome(){
 
   /* Animationen anstoßen: Ringe füllen, XP-Balken, Zähler */
   requestAnimationFrame(()=>{
-    $$('#scr-home .ring-bar').forEach(c=>{ c.style.strokeDashoffset = c.dataset.off; });
     $$('#scr-home .xpbar i').forEach(i=>{ i.style.width = i.dataset.w+'%'; });
     runCounters($('#scr-home'));
   });
@@ -5769,6 +5822,10 @@ $('#import-file').addEventListener('change',e=>{
     if(!await ask('Daten ersetzen?', `${s.workouts.length} Workouts aus der Datei ersetzen deinen aktuellen Stand.\nDein jetziger Stand wird vorher als Sicherungspunkt abgelegt.`, {ok:'Importieren', tone:'warn'})) return;
     makeSnapshot('vor Import', true);
     state = Object.assign({customEx:[],templates:[],active:null,ach:{},settings:{goal:5}}, s);
+    /* Eine fremde Datei kann jede Form haben. Bis V63 prüfte der Import nur,
+       ob `workouts` ein Array ist — eine einzige kaputte Einheit darin ließ
+       migrateState() fliegen und die App war bis zum Neuladen tot. */
+    repariereState();
     migrateState(); evalAchievements();
     saveState(); closeModals(); renderAll(); toast('Import erfolgreich ✓');
   }catch(_){ toast('Ungültige Datei'); } };
@@ -5886,7 +5943,12 @@ function svgBars(labels, values, fmt){
   const W=340,H=152,padB=22,padT=18,padR=30,max=Math.max(...values,1);
   const n=values.length, bw=Math.min(30,(W-10-padR)/n*0.62), step=(W-10-padR)/n;
   const tid='ct'+(++__cid), gid='gbar'+__cid;
-  let s = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+  /* Ein Diagramm ohne Beschriftung meldet die Sprachausgabe als „Grafik" und
+     sonst nichts. Gemessen waren 111 solcher Grafiken im Dokument. Statt sie
+     zu verstecken bekommen sie die Werte im Klartext — das ist genau die
+     Information, die im Bild steckt. */
+  const beschriftung = esc(labels.map((l,i)=>l+' '+fmt(values[i])).join(', '));
+  let s = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Balkendiagramm: ${beschriftung}">`;
   [0.5,1].forEach(f=>{ const y=padT+(H-padB-padT)*(1-f);
     s+=`<line x1="0" y1="${y}" x2="${W-padR+4}" y2="${y}" stroke="${C.gitter}" stroke-width="1"/>`;
     /* 8 px waren an der Lesbarkeitsgrenze und mit 3,17:1 unter dem Kontrastminimum */
@@ -5919,7 +5981,9 @@ function svgRadar(pairs, ziel, radarWs){
   const val = i => norm? Math.min(1.4, (pairs[i][1]||0) / Math.max(1, ziel[i].hi)) : null;
   const max=Math.max(...pairs.map(p=>p[1]),1);
   const pt=(i,f)=>{ const a=Math.PI*2*i/n-Math.PI/2; return [(cx+Math.cos(a)*R*f).toFixed(1),(cy+Math.sin(a)*R*f).toFixed(1)]; };
-  let s=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+  const radarTxt = esc(pairs.map(([l,v],i)=> l+' '+(v%1? v.toFixed(1).replace('.',',') : v)
+      + (norm? ' von '+ziel[i].lo+'–'+ziel[i].hi : '')).join(', '));
+  let s=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Muskel-Balance: ${radarTxt}">`;
   [0.33,0.66,1].forEach(f=>{ s+=`<polygon points="${pairs.map((_,i)=>pt(i,f).join(',')).join(' ')}" fill="none" stroke="${C.gitter}" stroke-width="1"/>`; });
   pairs.forEach((_,i)=>{ const [x,y]=pt(i,1); s+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="${C.gitter}" stroke-width="1"/>`; });
   if(norm){
@@ -5961,7 +6025,9 @@ function svgLine(pts, fmt, opts){
      (Gemessen: 5× #gbar im Dokument, der erste in einem unsichtbaren Panel.) */
   const tid='ct'+(++__cid), gl='gline'+__cid, gf='gfill'+__cid;
   let d=pts.map((p,i)=>(i?'L':'M')+X(i).toFixed(1)+','+Y(p.y).toFixed(1)).join(' ');
-  let s=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+  const linieTxt = esc(`${pts.length} Werte, von ${fmt(pts[0].y)} auf ${fmt(pts[pts.length-1].y)}, `
+    + `Tiefstwert ${fmt(min)}, Höchstwert ${fmt(max)}`);
+  let s=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Verlauf: ${linieTxt}">`;
   [max,(max+min)/2,min].forEach(v=>{ const y=Y(v); s+=`<line x1="0" y1="${y}" x2="${W-padR+4}" y2="${y}" stroke="${C.gitter}"/><text x="${W-padR+6}" y="${y+3}" font-size="9" fill="${C.achse}">${fmt(v)}</text>`; });
   if(opts.fill) s+=`<path d="${d} L${X(pts.length-1)},${H-padB} L${X(0)},${H-padB} Z" fill="url(#${gf})" stroke="none"/>`;
   /* Länge des Streckenzugs für die Zeichen-Animation (stroke-dashoffset) */
@@ -6857,6 +6923,11 @@ function uniFromLog(log, dateStr){   /* log muss aufsteigend sortiert sein */
   if(v !== null) return {v, src:'log'};
   return {v: !log[0].uni, src:'umkehr'};
 }
+/* exModes(exId, h) liefert dieselbe Liste wie exModesSrc, nur ohne die
+   Herkunftsangabe. Im App-Code ruft sie niemand mehr auf — aber t2 und d1
+   prüfen den Moduswechsel darüber. Bleibt: eine Funktion, an der zwei
+   Suiten hängen, ist nicht tot, sondern eine Schnittstelle.
+   (Mein Suchlauf hatte nur index.html durchsucht, nicht tests/.) */
 function exModes(exId, h){
   const log = (exOpt(exId).uniLog || []).slice().sort((a,b)=> a.d<b.d? -1 : a.d>b.d? 1 : 0);
   /* Einträge in derselben Reihenfolge einsammeln wie exHistory sie erzeugt —
@@ -6874,7 +6945,7 @@ function exModes(exId, h){
     return uniFromLog(log, x.date).v;                       // null = unbekannt
   });
 }
-/* wie exModes, aber mit Herkunft je Einheit */
+/* Wie exModes, aber mit Herkunft je Einheit */
 function exModesSrc(exId, h){
   const log = uniLogOf(exId);
   const byWid = {};
@@ -7104,13 +7175,15 @@ function renderExStats(){
 $('#exstat-search').addEventListener('input',renderExStats);
 
 /* ================= VERLAUF ================= */
+const HIST_STAPEL = 40;          // so viele Karten je Stapel
+let histLimit = HIST_STAPEL;
 function renderHist(){
   const ws = state.workouts.slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
   const g = globalAgg();
   const hours = state.workouts.reduce((a,w)=>a+Math.max(0,(w.end-w.start)),0)/3600000;
   if(!$('#hist-search').dataset.wired){
     $('#hist-search').dataset.wired = '1';
-    $('#hist-search').addEventListener('input', renderHist);
+    $('#hist-search').addEventListener('input', ()=>{ histLimit = HIST_STAPEL; renderHist(); });
   }
   $('#hist-count').textContent = ws.length? `${ws.length} Workouts seit ${fmtDate(state.workouts[0].date)}` : 'noch keine Einträge';
   /* Lifetime-Zahlen — machen den Verlauf zur Erfolgsbilanz statt zur Liste */
@@ -7126,7 +7199,7 @@ function renderHist(){
     ? ['Alle', ...typesUsed, 'Mit PR'].map(f=>`<button class="chip ${f===histFilter?'on':''}" data-hf="${esc(f)}">${esc(f)}</button>`).join('')
     : '';
   $('#hist-search').style.display = ws.length ? '' : 'none';
-  $$('#hist-filters .chip').forEach(c=>c.addEventListener('click',()=>{ histFilter=c.dataset.hf; renderHist(); }));
+  $$('#hist-filters .chip').forEach(c=>c.addEventListener('click',()=>{ histFilter=c.dataset.hf; histLimit=HIST_STAPEL; renderHist(); }));
 
   /* Anwenden von Filter + Suche (Suche greift auf Übungsnamen im Workout) */
   const q = ($('#hist-search').value||'').trim().toLowerCase();
@@ -7140,9 +7213,17 @@ function renderHist(){
     $('#hist-count').textContent = `${shown.length} von ${ws.length} Workouts`;
   }
 
+  /* Der Verlauf zeichnete bis V63 JEDES Workout auf einmal — bei 300
+     Einheiten 300 Karten, jede mit wSets() und wVolume() über alle Sätze.
+     Gemessen: 381 ms, der mit Abstand teuerste Bildschirm der App (der
+     nächste lag bei 171). Jetzt kommt ein Stapel nach dem anderen; Filter
+     und Suche laufen weiterhin über ALLE Einheiten, nur das Zeichnen ist
+     begrenzt. Zurückgesetzt wird bei jedem neuen Filter. */
+  const stapel = histLimit;
+  const gekuerzt = shown.slice(0, stapel);
   $('#hist-list').innerHTML = !ws.length
     ? `<div class="empty"><div class="big">${ICO.muscle}</div><b>Noch kein Training geloggt</b>Sobald du dein erstes Workout abschließt,<br>findest du hier deine komplette Historie.<div style="height:16px"></div><button class="btn btn-acc btn-sm" onclick="showScreen('scr-train')">Erstes Training starten</button></div>`
-    : (shown.length ? shown.map(w=>`
+    : (shown.length ? gekuerzt.map(w=>`
     <div class="card tap" data-wid="${w.id}" style="padding:12px 16px">
       <div class="row" style="justify-content:space-between">
         <div class="grow">
@@ -7154,10 +7235,15 @@ function renderHist(){
         <span style="color:var(--txt3);font-size:17px" aria-hidden="true">›</span>
       </div>
     </div>`).join('')
+      + (shown.length > gekuerzt.length
+        ? `<button class="btn btn-ghost btn-block" id="hist-mehr">Weitere ${Math.min(HIST_STAPEL, shown.length-gekuerzt.length)} anzeigen <span class="tiny">(${gekuerzt.length} von ${shown.length})</span></button>`
+        : '')
     : `<div class="empty"><div class="big">${ICO.search}</div><b>Nichts gefunden</b>${q?`Kein Training mit „${esc(q)}".`:'Kein Training in dieser Auswahl.'}<div style="height:14px"></div><button class="btn btn-ghost btn-sm" id="hist-reset">Filter zurücksetzen</button></div>`);
   $$('#hist-list [data-wid]').forEach(el=>el.addEventListener('click',()=>{ haptic(); showDetail(el.dataset.wid); }));
+  const mehr = $('#hist-mehr');
+  if(mehr) mehr.addEventListener('click',()=>{ histLimit += HIST_STAPEL; haptic(); renderHist(); });
   const rst = $('#hist-reset');
-  if(rst) rst.addEventListener('click',()=>{ histFilter='Alle'; $('#hist-search').value=''; renderHist(); });
+  if(rst) rst.addEventListener('click',()=>{ histFilter='Alle'; histLimit=HIST_STAPEL; $('#hist-search').value=''; renderHist(); });
   runCounters($('#scr-hist'));
 }
 function showDetail(wid){
@@ -7410,10 +7496,9 @@ function maybeAskBackup(){
 }
 
 /* ================= VAULT-EXPORT (Mail / Teilen) ================= */
-function backupBlob(){
-  return new Blob([JSON.stringify(state,null,1)],{type:'application/json'});
-}
-function backupName(){ return 'fitnesstracker-backup-'+new Date().toISOString().slice(0,10)+'.json'; }
+/* backupBlob()/backupName() stammen aus einem Anhang-Versand, den es nicht
+   mehr gibt: Die Mail trägt das Textprotokoll, die JSON-Datei kommt über
+   „Exportieren". Beide wurden von niemandem aufgerufen — entfernt V64. */
 /* Lesbarer Trainings-Text für die Mail: landet im E-Mail-TEXT (nicht nur im JSON-Anhang).
    So liest Claude im Vault die letzten Trainings + aktuelle Erholung direkt aus der Mail —
    ohne dass du den Anhang herunterladen und irgendwo ablegen musst. Ein Knopf genügt. */
@@ -7567,6 +7652,12 @@ function zyklusStreak(){
   }
   return n;
 }
+/* trainingsStreak() zählt Serien entlang FESTER WOCHENTAGE aus dem Profil.
+   Aarons Plan hat keine — Push → Pull → Rest wandert durch die Woche —, sie
+   gibt für ihn also immer null zurück und wird nirgends aufgerufen.
+   BLEIBT TROTZDEM: e1 schützt sie ausdrücklich, seit sie in V59 versehentlich
+   mitgerissen wurde. Eine Funktion, die ein Test namentlich sichert, wird
+   nicht im Vorbeigehen entfernt — dafür braucht es Aarons Wort. */
 function trainingsStreak(){
   const p = profil();
   const plan = Array.isArray(p.trainingsTage) ? p.trainingsTage.map(Number) : [];
