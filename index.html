@@ -610,6 +610,16 @@ details.erkl.warum>div{font-size:var(--fs-tiny);margin-top:2px}
 .excard{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.01)),var(--s1);border:1px solid var(--line);border-radius:var(--r);padding:var(--sp3) var(--sp4) var(--sp4);margin-bottom:var(--sp3);box-shadow:var(--e1),inset 0 1px 0 rgba(255,255,255,.05)}
 .excard .exhd{display:flex;align-items:flex-start;gap:var(--sp2);margin-bottom:var(--sp1)}
 .excard .exhd b{font-size:15px;font-weight:650;letter-spacing:-.015em}
+/* Der Übungsname ist ein Knopf: antippen öffnet die Statistik dazu (V66).
+   Er sieht aus wie eine Überschrift und verhält sich wie ein Knopf — das
+   kleine Diagramm-Zeichen dahinter ist der einzige Hinweis, den es braucht.
+   Touchziel über die volle Zeilenhöhe, mindestens --hit-min. */
+.exname{display:inline-flex;align-items:center;gap:6px;background:none;border:none;padding:2px 0;
+  color:inherit;text-align:left;cursor:pointer;min-height:var(--hit-min);max-width:100%}
+.exname .bi{flex:none;opacity:.55;transition:opacity var(--dur-2) var(--ease)}
+.exname .bi svg{width:14px;height:14px}
+.exname:active{opacity:.6}
+.exname:active .bi{opacity:1}
 .musctags{color:var(--txt3);font-size:11.5px;margin-top:2px;line-height:1.4}
 .prevline{font-size:13px;color:var(--txt2);background:var(--s2);border-radius:var(--r-sm);padding:8px 8px;margin:8px 0;border:1px solid var(--line)}
 .progbox{display:flex;align-items:center;gap:var(--sp3);border-radius:var(--r-md);padding:12px 12px;margin:8px 0 2px;
@@ -1170,6 +1180,17 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
 <div class="mback" id="modal-muscle"><div class="modal" id="muscle-body" role="dialog" aria-modal="true" aria-label="Muskelatlas"></div></div>
 <div class="mback" id="modal-detail"><div class="modal" id="detail-body" role="dialog" aria-modal="true" aria-label="Details"></div></div>
 
+<!-- Übungsstatistik als Blatt über dem laufenden Training (V66).
+     Ein Bildschirmwechsel mitten im Satz kostet den Platz in der Liste;
+     das Blatt legt sich darüber und geht wieder weg. -->
+<div class="mback" id="modal-exstat"><div class="modal" role="dialog" aria-modal="true" aria-label="Übungsstatistik">
+  <div class="grab"></div>
+  <div class="mhd"><div><h2 id="exsheet-title">Übung</h2><div class="sub" id="exsheet-sub"></div></div>
+    <button class="iconbtn" data-close aria-label="Schließen" data-ico-close></button></div>
+  <div id="exsheet-body"></div>
+  <button class="btn btn-ghost btn-block btn-sm" id="exsheet-full" style="margin-top:12px">Ganze Statistik öffnen</button>
+</div></div>
+
 <div class="mback" id="modal-custom"><div class="modal" role="dialog" aria-modal="true">
   <div class="grab"></div>
   <div class="mhd"><h2>Eigene Übung</h2><button class="iconbtn" data-close aria-label="Schließen" data-ico-close></button></div>
@@ -1399,7 +1420,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V65 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V66 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -3468,48 +3489,128 @@ function plateauCount(exId, beforeTs){
     if(v > best + 0.01){ best = v; since = 0; } else since++; });
   return since;
 }
+/* ══════════════════════════════════════════════════════════════════════
+   BESTLEISTUNG JE SATZPOSITION                                    (V66)
+
+   Aaron gibt in jedem Satz alles. Dadurch fallen seine Wiederholungen
+   innerhalb einer Übung fast immer ab — gemessen an seinen echten Daten:
+   bei 38 von 44 Übungen (86 %) ist der erste Satz der stärkste.
+
+   Ein einzelnes Ziel („3×7") passt auf so ein Muster nicht: Es liegt
+   entweder unter dem ersten Satz oder über dem letzten. Deshalb rechnet
+   die App ab V66 JE POSITION — Satz 1 gegen Satz 1, Satz 2 gegen Satz 2.
+
+   Verglichen wird nur mit Einheiten am SELBEN Arbeitsgewicht. Ein Satz mit
+   70 kg sagt nichts darüber, was bei 80 kg drin ist. */
+function bestJeSatz(exId, beforeTs){
+  const alle = exHistory(exId, beforeTs);
+  if(!alle.length) return null;
+  /* Am Strukturbruch schneiden — nach einem Wechsel auf einarmig oder an ein
+     anderes Gerät ist der alte Maßstab nicht mehr derselbe. */
+  const ab = exCutIndex(exId);
+  const h = (ab > 0 && ab < alle.length) ? alle.slice(ab) : alle;
+  if(!h.length) return null;
+  const letzte = h[h.length-1];
+  const eRef = {exId, uni: exIsUni(exId)};
+  const w = Math.max(...letzte.sets.map(s=>+s.w||0));
+  const gleicheLast = h.filter(x=>{
+    const xw = Math.max(...x.sets.map(s=>+s.w||0));
+    return Math.abs(xw - w) < 0.001;
+  });
+  const n = Math.max(1, letzte.sets.length);
+  const best = [];
+  for(let i=0; i<n; i++){
+    let m = 0;
+    gleicheLast.forEach(x=>{
+      const s = x.sets[i]; if(!s) return;
+      const r = repsOf(eRef, s, 'weak');      // schwächere Seite zählt
+      if(r > m) m = r;
+    });
+    best.push(m);
+  }
+  /* Der beste geschätzte 1RM, den er bei diesem Gewicht je hatte — die
+     Messlatte für den Fall, dass das Gewicht steigt. */
+  let bestE = 0;
+  gleicheLast.forEach(x=>x.sets.forEach(s=>{
+    const e = e1rm(+s.w||0, repsOf(eRef, s, 'weak'));
+    if(e > bestE) bestE = e;
+  }));
+  return { w, best, n, einheiten: gleicheLast.length, bestE, letzteWdh: letzte.sets.map(s=>repsOf(eRef,s,'weak')) };
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   PROGRESSION — die Zusage: NIE weniger als schon geschafft.      (V66)
+
+   Was vorher schiefging, gemessen an Aarons acht Trainings:
+     · „Gewicht rauf" verlangte, dass ALLE Sätze am oberen Ende liegen.
+       Das wäre in 1 von 53 Einträgen (2 %) erfüllt gewesen — der Weg nach
+       oben war praktisch tot.
+     · Der Rückfall rechnete `min(hi, schwächster Satz + 1)`. Nach 8/5 kam
+       so ein Ziel von 6 heraus: WENIGER als die 8, die er gerade gemacht
+       hatte. 8 von 15 Vorschlägen lagen unter seiner eigenen Leistung.
+     · Nach drei Einheiten ohne Bestwert nahm die App 10 % Gewicht weg.
+
+   Jetzt gilt: Jedes Ziel ist mindestens die Bestleistung dieser Position
+   bei diesem Gewicht, und mindestens EINE Position steigt. Damit wächst
+   die Gesamtwiederholungszahl in jeder Einheit — oder das Gewicht. */
 function progressionFor(exId, beforeTs){
   const o = exOpt(exId);
-  const h = exHistory(exId, beforeTs);
-  if(!h.length) return null;
-  const last = h[h.length-1];
-  const sets = last.sets;
-  const nSets = sets.length;
+  const b = bestJeSatz(exId, beforeTs);
+  if(!b) return null;
   const isBW = exIsBW(exId);
-  const w = Math.max(...sets.map(s=>+s.w||0));
-  /* Für die Progression zählt die SCHWÄCHERE Seite: Gewicht rauf erst, wenn
-     beide Arme das Ziel schaffen — sonst zieht die starke Seite die schwache mit
-     und das Ungleichgewicht wächst. `eRef` liefert die uni-Info zur Übung. */
-  const eRef = {exId, uni: exIsUni(exId)};
-  const atTop = sets.every(s=>repsOf(eRef,s,'weak') >= o.hi) && sets.every(s=>(+s.w||0) >= w - 0.001);
-  const minR = Math.min(...sets.map(s=>repsOf(eRef,s,'weak')));
+  const kg = v=>`${isBW&&v>0?'+':''}${fmtW(v)}${isBW&&v===0?'':' kg'}`;
   const stall = plateauCount(exId, beforeTs);
   /* RIR: waren noch ≥3 Wdh im Tank, war der Satz zu leicht → schneller steigern */
-  const rirs = sets.map(s=>s.rir).filter(v=>v!==undefined&&v!==null&&v!=='');
-  const avgRir = rirs.length? rirs.reduce((a,b)=>a+ +b,0)/rirs.length : null;
-  const kg = v=>`${isBW&&v>0?'+':''}${fmtW(v)}${isBW&&v===0?'':' kg'}`;
+  const letzteSets = (exHistory(exId, beforeTs).slice(-1)[0] || {sets:[]}).sets;
+  const rirs = letzteSets.map(s=>s.rir).filter(v=>v!==undefined&&v!==null&&v!=='');
+  const avgRir = rirs.length? rirs.reduce((a,x)=>a+ +x,0)/rirs.length : null;
+  const nSets = b.n;
+  /* Der Hinweis bei Stillstand SENKT NICHTS. Er sagt nur, was los ist —
+     die Entscheidung über einen leichteren Zyklus bleibt bei Aaron. */
+  const hinweis = stall >= 3
+    ? `${stall} Einheiten ohne neuen Bestwert. Wenn das so bleibt: ein Zyklus mit 10 % weniger Gewicht bringt die Progression meist zurück.`
+    : null;
 
-  /* Deload nach 3 Sessions Stillstand */
-  if(stall >= 3){
-    const dw = Math.round((w*0.9)*4)/4;
-    return {kind:'deload', w:dw, r:o.lo, sets:nSets,
-      txt:`Deload: ${nSets}×${o.lo} @ ${kg(dw)}`,
-      why:`${stall} Einheiten ohne neuen Bestwert. Einen Zyklus lang 10 % leichter und sauber ausführen — danach greift die Progression meist wieder.`};
+  /* ── Fall 1: alle Positionen am oberen Ende → Gewicht rauf ─────────── */
+  const alleOben = b.best.every(r => r >= o.hi);
+  const vielLuft = (avgRir !== null && avgRir >= 3);
+  if(alleOben || vielLuft){
+    const grosserSprung = (avgRir !== null && avgRir >= 4);
+    const nw = Math.round((b.w + o.step*(grosserSprung?2:1))*4)/4;
+    /* WIE VIELE Wdh beim neuen Gewicht? Nicht einfach das untere Ende —
+       das wäre rechnerisch oft ein Rückschritt: 9 Wdh mit 80 kg schätzen
+       auf 104 kg, 6 Wdh mit 82,5 kg nur auf 99. Gesucht ist die kleinste
+       Wiederholungszahl, bei der der geschätzte 1RM NICHT fällt. */
+    let r1 = nw > 0 ? Math.ceil(30*(b.bestE/nw - 1)) : o.lo;
+    if(!isFinite(r1) || r1 < o.lo) r1 = o.lo;
+    if(r1 > o.hi) r1 = o.hi;
+    const perSet = Array.from({length:nSets}, ()=>r1);
+    return {kind:'up', w:nw, r:r1, sets:nSets, perSet, hinweis,
+      txt:`${nSets}×${r1} @ ${kg(nw)}`,
+      why: grosserSprung
+          ? `Zuletzt im Schnitt ${avgRir.toFixed(1)} Wdh im Tank — das war deutlich zu leicht, größerer Sprung (+${fmtW(o.step*2)} kg). Mit ${r1} Wdh liegst du über deinem bisherigen Bestwert.`
+          : alleOben
+          ? `Jede Satzposition hat ${o.hi} Wdh erreicht — Gewicht rauf (+${fmtW(o.step)} kg). ${r1} Wdh reichen, um deinen geschätzten Bestwert von ${fmtW(Math.round(b.bestE*10)/10)} kg zu halten oder zu übertreffen.`
+          : `Noch ${avgRir.toFixed(1)} Wdh im Tank — Gewicht rauf (+${fmtW(o.step)} kg).`};
   }
-  if(atTop || (avgRir!==null && avgRir>=3)){
-    const bigJump = (avgRir!==null && avgRir>=4);
-    const nw = Math.round((w + o.step*(bigJump?2:1))*4)/4;
-    return {kind:'up', w:nw, r:o.lo, sets:nSets,
-      txt:`${nSets}×${o.lo} @ ${kg(nw)}`,
-      why: bigJump? `Zuletzt im Schnitt ${avgRir.toFixed(1)} Wdh im Tank — das war deutlich zu leicht, größerer Sprung (+${fmtW(o.step*2)} kg).`
-         : atTop? `Letztes Mal alle Sätze auf ${o.hi} Wdh — Gewicht rauf (+${fmtW(o.step)} kg).`
-                : `Noch ${avgRir.toFixed(1)} Wdh im Tank — Gewicht rauf (+${fmtW(o.step)} kg).`};
-  }
-  const targetR = Math.min(o.hi, minR + 1);
-  return {kind:'reps', w:w, r:targetR, sets:nSets,
-    txt:`${nSets}×${targetR} @ ${kg(w)}`,
-    why: stall>=2? `Seit ${stall} Einheiten kein neuer Bestwert — heute mindestens ${targetR} Wdh anpeilen, sonst im nächsten Zyklus Deload.`
-                : `Ziel ${o.lo}–${o.hi} Wdh: noch nicht am oberen Ende → gleiches Gewicht, eine Wdh mehr.`};
+
+  /* ── Fall 2: gleiches Gewicht, eine Position mehr ──────────────────── */
+  /* Die erste Position, die noch nicht oben ist, bekommt +1. Alle anderen
+     behalten ihre Bestleistung als Mindestziel. So steigt die Summe in
+     JEDER Einheit um mindestens eine Wiederholung, und keine Zahl liegt
+     je unter dem, was schon dastand. */
+  const perSet = b.best.slice();
+  const i = perSet.findIndex(r => r < o.hi);
+  if(i >= 0) perSet[i] = perSet[i] + 1;
+  /* Eine Position ohne Historie (neuer, zusätzlicher Satz) startet unten. */
+  for(let k=0;k<perSet.length;k++) if(!(perSet[k] > 0)) perSet[k] = o.lo;
+  const summeAlt = b.best.reduce((a,x)=>a+x, 0);
+  const summeNeu = perSet.reduce((a,x)=>a+x, 0);
+  return {kind:'reps', w:b.w, r:perSet[0], sets:nSets, perSet, hinweis,
+    txt:`${perSet.join(' · ')} @ ${kg(b.w)}`,
+    why:`Deine Bestwerte bei ${kg(b.w)} sind ${b.best.join(' · ')} Wdh. Satz ${i+1} bekommt eine drauf — macht ${summeNeu} statt ${summeAlt} Wiederholungen. `
+       + (b.einheiten > 1 ? `Verglichen über ${b.einheiten} Einheiten bei diesem Gewicht. ` : '')
+       + `Kein Ziel liegt unter dem, was du hier schon geschafft hast.`};
 }
 function fmtW(v){ v=+v||0; return (Math.round(v*100)/100).toString().replace('.',','); }
 
@@ -4958,7 +5059,7 @@ function renderActive(){
     const prevTxt = prev? prev.sets.map(fmtS).join(' · ') : null;
     const prog = progressionFor(e.exId, new Date(a.date).getTime());
     return `<div class="excard" data-ei="${ei}">
-      <div class="exhd">${a.exercises.length>1?`<div class="exreorder"><button class="rord" data-exup="${ei}" ${ei===0?'disabled':''} title="nach oben">▲</button><button class="rord" data-exdown="${ei}" ${ei===a.exercises.length-1?'disabled':''} title="nach unten">▼</button></div>`:''}<div class="grow"><b>${esc(e.name)}</b>${
+      <div class="exhd">${a.exercises.length>1?`<div class="exreorder"><button class="rord" data-exup="${ei}" ${ei===0?'disabled':''} title="nach oben">▲</button><button class="rord" data-exdown="${ei}" ${ei===a.exercises.length-1?'disabled':''} title="nach unten">▼</button></div>`:''}<div class="grow"><button class="exname" data-exstat="${ei}" aria-label="Statistik zu ${esc(e.name)} öffnen"><b>${esc(e.name)}</b><span class="bi" data-ico="chart" aria-hidden="true"></span></button>${
         /* ── V55/B: Muskelnamen raus ──────────────────────────────────────
            „Mittlere Brust · Vord. Schulter, Trizeps" stand über JEDER Übung.
            Beim Loggen weiß man, was man gerade macht — das ist Deko, die
@@ -5008,7 +5109,7 @@ function renderActive(){
           <button class="idx" data-settype title="Satz-Typ wechseln">${lbl}</button>
           ${ps? `<button class="prevpill" data-pf data-w="${+ps.w||0}" data-r="${ps.r||''}" data-rr="${ps.rr!==undefined?ps.rr:''}">${fmtS(ps).replace('×',' kg × ').replace('BW kg','BW')}</button>` : `<span class="prevpill none">—</span>`}
           <input type="number" inputmode="decimal" step="0.5" min="0" placeholder="${ps? +ps.w||0 : (assist?'Hilfe':isBW?'+kg':'kg')}" value="${s.w!==''&&s.w!=null? s.w:''}" data-f="w">
-          <input type="number" inputmode="numeric" step="1" min="0" placeholder="${e.target||(ps? ps.r : (uni?'L':'Wdh'))}" value="${s.r!==''&&s.r!=null? s.r:''}" data-f="r">
+          <input type="number" inputmode="numeric" step="1" min="0" placeholder="${(e.targets&&e.targets[si])||e.target||(ps? ps.r : (uni?'L':'Wdh'))}" value="${s.r!==''&&s.r!=null? s.r:''}" data-f="r">
           ${uni? `<input type="number" inputmode="numeric" step="1" min="0" placeholder="${ps&&ps.rr!==undefined&&ps.rr!==''?ps.rr:(ps?ps.r:'R')}" value="${s.rr!==''&&s.rr!=null&&s.rr!==undefined? s.rr:''}" data-f="rr">`:''}
           ${useRir? `<input class="riri" type="number" inputmode="numeric" step="1" min="0" max="10" placeholder="–" value="${s.rir!==''&&s.rir!=null&&s.rir!==undefined? s.rir:''}" data-f="rir">`:''}
           <button class="setdel" data-delset title="Satz löschen">✕</button>
@@ -5212,12 +5313,21 @@ function wireActiveOnce(){
       const hasData = ex.sets.some(s=>(+s.r||0)>0 || (s.w!==''&&s.w!=null&&+s.w>0));
       if(hasData && !await ask('Werte überschreiben?', 'Es sind schon Werte eingetragen. Der Vorschlag ersetzt sie.', {ok:'Überschreiben', tone:'warn'})) return;
       const backup = JSON.parse(JSON.stringify(ex.sets));
+      const backupT = ex.targets? ex.targets.slice() : null;
       ex.sets = Array.from({length:p.sets}, ()=>({w: p.w>0? String(p.w):'', r:''}));
+      /* Ein Ziel JE SATZ statt einer Zahl für alle — es steht als Platzhalter
+         in der jeweiligen Zeile. `target` bleibt für ältere Stände erhalten. */
+      ex.targets = (p.perSet || []).slice();
       ex.target = p.r;
       saveState(); renderActive();
-      withUndo(`Ziel: ${p.sets}×${p.r} Wdh`, ()=>{ ex.sets = backup; saveState(); renderActive(); });
+      withUndo(`Ziel: ${(p.perSet||[p.r]).join(' · ')} Wdh`, ()=>{
+        ex.sets = backup; if(backupT) ex.targets = backupT; else delete ex.targets;
+        saveState(); renderActive(); });
       return;
     }
+    /* Antippen des Übungsnamens → Statistik als Blatt darüber */
+    const xs = t.closest('[data-exstat]');
+    if(xs){ openExSheet(state.active.exercises[+xs.dataset.exstat].exId); return; }
     const op = t.closest('[data-exopt]');
     if(op){ openExOpt(state.active.exercises[+op.dataset.exopt].exId); return; }
     const ca = t.closest('[data-calc]');
@@ -7244,6 +7354,45 @@ function renderExStats(){
       }).join('')}</table></div>`
     + exAchCard(ex);
 }
+/* ══════════════════════════════════════════════════════════════════════
+   ÜBUNGSSTATISTIK ALS BLATT                                       (V66)
+
+   Aaron loggt gerade Brustpresse und will wissen, was er letztes Mal
+   gemacht hat. Bis V65 hieß das: Reiter wechseln, Übung suchen, zurück —
+   und die Stelle in der Satzliste war weg.
+
+   Gebaut wird der Inhalt von renderExStats(), also genau dieselbe Ansicht
+   wie im Statistik-Reiter. Kein zweiter Satz Diagramme, der auseinander-
+   laufen kann.
+
+   ACHTUNG, die Falle dabei: Die Diagramme vergeben eigene Verlaufs-IDs
+   (gline17, gbar18 …). Würde ich den HTML-Text einfach KOPIEREN, stünde
+   jede id zweimal im Dokument — und url(#gline17) trifft den ersten
+   Treffer, der in einem ausgeblendeten Reiter liegt. Genau der
+   Unsichtbare-Balken-Fehler aus V52. Deshalb wird der Inhalt VERSCHOBEN:
+   die Quelle wird geleert, sobald das Blatt sie übernimmt. */
+function openExSheet(exId){
+  const ex = getEx(exId); if(!ex) return;
+  exStatId = exId;
+  renderExStats();                                  // füllt #exstat-detail
+  const quelle = $('#exstat-detail');
+  $('#exsheet-body').innerHTML = quelle.innerHTML;
+  quelle.innerHTML = '';                            // ids bleiben einmalig
+  const o = exOpt(exId), h = exHistory(exId);
+  $('#exsheet-title').textContent = ex.name;
+  $('#exsheet-sub').textContent = `${ex.eq}${o.uni?' · einseitig':''} · Ziel ${o.lo}–${o.hi} Wdh · `
+    + (h.length? `${h.length} ${h.length===1?'Einheit':'Einheiten'}` : 'noch nie trainiert');
+  hydrateIcons($('#exsheet-body'));
+  openModal('#modal-exstat');
+  haptic();
+}
+$('#exsheet-full').addEventListener('click',()=>{
+  closeModals();
+  statsPanel = 'ex';
+  $$('#stats-seg button').forEach(x=>x.classList.toggle('on', x.dataset.p==='ex'));
+  showScreen('scr-stats');
+  renderStats();
+});
 $('#exstat-search').addEventListener('input',renderExStats);
 
 /* ================= VERLAUF ================= */
