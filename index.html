@@ -389,8 +389,15 @@ h3>.bi svg{width:15px;height:15px}
   font-size:var(--fs-body);line-height:1.35;color:var(--txt2);min-height:20px;
 }
 #body-sub b{font-weight:650;color:var(--txt)}
-#body-sub[data-art="dran"] b{color:var(--fig-g0)}      /* 11,58:1 auf --s1 */
-#body-sub[data-art="zuviel"] b{color:var(--fig-g4)}    /*  5,67:1 auf --s1 */
+#body-sub[data-art="dran"] b{color:var(--fig-g0)}
+#body-sub[data-art="zuviel"] b{color:var(--fig-g4)}
+/* Die „Dran"-Zeile ist ein Knopf (V67): antippen zeigt Übungen dafür. */
+.dranbtn{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center;
+  background:none;border:none;color:inherit;font:inherit;padding:4px 8px;cursor:pointer;
+  border-radius:var(--r-full);min-height:var(--hit-min);max-width:100%}
+.dranbtn .bi{flex:none;opacity:.7}
+.dranbtn .bi svg{width:14px;height:14px}
+.dranbtn:active{background:var(--s2)}
 /* Vorlage: Körper und Muskeln in derselben Farbe, getrennt durch dünne, etwas
    hellere Konturlinien — nicht durch dunkle Lücken. Das erzeugt die feine
    Anatomiezeichnung statt einer Flächenoptik. */
@@ -1180,6 +1187,15 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
 <div class="mback" id="modal-muscle"><div class="modal" id="muscle-body" role="dialog" aria-modal="true" aria-label="Muskelatlas"></div></div>
 <div class="mback" id="modal-detail"><div class="modal" id="detail-body" role="dialog" aria-modal="true" aria-label="Details"></div></div>
 
+<!-- Lücken schließen (V67): Die App weiß, welche Gruppen zu kurz kommen,
+     und kennt die Übungen dafür. Hier treffen sich beide. -->
+<div class="mback" id="modal-luecke"><div class="modal" role="dialog" aria-modal="true" aria-label="Lücken schließen">
+  <div class="grab"></div>
+  <div class="mhd"><div><h2>Was fehlt</h2><div class="sub" id="luecke-sub"></div></div>
+    <button class="iconbtn" data-close aria-label="Schließen" data-ico-close></button></div>
+  <div id="luecke-body"></div>
+</div></div>
+
 <!-- Übungsstatistik als Blatt über dem laufenden Training (V66).
      Ein Bildschirmwechsel mitten im Satz kostet den Platz in der Liste;
      das Blatt legt sich darüber und geht wieder weg. -->
@@ -1420,7 +1436,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V66 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V67 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -4527,8 +4543,15 @@ function paintBody(){
       figFresh = null;                       // einmalig, nicht bei jedem Rendern
     }
     const v = figureVerdict(figState, hatDaten);
-    $('#body-sub').innerHTML = v.text;
+    /* Die Zeile nennt seit V62, was ansteht. Seit V67 kann man sie antippen
+       und bekommt Übungen dafür — vorher war sie eine Sackgasse. */
+    $('#body-sub').innerHTML = (v.art === 'dran')
+      ? `<button class="dranbtn" id="btn-luecke">${v.text}<span class="bi" data-ico="plus" aria-hidden="true"></span></button>`
+      : v.text;
     $('#body-sub').dataset.art = v.art;
+    const lb = $('#btn-luecke');
+    if(lb){ lb.setAttribute('aria-label','Übungen für die offenen Gruppen zeigen');
+            lb.addEventListener('click', openLuecken); hydrateIcons($('#body-sub')); }
     $('#body-legend').innerHTML = hatDaten ? figLegend(false) : '';
     $('#body-reclist').innerHTML = '';
   }
@@ -5407,6 +5430,57 @@ async function finishWorkout(){
   renderTrain();
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   EIN TRAINING TEILEN                                             (V67)
+
+   Aaron will die App anderen zeigen. Bis V66 ging aus ihr nichts heraus
+   außer einer CSV-Datei und einem JSON-Backup — beides nichts, was man
+   jemandem schickt.
+
+   Geteilt wird TEXT, kein Bild: Text funktioniert in jeder App, ist
+   lesbar, kostet nichts und verrät nichts, was nicht auf dem Schirm steht.
+   Gebaut aus den Wahrheitsfunktionen, nicht aus der Anzeige — sonst laufen
+   geteilte und gezeigte Zahlen irgendwann auseinander. */
+function workoutText(w){
+  if(!w) return '';
+  const d = new Date(w.date).toLocaleDateString('de-DE',{weekday:'short', day:'2-digit', month:'2-digit'});
+  const kopf = `${w.type} · ${d}${w.end&&w.start? ' · '+fmtDur(w.end-w.start) : ''}`;
+  const zahlen = `${w.exercises.length} ${w.exercises.length===1?'Übung':'Übungen'} · ${wSets(w)} Sätze · ${fmtVol(wVolume(w))}`;
+  const zeilen = w.exercises.map(e=>{
+    const s = validSets(e); if(!s.length) return '';
+    const eRef = {exId:e.exId, uni: entryIsUni(e)};
+    const teile = s.map(x=>{
+      const kg = setW(e, x, w.date);
+      const l = +x.r||0, r = (x.rr!==undefined && x.rr!=='' && x.rr!=null)? (+x.rr||0) : null;
+      const wdh = (r!==null && r!==l)? `${l}/${r}` : l;
+      return (kg>0? fmtW(kg)+'kg' : 'BW') + '×' + wdh;
+    }).join(', ');
+    return `${getEx(e.exId)?.name || e.name} — ${teile}`;
+  }).filter(Boolean);
+  const prs = (w.prs||[]).length
+    ? `\n\n${(w.prs||[]).length} neue ${(w.prs||[]).length===1?'Bestleistung':'Bestleistungen'}: `
+      + w.prs.slice(0,5).map(p=>`${p.name} (${p.kind})`).join(', ')
+    : '';
+  return `${kopf}\n${zahlen}\n\n${zeilen.join('\n')}${prs}\n\n— Fitness Tracker`;
+}
+/* Teilen mit Rückfallebene: Wo navigator.share fehlt (Desktop-Browser),
+   landet der Text in der Zwischenablage. Beides meldet sich. */
+async function teileWorkout(wid){
+  const w = state.workouts.find(x=>x.id===wid); if(!w) return;
+  const text = workoutText(w);
+  try{
+    if(navigator.share){ await navigator.share({title:'Training', text}); haptic('success'); return; }
+  }catch(e){ if(e && e.name === 'AbortError') return; }        // abgebrochen ist kein Fehler
+  try{
+    await navigator.clipboard.writeText(text);
+    toast('In die Zwischenablage kopiert'); haptic('success');
+  }catch(_){ toast('Teilen geht auf diesem Gerät nicht'); }
+}
+document.addEventListener('click', e=>{
+  const b = e.target.closest('[data-share]'); if(!b) return;
+  teileWorkout(b.dataset.share);
+});
+
 /* ================= ZUSAMMENFASSUNG ================= */
 function showSummary(w, freshAch, newLevel){
   const dur = fmtDur(w.end-w.start);
@@ -5454,6 +5528,7 @@ function showSummary(w, freshAch, newLevel){
     <div style="height:18px"></div>
     <div class="row">
       <button class="btn btn-ghost grow" id="sum-tpl">Als Vorlage</button>
+      <button class="btn btn-ghost grow" data-share="${esc(w.id)}">Teilen</button>
       <button class="btn btn-acc grow" data-close>Fertig</button>
     </div>`;
   openModal('#modal-summary');
@@ -6442,6 +6517,135 @@ document.addEventListener('click', e=>{
   if(statsSetMode===b.dataset.setmode) return;
   statsSetMode = b.dataset.setmode; haptic(); renderStats();
 });
+/* ══════════════════════════════════════════════════════════════════════
+   VON DER ANZEIGE ZUR HANDLUNG                                    (V67)
+
+   Gemessen vor diesem Umbau: Die App nennt bei Aaron fünf Gruppen unter
+   dem Korridor — Bauch, Quadrizeps, Beinbeuger, Po, Waden — und hat für
+   genau diese Gruppen 177 passende Übungen in der Datenbank. Knöpfe, um
+   von der einen Stelle zur anderen zu kommen: KEINE. Die Figur-Karte hatte
+   zwei („Volumen", „Erholung"), die Karte „Sätze pro Muskelgruppe" gar
+   keinen.
+
+   Eine App, die einen Mangel benennt und keinen Weg anbietet, ihn zu
+   beheben, ist ein Bericht, kein Werkzeug. */
+
+/* Welche Gruppen sind offen — und zwar GENAU DIE, die auch die Figur nennt.
+   Beim Bauen aufgefallen: zyklusLuecken() steigt aus, wenn kein Zyklus läuft
+   („Rücken 0 von 9" wäre am Zyklusanfang eine Binsenweisheit — richtig für
+   die Vorschlagskarte). Die Figur dagegen fällt auf den letzten
+   abgeschlossenen Zyklus zurück. Ergebnis: Die Figur meldete „Dran: Bauch ·
+   Quadrizeps · Waden · Beinbeuger · Po", und die Lückenliste sagte „nichts
+   offen". Zwei Stellen, dieselbe Frage, zwei Antworten.
+   Deshalb liest dieses Blatt aus DERSELBEN Quelle wie die Figur. */
+function offeneGruppen(){
+  const lauf = runningCycle();
+  const c = lauf || closedCycles().slice(-1)[0] || null;
+  if(!c) return [];
+  const gs = figureGroupState(muscleSets(c.ws), 1);
+  const raus = [], gesehen = new Set();
+  SETGROUPS.forEach(([label, keys, mult, optional])=>{
+    if(gesehen.has(label) || optional || isLegGroup(label)) return;
+    gesehen.add(label);
+    const g = gs[keys[0]];
+    if(!g || (g.cls !== 'g0' && g.cls !== 'g1')) return;
+    raus.push({ gruppe:label, ist:g.sum, lo:g.lo, hi:g.hi, fehlt: Math.round((g.lo - g.sum)*10)/10 });
+  });
+  return raus.sort((a,b)=> b.fehlt - a.fehlt);
+}
+
+/* Welche Übungen schließen eine bestimmte Lücke?
+   Sortiert nach dem, was für AARON zählt — nicht nach einer allgemeinen
+   Bestenliste:
+     · Übungen, die er schon kennt, stehen vorn (keine Technik-Baustelle)
+     · Geräte, die er nachweislich benutzt, zählen mit (das Studio hat sie)
+     · darunter erst die Bewertung aus der Datenbank
+   Gerechnet wird über exRate(), also dieselbe Bewertung wie im Atlas. */
+function uebungenFuerLuecke(gruppe, max){
+  const def = SETGROUPS.find(g=>g[0]===gruppe);
+  if(!def) return [];
+  const keys = def[1];
+  const meine = new Set();
+  const geraet = {};
+  state.workouts.forEach(w=>w.exercises.forEach(e=>{
+    meine.add(e.exId);
+    const ex = getEx(e.exId); if(ex) geraet[ex.eq] = (geraet[ex.eq]||0) + 1;
+  }));
+  const kandidaten = allExercises().filter(x=>(x.p||[]).some(k=>keys.includes(k)));
+  return kandidaten.map(x=>{
+    const treffer = (x.p||[]).find(k=>keys.includes(k));
+    const r = exRate(x, treffer);
+    let score = r.act*0.5 + r.hyp*0.3 + r.beg*0.2;
+    const kennt = meine.has(x.id);
+    if(kennt) score += 40;                                  // Technik sitzt schon
+    if(geraet[x.eq]) score += Math.min(20, geraet[x.eq]*2);  // Gerät ist im Studio
+    return { ex:x, score, kennt, geraetVertraut: !!geraet[x.eq], r };
+  }).sort((a,b)=> b.score - a.score).slice(0, max || 4);
+}
+
+/* Eine Übung dorthin legen, wo sie hilft: ins laufende Training, sonst in
+   den Plan für heute. Nie beides, nie irgendwohin ohne Rückmeldung. */
+function uebungEinplanen(exId){
+  const ex = getEx(exId); if(!ex) return null;
+  if(state.active){
+    state.active.exercises.push({exId, name:ex.name, __live:true, sets:leereSaetze(exId)});
+    saveState(); renderActive();
+    return {ziel:'training', txt:`„${ex.name}" ist im laufenden Training`};
+  }
+  const tag = heuteIso();
+  const vorhanden = planAmTag(tag);
+  const typ = (vorhanden && vorhanden.type) || suggestType();
+  const liste = (vorhanden && vorhanden.exercises) || [];
+  if(liste.some(e=>e.exId === exId)) return {ziel:'schon', txt:`„${ex.name}" steht schon im Plan für heute`};
+  setPlan(tag, { type:typ, exercises: liste.concat([{exId, name:ex.name, sets:leereSaetze(exId)}]) });
+  if(typeof renderTrain==='function') renderTrain();
+  return {ziel:'plan', txt:`„${ex.name}" für heute eingeplant (${typ})`};
+}
+
+/* Das Blatt: alle offenen Gruppen, jede mit konkreten Übungen und einem
+   Knopf. Das ist der ganze Punkt — von „dir fehlen 4 Sätze Waden" zu
+   „Wadenheben steht jetzt in deinem Training" in einem Tipp. */
+function renderLuecken(){
+  const l = offeneGruppen();
+  const box = $('#luecke-body');
+  const c = runningCycle() || closedCycles().slice(-1)[0] || null;
+  $('#luecke-sub').textContent = c
+    ? `Zyklus ${c.n}${c.laufend? ' · läuft noch':''}`
+    : 'noch kein Zyklus';
+  if(!l.length){
+    box.innerHTML = `<div class="empty" style="padding:24px">
+      <div class="big">${ICO.check}</div><b>Keine Lücke</b>
+      Alle Gruppen liegen im Korridor. ${c && c.laufend? 'Der Zyklus läuft noch — das kann sich noch ändern.' : ''}</div>`;
+    return;
+  }
+  box.innerHTML = l.map(x=>{
+    const vor = uebungenFuerLuecke(x.gruppe, 4);
+    return `<div class="card">
+      <div class="row" style="justify-content:space-between;align-items:baseline">
+        <b style="font-size:var(--fs-lg)">${esc(x.gruppe)}</b>
+        <span class="tiny">${fmtW(x.ist)} von ${x.lo}–${x.hi} · <b style="color:var(--a6)">${fmtW(x.fehlt)} fehlen</b></span>
+      </div>
+      ${vor.length? vor.map(v=>`
+        <div class="item">
+          <div class="grow"><div class="ttl" style="font-size:13px">${esc(v.ex.name)}</div>
+            <div class="meta">${esc(v.ex.eq)}${v.kennt? ' · <b>kennst du schon</b>' : v.geraetVertraut? ' · Gerät nutzt du' : ''}</div></div>
+          <button class="btn btn-acc btn-sm" data-addgap="${esc(v.ex.id)}">＋</button>
+        </div>`).join('')
+        : '<div class="tiny">Keine passende Übung in der Datenbank.</div>'}
+    </div>`;
+  }).join('')
+  + `<p class="tiny" style="text-align:center">Ein Tipp auf ＋ legt die Übung ins laufende Training — oder in den Plan für heute.</p>`;
+  $$('#luecke-body [data-addgap]').forEach(b=>b.addEventListener('click',()=>{
+    const r = uebungEinplanen(b.dataset.addgap);
+    if(!r) return;
+    haptic('success');
+    toast(r.txt);
+    renderLuecken();
+    if(typeof renderHome==='function') renderHome();
+  }));
+}
+function openLuecken(){ renderLuecken(); openModal('#modal-luecke'); haptic(); }
+
 /* Klick auf eine Muskelgruppe → Modal mit allen Übungen */
 let lastStatsWs = [];
 document.addEventListener('click', e=>{
@@ -6458,8 +6662,29 @@ document.addEventListener('click', e=>{
           <div class="meta">${x.sets%1? x.sets.toFixed(1).replace('.',','):x.sets} Sätze · ${x.sessions}× trainiert · ${fmtVol(x.vol)}</div></div>
         <span style="color:var(--txt3)">›</span></div>`).join('')}</div>`
       : '<div class="empty">Keine Übung hat diese Gruppe trainiert</div>'}
+    ${(()=>{
+      /* Liegt die Gruppe unter dem Korridor, steht hier ein Weg nach draußen
+         statt nur der Feststellung. Bis V66 endete das Blatt bei „Keine Übung
+         hat diese Gruppe trainiert" — richtig, aber folgenlos. */
+      const luecke = offeneGruppen().find(x=>x.gruppe === g);
+      if(!luecke) return '';
+      const vor = uebungenFuerLuecke(g, 4);
+      if(!vor.length) return '';
+      return `<div class="card"><h3 style="margin-bottom:2px">${fmtW(luecke.fehlt)} Sätze fehlen</h3>
+        <p class="tiny" style="margin-bottom:8px">${fmtW(luecke.ist)} von ${luecke.lo}–${luecke.hi} im Zyklus. Diese Übungen schließen die Lücke:</p>
+        ${vor.map(v=>`<div class="item">
+          <div class="grow"><div class="ttl" style="font-size:13px">${esc(v.ex.name)}</div>
+            <div class="meta">${esc(v.ex.eq)}${v.kennt? ' · <b>kennst du schon</b>' : v.geraetVertraut? ' · Gerät nutzt du' : ''}</div></div>
+          <button class="btn btn-acc btn-sm" data-addgap="${esc(v.ex.id)}">＋</button></div>`).join('')}</div>`;
+    })()}
     <p class="tiny" style="text-align:center">„(indirekt)" = die Gruppe ist nur Hilfsmuskel und zählt halb.</p>`;
   openModal('#modal-detail');
+  $$('#detail-body [data-addgap]').forEach(b=>b.addEventListener('click',()=>{
+    const r = uebungEinplanen(b.dataset.addgap);
+    if(!r) return;
+    haptic('success'); toast(r.txt); closeModals();
+    if(typeof renderHome==='function') renderHome();
+  }));
   $$('#detail-body [data-godetail]').forEach(b=>b.addEventListener('click',()=>{
     const ex = allExercises().find(x=>x.name===b.dataset.godetail); if(!ex) return;
     closeModals(); exStatId = ex.id; statsPanel='ex';
@@ -6585,6 +6810,7 @@ function renderAllStats(){
   el.innerHTML = header + lead + kpis
     + `<div class="card"><h3>Verteilung über alle Muskelgruppen <span class="tiny">(ohne Zielampel — über die gesamte Historie sagt ein Korridor nichts)</span></h3>${muscleBars(muscleSetsBy(ws, statsSetMode), ws)}</div>`
     + `<div class="card"><h3>Volumen pro Monat <span class="tiny">(Kalendermonate, rein beschreibend)</span></h3>${svgBars(mLabels, mVals, v=>fmtVol(v))}</div>`
+    + bestenlisteCard()
     + statZuwachs()
     + statWdh(ws)
     + statAbstand(ws)
@@ -6741,6 +6967,35 @@ function statZuwachs(){
     <p class="tiny" style="margin-top:8px">Verglichen wird das beste Gewicht der ersten mit dem der letzten Einheit.
       Wo die App einen <b>Niveauwechsel</b> erkannt hat (Wechsel auf einarmig, anderes Gerät),
       rechnet sie erst ab dort — sonst misst sie den Wechsel statt den Fortschritt.</p></div>`;
+}
+/* ══════════════════════════════════════════════════════════════════════
+   BESTLEISTUNGEN ÜBER ALLES                                       (V67)
+   Rekorde gab es bisher nur je Zeitraum („PRs im Zyklus"). Was jemand
+   sehen will, der die App zum ersten Mal sieht — und was Aaron sehen will,
+   wenn er wissen möchte, wo er steht —, ist die Bestenliste über alles.
+   Gerechnet über exBests(), also dieselbe Quelle wie die Übungsstatistik. */
+function bestenliste(max){
+  const ids = [...new Set(state.workouts.flatMap(w=>w.exercises.map(e=>e.exId)))];
+  return ids.map(id=>{
+    const ex = getEx(id); if(!ex) return null;
+    const b = exBests(id);
+    if(!b || !(b.maxW > 0 || b.maxReps > 0)) return null;
+    const h = exHistory(id);
+    return { id, name:ex.name, eq:ex.eq, maxW:b.maxW||0, maxE:b.maxE||0,
+             maxReps:b.maxReps||0, einheiten:h.length };
+  }).filter(Boolean)
+    .sort((a,b)=> b.maxE - a.maxE || b.maxW - a.maxW)
+    .slice(0, max || 12);
+}
+function bestenlisteCard(){
+  const l = bestenliste(12);
+  if(!l.length) return '';
+  return `<div class="card"><h3 style="margin-bottom:4px">Deine Bestleistungen</h3>
+    <p class="tiny" style="margin-bottom:8px">Bestes Gewicht je Übung, sortiert nach geschätztem 1RM. Über die gesamte Historie.</p>
+    <table class="htable"><tr><th>Übung</th><th>kg</th><th>Wdh</th><th>e1RM</th></tr>
+    ${l.map(x=>`<tr><td>${esc(x.name)}</td><td><b>${fmtW(x.maxW)}</b></td>
+      <td>${x.maxReps||'—'}</td><td>${x.maxE>0? Math.round(x.maxE) : '—'}</td></tr>`).join('')}
+    </table></div>`;
 }
 function navRow(label, cb){ return {html:`<div class="cnav"><button class="iconbtn" data-nav="-1">‹</button><b>${label}</b><button class="iconbtn" data-nav="1">${''}›</button></div>`, wire(el){ el.querySelectorAll('[data-nav]').forEach(b=>b.addEventListener('click',()=>cb(+b.dataset.nav))); }}; }
 
@@ -7489,6 +7744,7 @@ function showDetail(wid){
       </div>`).join('')}
     <div class="row" style="margin-top:4px">
       <button class="btn btn-ghost btn-sm grow" id="det-tpl">Als Vorlage</button>
+      <button class="btn btn-ghost btn-sm grow" data-share="${esc(w.id)}">Teilen</button>
       <button class="btn btn-danger btn-sm grow" id="det-del">Löschen</button>
     </div>`;
   openModal('#modal-detail');
