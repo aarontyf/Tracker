@@ -1436,7 +1436,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V67 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V68 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -6809,6 +6809,9 @@ function renderAllStats(){
      Wochen- oder Zykluskorridor bedeutungslos. Nur die Verteilung zählt. */
   el.innerHTML = header + lead + kpis
     + `<div class="card"><h3>Verteilung über alle Muskelgruppen <span class="tiny">(ohne Zielampel — über die gesamte Historie sagt ein Korridor nichts)</span></h3>${muscleBars(muscleSetsBy(ws, statsSetMode), ws)}</div>`
+    /* Die Zyklus-Reihe steht VOR den Monaten: Sie ist der Maßstab der App,
+       die Monatsbalken sind die beschreibende Zugabe. */
+    + zyklusVolumenCard()
     + `<div class="card"><h3>Volumen pro Monat <span class="tiny">(Kalendermonate, rein beschreibend)</span></h3>${svgBars(mLabels, mVals, v=>fmtVol(v))}</div>`
     + bestenlisteCard()
     + statZuwachs()
@@ -6968,6 +6971,91 @@ function statZuwachs(){
       Wo die App einen <b>Niveauwechsel</b> erkannt hat (Wechsel auf einarmig, anderes Gerät),
       rechnet sie erst ab dort — sonst misst sie den Wechsel statt den Fortschritt.</p></div>`;
 }
+/* ══════════════════════════════════════════════════════════════════════
+   VOLUMEN JE ZYKLUS — ZYKLUS 1 BIS HEUTE                          (V68)
+
+   Der Reiter „Gesamt" rechnete als einziger in KALENDERMONATEN („Volumen
+   pro Monat"). Das widerspricht dem Maßstab der ganzen App: Die
+   Kalenderwoche — und der Monat genauso — ist hier unbrauchbar, weil mal
+   neun, mal elf Einheiten hineinfallen. Ein Monatsbalken misst dann den
+   Kalender, nicht das Training.
+
+   Die Reihe läuft ab Zyklus 1. Der VORLAUF (Nummer 0, alles vor dem ersten
+   aufgezeichneten Push) bleibt draußen — er ist kein Zyklus, sondern der
+   Rest davor, und würde die Reihe mit einem Wert eröffnen, der nach anderen
+   Regeln entstanden ist. */
+function zyklusVolumenReihe(){
+  return cycles()
+    .filter(c => !c.vorlauf)
+    .map(c => ({
+      n: c.n,
+      vol: c.ws.reduce((a,w)=>a + wVolume(w), 0),
+      saetze: c.ws.reduce((a,w)=>a + wSets(w), 0),
+      einheiten: c.ws.length,
+      tage: c.tage,
+      laufend: !!c.laufend,
+      vollstaendig: !!c.vollstaendig,
+      auffaellig: !!c.auffaellig
+    }));
+}
+function zyklusVolumenCard(){
+  const reihe = zyklusVolumenReihe();
+  if(!reihe.length) return '';
+  /* Ein LAUFENDER Zyklus ist noch nicht fertig. Er neben abgeschlossene zu
+     stellen, ohne das zu sagen, erzeugt einen Einbruch am rechten Rand, der
+     keiner ist — die Einheiten fehlen noch, nicht die Leistung.
+     Deshalb: gekennzeichnet im Diagramm UND aus Schnitt und Trend heraus. */
+  const fertig = reihe.filter(x=>!x.laufend);
+  const lauf = reihe.find(x=>x.laufend) || null;
+  const pts = reihe.map(x=>({ y: Math.round(x.vol), l: 'Z'+x.n }));
+  const marks = lauf ? [{ i: reihe.length-1, label:'läuft' }] : [];
+  const basis = fertig.length ? fertig : reihe;
+  const schnitt = basis.reduce((a,x)=>a+x.vol, 0) / basis.length;
+  const beste = basis.reduce((b,x)=> x.vol > b.vol ? x : b, basis[0]);
+  const gesamt = reihe.reduce((a,x)=>a+x.vol, 0);
+  /* Trend nur behaupten, wenn genug abgeschlossene Zyklen da sind. Bei zwei
+     Punkten ist jede Richtung Zufall. */
+  let trendTxt = '';
+  if(fertig.length >= 4){
+    const h = Math.floor(fertig.length/2);
+    const alt = fertig.slice(0, h).reduce((a,x)=>a+x.vol,0) / h;
+    const neu = fertig.slice(-h).reduce((a,x)=>a+x.vol,0) / h;
+    const d = alt > 0 ? Math.round((neu-alt)/alt*100) : 0;
+    trendTxt = d > 5  ? `Die letzten ${h} Zyklen liegen <b>${d} % über</b> den ersten ${h}.`
+             : d < -5 ? `Die letzten ${h} Zyklen liegen <b>${-d} % unter</b> den ersten ${h}.`
+                      : `Über die ganze Reihe stabil (${d>=0?'+':''}${d} %).`;
+  } else {
+    trendTxt = `Ab vier abgeschlossenen Zyklen rechne ich hier einen Trend — aktuell ${fertig.length}.`;
+  }
+  return `<div class="card"><h3 style="margin-bottom:2px">Volumen je Zyklus</h3>
+    <p class="tiny" style="margin-bottom:8px">Zyklus 1 bis heute · ${reihe.length} ${reihe.length===1?'Zyklus':'Zyklen'}${
+      lauf? ' · der letzte läuft noch' : ''}</p>
+    ${svgLine(pts, v=>fmtVol(v), {fill:true, avg:true, marks})}
+    <div class="kpis" style="margin:10px 0 0">
+      <div class="kpi"><b>${fmtVol(Math.round(schnitt))}</b><span>Ø je Zyklus</span></div>
+      <div class="kpi"><b>${fmtVol(Math.round(beste.vol))}</b><span>bester (Z${beste.n})</span></div>
+      <div class="kpi"><b>${fmtVol(Math.round(gesamt))}</b><span>gesamt</span></div>
+    </div>
+    <p class="kpihint tiny">${trendTxt}
+      ${lauf? ` Der laufende Zyklus ${lauf.n} ist mit ${lauf.einheiten} ${lauf.einheiten===1?'Einheit':'Einheiten'} noch offen und zählt weder in den Schnitt noch in den Trend.` : ''}
+      ${(()=>{
+        /* Ein Zyklus, der neun statt drei Tage dauerte, ist kein Zyklus wie die
+           anderen — sein Volumen verteilt sich auf die dreifache Zeit. Die App
+           kennzeichnet solche Abweichungen überall sonst; hier auch, statt sie
+           in einer glatten Linie verschwinden zu lassen. */
+        const auf = reihe.filter(x=>x.auffaellig && !x.laufend);
+        if(!auf.length) return '';
+        return ` <b>${auf.length} ${auf.length===1?'Zyklus war':'Zyklen waren'} auffällig lang oder kurz</b>
+          (${auf.map(x=>'Z'+x.n+' · '+x.tage+' Tage').join(', ')}) — dort verteilt sich dasselbe Volumen auf mehr oder weniger Zeit.`;
+      })()}
+      <details class="erkl"><summary>Warum Zyklen und nicht Monate?</summary><div>
+        In einen Kalendermonat fallen mal neun, mal elf Einheiten — das sind über
+        20 % Unterschied, ohne dass sich am Training etwas geändert hat. Ein
+        Zyklus ist bei dir immer Push → Pull → Rest und damit vergleichbar.
+        Gestrichelt: der gleitende Schnitt über vier Zyklen.
+      </div></details></p></div>`;
+}
+
 /* ══════════════════════════════════════════════════════════════════════
    BESTLEISTUNGEN ÜBER ALLES                                       (V67)
    Rekorde gab es bisher nur je Zeitraum („PRs im Zyklus"). Was jemand
