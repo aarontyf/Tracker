@@ -1456,7 +1456,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V71 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V72 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -3037,6 +3037,47 @@ function setW(e, s, dateStr){
   const bw = e.bwkg!==undefined? +e.bwkg : bwAt(dateStr);
   return Math.max(0, (bw||0) - (+s.w||0));
 }
+/* ══════════════════════════════════════════════════════════════════════
+   DIE TATSÄCHLICH BEWEGTE LAST                                     (V72)
+
+   Aaron: „nimm für alle Übungen, die Körpergewicht sind, mein aktuell
+   getracktes Gewicht, z.B. 60 kg."
+
+   Er hat einen echten Widerspruch gefunden. Die App rechnete an zwei
+   Stellen mit zwei verschiedenen Größen:
+
+     exVol  zählte bei Klimmzügen schon immer Körpergewicht + Zusatz
+     setW   liefert dort nur den ZUSATZ
+
+   Gemessen an seinen Daten (bei 60 kg Körpergewicht):
+
+     Klimmzüge (mit Gewicht)   Volumen 4.350 kg, bester Wert „10 kg"
+     Dips (Brust-Fokus)        Volumen 120 kg,   bester Wert „0 kg"
+
+   Dips ohne Zusatzgewicht waren damit in JEDER Kraftstatistik unsichtbar:
+   kein 1RM, nicht in der Bestenliste, nicht in der relativen Kraft. Und
+   das bei einer Übung, bei der er 60 kg bewegt.
+
+   `setW` bleibt trotzdem, was es ist — und wird nicht umgedeutet. Denn an
+   ihm hängen Rekorde, Strukturbruch-Erkennung, Erfolge und der Verlauf
+   „Zusatzgewicht pro Einheit". Würde es plötzlich 70 statt 10 liefern,
+   wäre jedes Kilo Körpergewicht ein neuer Rekord, und die
+   Bruch-Erkennung sähe einen Sprung, wo er nur gefrühstückt hat.
+
+   Deshalb gibt es die zweite Größe daneben, mit eigenem Namen:
+
+     setW     die Zahl, die im EINGABEFELD steht (bei unterstützten
+              Übungen in die effektive Last umgerechnet)
+     lastVon  was der Körper wirklich bewegt
+
+   Für alle anderen Übungen sind beide identisch. */
+function lastVon(e, s, dateStr){
+  if(entryIsAssist(e)) return setW(e, s, dateStr);
+  const isBW = (e.bw!==undefined) ? !!e.bw : exIsBW(e.exId);
+  if(!isBW) return +s.w||0;
+  const bw = e.bwkg!==undefined? +e.bwkg : bwAt(dateStr);
+  return (bw||0) + (+s.w||0);
+}
 
 /* ---------- Übungs-Einstellungen (unilateral, Wdh-Zielbereich, Gewichtssprung) ---------- */
 /* Wdh-Zielbereiche. Basis = deine Voreinstellung (Standard 6–9);
@@ -3402,6 +3443,11 @@ function exHistory(exId, before){
         /* einseitig: die stärkere Seite zählt — sonst liegt die Vergleichsbasis
            für Rekorde dauerhaft zu niedrig und es entstehen ständig „neue PRs" */
         bestE: Math.max(...sets.map(s=>e1rm(setW(e,s,w.date), repsOf(e,s,'best')))),
+        /* V72: dieselben zwei Werte noch einmal, gerechnet mit der
+           tatsächlich bewegten Last. Bei Hanteln identisch, bei
+           Klimmzügen und Dips der ganze Unterschied. */
+        bestLast: Math.max(...sets.map(s=>lastVon(e,s,w.date))),
+        bestELast: Math.max(...sets.map(s=>e1rm(lastVon(e,s,w.date), repsOf(e,s,'best')))),
         maxReps: Math.max(...sets.map(s=>repsOf(e,s,'best')))
       });
     });
@@ -3420,6 +3466,8 @@ function exBests(exId, before){
   return {
     maxW: Math.max(...h.map(x=>x.bestW)),
     maxE: Math.max(...h.map(x=>x.bestE)),
+    maxLast:  Math.max(...h.map(x=>x.bestLast)),     // V72: bewegte Last
+    maxELast: Math.max(...h.map(x=>x.bestELast)),
     maxVol: Math.max(...h.map(x=>x.vol)),
     maxReps: Math.max(...h.map(x=>x.maxReps)),
     sessions: h.length
@@ -7294,8 +7342,13 @@ function relativeKraft(max){
   const liste = ids.map(id=>{
     const ex = getEx(id); if(!ex) return null;
     const b = exBests(id);
-    if(!b || !(b.maxE > 0)) return null;
-    return { id, name:ex.name, maxE:b.maxE, faktor: b.maxE/kg };
+    /* V72: maxELast statt maxE — die bewegte Last. Vorher fehlten hier
+       genau die Übungen, bei denen die Frage „wie viel × Körpergewicht"
+       am meisten Sinn ergibt: Klimmzüge standen mit dem Zusatzgewicht
+       drin, Dips ohne Zusatz fielen mit 0 kg ganz heraus. */
+    if(!b || !(b.maxELast > 0)) return null;
+    return { id, name:ex.name, maxE:b.maxELast, faktor: b.maxELast/kg,
+             bw: ex.eq==='Körpergewicht' || ex.eq==='Maschine (unterstützt)' };
   }).filter(Boolean).sort((a,b)=> b.faktor - a.faktor);
   return { kg, datum: bw[bw.length-1].d, liste: liste.slice(0, max||8), gesamt: liste.length };
 }
@@ -7307,15 +7360,17 @@ function statRelativeKraft(){
   return `<div class="card"><h3 style="margin-bottom:2px">Relative Kraft</h3>
     <p class="tiny" style="margin-bottom:8px">Geschätzter 1RM geteilt durch dein Körpergewicht (${fmtW(r.kg)} kg, Stand ${fmtDate(r.datum)}).</p>
     <table class="htable"><tr><th>Übung</th><th>1RM</th><th>× Körpergewicht</th></tr>
-    ${r.liste.map(x=>`<tr><td>${esc(x.name)}</td><td>${Math.round(x.maxE)} kg</td>
+    ${r.liste.map(x=>`<tr><td>${esc(x.name)}${x.bw?' <span class="tiny grpsub">mit Körpergewicht</span>':''}</td><td>${Math.round(x.maxE)} kg</td>
       <td><b>${x.faktor.toFixed(2).replace('.',',')} ×</b></td></tr>`).join('')}
     </table>
     <p class="kpihint tiny">Diese Zahl bleibt vergleichbar, wenn sich dein Körpergewicht ändert —
       absolute Kilos allein sagen darüber nichts.
       <details class="erkl"><summary>Wie wird gerechnet?</summary><div>
         Der geschätzte 1RM kommt aus deinem besten Satz (Epley), das Körpergewicht
-        aus deinem letzten Eintrag. Bei unterstützten Übungen ist die effektive Last
-        gemeint, bei Körpergewichtsübungen dein Gewicht plus Zusatz.
+        aus deinem letzten Eintrag. Gerechnet wird mit der Last, die dein Körper
+        wirklich bewegt: bei Klimmzügen und Dips dein Körpergewicht plus Zusatz,
+        bei unterstützten Übungen dein Körpergewicht minus Hilfe, sonst die
+        eingetragenen Kilos.
       </div></details></p></div>`;
 }
 
@@ -7479,10 +7534,17 @@ function bestenliste(max){
   return ids.map(id=>{
     const ex = getEx(id); if(!ex) return null;
     const b = exBests(id);
-    if(!b || !(b.maxW > 0 || b.maxReps > 0)) return null;
+    if(!b || !(b.maxLast > 0 || b.maxReps > 0)) return null;
     const h = exHistory(id);
-    return { id, name:ex.name, eq:ex.eq, maxW:b.maxW||0, maxE:b.maxE||0,
-             maxReps:b.maxReps||0, einheiten:h.length };
+    /* V72: Die Bestenliste zeigt, was BEWEGT wurde. Vorher stand bei
+       Klimmzügen das Zusatzgewicht (10 kg) und bei Dips ohne Zusatz eine
+       0 — beides untertreibt das, was er tatsächlich hochgezogen hat.
+       Das Zusatzgewicht bleibt daneben stehen, sonst geht die Information
+       verloren, wie viel davon er selbst angehängt hat. */
+    const mitBw = ex.eq==='Körpergewicht';
+    return { id, name:ex.name, eq:ex.eq,
+             maxW:b.maxLast||0, zusatz: mitBw ? (b.maxW||0) : null, mitBw,
+             maxE:b.maxELast||0, maxReps:b.maxReps||0, einheiten:h.length };
   }).filter(Boolean)
     .sort((a,b)=> b.maxE - a.maxE || b.maxW - a.maxW)
     .slice(0, max || 12);
@@ -7491,11 +7553,16 @@ function bestenlisteCard(){
   const l = bestenliste(12);
   if(!l.length) return '';
   return `<div class="card"><h3 style="margin-bottom:4px">Deine Bestleistungen</h3>
-    <p class="tiny" style="margin-bottom:8px">Bestes Gewicht je Übung, sortiert nach geschätztem 1RM. Über die gesamte Historie.</p>
+    <p class="tiny" style="margin-bottom:8px">Höchste bewegte Last je Übung, sortiert nach geschätztem 1RM.
+      Über die gesamte Historie.</p>
     <table class="htable"><tr><th>Übung</th><th>kg</th><th>Wdh</th><th>e1RM</th></tr>
-    ${l.map(x=>`<tr><td>${esc(x.name)}</td><td><b>${fmtW(x.maxW)}</b></td>
+    ${l.map(x=>`<tr><td>${esc(x.name)}${x.mitBw? ` <span class="tiny grpsub">Körpergewicht${x.zusatz>0? ' + '+fmtW(x.zusatz)+' kg':''}</span>`:''}</td>
+      <td><b>${fmtW(x.maxW)}</b></td>
       <td>${x.maxReps||'—'}</td><td>${x.maxE>0? Math.round(x.maxE) : '—'}</td></tr>`).join('')}
-    </table></div>`;
+    </table>
+    <p class="kpihint tiny">Bei Klimmzügen und Dips steht die Last, die dein Körper bewegt —
+      dein Gewicht plus das, was du angehängt hast. Für <b>Rekorde</b> zählt weiter nur der Zusatz:
+      sonst wäre jedes Kilo Körpergewicht ein neuer Bestwert, ohne dass du einen Satz mehr geschafft hast.</p></div>`;
 }
 function navRow(label, cb){ return {html:`<div class="cnav"><button class="iconbtn" data-nav="-1">‹</button><b>${label}</b><button class="iconbtn" data-nav="1">${''}›</button></div>`, wire(el){ el.querySelectorAll('[data-nav]').forEach(b=>b.addEventListener('click',()=>cb(+b.dataset.nav))); }}; }
 
@@ -8054,6 +8121,10 @@ function renderExStats(){
       <div class="kpi"><b>${fmtVol(bests.maxVol)}</b><span>Best Volumen</span></div>
       <div class="kpi"><b>${bests.sessions}</b><span>Einheiten</span></div>
     </div>
+    ${(isBW && !assist && bests.maxLast > 0) ? `<div class="kpihint tiny">
+      Bewegt hast du dabei <b>${fmtW(bests.maxLast)} kg</b> — dein Körpergewicht${bests.maxW>0? ` plus ${fmtW(bests.maxW)} kg Zusatz`:''}
+      —, geschätzter 1RM <b>${Math.round(bests.maxELast)} kg</b>. Die Kacheln darüber zeigen bewusst nur das, was du
+      selbst angehängt hast: daran misst sich der Fortschritt.</div>` : ''}
     ${unsafeE1? `<div class="kpihint tiny">* Der beste Satz hatte ${bests.maxReps} Wdh. Über ${E1RM_RELIABLE_MAX} Wdh streuen alle 1RM-Formeln stark — die Zahl ist eine grobe Näherung.</div>`:''}
     ${maxes}
 
