@@ -647,6 +647,14 @@ details.erkl.warum>div{font-size:var(--fs-tiny);margin-top:2px}
 .rord[disabled]{opacity:.25;pointer-events:none}
 .sethead{font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.08em;font-weight:650;margin:8px 0 4px;padding:0 2px}
 .setrow{margin-bottom:8px}
+/* V71: Zeile im Nachbearbeiten-Blatt. Eigenes Raster, weil hier die Spalte
+   „letztes Mal" fehlt — beim Korrigieren steht schon da, was war. */
+.wehead,.werow{display:grid;grid-template-columns:30px 1fr 1fr 26px;gap:var(--sp2);align-items:center;margin-bottom:8px}
+.werow.uni,.wehead.uni{grid-template-columns:30px 1fr 1fr 1fr 26px}
+.werow.rir,.wehead.rir{grid-template-columns:30px 1fr 1fr 54px 26px}
+.werow.uni.rir,.wehead.uni.rir{grid-template-columns:30px 1fr 1fr 1fr 54px 26px}
+.werow input{text-align:center;padding:10px 4px;font-weight:750}
+.wehead>span{font-size:var(--fs-micro);letter-spacing:.06em;text-transform:uppercase;color:var(--txt3);text-align:center}
 .setrow .idx{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:750;font-size:13px;color:var(--txt3);background:var(--s2);border:1px solid var(--line);justify-self:center;transition:all var(--dur-2) var(--spring)}
 .setrow.filled .idx{background:var(--grad-a);border-color:transparent;color:var(--on-acc);box-shadow:0 3px 10px -3px rgba(82,156,255,.8)}
 .setrow.warm .idx{background:rgba(82,156,255,.16);border-color:rgba(82,156,255,.35);color:var(--gold);box-shadow:none}
@@ -1341,6 +1349,18 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
   <button class="btn btn-acc btn-block" id="rt-save">Workout speichern</button>
 </div></div>
 
+<div class="mback" id="modal-wedit"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="we-title">
+  <div class="grab"></div>
+  <div class="mhd"><div><h2 id="we-title">Training bearbeiten</h2><div class="sub" id="we-sub"></div></div>
+    <button class="iconbtn" data-close aria-label="Schließen" data-ico-close></button></div>
+  <div id="we-body"></div>
+  <div style="height:12px"></div>
+  <div class="row">
+    <button class="btn btn-ghost grow" id="we-cancel">Abbrechen</button>
+    <button class="btn btn-acc grow" id="we-save">Änderungen speichern</button>
+  </div>
+</div></div>
+
 <div class="mback" id="modal-settings"><div class="modal" role="dialog" aria-modal="true">
   <div class="grab"></div>
   <div class="mhd"><h2>Einstellungen &amp; Daten</h2><button class="iconbtn" data-close aria-label="Schließen" data-ico-close></button></div>
@@ -1436,7 +1456,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V70 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V71 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -2931,6 +2951,7 @@ function saveState(){
   if(typeof invalidateCycles==='function') invalidateCycles();   // Zyklen neu berechnen lassen
   if(typeof invalidateCuts==='function')   invalidateCuts();     // Schnittpunkte ebenso — sie hängen an Workouts UND exOpt
   if(typeof invalidateVorschlag==='function') invalidateVorschlag();   // und der Trainingsvorschlag
+  if(typeof invalidateHist==='function')   invalidateHist();     // und die gemerkten Übungsverläufe (V71)
   try{
     localStorage.setItem(LS_KEY, JSON.stringify(state));
     _saveWarned = false;
@@ -3348,7 +3369,24 @@ function e1rm(w,r){ w=+w||0; r=Math.min(+r||0,20); if(w<=0||r<=0) return 0; if(r
 
 /* ---------- Übungs-Historie & PRs ---------- */
 /* Alle Sessions einer Übung, älteste zuerst: [{date,wid,sets,vol,bestW,bestE,maxReps}] */
+/* ── Gemerkte Verläufe ────────────────────────────────────────────────
+   `exHistory` durchsucht für JEDE Übung den kompletten Bestand. Der Reiter
+   „Gesamt" ruft es über zwanzig Mal — Bestenliste, relative Kraft,
+   Häufigkeit und Progression fragen alle dasselbe. Bei 300 Einheiten waren
+   das über zwanzig volle Durchläufe je Aufbau und der Reiter riss die
+   100-ms-Grenze aus z2 (gemessen: 110 ms Median).
+
+   Gemerkt wird je Übung UND Stichtag. Der Merker fällt in `saveState()`
+   weg — dieselbe Stelle, an der auch Zyklen und Schnittpunkte verfallen.
+   Zurückgegeben wird eine KOPIE der Liste: Aufrufer schneiden und sortieren
+   sie (`.slice(-3)`, `.slice(ab)`), und ein geteiltes Array würde davon
+   irgendwann etwas mitbekommen. */
+let _hCache = new Map();
+function invalidateHist(){ _hCache = new Map(); }
 function exHistory(exId, before){
+  const key = exId + '|' + (before || '');
+  const merk = _hCache.get(key);
+  if(merk) return merk.slice();
   const out = [];
   state.workouts.forEach(w=>{
     if(before && new Date(w.date).getTime() >= before) return;
@@ -3369,7 +3407,12 @@ function exHistory(exId, before){
     });
   });
   out.sort((a,b)=>new Date(a.date)-new Date(b.date));
-  return out;
+  /* Jeder Stichtag legt einen eigenen Eintrag an; bei 300 Einheiten kann
+     das im Lauf einer Sitzung wachsen. Über 4000 wird geleert statt
+     unbegrenzt gehalten. */
+  if(_hCache.size > 4000) _hCache = new Map();
+  _hCache.set(key, out);
+  return out.slice();
 }
 function exBests(exId, before){
   const h = exHistory(exId, before);
@@ -5397,21 +5440,13 @@ $('#btn-finish').addEventListener('click',finishWorkout);
 async function finishWorkout(){
   const a = state.active;
   const cleaned = a.exercises.map(e=>{
-    const o = {exId:e.exId, name:e.name, sets:allLoggedSets(e).map(s=>{
-      const x = {w:+s.w||0, r:+s.r||0};
-      /* WICHTIG: rechte Seite mitspeichern. Fehlte das, wurden bei einseitigen
-         Übungen die Wiederholungen der rechten Seite beim Abschließen verworfen —
-         danach rechneten Volumen, Rekorde und Statistik dauerhaft mit falschen
-         Werten, weil `rr` als „nicht eingetragen" galt und links doppelt zählte. */
-      if(s.rr!==''&&s.rr!=null&&s.rr!==undefined) x.rr = +s.rr||0;
-      if(s.t) x.t = s.t;
-      if(s.rir!==''&&s.rir!=null&&s.rir!==undefined) x.rir = +s.rir;
-      /* V70: Zeitstempel MITNEHMEN. Ohne diese Zeile wäre er hier still
-         verschwunden — dieselbe Falle wie bei `rr` weiter oben, und die
-         Trainingsdauer würde für immer wieder ab dem Startknopf rechnen. */
-      if(isFinite(+s.ts) && +s.ts > 0) x.ts = +s.ts;
-      return x;
-    })};
+    /* V71: EINE Stelle, die aus einem getippten Satz einen gespeicherten
+       macht — `satzFuerSpeicher`. Vorher stand die Umwandlung nur hier,
+       und der Nachbearbeiten-Editor hätte sie ein zweites Mal gebraucht.
+       Zwei Stellen für dieselbe Frage driften auseinander; genau daran
+       sind schon `rr` (rechte Seite verschwand) und `ts` (Zeitstempel
+       verschwand) fast gestorben. */
+    const o = {exId:e.exId, name:e.name, sets:allLoggedSets(e).map(satzFuerSpeicher)};
     if(exIsBW(e.exId)){ o.bw = true; const b = bwAt(a.date); if(b) o.bwkg = b; }   // fürs Vault-Protokoll
     /* unterstützt: Körpergewicht mitschreiben, sonst lässt sich die effektive
        Last später nicht mehr rekonstruieren, wenn sich das Gewicht ändert */
@@ -8189,6 +8224,287 @@ function renderHist(){
   if(rst) rst.addEventListener('click',()=>{ histFilter='Alle'; histLimit=HIST_STAPEL; $('#hist-search').value=''; renderHist(); });
   runCounters($('#scr-hist'));
 }
+/* ══════════════════════════════════════════════════════════════════════
+   EIN TRAINING NACHTRÄGLICH BEARBEITEN                             (V71)
+
+   Aaron: „mach es so, dass man bei Verlauf die Trainingseinheiten im
+   Nachhinein noch bearbeiten kann, also alles — Zeit, Anzahl der Sätze,
+   Anzahl der Reps, Gewicht usw. Beachte alles, dass es sich in den
+   Statistiken auch ändert."
+
+   Trainingsdaten sind heilig (Regel 6). Deshalb:
+     · gearbeitet wird auf einer KOPIE — das Original bleibt bis zum
+       Speichern unangetastet, Abbrechen kostet nichts
+     · vor dem Schreiben entsteht ein Sicherungspunkt
+     · nach dem Schreiben gibt es „Rückgängig"
+     · die Ausführungs-Flags (einseitig · Körpergewicht · unterstützt) und
+       das damalige Körpergewicht kommen aus dem GESPEICHERTEN Eintrag und
+       werden NICHT aus den heutigen Einstellungen neu abgeleitet. Genau
+       das war der Fehler aus V49: eine Vorbelegung, die wie eine Messung
+       aussieht.
+
+   Was sich mitändert: Zyklen, Zielkorridor, Muskelfigur, sämtliche
+   Statistiken und der Trainingsvorschlag hängen alle an `state.workouts`
+   und werden über die Cache-Invalidierung in `saveState()` neu gerechnet.
+
+   Die REKORDE nicht — die stehen als `w.prs` fest im Datensatz. Wer ein
+   frühes Training nach oben korrigiert, macht damit womöglich ein
+   späteres „PR" zu keinem mehr. Deshalb werden nach jeder Änderung ALLE
+   Rekorde neu erkannt, nicht nur die des bearbeiteten Trainings.
+
+   ERFOLGE werden nicht aberkannt. Sie sind ein Ereignis („du hast an dem
+   Tag 100 kg gedrückt"), kein abgeleiteter Wert — und `evalAchievements`
+   hakt ohnehin nur ab, was noch offen ist. Der Editor sagt das dazu,
+   statt es zu verschweigen. */
+let weDraft = null;
+
+/* Ein Satz, wie er in den Datensatz gehört. EINE Stelle für Abschließen
+   und Bearbeiten — sonst laufen die beiden Wege auseinander. */
+function satzFuerSpeicher(s){
+  const x = {w:+s.w||0, r:+s.r||0};
+  if(s.rr!==''&&s.rr!=null&&s.rr!==undefined) x.rr = +s.rr||0;
+  if(s.t) x.t = s.t;
+  if(s.rir!==''&&s.rir!=null&&s.rir!==undefined) x.rir = +s.rir;
+  if(isFinite(+s.ts) && +s.ts > 0) x.ts = +s.ts;
+  return x;
+}
+function uebungFuerBearbeitung(e, datum){
+  const o = {exId:e.exId, name:e.name, sets: allLoggedSets(e).map(satzFuerSpeicher)};
+  /* Alte Einträge behalten ihre Flags. Nur bei NEU hinzugefügten Übungen
+     gibt es nichts zu behalten — dort zählen die heutigen Einstellungen. */
+  if(e.bw !== undefined) { if(e.bw) o.bw = true; } else if(exIsBW(e.exId)) o.bw = true;
+  if(e.as !== undefined) { if(e.as) o.as = true; } else if(exIsAssist(e.exId)) o.as = true;
+  if(e.bwkg !== undefined) o.bwkg = e.bwkg;
+  else if(o.bw || o.as){ const b = bwAt(datum); if(b) o.bwkg = b; }
+  o.uni = (e.uni !== undefined) ? !!e.uni : exIsUni(e.exId);
+  if(e.note && String(e.note).trim()) o.note = String(e.note).trim().slice(0,200);
+  return o;
+}
+/* Alle Rekorde neu erkennen.
+
+   Die erste Fassung sortierte vorher chronologisch, „weil jeder Rekord nur
+   gegen das gilt, was vorher war". Die Mutationsprobe hat gezeigt, dass das
+   nicht stimmt: `detectPRs` fragt `exBests(exId, w.date)` und schneidet den
+   Stichtag selbst ab — die Reihenfolge der Schleife ist gleichgültig. Ein
+   Sortieren, das nichts bewirkt, sieht aus wie eine Absicherung und ist
+   keine. Also weg damit.
+
+   Was sehr wohl zählt: die gemerkten Verläufe müssen VORHER verfallen sein,
+   sonst rechnet `exBests` gegen den Stand von vor der Bearbeitung. */
+function prsNeuRechnen(){
+  invalidateHist();
+  state.workouts.forEach(w=>{ w.prs = detectPRs(w); });
+  return state.workouts.reduce((a,w)=>a + (w.prs||[]).length, 0);
+}
+
+function openWEdit(wid){
+  const w = state.workouts.find(x=>x.id===wid); if(!w) return;
+  const f = trainingsFenster(w);
+  weDraft = {
+    id: w.id, date: w.date, type: w.type,
+    durMin: f ? String(Math.round(f.dauer/60000)) : '',
+    exercises: JSON.parse(JSON.stringify(w.exercises || []))
+  };
+  renderWEdit();
+  openModal('#modal-wedit');
+}
+function weDatumTeile(){
+  const d = new Date(weDraft.date);
+  const p = n => String(n).padStart(2,'0');
+  return { tag: d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()),
+           uhr: p(d.getHours())+':'+p(d.getMinutes()) };
+}
+function renderWEdit(){
+  if(!weDraft) return;
+  const dt = weDatumTeile();
+  const rir = !!state.settings.rir;
+  $('#we-sub').textContent = 'Alles änderbar. Gespeichert wird erst mit dem Knopf unten.';
+  $('#we-body').innerHTML = `
+    <label class="tiny up">Tag und Uhrzeit</label>
+    <div class="row" style="margin:4px 0 12px">
+      <input type="date" id="we-date" class="grow" value="${dt.tag}">
+      <input type="time" id="we-time" style="max-width:120px" value="${dt.uhr}">
+    </div>
+    <label class="tiny up">Art</label>
+    <div class="chips" id="we-type" style="margin:4px 0 12px">
+      ${WTYPES.map(t=>`<button class="chip ${t===weDraft.type?'on':''}" data-we-t="${esc(t)}">${esc(t)}</button>`).join('')}
+    </div>
+    <label class="tiny up" for="we-dur">Dauer in Minuten</label>
+    <input type="number" inputmode="numeric" min="1" max="300" id="we-dur"
+           placeholder="leer = automatisch" value="${esc(weDraft.durMin)}" style="margin:4px 0 4px">
+    <p class="tiny" style="margin-bottom:12px">Leer lassen heißt: vom ersten bis zum letzten Satz gemessen.
+      Eine eingetragene Zahl gilt stattdessen.</p>
+    ${weDraft.exercises.length ? weDraft.exercises.map((e,ei)=>{
+      const assist = (e.as !== undefined) ? !!e.as : exIsAssist(e.exId);
+      const isBW   = !assist && ((e.bw !== undefined) ? !!e.bw : exIsBW(e.exId));
+      const uni    = (e.uni !== undefined) ? !!e.uni : exIsUni(e.exId);
+      const kopf   = assist ? 'Hilfe kg' : isBW ? '+ kg' : 'kg';
+      const cls    = (uni?' uni':'') + (rir?' rir':'');
+      return `<div class="card" style="padding:10px 12px">
+        <div class="row" style="align-items:center;margin-bottom:6px">
+          <b class="grow" style="font-size:var(--fs-body)">${esc(e.name || (getEx(e.exId)||{}).name || 'Unbekannte Übung')}</b>
+          <button class="iconbtn" data-we-exup="${ei}" style="width:30px;height:30px" ${ei===0?'disabled':''} aria-label="nach oben">${ICO.up}</button>
+          <button class="iconbtn" data-we-exrm="${ei}" style="width:30px;height:30px" aria-label="Übung entfernen">${ICO.close}</button>
+        </div>
+        <div class="wehead${cls}"><span>#</span><span>${kopf}</span><span>${uni?'Wdh li.':'Wdh'}</span>${uni?'<span>Wdh re.</span>':''}${rir?'<span>RIR</span>':''}<span></span></div>
+        ${(e.sets||[]).map((s,si)=>`<div class="werow${cls}${s.t==='w'?' warm':''}${s.t==='d'?' drop':''}">
+          <button class="idx" data-we-type="${ei}.${si}" title="Satz-Typ wechseln">${s.t?SETTYPE[s.t][0]:(si+1)}</button>
+          <input type="number" inputmode="decimal" step="0.5" min="0" data-we-f="w" data-we-i="${ei}.${si}"
+                 aria-label="Gewicht Satz ${si+1}" value="${s.w!==''&&s.w!=null? esc(String(s.w)):''}">
+          <input type="number" inputmode="numeric" step="1" min="0" data-we-f="r" data-we-i="${ei}.${si}"
+                 aria-label="Wiederholungen Satz ${si+1}" value="${s.r!==''&&s.r!=null? esc(String(s.r)):''}">
+          ${uni?`<input type="number" inputmode="numeric" step="1" min="0" data-we-f="rr" data-we-i="${ei}.${si}"
+                 aria-label="Wiederholungen rechts Satz ${si+1}" value="${s.rr!==''&&s.rr!=null&&s.rr!==undefined? esc(String(s.rr)):''}">`:''}
+          ${rir?`<input type="number" inputmode="numeric" step="1" min="0" max="10" data-we-f="rir" data-we-i="${ei}.${si}"
+                 aria-label="RIR Satz ${si+1}" value="${s.rir!==''&&s.rir!=null&&s.rir!==undefined? esc(String(s.rir)):''}">`:''}
+          <button class="setdel" data-we-setrm="${ei}.${si}" title="Satz löschen" aria-label="Satz ${si+1} löschen">✕</button>
+        </div>`).join('')}
+        <button class="btn btn-ghost btn-sm btn-block" data-we-setadd="${ei}">＋ Satz</button>
+        <input placeholder="Notiz zu dieser Übung" data-we-note="${ei}" maxlength="200"
+               aria-label="Notiz" value="${esc(e.note||'')}" style="margin-top:8px">
+      </div>`;
+    }).join('') : '<div class="empty" style="padding:18px">Keine Übung mehr übrig. Füge eine hinzu oder brich ab.</div>'}
+    <button class="btn btn-ghost btn-block" id="we-exadd">＋ Übung hinzufügen</button>
+    <p class="tiny" style="margin-top:10px">Rekorde werden nach dem Speichern für <b>alle</b> Trainings neu
+      erkannt — eine Korrektur hier kann ein späteres PR aufheben. Bereits freigeschaltete
+      Erfolge bleiben; sie gehören zu dem Tag, an dem du sie geholt hast.</p>`;
+
+  /* Nur STRUKTUR-Änderungen zeichnen neu. Tippen darf das nicht, sonst
+     verliert das Feld bei jedem Zeichen den Fokus. */
+  $('#we-date').addEventListener('change', e=>{ weSetzeDatum(e.target.value, null); });
+  $('#we-time').addEventListener('change', e=>{ weSetzeDatum(null, e.target.value); });
+  $('#we-dur').addEventListener('input', e=>{ weDraft.durMin = e.target.value; });
+  $$('#we-type [data-we-t]').forEach(b=>b.addEventListener('click',()=>{
+    weDraft.type = b.dataset.weT; haptic(); renderWEdit();
+  }));
+  $('#we-exadd').addEventListener('click',()=>openPicker(id=>{
+    const ex = getEx(id); if(!ex) return;
+    weDraft.exercises.push({exId:id, name:ex.name, sets:[{w:'', r:''}]});
+    $('#modal-picker').classList.remove('on');    // nur den Picker schließen
+    renderWEdit();
+  }));
+}
+/* Diese beiden hängen am Behälter, nicht am Inhalt — und werden GENAU
+   EINMAL gebunden. In renderWEdit() gebunden würden sie sich bei jedem
+   Neuzeichnen stapeln, und ein Tipp auf „Satz löschen" würde nach dem
+   dritten Neuzeichnen drei Sätze löschen. */
+$('#we-body').addEventListener('input', e=>{
+  if(!weDraft) return;
+  const inp = e.target.closest('[data-we-f]');
+  if(inp){
+    const [ei,si] = inp.dataset.weI.split('.').map(Number);
+    weDraft.exercises[ei].sets[si][inp.dataset.weF] = inp.value;
+    return;
+  }
+  const nz = e.target.closest('[data-we-note]');
+  if(nz) weDraft.exercises[+nz.dataset.weNote].note = nz.value;
+});
+$('#we-body').addEventListener('click', e=>{
+  if(!weDraft) return;
+  {
+    const t = e.target;
+    const ty = t.closest('[data-we-type]');
+    if(ty){
+      const [ei,si] = ty.dataset.weType.split('.').map(Number);
+      const s = weDraft.exercises[ei].sets[si];
+      s.t = s.t==='w' ? 'd' : s.t==='d' ? undefined : 'w';
+      haptic(); renderWEdit(); return;
+    }
+    const rm = t.closest('[data-we-setrm]');
+    if(rm){
+      const [ei,si] = rm.dataset.weSetrm.split('.').map(Number);
+      weDraft.exercises[ei].sets.splice(si,1);
+      haptic(); renderWEdit(); return;
+    }
+    const ad = t.closest('[data-we-setadd]');
+    if(ad){
+      const ex = weDraft.exercises[+ad.dataset.weSetadd];
+      const letzt = (ex.sets||[])[ex.sets.length-1];
+      ex.sets.push(letzt ? {w:letzt.w, r:letzt.r} : {w:'', r:''});
+      haptic(); renderWEdit(); return;
+    }
+    const up = t.closest('[data-we-exup]');
+    if(up){
+      const i = +up.dataset.weExup;
+      if(i>0){ const a = weDraft.exercises; [a[i-1],a[i]] = [a[i],a[i-1]]; haptic(); renderWEdit(); }
+      return;
+    }
+    const xr = t.closest('[data-we-exrm]');
+    if(xr){
+      weDraft.exercises.splice(+xr.dataset.weExrm, 1);
+      haptic(); renderWEdit(); return;
+    }
+  }
+});
+function weSetzeDatum(tag, uhr){
+  const alt = weDatumTeile();
+  const d = new Date((tag || alt.tag) + 'T' + (uhr || alt.uhr) + ':00');
+  if(isNaN(d.getTime())){ toast('Datum unbrauchbar'); renderWEdit(); return; }
+  weDraft.date = d.toISOString();
+}
+async function weSpeichern(){
+  if(!weDraft) return;
+  const i = state.workouts.findIndex(x=>x.id===weDraft.id);
+  if(i < 0){ toast('Training nicht mehr da'); closeModals(); return; }
+
+  const uebungen = weDraft.exercises
+    .map(e => uebungFuerBearbeitung(e, weDraft.date))
+    .filter(e => e.sets.length);
+  if(!uebungen.length){
+    toast('Kein einziger Satz mit Wiederholungen — zum Entfernen bitte „Löschen"');
+    return;
+  }
+  const alteSaetze = state.workouts[i].exercises.reduce((a,e)=>a+validSets(e).length, 0);
+  const neueSaetze = uebungen.reduce((a,e)=>a+validSets(e).length, 0);
+  if(neueSaetze < alteSaetze){
+    const ok = await ask('Weniger Sätze als vorher',
+      `${alteSaetze} → ${neueSaetze} Sätze. Das lässt sich rückgängig machen, aber ich frage lieber nach.`,
+      {ok:'Trotzdem speichern'});
+    if(!ok) return;
+  }
+
+  const alt = JSON.parse(JSON.stringify(state.workouts));
+  makeSnapshot('vor Bearbeitung', true);
+
+  const neu = {
+    id: weDraft.id, date: weDraft.date, type: weDraft.type,
+    start: state.workouts[i].start, end: state.workouts[i].end,
+    exercises: uebungen, prs: []
+  };
+  /* Die Dauer: Eine eingetragene Zahl gilt nur, wenn sie sich vom
+     gemessenen Wert unterscheidet. Sonst bleibt es automatisch — sonst
+     würde jede Bearbeitung stillschweigend eine Handkorrektur anlegen. */
+  const gemessen = trainingsFenster({exercises:uebungen, start:neu.start, end:neu.end});
+  const m = Math.round(+String(weDraft.durMin).replace(',','.'));
+  if(String(weDraft.durMin).trim() !== '' && isFinite(m)){
+    if(m < 1 || m > 300){ toast('Dauer: bitte 1 bis 300 Minuten'); return; }
+    if(!gemessen || m !== Math.round(gemessen.dauer/60000)) neu.durFix = m*60000;
+  }
+
+  state.workouts[i] = neu;
+  /* Nur EIN saveState. Die erste Fassung rief es vor UND nach dem
+     Neurechnen — der ganze Datenbestand wurde damit zweimal serialisiert,
+     und das `invalidateHist()` in `prsNeuRechnen` war tote Absicherung,
+     weil das erste saveState schon verfallen ließ. Die Mutationsprobe hat
+     genau das gezeigt: Man konnte es entfernen, ohne dass etwas rot wurde. */
+  prsNeuRechnen();
+  saveState();
+
+  closeModals();
+  haptic('success');
+  withUndo('Training geändert · Rekorde neu erkannt', ()=>{
+    state.workouts = alt; prsNeuRechnen(); saveState();
+    renderHist(); renderHome();
+    if(typeof renderStats === 'function') renderStats();
+  });
+  weDraft = null;
+  renderHist(); renderHome(); renderTrain();
+  if(typeof renderStats === 'function') renderStats();
+  showDetail(neu.id);
+}
+$('#we-save').addEventListener('click', weSpeichern);
+$('#we-cancel').addEventListener('click', ()=>{ weDraft = null; closeModals(); });
+
 function showDetail(wid){
   const w = state.workouts.find(x=>x.id===wid); if(!w) return;
   const prByEx = {}; (w.prs||[]).forEach(p=>{ (prByEx[p.exId]=prByEx[p.exId]||[]).push(p.kind); });
@@ -8214,12 +8530,14 @@ function showDetail(wid){
           return `<tr><td>${i+1}</td><td><b>${s.w}</b></td><td>${repTxt}</td><td>${e1}</td></tr>`;
         }).join('')}</table>
       </div>`).join('')}
-    <div class="row" style="margin-top:4px">
+    <button class="btn btn-acc btn-block" id="det-edit" style="margin-top:6px">Training bearbeiten</button>
+    <div class="row" style="margin-top:8px">
       <button class="btn btn-ghost btn-sm grow" id="det-tpl">Als Vorlage</button>
       <button class="btn btn-ghost btn-sm grow" data-share="${esc(w.id)}">Teilen</button>
       <button class="btn btn-danger btn-sm grow" id="det-del">Löschen</button>
     </div>`;
   openModal('#modal-detail');
+  $('#det-edit').addEventListener('click',()=>{ haptic(); openWEdit(wid); });
   /* V70: Die acht Trainings von vor V70 haben keine Satz-Zeitstempel — ihre
      Dauer enthält die Vorbereitungszeit und lässt sich nicht rekonstruieren.
      Statt sie zu schätzen, kann Aaron sie eintragen. Leer = wieder
