@@ -1436,7 +1436,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V68 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V69 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -5480,6 +5480,22 @@ document.addEventListener('click', e=>{
   const b = e.target.closest('[data-share]'); if(!b) return;
   teileWorkout(b.dataset.share);
 });
+/* Die zwei Knöpfe, die aus der Statistik heraus etwas TUN (V69).
+   Der ＋-Knopf muss hier hängen: „Nicht mehr im Plan" rendert im
+   Statistik-Reiter, die alten addgap-Handler binden aber nur innerhalb
+   von #luecke-body und #detail-body. Deshalb ist er auf #scr-stats
+   begrenzt — global würde er in den Modalen doppelt feuern. */
+document.addEventListener('click', e=>{
+  if(e.target.closest('#stat-bw')){ haptic(); openModal('#modal-bw'); return; }
+  const plus = e.target.closest('#scr-stats [data-addgap]');
+  if(plus){
+    const r = uebungEinplanen(plus.dataset.addgap);
+    if(!r) return;
+    haptic('success'); toast(r.txt);
+    renderStats();
+    if(typeof renderHome==='function') renderHome();
+  }
+});
 
 /* ================= ZUSAMMENFASSUNG ================= */
 function showSummary(w, freshAch, newLevel){
@@ -6808,13 +6824,18 @@ function renderAllStats(){
   /* Hier bewusst KEINE Zielampel: über die gesamte Historie ist ein
      Wochen- oder Zykluskorridor bedeutungslos. Nur die Verteilung zählt. */
   el.innerHTML = header + lead + kpis
+    + bwFehltHinweis(ws)
     + `<div class="card"><h3>Verteilung über alle Muskelgruppen <span class="tiny">(ohne Zielampel — über die gesamte Historie sagt ein Korridor nichts)</span></h3>${muscleBars(muscleSetsBy(ws, statsSetMode), ws)}</div>`
     /* Die Zyklus-Reihe steht VOR den Monaten: Sie ist der Maßstab der App,
        die Monatsbalken sind die beschreibende Zugabe. */
     + zyklusVolumenCard()
     + `<div class="card"><h3>Volumen pro Monat <span class="tiny">(Kalendermonate, rein beschreibend)</span></h3>${svgBars(mLabels, mVals, v=>fmtVol(v))}</div>`
     + bestenlisteCard()
+    + statRelativeKraft()
     + statZuwachs()
+    + statHaeufigkeit()
+    + statBrach()
+    + statDauer(ws)
     + statWdh(ws)
     + statAbstand(ws)
     + statWochentag(ws)
@@ -6971,6 +6992,251 @@ function statZuwachs(){
       Wo die App einen <b>Niveauwechsel</b> erkannt hat (Wechsel auf einarmig, anderes Gerät),
       rechnet sie erst ab dort — sonst misst sie den Wechsel statt den Fortschritt.</p></div>`;
 }
+/* ══════════════════════════════════════════════════════════════════════
+   SECHS AUSWERTUNGEN AUS DATEN, DIE SCHON DALAGEN                 (V69)
+
+   Gemessen vor diesem Umbau: Jedes Workout speichert `start` und `end`,
+   und die Dauer wurde nur je Einheit ANGEZEIGT — nie ausgewertet.
+   `state.bodyweight` stand nirgends in der Statistik. Und keine Karte
+   beantwortete, welche Übungen aus dem Plan gefallen sind.
+
+   Was andere Tracker dafür haben und diese App nicht hatte:
+     Trainingsdauer und Dichte        Hevy, Strong, JEFIT
+     Entwicklung je Muskelgruppe      Alpha Progression
+     Relative Kraft                   Strong, StrongLifts
+     Vernachlässigte Übungen          Hevy, JEFIT
+     Häufigkeits-Rangliste            Hevy, Gymaholic
+
+   Alle sechs rechnen über die Wahrheitsfunktionen — wSets, wVolume, exVol,
+   exBests, muscleSetsBy — und erfinden keine eigene Zählung. */
+
+/* ── 1. Trainingsdauer und Dichte ───────────────────────────────────────
+   Nur PLAUSIBLE Dauern: Unter fünf Minuten war die Uhr nicht gestellt,
+   über fünf Stunden lief sie weiter. Beides würde den Schnitt kippen —
+   deshalb fallen sie raus, und die Karte sagt, wie viele. */
+const DAUER_MIN = 5*60000, DAUER_MAX = 5*3600000;
+function dauerStat(ws){
+  const gut = ws.filter(w => w.end && w.start && (w.end - w.start) >= DAUER_MIN
+                                             && (w.end - w.start) <= DAUER_MAX);
+  if(gut.length < 3) return null;
+  const ms = gut.map(w => w.end - w.start);
+  const summe = ms.reduce((a,x)=>a+x, 0);
+  const vol = gut.reduce((a,w)=>a + wVolume(w), 0);
+  const saetze = gut.reduce((a,w)=>a + wSets(w), 0);
+  const sortiert = ms.slice().sort((a,b)=>a-b);
+  return {
+    n: gut.length, ausgelassen: ws.length - gut.length,
+    schnitt: summe/gut.length,
+    kuerzeste: sortiert[0], laengste: sortiert[sortiert.length-1],
+    gesamtStunden: summe/3600000,
+    proMinute: vol / (summe/60000),
+    /* Sätze pro Minute wären 0,17 — auf eine Stelle gerundet wird daraus
+       0,2 und der Wert ist um ein Fünftel daneben. Umgedreht ist er lesbar. */
+    minJeSatz: saetze > 0 ? (summe/60000) / saetze : 0,
+    punkte: gut.map(w=>({ y: Math.round((w.end-w.start)/60000),
+                          l: new Date(w.date).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'}) }))
+  };
+}
+function statDauer(ws){
+  const d = dauerStat(ws);
+  if(!d) return `<div class="card"><h3>Trainingsdauer</h3>
+    <div class="empty" style="padding:16px">Ab drei Einheiten mit gemessener Dauer steht hier, wie lange du brauchst.</div></div>`;
+  return `<div class="card"><h3 style="margin-bottom:8px">Trainingsdauer</h3>
+    ${svgLine(d.punkte.slice(-30), v=>v+' min', {fill:true, avg:true})}
+    <div class="kpis" style="margin:10px 0 0">
+      <div class="kpi"><b>${fmtDur(d.schnitt)}</b><span>Ø je Einheit</span></div>
+      <div class="kpi"><b>${fmtDur(d.kuerzeste)}</b><span>kürzeste</span></div>
+      <div class="kpi"><b>${fmtDur(d.laengste)}</b><span>längste</span></div>
+      <div class="kpi"><b>${Math.round(d.gesamtStunden)}</b><span>Stunden gesamt</span></div>
+    </div>
+    <p class="kpihint tiny">Du bewegst <b>${fmtVol(Math.round(d.proMinute))} pro Minute</b>
+      und brauchst <b>${d.minJeSatz.toFixed(1).replace('.',',')} Minuten je Satz</b> — Satz plus Pause.
+      ${d.ausgelassen? `${d.ausgelassen} ${d.ausgelassen===1?'Einheit hat':'Einheiten haben'} keine brauchbare Dauer und ${d.ausgelassen===1?'ist':'sind'} nicht eingerechnet.` : ''}
+      <details class="erkl"><summary>Was sagt die Dichte?</summary><div>
+        Volumen pro Minute misst, wie viel Arbeit in der Zeit steckt. Steigt sie
+        bei gleichem Volumen, machst du dasselbe schneller — kürzere Pausen oder
+        weniger Leerlauf. Sinkt sie bei steigendem Volumen, ist das normal: mehr
+        Gewicht braucht mehr Pause. Aussagekräftig ist sie nur im Vergleich mit
+        dir selbst, nicht mit anderen.
+        Dauern unter 5 Minuten oder über 5 Stunden fallen raus — dort lief die
+        Uhr nicht mit dem Training.
+      </div></details></p></div>`;
+}
+
+/* ── 2. Entwicklung je Muskelgruppe über die Zyklen ─────────────────────
+   Gerechnet in SÄTZEN, nicht in Volumen: Der Zielkorridor der App ist in
+   Sätzen definiert, und ein Vergleich in einer zweiten Währung würde nur
+   verwirren. Verglichen wird die erste mit der zweiten Hälfte der
+   abgeschlossenen Zyklen. */
+function gruppeUeberZyklen(minZyklen){
+  const cs = closedCycles();
+  if(cs.length < (minZyklen || 4)) return null;
+  const h = Math.floor(cs.length/2);
+  const summe = (teil, keys) => teil.reduce((a,c)=>{
+    const m = muscleSetsBy(c.ws, statsSetMode);
+    return a + keys.reduce((b,k)=>b + (m[k]||0), 0);
+  }, 0) / teil.length;
+  const raus = [], gesehen = new Set();
+  SETGROUPS.forEach(([label, keys, mult, optional])=>{
+    if(gesehen.has(label)) return; gesehen.add(label);
+    const alt = summe(cs.slice(0, h), keys), neu = summe(cs.slice(-h), keys);
+    if(alt === 0 && neu === 0) return;
+    const pct = alt > 0 ? Math.round((neu-alt)/alt*100) : (neu > 0 ? null : 0);
+    raus.push({ gruppe:label, alt, neu, pct, optional:!!optional, neuDazu: alt===0 && neu>0 });
+  });
+  return { zyklen: cs.length, haelfte: h,
+           liste: raus.sort((a,b)=> (b.pct===null?999:b.pct) - (a.pct===null?999:a.pct)) };
+}
+function statGruppenTrend(){
+  const g = gruppeUeberZyklen(4);
+  if(!g) return `<div class="card"><h3>Entwicklung je Muskelgruppe</h3>
+    <div class="empty" style="padding:16px">Ab vier abgeschlossenen Zyklen vergleiche ich hier die erste mit der zweiten Hälfte.</div></div>`;
+  const zeile = x => {
+    const wert = x.neuDazu ? 'neu dazu' : x.pct===null ? '—' : (x.pct>0?'+':'')+x.pct+' %';
+    const zeichen = x.neuDazu ? '＋' : x.pct===null ? '' : x.pct>3 ? '↑' : x.pct<-3 ? '↓' : '→';
+    const farbe = x.neuDazu||x.pct>3 ? 'var(--a7)' : x.pct<-3 ? 'var(--sig)' : 'var(--txt2)';
+    return `<div class="mbar"><span>${esc(x.gruppe)}${x.optional?' <span class="tiny grpsub">freiwillig</span>':''}</span>
+      <span class="bar"><i style="width:${Math.min(100, Math.round(x.neu/Math.max(1,x.alt,x.neu)*100))}%"></i></span>
+      <span class="val" style="color:${farbe}"><b>${wert}</b> ${zeichen}</span></div>`;
+  };
+  return `<div class="card"><h3 style="margin-bottom:2px">Entwicklung je Muskelgruppe</h3>
+    <p class="tiny" style="margin-bottom:8px">Sätze je Zyklus: die letzten ${g.haelfte} gegen die ersten ${g.haelfte} von ${g.zyklen} Zyklen.</p>
+    ${g.liste.map(zeile).join('')}
+    <p class="kpihint tiny">Gerechnet in Sätzen — dieselbe Währung wie der Zielkorridor.
+      Ein Pfeil erscheint erst ab 3 % Unterschied; darunter ist es Rauschen.</p></div>`;
+}
+
+/* ── 2b. Der Befund aus b1, endlich behoben ────────────────────────────
+   b1 hielt seit V44 fest: Wer Klimmzüge loggt, ohne je ein Körpergewicht
+   eingetragen zu haben, bekommt „0 kg bewegt" — die Satzzahl stimmt, das
+   Volumen ist null, und die App sagt kein Wort dazu. Der Test hatte das als
+   BEFUND festgeschrieben, mit der Notiz „wird das behoben, sind die
+   folgenden vier Prüfungen anzupassen".
+
+   Ein stilles 0 ist genau die Sorte Lücke, die diese App nicht haben darf:
+   Sie sieht aus wie eine Messung. */
+function bwFehltHinweis(ws){
+  const bw = bwSorted();
+  if(bw.length) return '';
+  let betroffen = 0, saetze = 0;
+  (ws || []).forEach(w=>w.exercises.forEach(e=>{
+    if(!(exIsBW(e.exId) || exIsAssist(e.exId))) return;
+    const n = validSets(e).length; if(!n) return;
+    betroffen++; saetze += n;
+  }));
+  if(!betroffen) return '';
+  return `<div class="card" style="border-color:rgba(242,72,63,.34);background:rgba(242,72,63,.07)">
+    <h3 style="margin-bottom:4px">! Kein Körpergewicht hinterlegt</h3>
+    <p class="tiny">${betroffen} ${betroffen===1?'Übungseintrag':'Übungseinträge'} mit
+      ${saetze} ${saetze===1?'Satz':'Sätzen'} sind Körpergewichts- oder unterstützte Übungen.
+      Ohne dein Gewicht kann die App deren Last nicht kennen — sie zählen mit
+      <b>0 kg Volumen</b>. Die Satzzahl stimmt trotzdem.</p>
+    <button class="btn btn-acc btn-block btn-sm" id="stat-bw" style="margin-top:8px">Körpergewicht eintragen</button>
+  </div>`;
+}
+
+/* ── 3. Relative Kraft ─────────────────────────────────────────────────
+   Was Strong und StrongLifts zeigen: die Last im Verhältnis zum eigenen
+   Körpergewicht. Ohne einen Gewichtseintrag geht das nicht — dann sagt die
+   Karte das, statt mit einer erfundenen Zahl zu rechnen. */
+function relativeKraft(max){
+  const bw = bwSorted();
+  if(!bw.length) return null;
+  const kg = +bw[bw.length-1].kg || 0;
+  if(!(kg > 0)) return null;
+  const ids = [...new Set(state.workouts.flatMap(w=>w.exercises.map(e=>e.exId)))];
+  const liste = ids.map(id=>{
+    const ex = getEx(id); if(!ex) return null;
+    const b = exBests(id);
+    if(!b || !(b.maxE > 0)) return null;
+    return { id, name:ex.name, maxE:b.maxE, faktor: b.maxE/kg };
+  }).filter(Boolean).sort((a,b)=> b.faktor - a.faktor);
+  return { kg, datum: bw[bw.length-1].d, liste: liste.slice(0, max||8), gesamt: liste.length };
+}
+function statRelativeKraft(){
+  const r = relativeKraft(8);
+  if(!r) return `<div class="card"><h3>Relative Kraft</h3>
+    <div class="empty" style="padding:16px">Dafür brauche ich dein Körpergewicht — trag es auf der Startseite ein.</div></div>`;
+  if(!r.liste.length) return '';
+  return `<div class="card"><h3 style="margin-bottom:2px">Relative Kraft</h3>
+    <p class="tiny" style="margin-bottom:8px">Geschätzter 1RM geteilt durch dein Körpergewicht (${fmtW(r.kg)} kg, Stand ${fmtDate(r.datum)}).</p>
+    <table class="htable"><tr><th>Übung</th><th>1RM</th><th>× Körpergewicht</th></tr>
+    ${r.liste.map(x=>`<tr><td>${esc(x.name)}</td><td>${Math.round(x.maxE)} kg</td>
+      <td><b>${x.faktor.toFixed(2).replace('.',',')} ×</b></td></tr>`).join('')}
+    </table>
+    <p class="kpihint tiny">Diese Zahl bleibt vergleichbar, wenn sich dein Körpergewicht ändert —
+      absolute Kilos allein sagen darüber nichts.
+      <details class="erkl"><summary>Wie wird gerechnet?</summary><div>
+        Der geschätzte 1RM kommt aus deinem besten Satz (Epley), das Körpergewicht
+        aus deinem letzten Eintrag. Bei unterstützten Übungen ist die effektive Last
+        gemeint, bei Körpergewichtsübungen dein Gewicht plus Zusatz.
+      </div></details></p></div>`;
+}
+
+/* ── 4. Vernachlässigte Übungen ────────────────────────────────────────
+   Was Hevy „not trained recently" nennt. Nur Übungen, die er mindestens
+   zweimal gemacht hat — eine einmal ausprobierte Übung ist nicht
+   vernachlässigt, sondern verworfen. */
+const BRACH_ZYKLEN = 3;
+function brachliegend(){
+  const cs = cycles().filter(c=>!c.vorlauf);
+  if(cs.length < BRACH_ZYKLEN + 1) return null;
+  const letzteN = cs.slice(-BRACH_ZYKLEN);
+  const zuletzt = new Set(letzteN.flatMap(c=>c.ws.flatMap(w=>w.exercises.map(e=>e.exId))));
+  const zaehl = {};
+  state.workouts.forEach(w=>w.exercises.forEach(e=>{
+    if(!validSets(e).length) return;
+    (zaehl[e.exId] = zaehl[e.exId] || {n:0, letztes:null});
+    zaehl[e.exId].n++;
+    if(!zaehl[e.exId].letztes || w.date > zaehl[e.exId].letztes) zaehl[e.exId].letztes = w.date;
+  }));
+  return Object.entries(zaehl)
+    .filter(([id, v])=> v.n >= 2 && !zuletzt.has(id) && getEx(id))
+    .map(([id, v])=>({ id, name:getEx(id).name, mal:v.n, letztes:v.letztes,
+                       tage: Math.round((Date.now() - new Date(v.letztes).getTime())/864e5) }))
+    .sort((a,b)=> b.mal - a.mal);
+}
+function statBrach(){
+  const l = brachliegend();
+  if(l === null) return '';
+  if(!l.length) return `<div class="card"><h3>Nicht mehr im Plan</h3>
+    <div class="empty" style="padding:16px">Keine Übung liegt brach — alles, was du mehrfach gemacht hast, war in den letzten ${BRACH_ZYKLEN} Zyklen dabei.</div></div>`;
+  return `<div class="card"><h3 style="margin-bottom:2px">Nicht mehr im Plan</h3>
+    <p class="tiny" style="margin-bottom:8px">Mindestens zweimal gemacht, aber in den letzten ${BRACH_ZYKLEN} Zyklen nicht mehr.</p>
+    ${l.slice(0,8).map(x=>`<div class="item">
+      <div class="grow"><div class="ttl" style="font-size:13px">${esc(x.name)}</div>
+        <div class="meta">${x.mal}× trainiert · zuletzt vor ${x.tage} ${x.tage===1?'Tag':'Tagen'}</div></div>
+      <button class="btn btn-acc btn-sm" data-addgap="${esc(x.id)}">＋</button></div>`).join('')}
+    <p class="kpihint tiny">Kein Vorwurf — manche Übung fällt zu Recht raus. Der Knopf legt sie
+      zurück ins Training, falls sie nur untergegangen ist.</p></div>`;
+}
+
+/* ── 5. Häufigkeits-Rangliste ──────────────────────────────────────────
+   Was Hevy und Gymaholic zeigen: welche Übungen tragen das Training. */
+function haeufigkeit(max){
+  const acc = {};
+  state.workouts.forEach(w=>w.exercises.forEach(e=>{
+    const n = validSets(e).length; if(!n) return;
+    const ex = getEx(e.exId); if(!ex) return;
+    const c = acc[e.exId] || (acc[e.exId] = {name:ex.name, einheiten:0, saetze:0, vol:0});
+    c.einheiten++; c.saetze += n; c.vol += exVol(e, w.date);
+  }));
+  return Object.values(acc).sort((a,b)=> b.einheiten - a.einheiten || b.saetze - a.saetze)
+    .slice(0, max || 10);
+}
+function statHaeufigkeit(){
+  const l = haeufigkeit(10);
+  if(l.length < 3) return '';
+  const maxN = l[0].einheiten;
+  return `<div class="card"><h3 style="margin-bottom:2px">Am häufigsten trainiert</h3>
+    <p class="tiny" style="margin-bottom:8px">Über alle Einheiten. Diese Übungen tragen dein Training.</p>
+    ${l.map(x=>`<div class="mbar"><span>${esc(x.name)}</span>
+      <span class="bar"><i style="width:${Math.round(x.einheiten/maxN*100)}%"></i></span>
+      <span class="val"><b>${x.einheiten}×</b></span></div>`).join('')}
+    <p class="kpihint tiny">${l[0].name} steht mit ${l[0].einheiten} Einheiten und ${fmtW(l[0].saetze)} Sätzen oben —
+      ${fmtVol(Math.round(l[0].vol))} bewegt.</p></div>`;
+}
+
 /* ══════════════════════════════════════════════════════════════════════
    VOLUMEN JE ZYKLUS — ZYKLUS 1 BIS HEUTE                          (V68)
 
@@ -7247,6 +7513,8 @@ function renderSpanStats(el, n){
     + `<div class="card"><h3>Volumen je Satz</h3>${svgBars(zLab, cs.map(c=>Math.round(volProSatz(c.ws))), v=>fmtVol(v))}
         <p class="tiny" style="margin-top:8px">Steigt diese Zahl bei gleicher Satzzahl, wirst du stärker —
         steigt nur das Gesamtvolumen, hast du bloß mehr gemacht.</p></div>`
+    + statGruppenTrend()
+    + statDauer(ws)
     + statWdh(ws)
     + statAbstand(ws)
     /* Der Kalender allein erzeugt 371 <rect> und war damit der teuerste
