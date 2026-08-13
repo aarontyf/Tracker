@@ -1436,7 +1436,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V69 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V70 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -4469,7 +4469,11 @@ function renderHome(){
   /* ── Fortsetzen / Backup ── */
   $('#home-resume').innerHTML = state.active ? `
     <div class="banner"><span class="bi" data-ico="play" style="margin:0"></span>
-      <div class="grow"><b>${esc(state.active.type)}-Workout läuft</b><div class="tiny">seit ${fmtDur(Date.now()-state.active.start)}</div></div>
+      <div class="grow"><b>${esc(state.active.type)}-Workout läuft</b><div class="tiny">${(()=>{
+        const ts = satzStempel(state.active);          // V70: dieselbe Uhr wie im Training
+        return ts.length ? 'seit ' + fmtDur(Date.now()-ts[0])
+                         : 'vorbereitet, noch kein Satz eingetragen';
+      })()}</div></div>
       <button class="btn btn-acc btn-sm" onclick="showScreen('scr-train')">Weiter</button>
     </div>` : '';
   const lb = state.settings.lastBackup;
@@ -4684,7 +4688,7 @@ function renderDayBody(){
           <div class="kpi"><b>${w.exercises.length}</b><span>Übungen</span></div>
           <div class="kpi"><b>${saetze}</b><span>Sätze</span></div>
           <div class="kpi"><b>${fmtVol(vol)}</b><span>Volumen</span></div>
-          ${w.end&&w.start? `<div class="kpi"><b>${fmtDur(w.end-w.start)}</b><span>Dauer</span></div>`:''}
+          ${wDauer(w)? `<div class="kpi"><b>${fmtDur(wDauer(w))}</b><span>Dauer</span></div>`:''}
         </div>
         ${w.exercises.map(e=>{
           const ex = getEx(e.exId);
@@ -4964,8 +4968,16 @@ function startTicker(){ stopTicker(); tickerI = setInterval(tick, 1000); tick();
 function stopTicker(){ if(tickerI){ clearInterval(tickerI); tickerI=null; } }
 function tick(){
   if(!state.active) return;
-  const s = Math.floor((Date.now()-state.active.start)/1000);
-  $('#tw-timer').textContent = Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+  /* V70: Bis zum ersten Satz läuft die Uhr ab „Start" — danach ab dem
+     ersten Satz. Der Sprung zurück ist gewollt: Wer im Bus schon Gewichte
+     einträgt, hat noch nicht trainiert. */
+  const ts = satzStempel(state.active);
+  const ab = ts.length ? ts[0] : state.active.start;
+  const s = Math.max(0, Math.floor((Date.now()-ab)/1000));
+  const tEl = $('#tw-timer');
+  tEl.textContent = Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+  tEl.title = ts.length ? 'seit dem ersten Satz'
+                        : 'seit dem Start — die Trainingszeit beginnt mit dem ersten Satz';
   const btn = $('#btn-rest');
   if(restEnd){
     const left = Math.ceil((restEnd-Date.now())/1000);
@@ -5190,6 +5202,7 @@ function wireActiveOnce(){
     const wasDone = (+set.r||0)>0 || (+set.rr||0)>0;
     set[inp.dataset.f] = inp.value;
     const isDone = (+set.r||0)>0 || (+set.rr||0)>0;
+    if(!wasDone && isDone) satzGestempelt(set);      // V70: die Uhr des Satzes
     row.classList.toggle('filled', isDone);
     saveStateSoon();
     refreshSetCount();
@@ -5265,6 +5278,7 @@ function wireActiveOnce(){
       const rrIn = row.querySelector('[data-f=rr]');
       if(rrIn){ set.rr = (pf.dataset.rr!==undefined && pf.dataset.rr!=='') ? pf.dataset.rr : pf.dataset.r; rrIn.value = set.rr; }
       row.classList.add('filled');
+      if(!wasDone) satzGestempelt(set);              // V70: die Uhr des Satzes
       refreshSetCount(); saveState(); haptic();
       if(!wasDone) startRestFor(ei, set);
       return;
@@ -5392,6 +5406,10 @@ async function finishWorkout(){
       if(s.rr!==''&&s.rr!=null&&s.rr!==undefined) x.rr = +s.rr||0;
       if(s.t) x.t = s.t;
       if(s.rir!==''&&s.rir!=null&&s.rir!==undefined) x.rir = +s.rir;
+      /* V70: Zeitstempel MITNEHMEN. Ohne diese Zeile wäre er hier still
+         verschwunden — dieselbe Falle wie bei `rr` weiter oben, und die
+         Trainingsdauer würde für immer wieder ab dem Startknopf rechnen. */
+      if(isFinite(+s.ts) && +s.ts > 0) x.ts = +s.ts;
       return x;
     })};
     if(exIsBW(e.exId)){ o.bw = true; const b = bwAt(a.date); if(b) o.bwkg = b; }   // fürs Vault-Protokoll
@@ -5444,7 +5462,7 @@ async function finishWorkout(){
 function workoutText(w){
   if(!w) return '';
   const d = new Date(w.date).toLocaleDateString('de-DE',{weekday:'short', day:'2-digit', month:'2-digit'});
-  const kopf = `${w.type} · ${d}${w.end&&w.start? ' · '+fmtDur(w.end-w.start) : ''}`;
+  const kopf = `${w.type} · ${d}${wDauer(w)? ' · '+fmtDur(wDauer(w)) : ''}`;
   const zahlen = `${w.exercises.length} ${w.exercises.length===1?'Übung':'Übungen'} · ${wSets(w)} Sätze · ${fmtVol(wVolume(w))}`;
   const zeilen = w.exercises.map(e=>{
     const s = validSets(e); if(!s.length) return '';
@@ -5499,7 +5517,14 @@ document.addEventListener('click', e=>{
 
 /* ================= ZUSAMMENFASSUNG ================= */
 function showSummary(w, freshAch, newLevel){
-  const dur = fmtDur(w.end-w.start);
+  const fen = trainingsFenster(w);
+  const dur = fen ? fmtDur(fen.dauer) : '—';
+  /* V70: Wer im Bus startet, soll sehen, dass die Vorbereitungszeit
+     draußen ist — sonst wirkt die kürzere Dauer wie ein Fehler. */
+  const vorHtml = (fen && fen.vorlauf >= VORLAUF_SCHWELLE)
+    ? `<div class="tiny kpihint" style="text-align:center">
+         ${fmtDur(fen.vorlauf)} vor dem ersten Satz gestartet — nicht mitgerechnet.
+         Gemessen wird vom ersten bis zum letzten Satz.</div>` : '';
   const lvlHtml = newLevel? `<div class="levelcard" style="margin-bottom:12px;text-align:center">
       <div class="lvlbadge" style="margin:0 auto 8px;width:60px;height:60px"><b style="font-size:20px">${newLevel}</b><span>LEVEL</span></div>
       <b style="font-size:17px">Level ${newLevel} erreicht!</b>
@@ -5536,6 +5561,7 @@ function showSummary(w, freshAch, newLevel){
       <div class="kpi"><b data-count="${wReps(w)}">0</b><span>Wdh</span></div>
       <div class="kpi"><b data-count="${w.exercises.length}">0</b><span>Übungen</span></div>
     </div>
+    ${vorHtml}
     ${cmp}
     ${prHtml}
     ${achHtml}
@@ -7010,22 +7036,97 @@ function statZuwachs(){
    Alle sechs rechnen über die Wahrheitsfunktionen — wSets, wVolume, exVol,
    exBests, muscleSetsBy — und erfinden keine eigene Zählung. */
 
+/* ══════════════════════════════════════════════════════════════════════
+   WIE LANGE HAT DAS TRAINING GEDAUERT?                             (V70)
+
+   `w.start` ist der Moment, in dem der Startknopf gedrückt wurde — bei
+   Aaron regelmäßig eine knappe Stunde vor dem ersten Satz, weil er die
+   Gewichte schon im Bus einträgt. `w.end − w.start` misst dann die
+   Busfahrt mit: rund 50 Minuten auf rund 70 Minuten Training. Die Dauer
+   wäre fast doppelt so groß, die Dichte fast halb so groß — und beides
+   sähe aus wie eine Messung.
+
+   Seit V70 bekommt jeder Satz einen Zeitstempel, sobald WIEDERHOLUNGEN
+   darin stehen. Gewichte allein reichen nicht, denn genau die tippt er
+   vor. Die belastbare Dauer ist die Spanne vom ersten bis zum letzten
+   Satz.
+
+   Was diese Spanne NICHT enthält: den ersten Satz selbst und das
+   Aufwärmen davor. Deshalb heißt sie in der App auch genau so — „vom
+   ersten bis zum letzten Satz". Lieber eine benannte Grenze als ein
+   aufgerundeter Schätzwert.
+
+   Drei Quellen, in dieser Reihenfolge:
+     korrigiert — von Hand eingetragen (`w.durFix`), schlägt alles andere
+     saetze     — erster bis letzter Zeitstempel (ab V70)
+     knopf      — start bis end (Altdaten; enthält den Vorlauf) */
+const VORLAUF_SCHWELLE = 15*60000;
+const DAUER_QUELLE = {
+  korrigiert: 'von Hand eingetragen',
+  saetze:     'vom ersten bis zum letzten Satz gemessen',
+  knopf:      'von „Start" bis „Fertig" — enthält die Zeit vor dem ersten Satz'
+};
+function satzStempel(w){
+  const ts = [];
+  ((w && w.exercises) || []).forEach(e => (e.sets||[]).forEach(s=>{
+    const t = +(s && s.ts); if(isFinite(t) && t > 0) ts.push(t);
+  }));
+  return ts.sort((a,b)=>a-b);
+}
+function trainingsFenster(w){
+  if(!w) return null;
+  const fix = +w.durFix;
+  if(isFinite(fix) && fix > 0)
+    return {dauer:fix, quelle:'korrigiert', stempel:0, vorlauf:0, nachlauf:0};
+  const ts = satzStempel(w);
+  if(ts.length >= 2){
+    const von = ts[0], bis = ts[ts.length-1];
+    return {dauer: bis - von, quelle:'saetze', stempel: ts.length, von, bis,
+            vorlauf: (w.start && von > w.start) ? von - w.start : 0,
+            nachlauf:(w.end   && w.end > bis)   ? w.end - bis   : 0};
+  }
+  if(w.start && w.end && w.end > w.start)
+    return {dauer: w.end - w.start, quelle:'knopf', stempel: ts.length,
+            von:w.start, bis:w.end, vorlauf:0, nachlauf:0};
+  return null;
+}
+function wDauer(w){ const f = trainingsFenster(w); return f ? f.dauer : 0; }
+/* Der Stempel entsteht genau dann, wenn ein Satz fertig wird. Einmal
+   gesetzt, bleibt er — eine spätere Korrektur der Zahl verschiebt die
+   Uhrzeit nicht, denn gemacht wurde der Satz ja damals. */
+function satzGestempelt(set){
+  if(!state.active || !set) return;
+  set.ts = Date.now();
+  const ts = satzStempel(state.active);
+  if(ts.length === 1 && state.active.start
+     && set.ts - state.active.start >= VORLAUF_SCHWELLE)
+    toast('Vorlauf ' + fmtDur(set.ts - state.active.start)
+          + ' — die Trainingszeit läuft ab jetzt');
+}
+
 /* ── 1. Trainingsdauer und Dichte ───────────────────────────────────────
    Nur PLAUSIBLE Dauern: Unter fünf Minuten war die Uhr nicht gestellt,
    über fünf Stunden lief sie weiter. Beides würde den Schnitt kippen —
    deshalb fallen sie raus, und die Karte sagt, wie viele. */
 const DAUER_MIN = 5*60000, DAUER_MAX = 5*3600000;
 function dauerStat(ws){
-  const gut = ws.filter(w => w.end && w.start && (w.end - w.start) >= DAUER_MIN
-                                             && (w.end - w.start) <= DAUER_MAX);
+  const gut = [];
+  (ws || []).forEach(w=>{
+    const f = trainingsFenster(w);
+    if(!f || f.dauer < DAUER_MIN || f.dauer > DAUER_MAX) return;
+    gut.push({w, f});
+  });
   if(gut.length < 3) return null;
-  const ms = gut.map(w => w.end - w.start);
+  const ms = gut.map(x => x.f.dauer);
   const summe = ms.reduce((a,x)=>a+x, 0);
-  const vol = gut.reduce((a,w)=>a + wVolume(w), 0);
-  const saetze = gut.reduce((a,w)=>a + wSets(w), 0);
+  const vol = gut.reduce((a,x)=>a + wVolume(x.w), 0);
+  const saetze = gut.reduce((a,x)=>a + wSets(x.w), 0);
   const sortiert = ms.slice().sort((a,b)=>a-b);
+  const quellen = {korrigiert:0, saetze:0, knopf:0};
+  gut.forEach(x=>quellen[x.f.quelle]++);
+  const vor = gut.map(x=>x.f.vorlauf).filter(v => v >= VORLAUF_SCHWELLE);
   return {
-    n: gut.length, ausgelassen: ws.length - gut.length,
+    n: gut.length, ausgelassen: (ws || []).length - gut.length,
     schnitt: summe/gut.length,
     kuerzeste: sortiert[0], laengste: sortiert[sortiert.length-1],
     gesamtStunden: summe/3600000,
@@ -7033,8 +7134,10 @@ function dauerStat(ws){
     /* Sätze pro Minute wären 0,17 — auf eine Stelle gerundet wird daraus
        0,2 und der Wert ist um ein Fünftel daneben. Umgedreht ist er lesbar. */
     minJeSatz: saetze > 0 ? (summe/60000) / saetze : 0,
-    punkte: gut.map(w=>({ y: Math.round((w.end-w.start)/60000),
-                          l: new Date(w.date).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'}) }))
+    quellen, vorlaufN: vor.length,
+    vorlaufSchnitt: vor.length ? vor.reduce((a,x)=>a+x, 0)/vor.length : 0,
+    punkte: gut.map(x=>({ y: Math.round(x.f.dauer/60000),
+                          l: new Date(x.w.date).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'}) }))
   };
 }
 function statDauer(ws){
@@ -7052,12 +7155,20 @@ function statDauer(ws){
     <p class="kpihint tiny">Du bewegst <b>${fmtVol(Math.round(d.proMinute))} pro Minute</b>
       und brauchst <b>${d.minJeSatz.toFixed(1).replace('.',',')} Minuten je Satz</b> — Satz plus Pause.
       ${d.ausgelassen? `${d.ausgelassen} ${d.ausgelassen===1?'Einheit hat':'Einheiten haben'} keine brauchbare Dauer und ${d.ausgelassen===1?'ist':'sind'} nicht eingerechnet.` : ''}
+      ${d.vorlaufN? `<br>In ${d.vorlaufN} ${d.vorlaufN===1?'Einheit':'Einheiten'} hast du im Schnitt
+        <b>${fmtDur(d.vorlaufSchnitt)}</b> vor dem ersten Satz gestartet — diese Zeit ist nicht mitgerechnet.` : ''}
+      ${d.quellen.knopf? `<br>${d.quellen.knopf} ${d.quellen.knopf===1?'Einheit stammt':'Einheiten stammen'} noch aus der Zeit
+        ohne Satz-Zeitstempel und ${d.quellen.knopf===1?'ist':'sind'} von „Start" bis „Fertig" gemessen — dort steckt
+        die Vorbereitungszeit mit drin. Im Verlauf lässt sich jede Dauer von Hand richtigstellen.` : ''}
       <details class="erkl"><summary>Was sagt die Dichte?</summary><div>
         Volumen pro Minute misst, wie viel Arbeit in der Zeit steckt. Steigt sie
         bei gleichem Volumen, machst du dasselbe schneller — kürzere Pausen oder
         weniger Leerlauf. Sinkt sie bei steigendem Volumen, ist das normal: mehr
         Gewicht braucht mehr Pause. Aussagekräftig ist sie nur im Vergleich mit
         dir selbst, nicht mit anderen.
+        Gemessen wird vom ersten bis zum letzten Satz, nicht ab dem Startknopf —
+        die Zeit davor ist Vorbereitung, kein Training. Der erste Satz selbst und
+        das Aufwärmen davor liegen deshalb außerhalb der Spanne.
         Dauern unter 5 Minuten oder über 5 Stunden fallen raus — dort lief die
         Uhr nicht mit dem Training.
       </div></details></p></div>`;
@@ -8012,7 +8123,7 @@ let histLimit = HIST_STAPEL;
 function renderHist(){
   const ws = state.workouts.slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
   const g = globalAgg();
-  const hours = state.workouts.reduce((a,w)=>a+Math.max(0,(w.end-w.start)),0)/3600000;
+  const hours = state.workouts.reduce((a,w)=>a+Math.max(0, wDauer(w)),0)/3600000;
   if(!$('#hist-search').dataset.wired){
     $('#hist-search').dataset.wired = '1';
     $('#hist-search').addEventListener('input', ()=>{ histLimit = HIST_STAPEL; renderHist(); });
@@ -8083,7 +8194,12 @@ function showDetail(wid){
   const prByEx = {}; (w.prs||[]).forEach(p=>{ (prByEx[p.exId]=prByEx[p.exId]||[]).push(p.kind); });
   $('#detail-body').innerHTML = `
     <div class="grab"></div>
-    <div class="mhd"><div><h2>${esc(w.type)}-Workout</h2><div class="sub">${fmtDateShort(w.date)} · ${fmtDur(w.end-w.start)} · ${fmtVol(wVolume(w))}</div></div><button class="iconbtn" data-close aria-label="Schließen" data-ico-close></button></div>
+    <div class="mhd"><div><h2>${esc(w.type)}-Workout</h2><div class="sub">${fmtDateShort(w.date)}${wDauer(w)? ' · '+fmtDur(wDauer(w)):''} · ${fmtVol(wVolume(w))}</div></div><button class="iconbtn" data-close aria-label="Schließen" data-ico-close></button></div>
+    ${(()=>{ const f = trainingsFenster(w); return `<div class="item">
+      <div class="grow"><div class="ttl" style="font-size:13px">Dauer ${f? fmtDur(f.dauer) : 'nicht gemessen'}</div>
+        <div class="meta">${f? DAUER_QUELLE[f.quelle] : 'für dieses Training liegt keine Zeit vor'}${
+          f && f.vorlauf >= VORLAUF_SCHWELLE? ' · '+fmtDur(f.vorlauf)+' Vorlauf herausgerechnet' : ''}</div></div>
+      <button class="btn btn-ghost btn-sm" id="det-dur">${f && f.quelle==='korrigiert'? 'Ändern' : 'Korrigieren'}</button></div>`; })()}
     ${w.exercises.map(e=>`
       <div class="card" style="padding:8px 12px">
         <b>${esc(e.name)}</b> ${(prByEx[e.exId]||[]).map(k=>`<span class="badge pr">${ICO.trophy} ${esc(k)}</span>`).join(' ')}
@@ -8104,6 +8220,30 @@ function showDetail(wid){
       <button class="btn btn-danger btn-sm grow" id="det-del">Löschen</button>
     </div>`;
   openModal('#modal-detail');
+  /* V70: Die acht Trainings von vor V70 haben keine Satz-Zeitstempel — ihre
+     Dauer enthält die Vorbereitungszeit und lässt sich nicht rekonstruieren.
+     Statt sie zu schätzen, kann Aaron sie eintragen. Leer = wieder
+     automatisch; der gemessene Wert bleibt dabei erhalten. */
+  $('#det-dur').addEventListener('click',()=>{
+    const f = trainingsFenster(w);
+    const ein = prompt('Wie lange hat das Training wirklich gedauert?\n'
+      + 'Minuten eintragen — leer lassen für den gemessenen Wert.',
+      f ? String(Math.round(f.dauer/60000)) : '');
+    if(ein === null) return;
+    const t = String(ein).trim().replace(',', '.');
+    if(!t){
+      if(w.durFix === undefined) return;
+      delete w.durFix; saveState(); haptic();
+      toast('Dauer wieder automatisch');
+    } else {
+      const m = Math.round(+t);
+      if(!isFinite(m) || m < 1 || m > 300) return toast('Bitte eine Zahl zwischen 1 und 300 Minuten');
+      w.durFix = m*60000; saveState(); haptic('success');
+      toast('Dauer auf ' + fmtDur(w.durFix) + ' gesetzt');
+    }
+    showDetail(wid); renderHist();
+    if(typeof renderStats === 'function') renderStats();
+  });
   $('#det-tpl').addEventListener('click',()=>{
     const name = prompt('Name der Vorlage:', w.type+'-Tag'); if(!name) return;
     state.templates.push({id:uid(), name, type:w.type, exIds:w.exercises.map(e=>e.exId)});
