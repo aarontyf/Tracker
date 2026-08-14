@@ -55,6 +55,16 @@ exports.lauf = async ({ page, p }) => {
 
   const SCREENS = ['scr-home', 'scr-train', 'scr-hist', 'scr-lib', 'scr-stats'];
 
+  /* Die Systemtextgröße wird über die STANDARDSCHRIFTGRÖSSE des Browsers
+     gestellt, nicht über `html{font-size}`. Der Unterschied ist entscheidend:
+     `html{font-size}` verändert nur die Grundlage von `rem`. Die echte
+     iOS-Einstellung verändert die Standardgröße — und die wirkt zusätzlich
+     auf Medienabfragen in `em`. Wer nur das eine simuliert, testet die
+     Hälfte und übersieht genau die Regeln, die auf die andere reagieren. */
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send('Page.enable');
+  const systemSchrift = px => cdp.send('Page.setFontSizes', { fontSizes: { standard: px } });
+
   /* ── 1. Wächst der Text mit? ──────────────────────────────────────── */
   await js(page, `showScreen('scr-lib')`);
   await warte(page, 250);
@@ -62,9 +72,8 @@ exports.lauf = async ({ page, p }) => {
   const vorher = await js(page, MESSE);
   p.mind('genug Textproben gefunden', Object.keys(vorher).length, 6);
 
-  /* Wurzelgröße verdoppeln — entspricht „Textgröße ganz gross" im System. */
-  await js(page, `document.documentElement.style.fontSize = '32px'`);
-  await warte(page, 250);
+  await systemSchrift(32);                        // „Textgröße ganz gross"
+  await warte(page, 300);
   const nachher = await js(page, MESSE);
 
   const gewachsen = [];
@@ -89,18 +98,46 @@ exports.lauf = async ({ page, p }) => {
     p.hoechstens(`${s} läuft bei 200% Text nicht seitlich über`, u.ueber, 2);
   }
 
-  /* Zurücksetzen, damit nachfolgende Prüfungen normal messen. */
-  await js(page, `document.documentElement.style.fontSize = ''`);
-  await warte(page, 200);
-
   /* ── 3. Auch bei kleiner Schrift darf nichts brechen ──────────────── */
-  await js(page, `document.documentElement.style.fontSize = '12px'`);
-  await warte(page, 250);
+  await systemSchrift(12);
+  await warte(page, 300);
   for (const s of SCREENS) {
     await js(page, `showScreen(${JSON.stringify(s)})`);
     await warte(page, 150);
     const u = await js(page, UEBERLAUF);
     p.hoechstens(`${s} läuft bei 75% Text nicht über`, u.ueber, 2);
   }
-  await js(page, `document.documentElement.style.fontSize = ''`);
+
+  /* ── 4. Die Tableiste bleibt vollständig lesbar ───────────────────
+     Sie ist fest positioniert und taucht deshalb im Überlaufmaß oben NICHT
+     auf — bei 200 % war „Übungen" abgeschnitten, ohne dass ein Test anschlug.
+     Hier wird direkt gemessen, ob eine Beschriftung breiter ist als ihr Knopf. */
+  await systemSchrift(32);
+  await warte(page, 300);
+  const navAbgeschnitten = await js(page, `(() => {
+    const raus = [];
+    document.querySelectorAll('.nav button').forEach(b => {
+      if (b.scrollWidth > b.clientWidth + 1) {
+        raus.push((b.getAttribute('aria-label') || b.textContent).trim() +
+                  ' (' + b.scrollWidth + ' in ' + b.clientWidth + ')');
+      }
+    });
+    return raus;
+  })()`);
+  p.gleich('keine Tableisten-Beschriftung abgeschnitten', navAbgeschnitten.length, 0);
+  navAbgeschnitten.forEach(n => p.pruefe('  abgeschnitten: ' + n, false));
+  await systemSchrift(12);
+  await warte(page, 250);
+
+  /* ── 5. Eingabefelder bleiben bei 16px ────────────────────────────
+     Unter 16 px zoomt iOS beim Antippen ins Feld und die Ansicht springt.
+     Genau deshalb ist --fs-input als einziger Wert der Skala absolut —
+     bei kleiner Systemschrift wäre er mit rem darunter gerutscht. */
+  const eingabe = await js(page, `(() => {
+    const el = document.querySelector('#lib-search') || document.querySelector('input[type=text]');
+    return el ? parseFloat(getComputedStyle(el).fontSize) : null;
+  })()`);
+  p.mind('Suchfeld bleibt bei kleiner Systemschrift >= 16px (sonst zoomt iOS)', eingabe, 16);
+
+  await systemSchrift(16);                        // Standard wiederherstellen
 };

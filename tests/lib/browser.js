@@ -77,7 +77,9 @@ async function appOeffnen(opts = {}) {
     await cdp0.send('Page.setFontSizes', { fontSizes: { standard: opts.schriftPx } });
   }
 
-  await page.goto('file://' + APP, { waitUntil: 'load' });
+  /* opts.datei erlaubt es, einen anderen Stand zu laden — etwa den vorigen
+     Commit, um eine optische Änderung gegen den Vorzustand zu halten. */
+  await page.goto('file://' + (opts.datei || APP), { waitUntil: 'load' });
   await page.waitForFunction('typeof state === "object" && typeof renderAll === "function"', null, { timeout: 15000 });
 
   if (opts.throttle) {
