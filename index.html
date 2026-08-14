@@ -1149,6 +1149,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
 
     <div id="home-level"></div>
     <div id="home-bw"></div>
+    <div id="home-balance"></div>
     <div id="home-goals"></div>
     <div id="home-records"></div>
     <div id="home-backup"></div>
@@ -1547,7 +1548,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V73 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V74 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -4589,6 +4590,149 @@ function greeting(){
   return h<5? 'Gute Nacht' : h<11? 'Guten Morgen' : h<14? 'Mahlzeit' : h<18? 'Guten Tag' : h<23? 'Guten Abend' : 'Gute Nacht';
 }
 /* ══════════════════════════════════════════════════════════════════════
+   MUSKEL-BALANCE ALS AKTIVE MELDUNG                                (V74)
+
+   Das Radar in der Statistik zeigt Ungleichgewichte seit jeher — aber nur,
+   wenn man hinsieht, es lesen kann und weiss, welcher Zacken zu kurz ist.
+   Wer seit vier Monaten zu wenig für die hintere Schulter tut, erfährt es
+   dort nicht; er müsste es sich selbst zusammenreimen.
+
+   Diese Meldung sagt es hin: welches Paar, welche Zahlen, was zu tun ist.
+
+   ── Warum 28 Tage und nicht „pro Woche" ──────────────────────────────
+   Weil die Kalenderwoche für diesen Plan kein Maßstab ist. Bei Push → Pull
+   → Rest fallen mal zwei, mal drei Einheiten in eine Woche — das sind ±50 %
+   Schwankung, ohne dass sich am Training irgendetwas geändert hätte. Die
+   Zyklenrechnung der App geht deshalb gar nicht erst über Wochen, und eine
+   Balance-Warnung auf Wochenbasis würde genau dieses Rauschen als Befund
+   melden. Vier Wochen am Stück glätten das über mehrere Zyklen hinweg.
+
+   ── Warum drei Schwellen und nicht eine ──────────────────────────────
+   Eine Warnung, die zu oft kommt, wird weggeklickt und ist dann für immer
+   wertlos. Deshalb muss ein Befund ALLE drei Hürden nehmen:
+     Verhältnis   > 1,5  — dieselbe Faustregel wie bei Push/Pull
+     Unterschied  >= 4 Sätze — 3:2 ist Rauschen, kein Ungleichgewicht
+     stärkere Seite >= 6 Sätze — wer gerade anfängt, wird nicht belehrt
+   Gemeldet wird immer nur der GRÖSSTE Befund. Fünf Warnungen gleichzeitig
+   sind keine Meldung mehr, sondern eine Tapete.
+   ══════════════════════════════════════════════════════════════════════ */
+
+const BALANCE_FENSTER = 28;          // Tage
+const BALANCE_MIN_DIFF = 4;          // Sätze Unterschied
+const BALANCE_MIN_STARK = 6;         // Sätze auf der stärkeren Seite
+
+/* Gegenspieler-Paare. Nur Paare, bei denen ein Ungleichgewicht wirklich
+   etwas bedeutet — Bauch gegen Waden zu vergleichen ergäbe keinen Sinn. */
+const BALANCE_PAARE = [
+  { a:['chest_up','chest','chest_low'], b:['lats','upper_back'],
+    an:'Brust', bn:'Rücken',
+    rat:'Ein Übergewicht der Druckseite zieht die Schultern nach vorne.' },
+  { a:['front_delt'], b:['rear_delt'],
+    an:'Vordere Schulter', bn:'Hintere Schulter',
+    rat:'Die hintere Schulter kommt fast nie beim Drücken mit — sie braucht eigene Sätze.' },
+  { a:['quads'], b:['hamstrings'],
+    an:'Quadrizeps', bn:'Beinbeuger',
+    rat:'Ein starkes Missverhältnis hier gilt als Risikofaktor für die hintere Oberschenkelmuskulatur.' },
+  { a:['triceps'], b:['biceps'],
+    an:'Trizeps', bn:'Bizeps',
+    rat:'Beide bekommen bei Grundübungen etwas ab — meist ungleich viel.' },
+  { a:['abs','obliques'], b:['lower_back'],
+    an:'Bauch', bn:'Unterer Rücken',
+    rat:'Der Rumpf trägt bei jeder schweren Übung — vorne wie hinten.' },
+];
+
+/* Die Einheiten der letzten n Tage. Bewusst über das Datum und nicht über
+   die letzten n Einträge: Wer zwei Wochen krank war, soll keine Warnung aus
+   dem Training davor bekommen. */
+function letzteTage(n){
+  const ab = Date.now() - n*864e5;
+  return state.workouts.filter(w => Date.parse(w.date) >= ab);
+}
+
+function balanceBefunde(tage){
+  const ws = letzteTage(tage || BALANCE_FENSTER);
+  if(ws.length < 4) return [];                    // zu wenig Daten für eine Aussage
+
+  const m = muscleSetsBy(ws, 'both');
+  const su = keys => keys.reduce((s,k) => s + (m[k]||0), 0);
+  const befunde = [];
+
+  for(const paar of BALANCE_PAARE){
+    const av = su(paar.a), bv = su(paar.b);
+    const stark = Math.max(av, bv), schwach = Math.min(av, bv);
+    if(stark < BALANCE_MIN_STARK) continue;
+    if(stark - schwach < BALANCE_MIN_DIFF) continue;
+    if(schwach <= 0 ? false : stark/schwach <= PP_FAUSTREGEL) continue;
+
+    const aStaerker = av > bv;
+    /* Wie viele Sätze fehlen, um unter die Faustregel zu kommen? Das ist
+       die eigentlich nützliche Zahl — „mehr machen" hilft niemandem.
+
+       ACHTUNG, zwei verschiedene Bezugsgrössen: `noetig` gilt für das ganze
+       Fenster, `proWoche` ist daraus umgerechnet. Handeln kann man nur mit
+       der Wochenzahl — aber rechnen muss man mit der Fensterzahl, sonst
+       stimmt die Probe nicht. Beide getrennt zu führen, kostet ein Feld und
+       erspart einen Text, der um den Faktor vier danebenliegt. */
+    const noetig = Math.max(1, Math.ceil(stark / PP_FAUSTREGEL) - schwach);
+    const wochen = (tage || BALANCE_FENSTER) / 7;
+
+    befunde.push({
+      stark: aStaerker ? paar.an : paar.bn,
+      schwach: aStaerker ? paar.bn : paar.an,
+      starkN: Math.round(stark*10)/10,
+      schwachN: Math.round(schwach*10)/10,
+      verhaeltnis: schwach > 0 ? stark/schwach : Infinity,
+      noetig,
+      proWoche: Math.max(1, Math.ceil(noetig / wochen)),
+      rat: paar.rat,
+    });
+  }
+
+  /* Grösstes Missverhältnis zuerst. */
+  return befunde.sort((x,y) => y.verhaeltnis - x.verhaeltnis);
+}
+
+function renderBalance(){
+  const box = $('#home-balance');
+  if(!box) return;
+
+  if(!box.dataset.wired){
+    box.dataset.wired = '1';
+    box.addEventListener('click', e => {
+      if(!e.target.closest('#bal-mehr')) return;
+      /* Direkt dorthin, wo die vollständigen Zahlen stehen. */
+      statsSetMode = statsSetMode || 'both';
+      showScreen('scr-stats');
+    });
+  }
+
+  const alle = balanceBefunde();
+  if(!alle.length){ box.innerHTML = ''; return; }
+
+  const b = alle[0];
+  const weitere = alle.length - 1;
+
+  box.innerHTML = `<div class="card" style="border-color:var(--line-2)">
+    <div class="row" style="gap:10px;align-items:flex-start">
+      <span class="bi" data-ico="alert" style="color:var(--sig);flex:none;margin:0"></span>
+      <div class="grow">
+        <h3 style="margin-bottom:2px">${esc(b.schwach)} kommt zu kurz</h3>
+        <p class="tiny" style="margin-bottom:6px">
+          In den letzten 4 Wochen: <b style="color:var(--txt2)">${esc(b.stark)} ${fmtW(b.starkN)} Sätze</b>,
+          <b style="color:var(--sig)">${esc(b.schwach)} ${fmtW(b.schwachN)}</b>.
+        </p>
+        <p class="tiny" style="margin-bottom:6px">${esc(b.rat)}</p>
+        <p class="tiny"><b style="color:var(--txt2)">${b.proWoche} ${b.proWoche===1?'Satz':'Sätze'} ${esc(b.schwach)} mehr pro Woche</b>
+          bringen das Verhältnis wieder in den Rahmen.</p>
+        ${weitere ? `<p class="tiny" style="color:var(--txt3);margin-top:6px">${weitere} weiteres Ungleichgewicht${weitere>1?'e':''} — im Radar zu sehen.</p>` : ''}
+        <button class="btn btn-sm" id="bal-mehr" style="margin-top:10px">Radar ansehen</button>
+      </div>
+    </div>
+  </div>`;
+  hydrateIcons(box);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
    PERSÖNLICHE ZIELE                                                (V73)
 
    Die App konnte bisher sehr genau sagen, was WAR — Rekorde, Zyklen,
@@ -4901,6 +5045,7 @@ function zielePruefen(){
 
 function renderHome(){
   renderCoach();
+  renderBalance();
   renderZiele();
   const now = new Date();
   const [a,b] = weekRange(now);
