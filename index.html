@@ -1436,7 +1436,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V70 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V71 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -2931,6 +2931,8 @@ function saveState(){
   if(typeof invalidateCycles==='function') invalidateCycles();   // Zyklen neu berechnen lassen
   if(typeof invalidateCuts==='function')   invalidateCuts();     // Schnittpunkte ebenso — sie hängen an Workouts UND exOpt
   if(typeof invalidateVorschlag==='function') invalidateVorschlag();   // und der Trainingsvorschlag
+  if(typeof invalidateTrained==='function')   invalidateTrained();     // und „schon trainiert"
+  if(typeof invalidateAgg==='function')       invalidateAgg();         // und die Lifetime-Bilanz
   try{
     localStorage.setItem(LS_KEY, JSON.stringify(state));
     _saveWarned = false;
@@ -2954,6 +2956,20 @@ function saveStateSoon(){
 function flushSave(){
   if(_saveTimer){ clearTimeout(_saveTimer); _saveTimer = null; saveState(); }
 }
+/* Entprellung für Suchfelder: Bei 365 Übungen kostet ein Suchlauf samt Neuaufbau
+   der Liste auf einem Mittelklasse-Handy mehrere Millisekunden. Ohne Entprellung
+   fiel diese Arbeit bei JEDEM Zeichen an — beim schnellen Tippen also mitten in
+   den Frames, die die Tastatur zeichnen wollte. Ein Sammelfenster von 120 ms
+   bleibt unter der Wahrnehmungsschwelle, halbiert aber die Zahl der Durchläufe. */
+function entprellt(fn, ms){
+  let t = null;
+  return function(){
+    const self = this, args = arguments;
+    if(t) clearTimeout(t);
+    t = setTimeout(()=>{ t = null; fn.apply(self, args); }, ms);
+  };
+}
+
 window.addEventListener('pagehide', flushSave);
 window.addEventListener('beforeunload', flushSave);
 document.addEventListener('visibilitychange', ()=>{ if(document.hidden) flushSave(); });
@@ -2961,9 +2977,35 @@ document.addEventListener('visibilitychange', ()=>{ if(document.hidden) flushSav
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 
 /* ---------- Übungen ---------- */
-function allExercises(){ return EXDB.concat(state.customEx); }
-function getEx(id){ return allExercises().find(e=>e.id===id); }
+/* allExercises() steckt im heissesten Pfad der App: die Suche ruft es je
+   Übung auf, also bei 365 Übungen 365-mal pro Tastenanschlag. Jedes concat()
+   legte dabei ein frisches 365er-Array an. Einmal bauen, dann halten — der
+   Cache prüft sich selbst über Referenz und Länge von state.customEx und
+   überlebt damit auch Import und Wiederherstellung, die state komplett
+   austauschen. getEx() lief zusätzlich linear über dieses Array; eine Map
+   macht daraus einen Zugriff in konstanter Zeit. */
+let _exAll = null, _exSrc = null, _exN = -1, _exById = null;
+function allExercises(){
+  const cx = state.customEx;
+  if(!_exAll || _exSrc !== cx || _exN !== cx.length){
+    _exAll = EXDB.concat(cx); _exSrc = cx; _exN = cx.length; _exById = null;
+  }
+  return _exAll;
+}
+function getEx(id){
+  const all = allExercises();
+  if(!_exById){ _exById = new Map(); for(const e of all) _exById.set(e.id, e); }
+  return _exById.get(id);
+}
+function invalidateExercises(){ _exAll = null; _exSrc = null; _exN = -1; _exById = null; }
 function exMuscleLabel(ex){ return ex.p.map(m=>MUSCLES[m]).join(', ') + (ex.s.length? ' · '+ex.s.map(m=>MUSCLES[m]).join(', ') : ''); }
+
+/* Welche Übungen wurden schon trainiert — die Suche, die Bibliothek und die
+   Übungsstatistik brauchten das je einmal, also dreimal pro Tastenanschlag ein
+   Durchlauf durch die gesamte Historie. Einmal je Datenänderung reicht;
+   invalidiert wird zentral in saveState(), wie bei den Zyklen auch. */
+let _trainedCache = null;
+function invalidateTrained(){ _trainedCache = null; }
 
 /* ---------- Datum ---------- */
 function fmtDate(d){ return new Date(d).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'}); }
@@ -3206,7 +3248,7 @@ function cycles(){
   const ws0 = state.workouts;
   const key = ws0.length + '|' + ((ws0[0]||{}).id||'') + '|' + ((ws0[ws0.length-1]||{}).id||'') + '|' + ((ws0[ws0.length-1]||{}).date||'');
   if(_cyCache && _cyKey === key) return _cyCache;
-  const ws = ws0.slice().sort((a,b)=> new Date(a.date) - new Date(b.date));
+  const ws = ws0.slice().sort((a,b)=> Date.parse(a.date) - Date.parse(b.date));
   const out = [];
   let cur = null;
   ws.forEach(w=>{
@@ -3368,7 +3410,7 @@ function exHistory(exId, before){
       });
     });
   });
-  out.sort((a,b)=>new Date(a.date)-new Date(b.date));
+  out.sort((a,b)=>Date.parse(a.date) - Date.parse(b.date));
   return out;
 }
 function exBests(exId, before){
@@ -3834,7 +3876,7 @@ function setPlan(iso, patch){
 function letzteEinheitVom(typ){
   const ws = state.workouts
     .filter(w => w.type === typ && (w.exercises||[]).length)
-    .sort((a,b)=> new Date(a.date) - new Date(b.date));
+    .sort((a,b)=> Date.parse(a.date) - Date.parse(b.date));
   return ws.length ? ws[ws.length-1] : null;
 }
 
@@ -4105,10 +4147,20 @@ function exAgg(exId){
   }));
   return {vol,reps,sessions,maxW,streak:bestStreak(weeks)};
 }
+/* Lief bei jedem Rendern des Verlaufs komplett neu über die Historie — samt
+   wVolume() und wSets() je Einheit, also über jeden einzelnen Satz. Der
+   Verlauf zog zusätzlich die Trainingsstunden in einer zweiten Schleife;
+   die steckt jetzt im selben Durchlauf. Cache wird in saveState() geleert. */
+let _aggCache = null;
+function invalidateAgg(){ _aggCache = null; }
 function globalAgg(){
-  let vol=0,sets=0,prs=0; const weeks=new Set();
-  state.workouts.forEach(w=>{ vol+=wVolume(w); sets+=wSets(w); prs+=(w.prs||[]).length; weeks.add(weekKey(w.date)); });
-  return {wk:state.workouts.length, vol, sets, prs, streak:bestStreak(weeks)};
+  if(_aggCache) return _aggCache;
+  let vol=0,sets=0,prs=0,ms=0; const weeks=new Set();
+  state.workouts.forEach(w=>{
+    vol+=wVolume(w); sets+=wSets(w); prs+=(w.prs||[]).length; weeks.add(weekKey(w.date));
+    ms += Math.max(0, wDauer(w));
+  });
+  return _aggCache = {wk:state.workouts.length, vol, sets, prs, streak:bestStreak(weeks), hours: ms/3600000};
 }
 function achCurrent(def, agg){
   if(def.cat==='g'){ return def.gkey==='wk'?agg.wk : def.gkey==='vol'?agg.vol : def.gkey==='pr'?agg.prs : def.gkey==='streak'?agg.streak : agg.sets; }
@@ -4123,7 +4175,17 @@ function achCurrent(def, agg){
 if(!state.ach) state.ach = {};
 function achXP(){ return Object.values(state.ach||{}).reduce((a,x)=>a+(x.xp||0),0); }
 function achLevel(){ const xp=achXP(); const lvl=Math.floor(Math.sqrt(xp/150))+1; const cur=150*(lvl-1)*(lvl-1), next=150*lvl*lvl; return {lvl,xp,cur,next}; }
-function trainedExIds(){ const s=new Set(); state.workouts.forEach(w=>w.exercises.forEach(e=>s.add(e.exId))); return [...s]; }
+/* Liefert ein Set statt eines Arrays — beide Aufrufer iterierten ohnehin nur,
+   und die Suche kann jetzt in konstanter Zeit nachschlagen statt die Historie
+   ein zweites Mal zu durchlaufen. Gecacht bis zur nächsten Datenänderung. */
+function trainedExIds(){
+  if(!_trainedCache){
+    const s = new Set();
+    state.workouts.forEach(w=>w.exercises.forEach(e=>s.add(e.exId)));
+    _trainedCache = s;
+  }
+  return _trainedCache;
+}
 /* Prüft Übungen + global; schaltet Neues frei. silent=true → kein Rückgabe-Festakt */
 function evalAchievements(exIds){
   if(!state.ach) state.ach={};
@@ -5006,7 +5068,7 @@ function prevSession(exId){ const h = exHistory(exId, new Date(state.active.date
    Angezeigt wird die letzte Notiz derselben Übung gedämpft: man sieht beim
    Loggen, was letztes Mal war, ohne danach zu suchen. */
 function letzteNotiz(exId, beforeTs){
-  const ws = state.workouts.slice().sort((a,b)=> new Date(b.date) - new Date(a.date));
+  const ws = state.workouts.slice().sort((a,b)=> Date.parse(b.date) - Date.parse(a.date));
   for(const w of ws){
     if(beforeTs && new Date(w.date).getTime() >= beforeTs) continue;
     for(const e of (w.exercises||[])){
@@ -5604,10 +5666,12 @@ function renderPickChips(){
      „po"      → 79 Treffer (steckt in „su-ppo-rted" aus einem Alias)
    Jetzt: Felder getrennt indiziert, gewichtet, Wortanfänge bevorzugt. */
 let _ix = null, _ixN = 0;
+const _ixLeer = {name:'',al:'',eq:'',grp:'',pm:'',sm:''};
 function searchIndex(ex){
-  if(!_ix || _ixN !== allExercises().length){
-    _ix = new Map(); _ixN = allExercises().length;
-    allExercises().forEach(x=>_ix.set(x.id, {
+  const all = allExercises();
+  if(!_ix || _ixN !== all.length){
+    _ix = new Map(); _ixN = all.length;
+    all.forEach(x=>_ix.set(x.id, {
       name: (x.name||'').toLowerCase(),
       al:   (x.al||'').toLowerCase(),
       eq:   (x.eq||'').toLowerCase(),
@@ -5616,9 +5680,9 @@ function searchIndex(ex){
       sm:   x.s.map(m=>MUSCLES[m]||'').join(' ').toLowerCase()    // sekundär
     }));
   }
-  return _ix.get(ex.id) || {name:'',al:'',eq:'',grp:'',pm:'',sm:''};
+  return _ix.get(ex.id) || _ixLeer;
 }
-function invalidateSearch(){ _ix = null; }
+function invalidateSearch(){ _ix = null; invalidateExercises(); }
 
 /* Ein Treffer am Wortanfang zählt voll, mitten im Wort nur einen Bruchteil.
    Deshalb landet „rücken" bei den Rücken-Übungen und nicht bei „Bankdrücken". */
@@ -5660,8 +5724,7 @@ function filterEx(q, grp){
     return true;
   });
   if(!terms || !terms.length) return base;
-  const trained = new Set();
-  state.workouts.forEach(w=>w.exercises.forEach(e=>trained.add(e.exId)));
+  const trained = trainedExIds();
   const out = [];
   base.forEach(ex=>{
     const ix = searchIndex(ex);
@@ -5683,7 +5746,7 @@ function filterEx(q, grp){
    337 Übungen den Suchvorgang für genau die, die man ohnehin ständig macht. */
 function recentExIds(limit){
   const seen = new Map();
-  const ws = state.workouts.slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const ws = state.workouts.slice().sort((a,b)=>Date.parse(b.date) - Date.parse(a.date));
   for(const w of ws){
     for(const e of w.exercises){ if(!seen.has(e.exId)) seen.set(e.exId, new Date(w.date).getTime()); }
     if(seen.size >= (limit||8)*3) break;
@@ -5721,15 +5784,21 @@ function renderPickList(){
   $('#pick-list').innerHTML = list.length
     ? head + list.map(ex=>pickRow(ex)).join('')
     : `<div class="empty"><div class="big">${ICO.search}</div><b>Keine Übung gefunden</b>Versuch es mit einem anderen Begriff —<br>Englisch funktioniert auch.</div>`;
-  $$('#pick-list [data-pick]').forEach(el=>el.addEventListener('click', e=>{
-    if(e.target.closest('[data-fav]')) return;          // Stern schließt den Picker nicht
-    pickCb && pickCb(el.dataset.pick);
-  }));
-  $$('#pick-list [data-fav]').forEach(b=>b.addEventListener('click', e=>{
-    e.stopPropagation(); toggleFav(b.dataset.fav); renderPickList();
-  }));
+  /* Ein Listener am Container statt zweier je Zeile. Die Reihenfolge der
+     Prüfung ersetzt das frühere stopPropagation: Trifft der Klick den Stern,
+     wird nur umgeschaltet und der Picker bleibt offen. */
+  const pickBox = $('#pick-list');
+  if(!pickBox.dataset.wired){
+    pickBox.dataset.wired = '1';
+    pickBox.addEventListener('click', e=>{
+      const fav = e.target.closest('[data-fav]');
+      if(fav){ toggleFav(fav.dataset.fav); renderPickList(); return; }
+      const el = e.target.closest('[data-pick]');
+      if(el) pickCb && pickCb(el.dataset.pick);
+    });
+  }
 }
-$('#pick-search').addEventListener('input',renderPickList);
+$('#pick-search').addEventListener('input', entprellt(renderPickList, 120));
 
 /* ================= EIGENE ÜBUNG ================= */
 let cxP = [], cxS = [];
@@ -6081,7 +6150,7 @@ $('#bk-later').addEventListener('click',()=>{
 /* CSV-Export (bei Strong hinter Premium) */
 $('#btn-csv').addEventListener('click',()=>{
   const rows = [['Datum','Uhrzeit','Typ','Übung','Satz','Satztyp','Gewicht_kg','Wdh_links','Wdh_rechts','Wdh_gesamt','RIR','Volumen_kg','Körpergewicht_kg','Einseitig','Unterstützt']];
-  state.workouts.slice().sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach(w=>{
+  state.workouts.slice().sort((a,b)=>Date.parse(a.date) - Date.parse(b.date)).forEach(w=>{
     const d = new Date(w.date);
     w.exercises.forEach(e=>{
       const assist = entryIsAssist(e);
@@ -6816,7 +6885,7 @@ function renderStats(){
 /* Seit Beginn — alle Trainings über den gesamten Zeitraum */
 function renderAllStats(){
   const el = $('#stats-all');
-  const ws = state.workouts.slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const ws = state.workouts.slice().sort((a,b)=>Date.parse(a.date) - Date.parse(b.date));
   lastStatsWs = ws;
   if(!ws.length){ el.innerHTML = `<div class="empty"><div class="big">${ICO.chart}</div><b>Noch keine Trainings</b>Sobald du das erste Training abschließt,<br>siehst du hier deine gesamte Entwicklung.</div>`; return; }
   const first = new Date(ws[0].date);
@@ -7890,7 +7959,7 @@ function exModeSwitches(exId){
 /* ---------- Übungs-Statistik ---------- */
 function renderExStats(){
   const q = $('#exstat-search').value;
-  const trained = new Set(); state.workouts.forEach(w=>w.exercises.forEach(e=>trained.add(e.exId)));
+  const trained = trainedExIds();
   let list = filterEx(q,'Alle');
   /* Nur OHNE Suchbegriff nach „schon trainiert" vorsortieren — bei einer Suche
      würde das die Relevanz kippen (eine trainierte Brustübung stünde über einer
@@ -7899,7 +7968,14 @@ function renderExStats(){
   $('#exstat-results').innerHTML = (q||!exStatId)? `<div class="card" style="padding:2px 12px">${
     list.slice(0,q?15:8).map(ex=>`<div class="item" data-exsel="${ex.id}" style="cursor:pointer">
       <div class="grow"><div class="ttl">${esc(ex.name)}</div><div class="meta">${trained.has(ex.id)?'✓ trainiert':'noch nie trainiert'}</div></div>›</div>`).join('')}</div>` : '';
-  $$('#exstat-results [data-exsel]').forEach(el=>el.addEventListener('click',()=>{ exStatId=el.dataset.exsel; $('#exstat-search').value=''; renderExStats(); }));
+  const exResBox = $('#exstat-results');
+  if(!exResBox.dataset.wired){
+    exResBox.dataset.wired = '1';
+    exResBox.addEventListener('click', e=>{
+      const el = e.target.closest('[data-exsel]'); if(!el) return;
+      exStatId = el.dataset.exsel; $('#exstat-search').value=''; renderExStats();
+    });
+  }
   if(!exStatId){ $('#exstat-detail').innerHTML=''; return; }
   const ex = getEx(exStatId); if(!ex){ $('#exstat-detail').innerHTML=''; return; }
   const h = exHistory(exStatId);
@@ -8115,18 +8191,18 @@ $('#exsheet-full').addEventListener('click',()=>{
   showScreen('scr-stats');
   renderStats();
 });
-$('#exstat-search').addEventListener('input',renderExStats);
+$('#exstat-search').addEventListener('input', entprellt(renderExStats, 120));
 
 /* ================= VERLAUF ================= */
 const HIST_STAPEL = 40;          // so viele Karten je Stapel
 let histLimit = HIST_STAPEL;
 function renderHist(){
-  const ws = state.workouts.slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const ws = state.workouts.slice().sort((a,b)=>Date.parse(b.date) - Date.parse(a.date));
   const g = globalAgg();
-  const hours = state.workouts.reduce((a,w)=>a+Math.max(0, wDauer(w)),0)/3600000;
+  const hours = g.hours;
   if(!$('#hist-search').dataset.wired){
     $('#hist-search').dataset.wired = '1';
-    $('#hist-search').addEventListener('input', ()=>{ histLimit = HIST_STAPEL; renderHist(); });
+    $('#hist-search').addEventListener('input', entprellt(()=>{ histLimit = HIST_STAPEL; renderHist(); }, 120));
   }
   $('#hist-count').textContent = ws.length? `${ws.length} Workouts seit ${fmtDate(state.workouts[0].date)}` : 'noch keine Einträge';
   /* Lifetime-Zahlen — machen den Verlauf zur Erfolgsbilanz statt zur Liste */
@@ -8142,7 +8218,14 @@ function renderHist(){
     ? ['Alle', ...typesUsed, 'Mit PR'].map(f=>`<button class="chip ${f===histFilter?'on':''}" data-hf="${esc(f)}">${esc(f)}</button>`).join('')
     : '';
   $('#hist-search').style.display = ws.length ? '' : 'none';
-  $$('#hist-filters .chip').forEach(c=>c.addEventListener('click',()=>{ histFilter=c.dataset.hf; histLimit=HIST_STAPEL; renderHist(); }));
+  const hfBox = $('#hist-filters');
+  if(!hfBox.dataset.wired){
+    hfBox.dataset.wired = '1';
+    hfBox.addEventListener('click', e=>{
+      const c = e.target.closest('.chip'); if(!c) return;
+      histFilter = c.dataset.hf; histLimit = HIST_STAPEL; renderHist();
+    });
+  }
 
   /* Anwenden von Filter + Suche (Suche greift auf Übungsnamen im Workout) */
   const q = ($('#hist-search').value||'').trim().toLowerCase();
@@ -8182,11 +8265,19 @@ function renderHist(){
         ? `<button class="btn btn-ghost btn-block" id="hist-mehr">Weitere ${Math.min(HIST_STAPEL, shown.length-gekuerzt.length)} anzeigen <span class="tiny">(${gekuerzt.length} von ${shown.length})</span></button>`
         : '')
     : `<div class="empty"><div class="big">${ICO.search}</div><b>Nichts gefunden</b>${q?`Kein Training mit „${esc(q)}".`:'Kein Training in dieser Auswahl.'}<div style="height:14px"></div><button class="btn btn-ghost btn-sm" id="hist-reset">Filter zurücksetzen</button></div>`);
-  $$('#hist-list [data-wid]').forEach(el=>el.addEventListener('click',()=>{ haptic(); showDetail(el.dataset.wid); }));
-  const mehr = $('#hist-mehr');
-  if(mehr) mehr.addEventListener('click',()=>{ histLimit += HIST_STAPEL; haptic(); renderHist(); });
-  const rst = $('#hist-reset');
-  if(rst) rst.addEventListener('click',()=>{ histFilter='Alle'; histLimit=HIST_STAPEL; $('#hist-search').value=''; renderHist(); });
+  /* Karten, „Weitere anzeigen" und „Filter zurücksetzen" liegen alle in
+     #hist-list und werden bei jedem Rendern neu geschrieben — ein Listener
+     am Container überlebt das und spart bis zu 40 Anbindungen je Stapel. */
+  const hlBox = $('#hist-list');
+  if(!hlBox.dataset.wired){
+    hlBox.dataset.wired = '1';
+    hlBox.addEventListener('click', e=>{
+      if(e.target.closest('#hist-mehr')){ histLimit += HIST_STAPEL; haptic(); renderHist(); return; }
+      if(e.target.closest('#hist-reset')){ histFilter='Alle'; histLimit=HIST_STAPEL; $('#hist-search').value=''; renderHist(); return; }
+      const el = e.target.closest('[data-wid]');
+      if(el){ haptic(); showDetail(el.dataset.wid); }
+    });
+  }
   runCounters($('#scr-hist'));
 }
 function showDetail(wid){
@@ -8255,7 +8346,7 @@ function showDetail(wid){
     saveState(); closeModals(); renderHist(); renderHome();
     toast('Workout gelöscht', 'Rückgängig', ()=>{
       state.workouts.push(del);
-      state.workouts.sort((a,b)=>new Date(a.date)-new Date(b.date));
+      state.workouts.sort((a,b)=>Date.parse(a.date) - Date.parse(b.date));
       saveState(); renderHist(); renderHome(); toast('Wiederhergestellt ✓');
     });
   });
@@ -8266,10 +8357,21 @@ let libGrp='Alle';
 let histFilter='Alle';
 function renderLib(){
   const groups = ['Alle','Brust','Rücken','Schultern','Arme','Beine','Bauch','Ganzkörper','Eigene'];
-  $('#lib-groups').innerHTML = groups.map(g=>`<button class="chip ${g===libGrp?'on':''}" data-g="${g}">${g}</button>`).join('');
-  $$('#lib-groups .chip').forEach(c=>c.addEventListener('click',()=>{ libGrp=c.dataset.g; renderLib(); }));
+  /* Die Gruppen-Chips sind bei jedem Rendern dieselben neun Knöpfe. Einmal
+     bauen, danach nur noch die aktive Markierung umsetzen — das spart pro
+     Tastenanschlag einen HTML-Neuaufbau samt neun frischer Listener. */
+  const grpBox = $('#lib-groups');
+  if(!grpBox.dataset.wired){
+    grpBox.dataset.wired = '1';
+    grpBox.innerHTML = groups.map(g=>`<button class="chip" data-g="${g}">${g}</button>`).join('');
+    grpBox.addEventListener('click', e=>{
+      const c = e.target.closest('.chip'); if(!c) return;
+      libGrp = c.dataset.g; renderLib();
+    });
+  }
+  $$('#lib-groups .chip').forEach(c=>c.classList.toggle('on', c.dataset.g===libGrp));
   const list = filterEx($('#lib-search').value, libGrp);
-  const trained = new Set(); state.workouts.forEach(w=>w.exercises.forEach(e=>trained.add(e.exId)));
+  const trained = trainedExIds();
   $('#lib-count').textContent = list.length+' Übungen'+(libGrp==='Alle'&&!$('#lib-search').value? ' in der Datenbank':'')
     + (trained.size? ` · ${trained.size} schon trainiert`:'');
   /* content-visibility lässt den Browser Zeilen außerhalb des Sichtfelds überspringen */
@@ -8280,13 +8382,20 @@ function renderLib(){
       ${trained.has(ex.id)? '<span class="badge type" style="flex:none">✓</span>':''}
       <span style="color:var(--txt3);font-size:17px" aria-hidden="true">›</span>
     </div>`).join('') || `<div class="empty"><div class="big">${ICO.search}</div><b>Keine Übung gefunden</b>Versuch es mit einem anderen Begriff —<br>Englisch funktioniert auch.</div>`;
-  $$('#lib-list [data-lib]').forEach(el=>el.addEventListener('click',()=>{
-    exStatId = el.dataset.lib; statsPanel='ex';
-    $$('#stats-seg button').forEach(x=>x.classList.toggle('on',x.dataset.p==='ex'));
-    showScreen('scr-stats');
-  }));
+  /* Ein Listener am Container statt 150 an den Zeilen — die Zeilen werden bei
+     jeder Suche neu geschrieben, der Listener bleibt. */
+  const libBox = $('#lib-list');
+  if(!libBox.dataset.wired){
+    libBox.dataset.wired = '1';
+    libBox.addEventListener('click', e=>{
+      const el = e.target.closest('[data-lib]'); if(!el) return;
+      exStatId = el.dataset.lib; statsPanel='ex';
+      $$('#stats-seg button').forEach(x=>x.classList.toggle('on',x.dataset.p==='ex'));
+      showScreen('scr-stats');
+    });
+  }
 }
-$('#lib-search').addEventListener('input',renderLib);
+$('#lib-search').addEventListener('input', entprellt(renderLib, 120));
 
 /* ================= PIN-SPERRE ================= */
 const PIN_KEY='ft_pin';
@@ -8482,7 +8591,7 @@ function backupText(maxWk){
     recLine = '\n\n▼ ERHOLUNG JETZT\n' + g.map(([n,v])=>`${n} ${v}%`).join(' · '); }catch(e){}
   const cutoff = Date.now() - 14*864e5;                 // letzte 14 Tage
   const recent = state.workouts.filter(w=> new Date(w.date).getTime() >= cutoff)
-    .sort((a,b)=> new Date(b.date) - new Date(a.date)).slice(0, maxWk||12);   // neueste zuerst
+    .sort((a,b)=> Date.parse(b.date) - Date.parse(a.date)).slice(0, maxWk||12);   // neueste zuerst
   let log = '';
   if(recent.length){
     log = '\n\n▼ LETZTE TRAININGS (14 Tage)\n' + recent.map(w=>{
