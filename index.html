@@ -565,6 +565,11 @@ a:active{color:var(--a7)}
 @keyframes growx{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 .mbar .zone{position:absolute;top:0;bottom:0;background:rgba(255,255,255,.10);border-left:1px solid var(--line-3);border-right:1px solid var(--line-3);pointer-events:none}
 .mbar .val{text-align:right;color:var(--txt2);font-variant-numeric:tabular-nums}
+/* Zielbalken. Schlanker als .mbar, weil er unter der Zeile sitzt und nicht
+   neben ihr — und weil die Zahl daneben die eigentliche Aussage trägt. */
+.gbar{height:7px;background:rgba(255,255,255,.06);border-radius:var(--r-full);overflow:hidden}
+.gbar i{display:block;height:100%;border-radius:var(--r-full);transition:width var(--dur-3) var(--ease)}
+@media (prefers-reduced-motion:reduce){ .gbar i{transition:none} }
 .mbar.big{grid-template-columns:100px 1fr 56px;margin-bottom:8px;font-size:var(--fs-sub)}
 /* „Ziel 9–17" unter dem Gruppennamen. Stand bis V61 mit margin-top:-2px da —
    gemeint war engerer Zeilenabstand, gebaut war ein Sonderfall im Raster.
@@ -1144,6 +1149,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
 
     <div id="home-level"></div>
     <div id="home-bw"></div>
+    <div id="home-goals"></div>
     <div id="home-records"></div>
     <div id="home-backup"></div>
   </section>
@@ -1374,6 +1380,36 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
   <button class="btn btn-ghost btn-block btn-sm" id="xo-reset">Auf Standard zurücksetzen</button>
 </div></div>
 
+<div class="mback" id="modal-goal"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="goal-title">
+  <div class="grab"></div>
+  <div class="mhd"><h2 id="goal-title"><span class="bi" data-ico="star"></span>Ziel</h2><button class="iconbtn" data-close aria-label="Schließen" data-ico-close></button></div>
+  <div class="card">
+    <h3 style="margin-bottom:8px">Was willst du erreichen?</h3>
+    <div class="chips" id="goal-arten" style="margin-bottom:12px"></div>
+
+    <!-- Übungswahl nur bei übungsbezogenen Zielen; sonst ausgeblendet -->
+    <div id="goal-exrow" style="margin-bottom:12px">
+      <label class="up" for="goal-ex" style="display:block;margin-bottom:4px">Übung</label>
+      <button class="btn btn-block" id="goal-ex" style="justify-content:space-between">Übung wählen …</button>
+    </div>
+
+    <div class="row" style="gap:8px;margin-bottom:12px">
+      <div class="grow">
+        <label class="up" for="goal-wert" style="display:block;margin-bottom:4px">Zielwert</label>
+        <input type="text" inputmode="decimal" id="goal-wert" placeholder="z.B. 100" style="width:100%">
+      </div>
+      <div class="grow">
+        <label class="up" for="goal-bis" style="display:block;margin-bottom:4px">Bis wann</label>
+        <input type="date" id="goal-bis" style="width:100%">
+      </div>
+    </div>
+
+    <p class="tiny" id="goal-hinweis" style="margin-bottom:12px"></p>
+    <button class="btn btn-acc btn-block btn-lg" id="goal-save">Ziel speichern</button>
+    <button class="btn btn-danger btn-block" id="goal-del" style="margin-top:8px;display:none">Ziel löschen</button>
+  </div>
+</div></div>
+
 <div class="mback" id="modal-bw"><div class="modal" role="dialog" aria-modal="true">
   <div class="grab"></div>
   <div class="mhd"><h2><span class="bi" data-ico="trend"></span>Körpergewicht</h2><button class="iconbtn" data-close aria-label="Schließen" data-ico-close></button></div>
@@ -1511,7 +1547,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V72 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V73 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -2881,6 +2917,7 @@ let state = {
   exOpt: {},           // Einstellungen pro Übung {exId:{uni,lo,hi,step,rest,sets}}
   plan: {},            // geplante Einheiten {'YYYY-MM-DD':{type,exercises:[{exId,name,sets:[{w,r}]}]}}
   measures: [],        // Körpermaße [{d, key:cm}]
+  goals: [],           // Ziele [{id,art,exId,ziel,start,bis,angelegt,erreicht}]
   settings: { goal: 5, rest: 90, lastBackup: null, backupSnooze: 0, repLo: 6, repHi: 9, defSets: 2, setGoalLo: 10, setGoalHi: 20 }
 };
 
@@ -2892,6 +2929,9 @@ function loadState(){
       if(!state.bodyweight) state.bodyweight=[];
       if(!state.measures) state.measures=[];
       if(!state.exOpt) state.exOpt={};
+      /* V73: Ziele. Rein additiv wie der Plan in V63 — fehlt der Schlüssel,
+         gibt es eben keine Ziele. Nichts, was Trainingsdaten anfassen könnte. */
+      if(!Array.isArray(state.goals)) state.goals=[];
       /* V63: Planung. Rein additiv — fehlt der Schlüssel, ist der Plan leer.
          Keine Migration, die Trainingsdaten anfassen könnte. */
       if(!state.plan || typeof state.plan !== 'object') state.plan={}; }
@@ -4548,8 +4588,320 @@ function greeting(){
   const h = new Date().getHours();
   return h<5? 'Gute Nacht' : h<11? 'Guten Morgen' : h<14? 'Mahlzeit' : h<18? 'Guten Tag' : h<23? 'Guten Abend' : 'Gute Nacht';
 }
+/* ══════════════════════════════════════════════════════════════════════
+   PERSÖNLICHE ZIELE                                                (V73)
+
+   Die App konnte bisher sehr genau sagen, was WAR — Rekorde, Zyklen,
+   Verläufe über Jahre. Sie konnte nicht sagen, wo man HIN will. Genau das
+   ist aber der Grund, warum man im Winter um sieben Uhr aufsteht.
+
+   Alle Zielarten rechnen aus Daten, die ohnehin schon da sind. Es gibt
+   nichts einzutragen und nichts zu pflegen: Wer „100 kg Bankdrücken bis
+   Dezember" setzt, muss danach nur noch trainieren.
+
+   Der Startwert wird bei der Anlage FESTGEHALTEN. Ohne ihn liesse sich der
+   Fortschritt nicht ehrlich anzeigen — wer bei 80 kg beginnt und 100 will,
+   hat bei 90 kg die Hälfte geschafft, nicht 90 %.
+   ══════════════════════════════════════════════════════════════════════ */
+
+const ZIEL_ARTEN = {
+  e1rm:     { label:'Rechnerisches 1RM', kurz:'1RM',        einheit:'kg',     ex:true,
+              hilfe:'Aus dem besten Satz hochgerechnet — du musst die 100 kg nie einzeln heben.',
+              wert:g => { const b=exBests(g.exId); return b? Math.round(b.maxE) : 0; } },
+  gewicht:  { label:'Arbeitsgewicht',    kurz:'Gewicht',    einheit:'kg',     ex:true,
+              hilfe:'Das schwerste Gewicht, mit dem du in einem Arbeitssatz gearbeitet hast.',
+              wert:g => { const b=exBests(g.exId); return b? b.maxW : 0; } },
+  wdh:      { label:'Wiederholungen',    kurz:'Wdh',        einheit:'Wdh',    ex:true,
+              hilfe:'Die meisten Wiederholungen in einem Satz — egal bei welchem Gewicht.',
+              wert:g => { const b=exBests(g.exId); return b? b.maxReps : 0; } },
+  workouts: { label:'Anzahl Workouts',   kurz:'Workouts',   einheit:'',       ex:false,
+              hilfe:'Zählt alle abgeschlossenen Einheiten. Das Ziel für alle, die einfach dranbleiben wollen.',
+              wert:() => state.workouts.length },
+  volumen:  { label:'Gesamtvolumen',     kurz:'Volumen',    einheit:'kg',     ex:false,
+              hilfe:'Alles bewegte Gewicht zusammen. In Tonnen denken hilft: 100.000 kg sind 100 t.',
+              wert:() => Math.round(globalAgg().vol) },
+  koerper:  { label:'Körpergewicht',     kurz:'Körper',     einheit:'kg',     ex:false, abwaerts:true,
+              hilfe:'Funktioniert in beide Richtungen — zunehmen wie abnehmen. Braucht Einträge unter „Körpergewicht".',
+              wert:() => { const b=bwLatest(); return b? b.kg : 0; } },
+  streak:   { label:'Wochen in Folge',   kurz:'Streak',     einheit:'Wochen', ex:false,
+              hilfe:'Deine aktuelle Serie trainierter Wochen.',
+              wert:() => currentWeekStreak() },
+};
+
+/* Verträglich gegenüber beschädigten Daten: ein kaputtes Ziel darf die
+   Startseite nicht mitreissen, also fliegt es hier still raus. */
+function zieleListe(){
+  if(!Array.isArray(state.goals)) return [];
+  return state.goals.filter(g => g && typeof g==='object' && ZIEL_ARTEN[g.art] && isFinite(+g.ziel));
+}
+
+const TAG_MS = 864e5;
+const heuteISO = () => new Date().toISOString().slice(0,10);
+const tageZwischen = (vonISO, bisISO) =>
+  Math.round((Date.parse(bisISO+'T00:00:00') - Date.parse(vonISO+'T00:00:00')) / TAG_MS);
+
+/* Der komplette Zustand eines Ziels an einem Punkt — Fortschritt, Zeit und
+   die Frage, die zählt: Reicht das Tempo? */
+function zielStand(g){
+  const art   = ZIEL_ARTEN[g.art];
+  const jetzt = art.wert(g);
+  const start = isFinite(+g.start) ? +g.start : 0;
+  const ziel  = +g.ziel;
+
+  /* Spanne kann negativ sein — beim Abnehmen ist das Ziel kleiner als der
+     Start. Der Bruch stimmt trotzdem, weil dann auch der Zähler negativ ist. */
+  const spanne    = ziel - start;
+  const geschafft = jetzt - start;
+  const anteil = spanne === 0
+    ? (geschafft >= 0 ? 1 : 0)
+    : Math.max(0, Math.min(1, geschafft / spanne));
+
+  const heute       = heuteISO();
+  const tageGesamt  = Math.max(1, tageZwischen(g.angelegt, g.bis));
+  const tageDurch   = Math.max(0, tageZwischen(g.angelegt, heute));
+  const tageRest    = tageZwischen(heute, g.bis);
+  const zeitAnteil  = Math.max(0, Math.min(1, tageDurch / tageGesamt));
+
+  const erreicht = spanne === 0 ? geschafft >= 0
+                 : spanne > 0   ? jetzt >= ziel
+                 :                jetzt <= ziel;
+
+  /* Prognose nur, wenn es überhaupt eine Bewegung in die richtige Richtung
+     gab. Aus null Fortschritt lässt sich kein Termin hochrechnen, und eine
+     erfundene Zahl wäre schlimmer als keine. */
+  let prognose = null;
+  if(!erreicht && tageDurch >= 7 && spanne !== 0 && geschafft/spanne > 0.02){
+    const tempo = (geschafft / spanne) / tageDurch;          // Anteil pro Tag
+    const restTage = Math.ceil((1 - geschafft/spanne) / tempo);
+    if(isFinite(restTage) && restTage > 0 && restTage < 3650){
+      prognose = new Date(Date.now() + restTage*TAG_MS).toISOString().slice(0,10);
+    }
+  }
+
+  return { jetzt, start, ziel, anteil, zeitAnteil, tageRest, tageGesamt,
+           erreicht, prognose, imPlan: anteil >= zeitAnteil - 0.02,
+           abgelaufen: tageRest < 0 };
+}
+
+function zielTitel(g){
+  const art = ZIEL_ARTEN[g.art];
+  const ex  = g.exId ? getEx(g.exId) : null;
+  return art.ex ? (ex ? ex.name : 'Unbekannte Übung') : art.label;
+}
+function zielWertText(g, wert){
+  const art = ZIEL_ARTEN[g.art];
+  if(g.art === 'volumen') return fmtVol(wert);
+  return fmtW(wert) + (art.einheit ? ' ' + art.einheit : '');
+}
+
+/* ── Anzeige auf der Startseite ─────────────────────────────────────── */
+function renderZiele(){
+  const box = $('#home-goals');
+  if(!box) return;
+
+  /* Der Kasten wird bei jedem renderHome neu geschrieben, der Kasten selbst
+     bleibt aber stehen — ein Listener an ihm überlebt das. */
+  if(!box.dataset.wired){
+    box.dataset.wired = '1';
+    box.addEventListener('click', e => {
+      if(e.target.closest('#goal-new')) return openZiel(null);
+      const z = e.target.closest('[data-goal]');
+      if(z) openZiel(z.dataset.goal);
+    });
+  }
+  const alle = zieleListe();
+  const offen = alle.filter(g => !g.erreicht);
+  const fertig = alle.filter(g => g.erreicht);
+
+  if(!alle.length){
+    /* Leerzustand mit Einladung — ein leerer Kasten erklärt sich nicht. */
+    box.innerHTML = `<div class="card">
+      <div class="row" style="justify-content:space-between;align-items:flex-start">
+        <div class="grow"><h3 style="margin-bottom:2px">Ziele</h3>
+          <p class="tiny">Rekorde zeigen, was war. Ein Ziel zeigt, wo du hinwillst —<br>„100 kg Bankdrücken bis Dezember".</p></div>
+      </div>
+      <button class="btn btn-block" id="goal-new" style="margin-top:10px">${ICO.plus} Erstes Ziel setzen</button>
+    </div>`;
+    return;
+  }
+
+  const zeile = g => {
+    const s = zielStand(g);
+    const art = ZIEL_ARTEN[g.art];
+    const proz = Math.round(s.anteil * 100);
+
+    /* Statuszeile: Die ehrliche Antwort auf „schaffe ich das?".
+
+       Die Farben folgen dem Haus-System: Die Akzentfamilie (--acc, --a7) ist
+       ein einziger Farbton in steigender Helligkeit und deshalb bei jeder
+       Farbsehschwäche unterscheidbar. --sig ist der einzige zweite Ton der
+       App und bleibt echten Signalen vorbehalten — genau wie beim „!" der
+       Satzzahl-Ampel. „Zu langsam" ist so ein Signal.
+
+       Die Aussage steht zusätzlich im Text. Wer die Farben gar nicht
+       auseinanderhält, liest „Im Plan" oder „Zu langsam" und weiss Bescheid. */
+    let status, farbe;
+    if(s.erreicht){
+      status = 'Geschafft ✓'; farbe = 'var(--a7)';
+    } else if(s.abgelaufen){
+      status = `Frist abgelaufen — ${proz}% erreicht`; farbe = 'var(--txt3)';
+    } else if(s.imPlan){
+      status = `Im Plan · noch ${s.tageRest} ${s.tageRest===1?'Tag':'Tage'}`; farbe = 'var(--acc)';
+    } else {
+      status = s.prognose
+        ? `Zu langsam — bei dem Tempo am ${fmtDate(s.prognose)}`
+        : `Noch ${s.tageRest} ${s.tageRest===1?'Tag':'Tage'} · erst ${proz}%`;
+      farbe = 'var(--sig)';
+    }
+
+    return `<div class="item" data-goal="${esc(g.id)}" style="cursor:pointer;display:block;padding:10px 0">
+      <div class="row" style="justify-content:space-between;gap:8px">
+        <div class="grow" style="min-width:0">
+          <div class="ttl" style="font-size:var(--fs-sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(zielTitel(g))}</div>
+          <!-- Pfeil statt „von": Beim Abnehmen ist der Zielwert KLEINER als
+               der aktuelle, und „81,4 kg von 78 kg" liest sich dann verkehrt
+               herum. Der Pfeil stimmt in beide Richtungen. -->
+          <div class="meta">${art.kurz} · ${esc(zielWertText(g, s.jetzt))} → ${esc(zielWertText(g, s.ziel))}</div>
+        </div>
+        <b style="flex:none;color:${farbe};font-size:var(--fs-lg)">${proz}%</b>
+      </div>
+      <div class="gbar" style="margin-top:6px"><i style="width:${proz}%;background:${farbe}"></i></div>
+      <div class="tiny" style="margin-top:4px;color:${farbe}">${esc(status)}</div>
+    </div>`;
+  };
+
+  box.innerHTML = `<div class="card">
+    <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:2px">
+      <h3 style="margin:0">Ziele</h3>
+      <button class="iconbtn" id="goal-new" aria-label="Neues Ziel">${ICO.plus}</button>
+    </div>
+    ${offen.map(zeile).join('')}
+    ${fertig.length ? `<div class="picksec" style="margin-top:8px">Erreicht</div>` + fertig.map(zeile).join('') : ''}
+  </div>`;
+}
+
+/* ── Anlegen und Bearbeiten ─────────────────────────────────────────── */
+let _zielEntwurf = null;
+
+function openZiel(id){
+  const vorhanden = id ? zieleListe().find(g => g.id === id) : null;
+  _zielEntwurf = vorhanden
+    ? Object.assign({}, vorhanden)
+    : { id:'g'+uid(), art:'e1rm', exId:null, ziel:'', bis:'', angelegt:heuteISO(), erreicht:null };
+
+  if(!_zielEntwurf.bis){
+    /* Vorgabe drei Monate — kurz genug, dass es drückt, lang genug, dass
+       es bei Kraftaufbau überhaupt erreichbar ist. */
+    _zielEntwurf.bis = new Date(Date.now() + 90*TAG_MS).toISOString().slice(0,10);
+  }
+  $('#goal-title').innerHTML = `<span class="bi" data-ico="star"></span>${vorhanden ? 'Ziel bearbeiten' : 'Neues Ziel'}`;
+  $('#goal-del').style.display = vorhanden ? '' : 'none';
+  $('#goal-wert').value = vorhanden ? vorhanden.ziel : '';
+  $('#goal-bis').value = _zielEntwurf.bis;
+  zielFormular();
+  openModal('#modal-goal');
+  hydrateIcons($('#modal-goal'));
+}
+
+/* Zeichnet die veränderlichen Teile des Formulars neu. */
+function zielFormular(){
+  const g = _zielEntwurf;
+  const art = ZIEL_ARTEN[g.art];
+
+  $('#goal-arten').innerHTML = Object.entries(ZIEL_ARTEN).map(([k,v]) =>
+    `<button class="chip ${k===g.art?'on':''}" data-art="${k}">${esc(v.kurz)}</button>`).join('');
+
+  $('#goal-exrow').style.display = art.ex ? '' : 'none';
+  if(art.ex){
+    const ex = g.exId ? getEx(g.exId) : null;
+    /* Der Pfeil macht sichtbar, dass hier etwas aufgeht — ohne ihn sah der
+       Knopf wie eine reine Beschriftung aus. */
+    $('#goal-ex').innerHTML = `<span class="grow" style="text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${
+      ex ? esc(ex.name) : 'Übung wählen …'}</span><span style="color:var(--txt3)" aria-hidden="true">›</span>`;
+  }
+
+  /* Der aktuelle Stand gehört ins Formular: Wer sein Ziel setzt, soll sehen,
+     wovon aus er startet — sonst tippt er eine Zahl, die er längst hat. */
+  const kannRechnen = !art.ex || g.exId;
+  const jetzt = kannRechnen ? art.wert(g) : null;
+  $('#goal-hinweis').innerHTML = art.hilfe
+    + (jetzt !== null ? `<br><b style="color:var(--txt2)">Aktuell: ${esc(zielWertText(g, jetzt))}</b>` : '');
+  $('#goal-wert').placeholder = art.einheit === 'kg' ? 'z.B. 100' : 'z.B. 20';
+}
+
+$('#goal-arten').addEventListener('click', e => {
+  const c = e.target.closest('[data-art]'); if(!c || !_zielEntwurf) return;
+  _zielEntwurf.art = c.dataset.art;
+  if(!ZIEL_ARTEN[_zielEntwurf.art].ex) _zielEntwurf.exId = null;
+  zielFormular();
+});
+
+$('#goal-ex').addEventListener('click', () => {
+  openPicker(id => { _zielEntwurf.exId = id; closeModals(); openModal('#modal-goal'); zielFormular(); });
+});
+
+$('#goal-save').addEventListener('click', () => {
+  const g = _zielEntwurf; if(!g) return;
+  const art = ZIEL_ARTEN[g.art];
+  const wert = parseFloat(String($('#goal-wert').value).replace(',', '.'));
+  const bis = $('#goal-bis').value;
+
+  if(art.ex && !g.exId)      return toast('Bitte zuerst eine Übung wählen');
+  if(!isFinite(wert) || wert <= 0) return toast('Bitte einen Zielwert eintragen');
+  if(!bis)                   return toast('Bitte eine Frist eintragen');
+  if(tageZwischen(heuteISO(), bis) < 1) return toast('Die Frist muss in der Zukunft liegen');
+
+  const jetzt = art.wert(g);
+  if(!art.abwaerts && wert <= jetzt)
+    return toast(`Das hast du schon — aktuell ${zielWertText(g, jetzt)}`);
+
+  g.ziel = wert;
+  g.bis = bis;
+  /* Startwert nur bei der ANLAGE festhalten. Beim Bearbeiten bliebe er
+     sonst nicht stehen, und der Fortschrittsbalken spränge zurück. */
+  if(!isFinite(+g.start)) g.start = jetzt;
+
+  const idx = state.goals.findIndex(x => x && x.id === g.id);
+  if(idx >= 0) state.goals[idx] = g; else state.goals.push(g);
+
+  saveState(); closeModals(); renderHome();
+  toast(idx >= 0 ? 'Ziel geändert' : 'Ziel gesetzt — viel Erfolg');
+  haptic();
+});
+
+$('#goal-del').addEventListener('click', async () => {
+  const g = _zielEntwurf; if(!g) return;
+  const idx = state.goals.findIndex(x => x && x.id === g.id);
+  if(idx < 0) return;
+  const weg = state.goals[idx];
+  state.goals.splice(idx, 1);
+  saveState(); closeModals(); renderHome();
+  withUndo('Ziel gelöscht', () => {
+    state.goals.splice(idx, 0, weg); saveState(); renderHome();
+  });
+});
+
+/* Nach jedem abgeschlossenen Training prüfen, ob ein Ziel gefallen ist.
+   Wird bewusst NICHT beim Rendern geprüft — sonst feiert die App dasselbe
+   Ziel bei jedem Bildschirmwechsel erneut. */
+function zielePruefen(){
+  let gefeiert = false;
+  zieleListe().forEach(g => {
+    if(g.erreicht) return;
+    if(zielStand(g).erreicht){
+      g.erreicht = heuteISO();
+      gefeiert = true;
+      toast(`Ziel erreicht: ${zielTitel(g)} ✓`);
+      haptic();
+    }
+  });
+  if(gefeiert) saveState();
+  return gefeiert;
+}
+
 function renderHome(){
   renderCoach();
+  renderZiele();
   const now = new Date();
   const [a,b] = weekRange(now);
   const bEnd = new Date(b); bEnd.setDate(bEnd.getDate()-1);
@@ -5595,6 +5947,9 @@ async function finishWorkout(){
      Einmalig — die Marke wird beim Malen verbraucht, nicht nach einer Uhr. */
   figFresh = new Set(cleaned.flatMap(e=>{ const x = getEx(e.exId); return x? x.p.concat(x.s||[]) : []; }));
   const freshAch = evalAchievements([...new Set(cleaned.map(e=>e.exId))]);
+  /* Ziele hier prüfen, nicht beim Zeichnen: Sonst würde dasselbe erreichte
+     Ziel bei jedem Bildschirmwechsel erneut gefeiert. */
+  zielePruefen();
   const lvlAfter = achLevel().lvl;
   makeSnapshot('nach Training');          // Sicherungspunkt direkt nach dem Abschluss
   haptic('success');
