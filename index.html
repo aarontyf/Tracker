@@ -1548,7 +1548,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V74 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V75 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -4431,6 +4431,8 @@ const ICO = {
   rocket:_i('<path d="M12 2c3.5 2.2 5.5 6 5.5 10.2L15 15H9l-2.5-2.8C6.5 8 8.5 4.2 12 2zM9 19c-1 1.5-3 2-3 2s.5-2 2-3M15 19c1 1.5 3 2 3 2s-.5-2-2-3"/><circle cx="12" cy="10" r="1.6"/>'),
   search:_i('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>'),
   star:  _i('<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z"/>'),
+  /* Teilen — der Pfeil nach oben aus dem Kasten, wie ihn iOS benutzt. */
+  share: _i('<path d="M12 15V3M12 3L8.5 6.5M12 3l3.5 3.5"/><path d="M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/>'),
   undo:  _i('<path d="M9 14L4 9l5-5"/><path d="M4 9h9a7 7 0 010 14h-3"/>'),
   alert: _i('<path d="M12 8v5M12 17h.01"/><path d="M10.3 3.9L2.6 17a2 2 0 001.7 3h15.4a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/>'),
   shield:_i('<path d="M12 3l7.5 3v5.5c0 4.4-3.1 8.3-7.5 9.5-4.4-1.2-7.5-5.1-7.5-9.5V6z"/><path d="M9.2 12.2l1.9 1.9 3.7-3.9"/>'),
@@ -4589,6 +4591,181 @@ function greeting(){
   const h = new Date().getHours();
   return h<5? 'Gute Nacht' : h<11? 'Guten Morgen' : h<14? 'Mahlzeit' : h<18? 'Guten Tag' : h<23? 'Guten Abend' : 'Gute Nacht';
 }
+/* ══════════════════════════════════════════════════════════════════════
+   REKORD-KARTE ALS BILD                                            (V75)
+
+   V67 hat entschieden, Trainings als TEXT zu teilen, und die Begründung
+   gilt weiter: Ein Trainingsprotokoll will gelesen werden, Text funktioniert
+   überall und verrät nichts, was nicht ohnehin auf dem Schirm steht.
+
+   Ein Rekord ist ein anderes Ding. Er will nicht gelesen, sondern angesehen
+   werden — und geteilte Screenshots sind der einzige Weg, auf dem eine App
+   ohne Backend jemals über den eigenen Bildschirm hinauskommt. Ein Bild
+   überlebt WhatsApp, Instagram und den Sperrbildschirm; drei Zeilen Text
+   nicht.
+
+   Alles wird auf ein Canvas gezeichnet: kein Dienst, kein Netz, keine
+   Bibliothek. Was das Gerät verlässt, bestimmt der Nutzer beim Teilen.
+
+   Bewusst nicht themeabhängig: Die Karte landet in fremden Feeds, nicht in
+   der App. Sie hat ein eigenes, festes Aussehen — dunkel, weil das Schwarz
+   die Marke der App ist und in jedem Feed funktioniert.
+   ══════════════════════════════════════════════════════════════════════ */
+
+const KARTE_B = 1080, KARTE_H = 1350;             // 4:5 — das Format, das Feeds am wenigsten beschneiden
+/* Die zuletzt gezeichneten Rekorde. Der Teilen-Knopf trägt nur einen Index;
+   die Daten hier zu halten spart es, ein ganzes PR-Objekt ins Markup zu
+   schreiben und wieder herauszuparsen. */
+let _letzteRekorde = [];
+
+/* Systemschriften statt geladener: Eine Webschrift wäre zum Zeichenzeitpunkt
+   womöglich noch nicht da, und die Karte käme ohne Text heraus. */
+const KARTE_FONT = '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
+
+function zeichnePrKarte(pr){
+  const c = document.createElement('canvas');
+  c.width = KARTE_B; c.height = KARTE_H;
+  const x = c.getContext('2d');
+
+  /* ── Grund ── */
+  x.fillStyle = '#000000';
+  x.fillRect(0, 0, KARTE_B, KARTE_H);
+
+  /* Derselbe Lichtschein wie auf der Startseite — die Karte soll erkennbar
+     aus dieser App kommen. */
+  const schein = x.createRadialGradient(KARTE_B*0.5, KARTE_H*0.18, 0, KARTE_B*0.5, KARTE_H*0.18, KARTE_B*0.85);
+  schein.addColorStop(0, 'rgba(82,156,255,0.20)');
+  schein.addColorStop(1, 'rgba(82,156,255,0)');
+  x.fillStyle = schein;
+  x.fillRect(0, 0, KARTE_B, KARTE_H);
+
+  const mitte = KARTE_B / 2;
+  x.textAlign = 'center';
+
+  /* ── Kopfzeile ── */
+  x.fillStyle = '#529CFF';
+  x.font = `600 34px ${KARTE_FONT}`;
+  x.letterSpacing = '6px';
+  x.fillText('NEUE BESTLEISTUNG', mitte, 150);
+  x.letterSpacing = '0px';
+
+  /* ── Übungsname, notfalls über zwei Zeilen ── */
+  const name = String(pr.name || 'Übung');
+  x.fillStyle = '#FFFFFF';
+  let namGroesse = 76;
+  x.font = `800 ${namGroesse}px ${KARTE_FONT}`;
+  /* Erst verkleinern, dann umbrechen — ein Name wie „Schrägbank-Brustpresse
+     (Maschine)" passt sonst in keiner Grösse in eine Zeile. */
+  while(x.measureText(name).width > KARTE_B - 120 && namGroesse > 44){
+    namGroesse -= 4;
+    x.font = `800 ${namGroesse}px ${KARTE_FONT}`;
+  }
+  const zeilen = umbrichText(x, name, KARTE_B - 120).slice(0, 2);
+  zeilen.forEach((z, i) => x.fillText(z, mitte, 270 + i * (namGroesse + 12)));
+
+  /* ── Der Wert: das, wofür die Karte da ist ──────────────────────────
+     Feste Höhe statt Abstand zum Namen. Hing der Wert am Namen, rutschte er
+     bei zweizeiligen Namen nach unten und riss unten ein Loch auf — die
+     Karte sah dann bei jeder Übung anders aus. So sitzt er immer gleich,
+     egal wie lang der Name ist. */
+  const wertY = Math.round(KARTE_H * 0.52);
+
+  /* Auch der Wert muss schrumpfen dürfen: „10.100 kg" bei einem
+     Volumenrekord ist mehr als doppelt so breit wie „140 kg". */
+  let wertGroesse = 190;
+  const wertTxt = String(pr.val ?? '');
+  x.font = `800 ${wertGroesse}px ${KARTE_FONT}`;
+  while(x.measureText(wertTxt).width > KARTE_B - 120 && wertGroesse > 70){
+    wertGroesse -= 6;
+    x.font = `800 ${wertGroesse}px ${KARTE_FONT}`;
+  }
+  x.fillStyle = '#FFFFFF';
+  x.fillText(wertTxt, mitte, wertY);
+
+  x.fillStyle = '#A7B0BD';
+  x.font = `650 44px ${KARTE_FONT}`;
+  x.fillText(String(pr.kind ?? ''), mitte, wertY + 78);
+
+  /* ── Der Vorher-Wert macht die Leistung erst greifbar ── */
+  if(pr.old){
+    const y = wertY + 190;
+    const txt = `vorher ${pr.old}`;
+    x.fillStyle = '#79828F';
+    x.font = `500 40px ${KARTE_FONT}`;
+    x.fillText(txt, mitte, y);
+    /* Durchgestrichen — spart das Wort „statt" und liest sich sofort. */
+    const br = x.measureText(txt).width;
+    x.strokeStyle = 'rgba(121,130,143,0.55)';
+    x.lineWidth = 3;
+    x.beginPath(); x.moveTo(mitte - br/2, y - 13); x.lineTo(mitte + br/2, y - 13); x.stroke();
+  }
+
+  /* ── Fusszeile ── */
+  const datum = pr.date ? new Date(pr.date).toLocaleDateString('de-DE',{day:'2-digit',month:'long',year:'numeric'}) : '';
+  x.fillStyle = '#79828F';
+  x.font = `500 38px ${KARTE_FONT}`;
+  x.fillText(datum, mitte, KARTE_H - 170);
+
+  x.font = `800 42px ${KARTE_FONT}`;
+  const marke = 'Fitness', marke2 = 'Tracker';
+  const b1 = x.measureText(marke).width, b2 = x.measureText(marke2).width;
+  const startX = mitte - (b1 + b2) / 2;
+  x.textAlign = 'left';
+  x.fillStyle = '#FFFFFF'; x.fillText(marke, startX, KARTE_H - 90);
+  x.fillStyle = '#529CFF'; x.fillText(marke2, startX + b1, KARTE_H - 90);
+
+  return c;
+}
+
+/* Bricht Text an Wortgrenzen auf die verfügbare Breite um. */
+function umbrichText(ctx, text, maxBreite){
+  const worte = String(text).split(/\s+/);
+  const zeilen = [];
+  let zeile = '';
+  for(const wort of worte){
+    const versuch = zeile ? zeile + ' ' + wort : wort;
+    if(ctx.measureText(versuch).width > maxBreite && zeile){ zeilen.push(zeile); zeile = wort; }
+    else zeile = versuch;
+  }
+  if(zeile) zeilen.push(zeile);
+  return zeilen;
+}
+
+const canvasZuBlob = c => new Promise(res => c.toBlob(res, 'image/png'));
+
+/* Teilen mit zwei Rückfallebenen: Datei-Teilen (Handy) → Herunterladen
+   (Desktop). Ein Abbruch durch den Nutzer ist kein Fehler und wird still
+   geschluckt — sonst meldet die App „fehlgeschlagen", wenn jemand einfach
+   nur den Teilen-Dialog zumacht. */
+async function teilePrKarte(pr){
+  let blob;
+  try{
+    blob = await canvasZuBlob(zeichnePrKarte(pr));
+  }catch(e){ console.warn('karte fail', e); return toast('Karte konnte nicht erzeugt werden'); }
+  if(!blob) return toast('Karte konnte nicht erzeugt werden');
+
+  const dateiname = `rekord-${String(pr.name||'uebung').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}.png`;
+  const datei = new File([blob], dateiname, { type:'image/png' });
+
+  if(navigator.canShare && navigator.canShare({ files:[datei] }) && navigator.share){
+    try{
+      await navigator.share({ files:[datei], title:'Neue Bestleistung' });
+      haptic('success');
+      return;
+    }catch(e){
+      if(e && e.name === 'AbortError') return;
+      /* Alles andere fällt auf den Download durch. */
+    }
+  }
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = dateiname;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 10000);
+  toast('Karte gespeichert');
+}
+
 /* ══════════════════════════════════════════════════════════════════════
    MUSKEL-BALANCE ALS AKTIVE MELDUNG                                (V74)
 
@@ -5114,10 +5291,22 @@ function renderHome(){
     .flatMap(w=>(w.prs||[]).map(p=>({...p, date:w.date}))).reverse().slice(0,4);
   $('#home-records').innerHTML = recentPrs.length? `<div class="card">
     <h3 style="margin-bottom:4px">Letzte Bestleistungen</h3>
-    ${recentPrs.map(p=>`<div class="item"><div class="grow"><div class="ttl" style="font-size:var(--fs-sub)">${esc(p.name)}</div>
+    ${recentPrs.map((p,i)=>`<div class="item"><div class="grow"><div class="ttl" style="font-size:var(--fs-sub)">${esc(p.name)}</div>
       <div class="meta">${p.kind} · <b style="color:var(--gold)">${p.val}</b>${p.old?` <span class="tiny">statt ${p.old}</span>`:''}</div></div>
-      <span class="tiny">${new Date(p.date).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})}</span></div>`).join('')}
+      <span class="tiny">${new Date(p.date).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})}</span>
+      <button class="iconbtn" data-prshare="${i}" aria-label="Bestleistung „${esc(p.name)}" als Bild teilen">${ICO.share}</button></div>`).join('')}
   </div>`:'';
+  /* Die Rekorde werden bei jedem renderHome neu geschrieben — ein Listener
+     am Kasten überlebt das, einer an der Zeile nicht. */
+  const recBox = $('#home-records');
+  if(!recBox.dataset.wired){
+    recBox.dataset.wired = '1';
+    recBox.addEventListener('click', e => {
+      const b = e.target.closest('[data-prshare]');
+      if(b) teilePrKarte(_letzteRekorde[+b.dataset.prshare]);
+    });
+  }
+  _letzteRekorde = recentPrs;
 
   /* ── Fortsetzen / Backup ── */
   $('#home-resume').innerHTML = state.active ? `
