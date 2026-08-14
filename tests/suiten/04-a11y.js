@@ -107,4 +107,56 @@ exports.lauf = async ({ page, p }) => {
   })()`);
   p.gleich('jedes Eingabefeld ist beschriftet', felderOhne.length, 0);
   felderOhne.slice(0, 10).forEach(f => p.pruefe(`  unbeschriftet: ${f}`, false));
+
+  /* ── Tastaturbedienung von Modalen ────────────────────────────────
+     Ab hier wieder aufgeräumt: die Prüfungen oben haben alles geöffnet. */
+  await js(page, `document.querySelectorAll('.mback').forEach(m=>m.classList.remove('on'));
+                  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+                  showScreen('scr-home');`);
+  await warte(page, 200);
+
+  /* Escape muss jedes Modal schliessen, nicht nur den Bestätigungsdialog. */
+  await js(page, `openModal('#modal-calc')`);
+  await warte(page, 200);
+  p.pruefe('Modal öffnet sich', await js(page, `document.querySelector('#modal-calc').classList.contains('on')`));
+
+  await page.keyboard.press('Escape');
+  await warte(page, 200);
+  p.pruefe('Escape schliesst das Modal',
+           !(await js(page, `document.querySelector('#modal-calc').classList.contains('on')`)));
+
+  /* Der Fokus muss dorthin zurück, wo er herkam — sonst landet man nach dem
+     Schliessen wieder ganz oben in der Seite. */
+  const zurueck = await js(page, `(() => {
+    const anker = document.querySelector('#scr-home button') || document.querySelector('button');
+    if (!anker) return 'kein Anker';
+    anker.id = anker.id || 'a11y-anker';
+    anker.focus();
+    const vorher = document.activeElement.id;
+    openModal('#modal-calc');
+    return vorher;
+  })()`);
+  await warte(page, 250);
+  await js(page, 'closeModals()');
+  await warte(page, 200);
+  p.gleich('Fokus kehrt nach dem Schliessen zurück', await js(page, 'document.activeElement.id'), zurueck);
+
+  /* Ein offenes Modal muss den Fokus halten — sonst tabbt man unsichtbar
+     durch die Seite dahinter. */
+  await js(page, `openModal('#modal-calc')`);
+  await warte(page, 250);
+  const gefangen = await js(page, `(() => {
+    const modal = document.querySelector('#modal-calc');
+    const items = [...modal.querySelectorAll(FOCUSABLE)].filter(el => el.offsetParent !== null);
+    if (items.length < 2) return 'zu wenig Ziele';
+    items[items.length - 1].focus();
+    return modal.contains(document.activeElement);
+  })()`);
+  await page.keyboard.press('Tab');
+  await warte(page, 150);
+  p.pruefe('Fokus bleibt im offenen Modal',
+           await js(page, `document.querySelector('#modal-calc').contains(document.activeElement)`),
+           'Ausgangslage: ' + gefangen);
+
+  await js(page, 'closeModals()');
 };

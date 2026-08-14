@@ -532,6 +532,11 @@ details.erkl>summary{cursor:pointer;color:var(--acc);list-style:none;min-height:
 details.erkl>summary::-webkit-details-marker{display:none}
 details.erkl>summary::after{content:'›';margin-left:6px;display:inline-block;transition:transform var(--dur-2) var(--ease)}
 details.erkl[open]>summary::after{transform:rotate(90deg)}
+/* Quellenlinks sind zum Antippen da, nicht nur zum Lesen. Ohne eigene Höhe
+   waren sie 18 px hoch — im Studio mit feuchten Händen nicht zu treffen.
+   inline-block mit Polsterung statt grösserer Zeilenhöhe, damit der Fliesstext
+   daneben unverändert umbricht. */
+details.erkl a{display:inline-block;padding:4px 0;min-height:24px}
 details.erkl>div{margin-top:6px;color:var(--txt2)}
 /* Im Training kompakter — dort zählt jede Zeile */
 details.erkl.warum{margin-top:2px}
@@ -1177,7 +1182,11 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
   <div class="cf-ico" id="cf-ico"></div>
   <h2 id="cf-title" style="text-align:center;margin-bottom:4px"></h2>
   <p class="sub" id="cf-text" style="text-align:center;margin-bottom:16px;white-space:pre-line"></p>
-  <button class="btn btn-block btn-lg" id="cf-ok" style="margin-bottom:8px"></button>
+  <!-- Beschriftung setzt confirmModal() zur Laufzeit. Der Vorgabetext steht
+       trotzdem hier: Ein Knopf ohne Text ist für einen Screenreader nur eine
+       „Schaltfläche" — und falls die Beschriftung je ausbleibt, steht hier
+       etwas Sinnvolles statt nichts. -->
+  <button class="btn btn-block btn-lg" id="cf-ok" style="margin-bottom:8px">Ja, weiter</button>
   <button class="btn btn-ghost btn-block" id="cf-cancel">Abbrechen</button>
 </div></div>
 
@@ -4419,6 +4428,25 @@ function closeModals(){
   if(_focusReturn && document.contains(_focusReturn)){ try{ _focusReturn.focus(); }catch(_){} }
   _focusReturn = null;
 }
+/* Escape schliesst das oberste offene Modal.
+   Bis hierher galt das nur für den Bestätigungsdialog — die übrigen fünfzehn
+   liessen sich mit der Tastatur überhaupt nicht schliessen. Wer keine Maus
+   benutzt, sass darin fest und kam nur über den Schliessen-Knopf wieder raus.
+   Gesperrte Modale (die Sicherungs-Warnung) bleiben ausgenommen, genau wie
+   beim Tippen daneben — sonst liesse sich die Warnung wegdrücken, die
+   ausdrücklich nicht wegdrückbar sein soll. */
+document.addEventListener('keydown', e=>{
+  if(e.key!=='Escape') return;
+  if(_cfResolve) return;                            // Bestätigungsdialog hat Vorrang
+  const oben = [...document.querySelectorAll('.mback.on')].pop();
+  if(!oben) return;
+  const inner = oben.querySelector('.modal');
+  if(inner && inner.dataset.locked==='1') return;
+  oben.classList.remove('on');
+  if(_focusReturn && document.contains(_focusReturn)){ try{ _focusReturn.focus(); }catch(_){} }
+  _focusReturn = null;
+});
+
 $$('.mback').forEach(m=>m.addEventListener('click',e=>{
   if(e.target!==m) return;
   const inner = m.querySelector('.modal');
