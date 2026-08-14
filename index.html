@@ -700,6 +700,12 @@ details.erkl.warum>div{font-size:var(--fs-tiny);margin-top:2px}
 .sethead.rir,.setrow.rir{grid-template-columns:30px 1fr 70px 58px 52px 26px}
 .sethead.uni,.setrow.uni{grid-template-columns:28px 1fr 62px 50px 50px 24px}
 .sethead.uni.rir,.setrow.uni.rir{grid-template-columns:26px .84fr 54px 42px 42px 42px 22px}
+/* Zeit- und Kardioübungen haben weniger Felder, die aber breiter sein
+   müssen: „1:30 min" braucht mehr Platz als „12". Die Klassen stehen NACH
+   den anderen, damit sie rir/uni überschreiben — beides ergibt bei einer
+   Halteübung ohnehin keinen Sinn. */
+.sethead.zeit,.setrow.zeit{grid-template-columns:30px 1fr 92px 26px}
+.sethead.kardio,.setrow.kardio{grid-template-columns:30px 1fr 82px 82px 26px}
 /* Touch-Ziele: sichtbare Größe kompakt, Trefferfläche via ::after auf Norm gebracht */
 .setdel{position:relative;width:var(--hit-min);height:var(--hit-min);border-radius:var(--r-sm);background:none;border:none;color:var(--txt3);font-size:var(--fs-sub);display:inline-flex;align-items:center;justify-content:center;justify-self:center;transition:color var(--dur-2) var(--ease),transform var(--dur-1) var(--ease),background var(--dur-2) var(--ease)}
 .setdel::after{content:'';position:absolute;inset:-10px -8px}
@@ -1548,7 +1554,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V75 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V76 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -2531,7 +2537,7 @@ function recoveryGroups(rec){
 }
 /* ================= ÜBUNGSDATENBANK ================= */
 /* [Name, Gruppe, Gerät, primäre Muskeln, sekundäre Muskeln, Alias/Suchbegriffe] */
-const EQUIPS = ['Langhantel','Kurzhantel','Maschine','Maschine (unterstützt)','Kabel','Multipresse','Körpergewicht','SZ-Stange','Trap-Stange','Kettlebell','Widerstandsband','Hantelscheibe','Sonstiges'];
+const EQUIPS = ['Langhantel','Kurzhantel','Maschine','Maschine (unterstützt)','Kabel','Multipresse','Körpergewicht','SZ-Stange','Trap-Stange','Kettlebell','Widerstandsband','Hantelscheibe','Kardiogerät','Sonstiges'];
 const EXDB_RAW = [
 /* ---------- BRUST ---------- */
 ['Bankdrücken (Langhantel)','Brust','Langhantel',['chest'],['front_delt','triceps'],'bench press flat'],
@@ -2895,9 +2901,54 @@ const EXDB_RAW = [
 ['Human Flag (Sek. als Wdh)','Ganzkörper','Körpergewicht',['obliques'],['lats','side_delt','abs'],'human flag menschliche fahne halten'],
 ['Renegade-Rudern','Ganzkörper','Kurzhantel',['upper_back','lats'],['abs','biceps'],'renegade row',1],
 ['Wandball-Würfe','Ganzkörper','Sonstiges',['quads','front_delt'],['glutes','abs'],'wall ball wandball'],
+
+/* ── HALTEÜBUNGEN (Zeit) ──────────────────────────────────────────────
+   Achte Spalte = Übungsart: 'zeit' misst Sekunden statt Wiederholungen.
+
+   Bis V75 gab es dafür nur Behelfe: „Tuck-Planche (Sek. als Wdh)" und
+   „Human Flag (Sek. als Wdh)" — die Sekunden wurden ins Wiederholungsfeld
+   getippt. Die beiden Einträge BLEIBEN unverändert stehen, samt Namen: Wer
+   sie benutzt hat, hat dort Historie liegen, und eine Umdeutung ihrer Zahlen
+   würde diese Historie still verfälschen. Neue Halteübungen kommen hier dazu. */
+['Unterarmstütz','Bauch','Körpergewicht',['abs'],['front_delt','obliques'],'plank unterarmstütz planke halten',0,'zeit'],
+['Unterarmstütz (seitlich)','Bauch','Körpergewicht',['obliques'],['abs','side_delt'],'side plank seitstütz halten',1,'zeit'],
+['Unterarmstütz (Füße erhöht)','Bauch','Körpergewicht',['abs'],['front_delt'],'plank feet elevated erhöht halten',0,'zeit'],
+['Hohlkreuz-Halten','Bauch','Körpergewicht',['abs'],[],'hollow body hold hohlkörper halten',0,'zeit'],
+['Unterarmstütz (Liegestützposition)','Bauch','Körpergewicht',['abs'],['chest','triceps'],'high plank liegestütz halten',0,'zeit'],
+['Totenkäfer-Halten','Bauch','Körpergewicht',['abs'],[],'dead bug hold halten',0,'zeit'],
+['Hängen an der Stange','Rücken','Körpergewicht',['forearms'],['lats'],'dead hang hängen stange grip',0,'zeit'],
+['Wandsitzen','Beine','Körpergewicht',['quads'],['glutes'],'wall sit wandsitz halten',0,'zeit'],
+['Farmers Walk','Ganzkörper','Kurzhantel',['forearms','traps'],['abs','quads'],'farmers walk farmerslauf tragen',0,'zeit'],
+['Koffertragen (einseitig)','Ganzkörper','Kurzhantel',['obliques','forearms'],['traps'],'suitcase carry koffer tragen',1,'zeit'],
+['Überkopftragen','Ganzkörper','Kurzhantel',['side_delt','abs'],['traps'],'overhead carry überkopf tragen',0,'zeit'],
+['Rudergriff-Halten (Lat)','Rücken','Kabel',['upper_back'],['lats','biceps'],'iso hold rudern halten',0,'zeit'],
+['Glute-Bridge-Halten','Beine','Körpergewicht',['glutes'],['hamstrings'],'glute bridge hold hüftbrücke halten',0,'zeit'],
+['Waden-Halten (gestreckt)','Beine','Körpergewicht',['calves'],[],'calf hold waden halten',0,'zeit'],
+
+/* ── KARDIO (Zeit + Distanz) ──────────────────────────────────────────
+   'kardio' misst Sekunden UND Strecke. Volumen in Kilogramm ergibt hier
+   keinen Sinn und wird deshalb auch nicht berechnet — die Zahlen dieser
+   Übungen laufen getrennt. */
+['Laufband','Ganzkörper','Kardiogerät',['quads','calves'],['hamstrings','glutes'],'treadmill laufband laufen rennen',0,'kardio'],
+['Laufband (Steigung)','Ganzkörper','Kardiogerät',['glutes','quads'],['calves','hamstrings'],'incline walk steigung bergauf',0,'kardio'],
+['Rudergerät','Ganzkörper','Kardiogerät',['upper_back','quads'],['lats','biceps','hamstrings'],'rowing erg concept2 rudergerät',0,'kardio'],
+['Fahrradergometer','Beine','Kardiogerät',['quads'],['glutes','calves'],'bike ergometer fahrrad radfahren spinning',0,'kardio'],
+['Liegeergometer','Beine','Kardiogerät',['quads'],['glutes'],'recumbent bike liegerad',0,'kardio'],
+['Crosstrainer','Ganzkörper','Kardiogerät',['quads','glutes'],['calves','upper_back'],'elliptical crosstrainer ellipsentrainer',0,'kardio'],
+['Treppensteiger','Beine','Kardiogerät',['glutes','quads'],['calves'],'stairmaster treppe stepper steigen',0,'kardio'],
+['Skiergometer','Ganzkörper','Kardiogerät',['lats','abs'],['triceps','upper_back'],'skierg ski ergometer',0,'kardio'],
+['Air Bike','Ganzkörper','Kardiogerät',['quads','front_delt'],['lats','glutes'],'assault air bike ventilator',0,'kardio'],
+['Laufen (draußen)','Ganzkörper','Sonstiges',['quads','calves'],['hamstrings','glutes'],'running joggen laufen outdoor',0,'kardio'],
+['Radfahren (draußen)','Beine','Sonstiges',['quads'],['glutes','calves'],'cycling radfahren fahrrad outdoor',0,'kardio'],
+['Schwimmen','Ganzkörper','Sonstiges',['lats','front_delt'],['abs','quads'],'swimming schwimmen bahnen',0,'kardio'],
+['Seilspringen','Ganzkörper','Sonstiges',['calves'],['front_delt','abs'],'jump rope seilspringen springseil',0,'kardio'],
+['Schlittenschieben','Ganzkörper','Sonstiges',['quads','glutes'],['calves','abs'],'sled push prowler schlitten schieben',0,'kardio'],
 ];
 const exSlug = n=>'x-'+n.toLowerCase().replace(/[^a-z0-9äöüß]+/g,'-').replace(/^-+|-+$/g,'');
-const EXDB = EXDB_RAW.map(r=>({id:exSlug(r[0]), name:r[0], grp:r[1], eq:r[2], p:r[3], s:r[4]||[], al:(r[5]||'').toLowerCase(), uni:!!r[6]}));
+/* art: 'kraft' (Gewicht × Wiederholungen), 'zeit' (Sekunden) oder
+   'kardio' (Sekunden + Strecke). Fehlt die Spalte, ist es Kraft — damit
+   bleiben alle 337 bestehenden Einträge und alle Altdaten unberührt. */
+const EXDB = EXDB_RAW.map(r=>({id:exSlug(r[0]), name:r[0], grp:r[1], eq:r[2], p:r[3], s:r[4]||[], al:(r[5]||'').toLowerCase(), uni:!!r[6], art:r[7]||'kraft'}));
 /* ================= KERN: STATE / DATUM / PR-LOGIK ================= */
 const LS_KEY = 'ironlog_v1';
 /* Zyklus = Ganzkörper-Push → Ganzkörper-Pull → Rest. Der Vorschlag kommt
@@ -3259,7 +3310,63 @@ function clearUniSince(exId){ setExOpt(exId, {uniLog:[]}); }
    Satz-Typen:  (leer)=Arbeitssatz · 'w'=Aufwärmen · 'd'=Dropset
    Aufwärmsätze zählen NICHT in Volumen, PRs, Muskelsätze und Progression. */
 /* Ein Satz zählt, sobald links ODER rechts Wdh stehen (rr = Wdh rechte Seite bei einseitigen Übungen) */
-function validSets(ex){ return ex.sets.filter(s=>((+s.r||0)>0 || (+s.rr||0)>0) && s.t!=='w'); }
+/* ══════════════════════════════════════════════════════════════════════
+   ÜBUNGSARTEN: KRAFT, ZEIT, KARDIO                                 (V76)
+
+   Das Satzmodell kannte bis hier nur Gewicht × Wiederholungen. Ein
+   Unterarmstütz hat aber keine Wiederholungen, und ein Laufband schon gar
+   nicht — beides liess sich nur als Behelf eintragen, indem man Sekunden
+   ins Wiederholungsfeld tippte (siehe „Tuck-Planche (Sek. als Wdh)").
+
+   Neue Satzfelder, beide optional:
+     sek   Dauer in Sekunden          ('zeit' und 'kardio')
+     dist  Strecke in Metern          (nur 'kardio')
+
+   Der wichtigste Teil dieser Änderung ist, was NICHT passiert: Die
+   Volumenformel bleibt, wie sie ist. Sie rechnet Gewicht × Wiederholungen,
+   und bei einem Zeitsatz sind die Wiederholungen null — das Volumen ist
+   also von selbst null, ohne eine einzige Fallunterscheidung. Dasselbe gilt
+   für e1RM und die Gewichtsrekorde. Wer hier Sonderfälle einbaut, bricht
+   sich die Kraftstatistik an einer Stelle, an der die Mathematik ohnehin
+   schon das Richtige tut.
+   ══════════════════════════════════════════════════════════════════════ */
+function exArt(exId){ const ex = getEx(exId); return (ex && ex.art) || 'kraft'; }
+const istZeitArt = art => art === 'zeit' || art === 'kardio';
+/* Bei Einträgen im Workout: die Art der zugehörigen Übung. */
+function entryArt(e){ return exArt(e && e.exId); }
+
+/* Ein Satz zählt, wenn er etwas Gemessenes enthält — Wiederholungen ODER
+   Sekunden. Ohne das zweite Kriterium wären Halteübungen unsichtbar: Sie
+   fielen hier heraus und damit aus Historie, Statistik und Satzzählung. */
+function satzHatInhalt(s){
+  return (+s.r||0) > 0 || (+s.rr||0) > 0 || (+s.sek||0) > 0;
+}
+function validSets(ex){ return ex.sets.filter(s=>satzHatInhalt(s) && s.t!=='w'); }
+
+/* Dauer und Strecke — die Kennzahlen, die bei Zeit und Kardio an die Stelle
+   des Volumens treten. */
+function exDauerSek(e){ return validSets(e).reduce((a,s)=>a+(+s.sek||0), 0); }
+function exDistM(e){    return validSets(e).reduce((a,s)=>a+(+s.dist||0), 0); }
+function wDauerSek(w){  return w.exercises.reduce((a,e)=>a+exDauerSek(e), 0); }
+function wDistM(w){     return w.exercises.reduce((a,e)=>a+exDistM(e), 0); }
+
+/* Formatierung. Sekunden werden erst ab einer Minute umgerechnet — „45 s"
+   ist bei einem Unterarmstütz die Zahl, die zählt, „0:45" liest sich dort
+   umständlicher. */
+function fmtSek(sek){
+  sek = Math.round(+sek||0);
+  if(sek < 60) return sek + ' s';
+  const m = Math.floor(sek/60), s = sek%60;
+  if(m < 60) return s ? `${m}:${String(s).padStart(2,'0')} min` : `${m} min`;
+  const h = Math.floor(m/60);
+  return `${h}:${String(m%60).padStart(2,'0')} h`;
+}
+function fmtDist(m){
+  m = +m||0;
+  if(!m) return '';
+  return m < 1000 ? Math.round(m) + ' m'
+                  : (Math.round(m/10)/100).toLocaleString('de-DE') + ' km';
+}
 
 /* ── WIEDERHOLUNGEN EINES SATZES ────────────────────────────────────────
    Bei einseitigen Übungen gibt es zwei Werte (links/rechts). Welcher zählt,
@@ -3289,7 +3396,7 @@ function repsOf(e, s, mode){
   if(mode==='weak')  return Math.min(rl, rr);
   return Math.max(rl, rr);
 }
-function allLoggedSets(ex){ return ex.sets.filter(s=>(+s.r||0)>0 || (+s.rr||0)>0); }
+function allLoggedSets(ex){ return ex.sets.filter(satzHatInhalt); }
 const SETTYPE = {w:['A','Aufwärmsatz'], d:['D','Dropset']};
 /* Volumen einer Übung im Workout:
    - Körpergewichtsübungen: (Körpergewicht + Zusatz) × Wdh
@@ -5942,7 +6049,7 @@ function renderActive(){
            Beim Loggen weiß man, was man gerade macht — das ist Deko, die
            Platz kostet. Die Hinweise zur EINGABE bleiben: sie erklären, was
            die Zahl im Feld bedeutet, und ohne sie trägt man Falsches ein. */
-        (isBW||assist||o.uni)? `<div class="musctags">${isBW?'<b style="color:var(--acc2)">„+kg" = Zusatzgewicht</b>':''}${assist?`<b style="color:var(--acc2)">mehr kg = leichter${myBw?` · ${myBw} kg − Hilfe`:''}</b>`:''}${o.uni?`${isBW||assist?' · ':''}<b style="color:var(--acc2)">Wdh L/R getrennt</b>`:''}</div>`:''}</div>
+        (!istZeitArt(entryArt(e)) && (isBW||assist||o.uni))? `<div class="musctags">${isBW?'<b style="color:var(--acc2)">„+kg" = Zusatzgewicht</b>':''}${assist?`<b style="color:var(--acc2)">mehr kg = leichter${myBw?` · ${myBw} kg − Hilfe`:''}</b>`:''}${o.uni?`${isBW||assist?' · ':''}<b style="color:var(--acc2)">Wdh L/R getrennt</b>`:''}</div>`:''}</div>
         <button class="iconbtn" data-calc="${ei}" style="width:32px;height:32px" aria-label="Scheiben-Rechner">${ICO.scale}</button>
         <button class="iconbtn" data-exopt="${ei}" style="width:32px;height:32px">${ICO.gear}</button>
         <button class="iconbtn" data-rmex="${ei}" style="width:32px;height:32px">${ICO.trash}</button></div>
@@ -5959,6 +6066,22 @@ function renderActive(){
            Bei unterstützten Übungen ist es die effektive Last, bei
            Körpergewicht das Zusatzgewicht; exHistory rechnet das bereits. */
         (()=>{
+          /* Bei Halte- und Kardioübungen gibt es kein Arbeitsgewicht und keinen
+             Wiederholungsbereich. Die Verlaufszeile zeigt hier deshalb die
+             gehaltene Zeit — „67 → 70 → 75 kg" wäre bei einem Unterarmstütz
+             schlicht falsch, und „Gewicht suchen, mit dem 10–20 Wdh sauber
+             gehen" ein Rat, der zur Übung nicht passt. */
+          if(istZeitArt(entryArt(e))){
+            const hz = state.workouts
+              .filter(w => Date.parse(w.date) < new Date(a.date).getTime())
+              .flatMap(w => w.exercises.filter(x => x.exId === e.exId))
+              .map(x => Math.max(0, ...validSets(x).map(s => +s.sek||0)))
+              .filter(v => v > 0).slice(-3);
+            if(!hz.length) return `<div class="prevline">Erstes Mal — Zeit ehrlich stoppen, das ist der Ausgangswert</div>`;
+            const rauf = hz.length>1 && hz[hz.length-1] > hz[0];
+            return `<div class="prevline">Längste Zeit <b>${hz.map(fmtSek).join(' → ')}</b>${
+              rauf? ' <span style="color:var(--green)">↑</span>':''}</div>`;
+          }
           const h3 = exHistory(e.exId, new Date(a.date).getTime()).slice(-3);
           if(!h3.length) return `<div class="prevline">Erstes Mal — Gewicht suchen, mit dem ${o.lo}–${o.hi} Wdh sauber gehen</div>`;
           /* Bei einer Körpergewichtsübung OHNE Zusatzgewicht ist das Gewicht
@@ -5974,24 +6097,60 @@ function renderActive(){
                       : (bests&&bests.maxW>0? ` &nbsp;·&nbsp; Best <b>${isBW&&!assist?'+':''}${fmtW(bests.maxW)}</b>` : '');
           return `<div class="prevline">Zuletzt <b>${werte}</b>${einh}${pfeil}${best}</div>`;
         })()}
-      <div class="platewrap" data-pb="${ei}">${scheibenZeile(ei)}</div>
-      <div data-wh="${ei}">${warmVorschlag(ei)}</div>
-      <div class="sethead ${useRir?'rir':''} ${uni?'uni':''}"><span>#</span><span>Zuletzt</span><span title="${assist?'Hilfe der Maschine — mehr kg macht die Übung leichter':''}">${assist?'−kg Hilfe':isBW?'+kg':'kg'}</span>${uni?'<span title="Wdh linke Seite">Wdh L</span><span title="Wdh rechte Seite">Wdh R</span>':'<span>Wdh</span>'}${useRir?'<span title="Reps in Reserve">RIR</span>':''}<span></span></div>
-      ${e.sets.map((s,si)=>{
-        const ps = prev && prev.sets[si];
-        const filled = (+s.r||0)>0 || (+s.rr||0)>0;
-        const tcls = s.t==='w'?'warm':s.t==='d'?'drop':'';
-        const lbl = s.t? SETTYPE[s.t][0] : (si+1);
-        return `<div class="setrow ${useRir?'rir':''} ${uni?'uni':''} ${filled?'filled':''} ${tcls}" data-ei="${ei}" data-si="${si}">
-          <button class="idx" data-settype title="Satz-Typ wechseln">${lbl}</button>
-          ${ps? `<button class="prevpill" data-pf data-w="${+ps.w||0}" data-r="${ps.r||''}" data-rr="${ps.rr!==undefined?ps.rr:''}">${fmtS(ps).replace('×',' kg × ').replace('BW kg','BW')}</button>` : `<span class="prevpill none">—</span>`}
-          <input type="number" inputmode="decimal" step="0.5" min="0" placeholder="${ps? +ps.w||0 : (assist?'Hilfe':isBW?'+kg':'kg')}" value="${s.w!==''&&s.w!=null? s.w:''}" data-f="w">
-          <input type="number" inputmode="numeric" step="1" min="0" placeholder="${(e.targets&&e.targets[si])||e.target||(ps? ps.r : (uni?'L':'Wdh'))}" value="${s.r!==''&&s.r!=null? s.r:''}" data-f="r">
-          ${uni? `<input type="number" inputmode="numeric" step="1" min="0" placeholder="${ps&&ps.rr!==undefined&&ps.rr!==''?ps.rr:(ps?ps.r:'R')}" value="${s.rr!==''&&s.rr!=null&&s.rr!==undefined? s.rr:''}" data-f="rr">`:''}
-          ${useRir? `<input class="riri" type="number" inputmode="numeric" step="1" min="0" max="10" placeholder="–" value="${s.rir!==''&&s.rir!=null&&s.rir!==undefined? s.rir:''}" data-f="rir">`:''}
-          <button class="setdel" data-delset title="Satz löschen">✕</button>
-        </div>`;
-      }).join('')}
+      <!-- Scheibenrechner und Aufwaermvorschlag rechnen beide in Kilogramm.
+           Bei einer Halte- oder Kardiouebung gibt es keine, also auch keinen
+           Grund, die Zeilen ueberhaupt anzulegen. -->
+      ${istZeitArt(entryArt(e)) ? '' : `<div class="platewrap" data-pb="${ei}">${scheibenZeile(ei)}</div>
+      <div data-wh="${ei}">${warmVorschlag(ei)}</div>`}
+      ${(() => {
+        /* Zeit- und Kardioübungen bekommen eine eigene Kopfzeile und eigene
+           Felder. Alles andere bleibt Wort für Wort, wie es war — diese
+           Übungsarten sind ein Zusatz, kein Umbau der Krafteingabe. */
+        const art = entryArt(e);
+        const kopfKlasse = art==='zeit' ? 'zeit' : art==='kardio' ? 'kardio' : `${useRir?'rir':''} ${uni?'uni':''}`;
+        const kopf = art==='zeit'
+          ? `<span>#</span><span>Zuletzt</span><span title="Gehaltene Zeit in Sekunden">Sek</span><span></span>`
+          : art==='kardio'
+          ? `<span>#</span><span>Zuletzt</span><span title="Dauer in Sekunden">Sek</span><span title="Strecke in Metern">Meter</span><span></span>`
+          : `<span>#</span><span>Zuletzt</span><span title="${assist?'Hilfe der Maschine — mehr kg macht die Übung leichter':''}">${assist?'−kg Hilfe':isBW?'+kg':'kg'}</span>${uni?'<span title="Wdh linke Seite">Wdh L</span><span title="Wdh rechte Seite">Wdh R</span>':'<span>Wdh</span>'}${useRir?'<span title="Reps in Reserve">RIR</span>':''}<span></span>`;
+
+        const zeilen = e.sets.map((s,si)=>{
+          const ps = prev && prev.sets[si];
+          const filled = satzHatInhalt(s);
+          const tcls = s.t==='w'?'warm':s.t==='d'?'drop':'';
+          const lbl = s.t? SETTYPE[s.t][0] : (si+1);
+
+          if(istZeitArt(art)){
+            /* Der Vorher-Wert zeigt hier Sekunden bzw. Sekunden und Strecke.
+               Antippen übernimmt ihn, genau wie bei den Kraftsätzen. */
+            const vorher = ps
+              ? `<button class="prevpill" data-pf data-sek="${+ps.sek||0}" data-dist="${+ps.dist||0}">${
+                  fmtSek(ps.sek)}${(+ps.dist||0)? ' · '+fmtDist(ps.dist) : ''}</button>`
+              : `<span class="prevpill none">—</span>`;
+            return `<div class="setrow ${art} ${filled?'filled':''} ${tcls}" data-ei="${ei}" data-si="${si}">
+              <button class="idx" data-settype title="Satz-Typ wechseln">${lbl}</button>
+              ${vorher}
+              <input type="number" inputmode="numeric" step="5" min="0" aria-label="Sekunden"
+                     placeholder="${ps? (+ps.sek||0) : 'Sek'}" value="${s.sek!==''&&s.sek!=null? s.sek:''}" data-f="sek">
+              ${art==='kardio' ? `<input type="number" inputmode="numeric" step="10" min="0" aria-label="Meter"
+                     placeholder="${ps? (+ps.dist||0) : 'm'}" value="${s.dist!==''&&s.dist!=null? s.dist:''}" data-f="dist">` : ''}
+              <button class="setdel" data-delset title="Satz löschen">✕</button>
+            </div>`;
+          }
+
+          return `<div class="setrow ${useRir?'rir':''} ${uni?'uni':''} ${filled?'filled':''} ${tcls}" data-ei="${ei}" data-si="${si}">
+            <button class="idx" data-settype title="Satz-Typ wechseln">${lbl}</button>
+            ${ps? `<button class="prevpill" data-pf data-w="${+ps.w||0}" data-r="${ps.r||''}" data-rr="${ps.rr!==undefined?ps.rr:''}">${fmtS(ps).replace('×',' kg × ').replace('BW kg','BW')}</button>` : `<span class="prevpill none">—</span>`}
+            <input type="number" inputmode="decimal" step="0.5" min="0" placeholder="${ps? +ps.w||0 : (assist?'Hilfe':isBW?'+kg':'kg')}" value="${s.w!==''&&s.w!=null? s.w:''}" data-f="w">
+            <input type="number" inputmode="numeric" step="1" min="0" placeholder="${(e.targets&&e.targets[si])||e.target||(ps? ps.r : (uni?'L':'Wdh'))}" value="${s.r!==''&&s.r!=null? s.r:''}" data-f="r">
+            ${uni? `<input type="number" inputmode="numeric" step="1" min="0" placeholder="${ps&&ps.rr!==undefined&&ps.rr!==''?ps.rr:(ps?ps.r:'R')}" value="${s.rr!==''&&s.rr!=null&&s.rr!==undefined? s.rr:''}" data-f="rr">`:''}
+            ${useRir? `<input class="riri" type="number" inputmode="numeric" step="1" min="0" max="10" placeholder="–" value="${s.rir!==''&&s.rir!=null&&s.rir!==undefined? s.rir:''}" data-f="rir">`:''}
+            <button class="setdel" data-delset title="Satz löschen">✕</button>
+          </div>`;
+        }).join('');
+
+        return `<div class="sethead ${kopfKlasse}">${kopf}</div>${zeilen}`;
+      })()}
       <button class="addset" data-addset="${ei}">＋ Satz</button>
       <div data-nz="${ei}">${notizFeld(ei)}</div>
     </div>`;
@@ -6041,9 +6200,12 @@ function wireActiveOnce(){
     const row = inp.closest('.setrow'); if(!row) return;
     const ei = +row.dataset.ei, si = +row.dataset.si;
     const set = state.active.exercises[ei].sets[si];
-    const wasDone = (+set.r||0)>0 || (+set.rr||0)>0;
+    /* satzHatInhalt() statt der Wiederholungsprüfung: Sonst gälte ein
+       Unterarmstütz nie als „gemacht" — kein Zeitstempel, keine Markierung,
+       keine Satzzählung. */
+    const wasDone = satzHatInhalt(set);
     set[inp.dataset.f] = inp.value;
-    const isDone = (+set.r||0)>0 || (+set.rr||0)>0;
+    const isDone = satzHatInhalt(set);
     if(!wasDone && isDone) satzGestempelt(set);      // V70: die Uhr des Satzes
     row.classList.toggle('filled', isDone);
     saveStateSoon();
@@ -6113,12 +6275,23 @@ function wireActiveOnce(){
     if(pf && row){
       const ei=+row.dataset.ei, si=+row.dataset.si;
       const set = state.active.exercises[ei].sets[si];
-      const wasDone = (+set.r||0)>0 || (+set.rr||0)>0;
-      set.w = pf.dataset.w; set.r = pf.dataset.r;
-      row.querySelector('[data-f=w]').value = set.w;
-      row.querySelector('[data-f=r]').value = set.r;
-      const rrIn = row.querySelector('[data-f=rr]');
-      if(rrIn){ set.rr = (pf.dataset.rr!==undefined && pf.dataset.rr!=='') ? pf.dataset.rr : pf.dataset.r; rrIn.value = set.rr; }
+      const wasDone = satzHatInhalt(set);
+      /* Zeit- und Kardiozeilen haben kein Gewichts- und kein
+         Wiederholungsfeld. Ohne diese Abzweigung liefe der Zugriff auf
+         [data-f=w] hier ins Leere und der Knopf würde eine Ausnahme werfen. */
+      const sekIn = row.querySelector('[data-f=sek]');
+      if(sekIn){
+        set.sek = pf.dataset.sek || '';
+        sekIn.value = set.sek;
+        const distIn = row.querySelector('[data-f=dist]');
+        if(distIn){ set.dist = pf.dataset.dist || ''; distIn.value = set.dist; }
+      } else {
+        set.w = pf.dataset.w; set.r = pf.dataset.r;
+        row.querySelector('[data-f=w]').value = set.w;
+        row.querySelector('[data-f=r]').value = set.r;
+        const rrIn = row.querySelector('[data-f=rr]');
+        if(rrIn){ set.rr = (pf.dataset.rr!==undefined && pf.dataset.rr!=='') ? pf.dataset.rr : pf.dataset.r; rrIn.value = set.rr; }
+      }
       row.classList.add('filled');
       if(!wasDone) satzGestempelt(set);              // V70: die Uhr des Satzes
       refreshSetCount(); saveState(); haptic();
@@ -6252,6 +6425,12 @@ async function finishWorkout(){
          verschwunden — dieselbe Falle wie bei `rr` weiter oben, und die
          Trainingsdauer würde für immer wieder ab dem Startknopf rechnen. */
       if(isFinite(+s.ts) && +s.ts > 0) x.ts = +s.ts;
+      /* V76: Sekunden und Strecke MITSPEICHERN. Dieselbe Falle wie bei `rr`
+         und `ts` weiter oben — ohne diese zwei Zeilen verschwände jede
+         Halte- und Kardioübung beim Abschließen still, und in der Historie
+         stünde ein Satz ohne jeden Messwert. */
+      if(isFinite(+s.sek)  && +s.sek  > 0) x.sek  = +s.sek;
+      if(isFinite(+s.dist) && +s.dist > 0) x.dist = +s.dist;
       return x;
     })};
     if(exIsBW(e.exId)){ o.bw = true; const b = bwAt(a.date); if(b) o.bwkg = b; }   // fürs Vault-Protokoll
@@ -9039,7 +9218,17 @@ function renderHist(){
           <div class="row" style="gap:8px"><b style="font-size:var(--fs-body)">${fmtDateShort(w.date)}</b>
             <span class="badge type">${esc(w.type)}</span>
             ${(w.prs&&w.prs.length)?`<span class="badge pr">${ICO.trophy} ${w.prs.length}</span>`:''}</div>
-          <div class="meta" style="margin-top:4px">${w.exercises.length} Übungen · ${wSets(w)} Sätze · <b style="color:var(--txt2)">${fmtVol(wVolume(w))}</b> · ${fmtDur(w.end-w.start)}</div>
+          <!-- Bei einer reinen Kardio- oder Halte-Einheit ist das Volumen null.
+               „0 kg" wäre dort keine Information, sondern eine Irreführung —
+               dann stehen stattdessen Dauer und Strecke, also das, was
+               tatsächlich gemessen wurde. -->
+          <div class="meta" style="margin-top:4px">${w.exercises.length} Übungen · ${wSets(w)} Sätze · <b style="color:var(--txt2)">${(()=>{
+            const vol = wVolume(w);
+            if(vol > 0) return fmtVol(vol);
+            const sek = wDauerSek(w), dist = wDistM(w);
+            if(sek || dist) return [sek? fmtSek(sek):'', dist? fmtDist(dist):''].filter(Boolean).join(' · ');
+            return fmtVol(0);
+          })()}</b> · ${fmtDur(w.end-w.start)}</div>
         </div>
         <span style="color:var(--txt3);font-size:var(--fs-lg)" aria-hidden="true">›</span>
       </div>
