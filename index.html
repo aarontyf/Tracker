@@ -1576,7 +1576,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V77 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V78 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -3042,6 +3042,18 @@ function repariereState(){
   if(!Array.isArray(state.workouts)) { state.workouts = []; n++; }
   const heileEinheit = w => {
     if(!w || typeof w!=='object') { n++; return null; }
+    /* Das Datum MUSS eine Zeichenkette sein. An mehreren Stellen wird
+       darauf `.slice(0,10)` aufgerufen, um den Tag herauszuschneiden — bei
+       einer Zahl wirft das „w.date.slice is not a function", und zwar mitten
+       im Zeichnen: weisser Bildschirm, obwohl die Daten in Ordnung sind.
+       Eine Zahl ist ein gültiger Zeitstempel, sie muss nur die richtige
+       Form bekommen. Alles Unbrauchbare wird zu einer leeren Zeichenkette,
+       mit der die Datumsfunktionen umgehen können. */
+    if(typeof w.date !== 'string'){
+      const t = Date.parse(w.date) || (isFinite(+w.date) ? +w.date : NaN);
+      w.date = isFinite(t) ? new Date(t).toISOString() : '';
+      n++;
+    }
     w.exercises = liste(w.exercises).map(e=>{
       if(!e || typeof e!=='object') { n++; return null; }
       e.sets = liste(e.sets).map(s=> (s && typeof s==='object') ? s : (n++, {w:0, r:0}));
@@ -3224,8 +3236,28 @@ function bwSorted(){
     .map(e=>({d:e.d, kg:+e.kg}))
     .sort((a,b)=>a.d<b.d?-1:1);
 }
+/* Das Körpergewicht zu einem Datum — die Last bei Dips, Klimmzügen,
+   Liegestützen und die Bezugsgrösse bei unterstützten Maschinen.
+
+   V78: Gibt es KEINEN Wiegeeintrag, wird auf das Gewicht aus dem
+   Coach-Profil zurückgegriffen. Vorher kam in diesem Fall 0 heraus — und
+   damit zählte ein Satz Dips genau so viel wie gar kein Training: Volumen
+   null, kein Rekord, keine Linie im Verlauf. Bei unterstützten Maschinen
+   war es dieselbe Wurzel, weil dort max(0, Körpergewicht − Hilfe)
+   gerechnet wird und aus 0 − Hilfe nie etwas anderes als 0 werden kann.
+
+   Das Profilgewicht ist eine Näherung: Es hat kein Datum und gilt deshalb
+   rückwirkend für alle Einheiten. Für die Historie ist das ungenau — aber
+   ungenau ist um Längen besser als null, und wer sich regelmässig wiegt,
+   bekommt diesen Zweig ohnehin nie zu sehen. Beim Abschliessen wird das
+   Gewicht als `bwkg` im Eintrag festgehalten; alte Einheiten behalten
+   damit ihre eigene Wahrheit, egal was hier steht. */
 function bwAt(dateStr){
-  const arr = bwSorted(); if(!arr.length) return 0;
+  const arr = bwSorted();
+  if(!arr.length){
+    const p = +((state.profile||{}).gewicht);
+    return isFinite(p) && p > 0 ? p : 0;
+  }
   const day = String(dateStr).slice(0,10); let v = arr[0].kg;
   for(const e of arr){ if(e.d<=day) v=e.kg; else break; }
   return v;
@@ -3467,16 +3499,32 @@ const SETTYPE = {w:['A','Aufwärmsatz'], d:['D','Dropset']};
    - einseitige Übungen: Wdh links + Wdh rechts (getrennt geloggt).
      Fehlt die rechte Seite (alte Daten oder R-Feld leer), zählt links doppelt — wie früher.
    Sätze pro Muskel bleiben unverändert (ein einseitiger Satz = ein Satz für den Muskel). */
+/* Eine Zahl, mit der man rechnen kann: endlich und nicht negativ.
+
+   `+s.w||0` fängt Text und null ab, aber nicht −50 und nicht Infinity.
+   Beides ist im Alltag ein Tippfehler und beides vergiftet das Volumen
+   dauerhaft: Ein Minuszeichen lässt die Lebensbilanz SCHRUMPFEN, und ein
+   einziges Infinity macht jede Summe, jeden Schnitt und jedes Diagramm für
+   immer zu „Infinity" — auch nach dem Löschen des Satzes, weil die Zahl
+   schon in Rekorden und Zwischenspeichern steht.
+
+   Gekappt wird bei der BERECHNUNG, nicht bei der Eingabe: Was jemand
+   eingetippt hat, bleibt unverändert stehen und lässt sich korrigieren. */
+function messwert(x){
+  const v = +x;
+  return isFinite(v) && v > 0 ? v : 0;
+}
+
 function exVol(e, dateStr){
   const assist = entryIsAssist(e);
   const isBW = !assist && (e.bw!==undefined? !!e.bw : exIsBW(e.exId));
-  const bw = isBW? (e.bwkg!==undefined? +e.bwkg : bwAt(dateStr)) : 0;
+  const bw = isBW? messwert(e.bwkg!==undefined? e.bwkg : bwAt(dateStr)) : 0;
   const uni = entryIsUni(e);
   return validSets(e).reduce((a,s)=>{
     /* unterstützt: Körpergewicht − Hilfe · sonst: Gewicht + ggf. Körpergewicht */
-    const base = assist ? setW(e,s,dateStr) : (+s.w||0)+bw;
-    const rl = +s.r||0;
-    if(uni){ const rr = (s.rr!==undefined && s.rr!=='') ? (+s.rr||0) : rl; return a + base*(rl+rr); }
+    const base = messwert(assist ? setW(e,s,dateStr) : messwert(s.w)+bw);
+    const rl = messwert(s.r);
+    if(uni){ const rr = (s.rr!==undefined && s.rr!=='') ? messwert(s.rr) : rl; return a + base*(rl+rr); }
     return a + base*rl;
   },0);
 }
