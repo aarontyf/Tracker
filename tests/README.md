@@ -33,15 +33,41 @@ Suite unverändert in einen Git-Hook oder eine CI-Stufe hängen.
 ## Leistungsmessung
 
 ```bash
-npm run bench                       # 200 Einheiten, CPU 4x gedrosselt
-THROTTLE=1 npm run bench            # ungedrosselt
-WORKOUTS=500 npm run bench          # grössere Historie
+npm run bench                            # 200 Einheiten, CPU 4x gedrosselt
+node bench.js --gegen ../alt/index.html  # zwei Stände vergleichen
+THROTTLE=1 npm run bench                 # ungedrosselt
+WORKOUTS=500 npm run bench               # grössere Historie
 ```
 
 Gemessen wird der **Median** mehrerer Runden. Der Mittelwert taugt hier nicht:
 ein einzelner GC-Lauf verzieht ihn um Dutzende Prozent, und dann sieht eine
 Verbesserung wie ein Rückschritt aus. Die CPU wird gedrosselt, weil die App im
 Studio auf einem Handy läuft und nicht auf einem Entwicklerrechner.
+
+### Wie weit man den Zahlen trauen darf
+
+**Den Bausteinen** (`getEx`, `filterEx`, `globalAgg`) weit — sie sind klein,
+rein rechnend und schwanken kaum.
+
+**Den ganzen Bildschirmen** deutlich weniger. Sie zeichnen ins DOM, stossen
+Animationen an und hinterlassen einen Zustand, in dem die nächste Messung
+läuft. Gemessen wurde hier einmal `renderTrain` mit **184 ms**, das in
+Einzelmessung reproduzierbar **19 ms** braucht — Faktor 10, allein aus der
+Reihenfolge der Messungen.
+
+Zwei Regeln, die daraus folgen:
+
+1. **Nie zwei getrennte Aufrufe vergleichen.** Absolute Zahlen schwankten
+   zwischen zwei Läufen um mehr als das Anderthalbfache. Für den Vergleich
+   zweier Stände `--gegen` benutzen — beide werden dann im selben Prozess
+   nacheinander gemessen, und nur die Prozentspalte ist belastbar.
+2. **Auffällige Einzelwerte nachmessen**, in einer eigenen kleinen Datei, die
+   nur diesen einen Renderer in einer frischen Seite misst.
+
+Die Zähler-Animation (`runCounters`) wird während der Messung stillgelegt: Sie
+startet bei jedem Durchlauf neu, ohne dass die vorige fertig wäre, und bremst
+nach zwölf Runden genau die Funktion aus, die gerade gemessen wird. Dass sie
+existiert, ist kein Fehler — sie mitzumessen schon.
 
 ## Aufbau
 
