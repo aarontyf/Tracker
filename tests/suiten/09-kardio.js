@@ -207,5 +207,33 @@ exports.lauf = async ({ page, p }) => {
   p.enthaelt('reine Kardio-Einheit zeigt die Dauer', kartenTxt, '30 min');
   p.enthaelt('reine Kardio-Einheit zeigt die Strecke', kartenTxt, '5,2 km');
 
+
+  /* ── Nahtstelle zum Nachbearbeiten-Editor (V71) ────────────────────
+     Der Editor und das Abschliessen teilen sich satzFuerSpeicher(). Genau
+     deshalb stehen sek und dist dort und nicht in finishWorkout(): Sonst
+     ueberlebten Halteuebungen das Abschliessen und verschwaenden beim
+     Korrigieren still — dieselbe Falle, an der rr und ts schon zweimal
+     fast gestorben sind. */
+  const editor = await js(page, `(() => {
+    if (typeof satzFuerSpeicher !== 'function') return 'satzFuerSpeicher fehlt';
+    const roh = { w:'', r:'', sek:'90', dist:'2500', ts:Date.now(), rir:'2' };
+    const gespeichert = satzFuerSpeicher(roh);
+    const ergebnis = { sek: gespeichert.sek, dist: gespeichert.dist, rir: gespeichert.rir };
+    if (typeof uebungFuerBearbeitung === 'function') {
+      const lauf = EXDB.find(e => e.name === 'Laufband');
+      const e = { exId: lauf.id, name: lauf.name, sets: [roh] };
+      const o = uebungFuerBearbeitung(e, new Date().toISOString());
+      ergebnis.ueberEditor = o.sets[0] ? { sek: o.sets[0].sek, dist: o.sets[0].dist } : null;
+    }
+    return ergebnis;
+  })()`);
+  p.gleich('satzFuerSpeicher behaelt die Sekunden', editor.sek, 90);
+  p.gleich('satzFuerSpeicher behaelt die Strecke', editor.dist, 2500);
+  p.gleich('vorhandene Felder bleiben unberuehrt', editor.rir, 2);
+  if (editor.ueberEditor) {
+    p.gleich('Nachbearbeiten-Editor behaelt die Sekunden', editor.ueberEditor.sek, 90);
+    p.gleich('Nachbearbeiten-Editor behaelt die Strecke', editor.ueberEditor.dist, 2500);
+  }
+
   await js(page, 'state.active = null; saveState(); renderAll();');
 };
