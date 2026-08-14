@@ -26,8 +26,23 @@
 !icon-512-maskable.png
 !.gitignore
 
-# 4) Ausdrücklich draußen, auch wenn oben etwas passen würde:
-#    Unterordner mit alten Ständen und der Testaufbau.
+# 4) Die Testsuite — NAMENTLICH freigegeben, nicht als ganzer Ordner.
+#    Der Ordner liegt im Obsidian-Vault: daneben stehen private Notizen und
+#    11 MB node_modules. Deshalb hier nur Muster, die Unterordner NICHT
+#    erreichen können (tests/*.js trifft nur die oberste Ebene).
+#    Neue Suite? Sie liegt in tests/suiten/ und ist damit schon freigegeben.
+!tests/README.md
+!tests/package.json
+!tests/run.js
+!tests/bench.js
+!tests/lib/*.js
+!tests/suiten/*.js
+
+#    Doppelt gesichert: node_modules bleibt unter allen Umständen draußen.
+tests/node_modules/
+tests/package-lock.json
+
+# 5) Ausdrücklich draußen, auch wenn oben etwas passen würde:
+#    Unterordner mit alten Ständen.
 Backup*/
 Redesign/
-tests/

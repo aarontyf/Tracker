@@ -1,0 +1,15 @@
+{
+  "name": "fitness-tracker-tests",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Testsuite für den Fitness Tracker — fährt die ausgelieferte index.html in echtem Chromium.",
+  "scripts": {
+    "test": "node run.js",
+    "test:leise": "node run.js --leise",
+    "bench": "node bench.js",
+    "setup": "npm install && npx playwright install chromium"
+  },
+  "dependencies": {
+    "playwright-core": "^1.49.0"
+  }
+}
