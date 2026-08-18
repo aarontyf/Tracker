@@ -143,17 +143,33 @@
   --fig-rim:#FFFFFF;
   /* ── TYPO-SKALA: 9 Stufen statt 31 gewachsener Größen ──────────────
      Eine Skala ist der Unterschied zwischen „selbstgebaut" und „System".
-     --fs-input bleibt bewusst bei 16px: darunter zoomt iOS beim Antippen. */
-  --fs-micro:10px;   /* Versalien-Label, Abzeichen        */
-  --fs-tiny:11.5px;  /* Hilfstext, Meta                   */
-  --fs-sub:13px;     /* Sekundärtext, kleine Buttons      */
-  --fs-body:15px;    /* Fließtext, Buttons                */
-  --fs-lg:17px;      /* Kartentitel, hervorgehobene Werte */
-  --fs-h2:20px;      /* Abschnittsüberschrift             */
-  --fs-h1:26px;      /* Screen-Titel                      */
-  --fs-num:34px;     /* große Kennzahl                    */
-  --fs-hero:44px;    /* Feier-Moment                      */
-  --fs-input:16px;   /* NICHT ändern — sonst zoomt iOS    */
+
+     Seit V72 in rem statt px. Das ist keine Kosmetik: Wer auf dem iPhone
+     unter „Anzeige & Helligkeit → Textgröße" größer stellt, ändert die
+     Basisgröße des Browsers. `px` ignoriert das vollständig — die App wäre
+     bei 13 px geblieben, egal was eingestellt ist. `rem` rechnet relativ zu
+     dieser Basis und wächst mit.
+
+     Die Zahlen sind dieselben wie vorher (bei 16-px-Basis identisch), nur
+     dividiert. Kommentar = px-Wert bei Standardeinstellung. Bewusst KEINE
+     glatte 1,25er-Stufung: die würde jede zweite Größe verschieben und das
+     ganze Layout neu ausrichten — eine andere Änderung als diese hier.
+
+     Die Skala galt bis V71 nur für 17 Stellen, während 153 weitere ihre
+     Größe direkt als px hinschrieben. Jetzt geht alles hier durch. */
+  --fs-micro:0.625rem;    /* 10    Versalien-Label, Abzeichen        */
+  --fs-tiny:0.71875rem;   /* 11,5  Hilfstext, Meta                   */
+  --fs-sub:0.8125rem;     /* 13    Sekundärtext, kleine Buttons      */
+  --fs-body:0.9375rem;    /* 15    Fließtext, Buttons                */
+  --fs-lg:1.0625rem;      /* 17    Kartentitel, hervorgehobene Werte */
+  --fs-h2:1.25rem;        /* 20    Abschnittsüberschrift             */
+  --fs-h1:1.625rem;       /* 26    Screen-Titel                      */
+  --fs-num:2.125rem;      /* 34    große Kennzahl                    */
+  --fs-hero:2.75rem;      /* 44    Feier-Moment                      */
+  /* Eingabefelder bleiben absolut bei 16px. Unter 16px zoomt iOS beim
+     Antippen ins Feld — und mit rem wäre genau das bei kleiner
+     Systemtextgröße wieder passiert. Hier ist px die richtige Einheit. */
+  --fs-input:16px;
   /* Abstände (4er-Raster) */
   --sp1:4px; --sp2:8px; --sp3:12px; --sp4:16px; --sp5:20px; --sp6:24px; --sp8:32px; --sp10:40px;
   /* Radien */
@@ -210,13 +226,30 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 :focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:6px}
 
 /* ─── TYPOGRAFIE ─────────────────────────────────────────────────── */
-h1{font-size:26px;font-weight:800;letter-spacing:-.028em;line-height:1.1;text-wrap:balance}
-h2{font-size:17px;font-weight:750;letter-spacing:-.02em;line-height:1.2;margin-bottom:var(--sp3);text-wrap:balance}
-h3{font-size:15px;font-weight:650;letter-spacing:-.012em}
-.sub{color:var(--txt2);font-size:13px;letter-spacing:-.005em;text-wrap:pretty}
-.tiny{color:var(--txt3);font-size:13px;letter-spacing:0;line-height:1.4;text-wrap:pretty}
+h1{font-size:var(--fs-h1);font-weight:800;letter-spacing:-.028em;line-height:1.1;text-wrap:balance}
+/* Der Markentitel bleibt einzeilig. Sein Kasten ist 203 px breit, das Wort
+   braucht 204 — es ragt also um genau ein Pixel heraus, in den Freiraum über
+   den drei Knöpfen. So sah es immer aus, und so soll es bleiben.
+
+   Dieses eine Pixel ist der Grund, warum hier `nowrap` steht: Ein <wbr>
+   zwischen „Fitness" und „Tracker" hat der Browser trotz nowrap genutzt und
+   den Titel zweizeilig gesetzt — ein Pixel Überhang reichte ihm als Anlass.
+   Das <wbr> ist deshalb wieder raus.
+
+   Nur wenn das Sichtfenster im VERHÄLTNIS zur Textgröße eng wird, darf der
+   Titel umbrechen — sonst schiebt er bei doppelter Systemschrift die ganze
+   Seite seitlich auf. Dafür ist die Abfrage in `em` statt `px`: sie misst in
+   Vielfachen der Basisschrift, nicht in Gerätepunkten. Bei Standardgröße
+   sind 390 px rund 24 em (Regel greift nicht), bei doppelter Textgröße nur
+   noch 12 em (Regel greift). */
+#scr-home h1{white-space:nowrap}
+@media (max-width:15em){ #scr-home h1{white-space:normal;overflow-wrap:anywhere} }
+h2{font-size:var(--fs-lg);font-weight:750;letter-spacing:-.02em;line-height:1.2;margin-bottom:var(--sp3);text-wrap:balance}
+h3{font-size:var(--fs-body);font-weight:650;letter-spacing:-.012em}
+.sub{color:var(--txt2);font-size:var(--fs-sub);letter-spacing:-.005em;text-wrap:pretty}
+.tiny{color:var(--txt3);font-size:var(--fs-sub);letter-spacing:0;line-height:1.4;text-wrap:pretty}
 .acc{color:var(--acc)}
-.up{text-transform:uppercase;letter-spacing:.09em;font-size:10px;font-weight:650;color:var(--txt3)}
+.up{text-transform:uppercase;letter-spacing:.09em;font-size:var(--fs-micro);font-weight:650;color:var(--txt3)}
 /* Zahlen laufen nicht mehr — Tabellenziffern überall, wo gezählt wird */
 .kpi b,.timer,.val,.htable td,.lvlbadge b{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
 
@@ -251,7 +284,7 @@ h3{font-size:15px;font-weight:650;letter-spacing:-.012em}
 /* ─── BUTTONS ────────────────────────────────────────────────────── */
 .btn{
   position:relative; display:inline-flex; align-items:center; justify-content:center; gap:var(--sp2);
-  font-weight:650; font-size:15px; letter-spacing:-.012em; border-radius:var(--r-md);
+  font-weight:650; font-size:var(--fs-body); letter-spacing:-.012em; border-radius:var(--r-md);
   padding:12px 16px; min-height:var(--hit-comfort); border:1px solid transparent; user-select:none; overflow:hidden;
   transition:transform var(--dur-1) var(--ease), filter var(--dur-2) var(--ease), background var(--dur-2) var(--ease);
   min-height:44px;
@@ -266,8 +299,8 @@ h3{font-size:15px;font-weight:650;letter-spacing:-.012em}
 .btn-ghost:active{background:var(--s3)}
 .btn-danger{background:rgba(242,72,63,.10);border-color:rgba(242,72,63,.32);color:var(--red)}
 .btn-block{width:100%}
-.btn-sm{padding:8px 12px;font-size:13px;border-radius:var(--r-sm);min-height:var(--hit-comfort)}
-.btn-lg{padding:16px 20px;font-size:17px;border-radius:var(--r-lg)}
+.btn-sm{padding:8px 12px;font-size:var(--fs-sub);border-radius:var(--r-sm);min-height:var(--hit-comfort)}
+.btn-lg{padding:16px 20px;font-size:var(--fs-lg);border-radius:var(--r-lg)}
 /* Inline-Icon in Beschriftungen — ersetzt die früheren Emoji, damit die
    Bildsprache geräteunabhängig identisch aussieht */
 .bi{display:inline-flex;align-items:center;justify-content:center;vertical-align:-3px;margin-right:4px;flex:none}
@@ -309,11 +342,15 @@ h3>.bi svg{width:15px;height:15px}
 
 /* ─── CHIPS & SEGMENTE ───────────────────────────────────────────── */
 .chips{display:flex;gap:var(--sp2);flex-wrap:wrap}
-.chips.scroll{flex-wrap:nowrap;overflow-x:auto;padding-bottom:var(--sp1);scrollbar-width:none;max-width:100%;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity}
+/* min-width:0 ist hier nicht optional: `max-width:100%` allein reicht nicht,
+   solange die Leiste als Flex-Kind mit dem Standardwert min-width:auto
+   liegt — dann wächst sie trotzdem auf ihre Inhaltsbreite und schiebt die
+   Seite seitlich auf, statt selbst zu scrollen. */
+.chips.scroll{flex-wrap:nowrap;overflow-x:auto;padding-bottom:var(--sp1);scrollbar-width:none;max-width:100%;min-width:0;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity}
 .chips.scroll::-webkit-scrollbar{display:none}
 .chip{
   background:var(--s2);border:1px solid var(--line);border-radius:var(--r-full);
-  padding:8px 12px;font-size:13px;font-weight:650;color:var(--txt2);white-space:nowrap;flex:none;
+  padding:8px 12px;font-size:var(--fs-sub);font-weight:650;color:var(--txt2);white-space:nowrap;flex:none;
   transition:all var(--dur-2) var(--ease); scroll-snap-align:start; min-height:var(--hit-comfort);
 }
 .chip:active{transform:scale(.95)}
@@ -322,9 +359,9 @@ h3>.bi svg{width:15px;height:15px}
    Wurde beim Entfernen der Missionen versehentlich mitgelöscht und
    wiederhergestellt — die Klasse wird an zwei Stellen weiter benutzt. */
 .mnote{margin-top:var(--sp3);border-top:1px solid var(--line);padding-top:var(--sp2)}
-.mnote summary{font-size:13px;color:var(--txt3);cursor:pointer}
-.mnote p{font-size:13px;line-height:1.5;color:var(--txt3);margin:8px 0 0}
-.chip.mini{padding:8px;font-size:11.5px;min-height:var(--hit-comfort)}
+.mnote summary{font-size:var(--fs-sub);color:var(--txt3);cursor:pointer}
+.mnote p{font-size:var(--fs-sub);line-height:1.5;color:var(--txt3);margin:8px 0 0}
+.chip.mini{padding:8px;font-size:var(--fs-tiny);min-height:var(--hit-comfort)}
 /* Segment-Control mit gleitender Pille */
 .seg{position:relative;display:flex;background:var(--s2);border:1px solid var(--line);border-radius:var(--r-md);padding:4px;gap:0;margin-bottom:var(--sp4)}
 .seg::before{
@@ -334,15 +371,31 @@ h3>.bi svg{width:15px;height:15px}
   box-shadow:0 4px 14px -6px rgba(82,156,255,.7), inset 0 1px 0 rgba(255,255,255,.25);
   transition:transform var(--dur-3) var(--spring);
 }
-.seg button{position:relative;z-index:1;flex:1;padding:8px 4px;border-radius:var(--r-sm);font-weight:650;font-size:13px;color:var(--txt2);transition:color var(--dur-2) var(--ease);min-height:var(--hit-comfort)}
+/* Der Schieber hinter den Knöpfen (.seg::before) rechnet in Prozent der
+   Leistenbreite. Umbrechen oder Scrollen würde ihn danebenlegen — also
+   müssen die Beschriftungen schrumpfen dürfen. min-width:0 hebt die
+   Flex-Sperre auf, die Ellipse fängt den Rest ab. Bei doppelter
+   Systemtextgröße wird aus „Gesamt" also „Gesa…", und die Leiste bleibt
+   heil und bedienbar. */
+.seg button{position:relative;z-index:1;flex:1;min-width:0;padding:8px 4px;border-radius:var(--r-sm);font-weight:650;font-size:var(--fs-sub);color:var(--txt2);transition:color var(--dur-2) var(--ease);min-height:var(--hit-comfort);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .seg button.on{color:var(--on-acc)}
 
 /* ─── KPI / STAT-KACHELN ─────────────────────────────────────────── */
-.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--sp2)}
+/* Vier Spalten, solange sie passen — sonst weniger.
+   Das `min(100%,4.5rem)` ist der Kniff: Weil rem mit der Systemtextgröße
+   wächst, wächst auch die Mindestbreite einer Kachel. Bei Standardgröße sind
+   4,5rem = 72px, also passen vier Kacheln in 390px. Bei doppelter Textgröße
+   sind es 144px und es passen nur noch zwei — genau dann, wenn die Zahlen
+   sonst aus der Kachel gelaufen wären. Das Raster reagiert damit auf die
+   Textgröße, ohne dass ein Medienabfrage-Grenzwert geraten werden muss. */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,4.5rem),1fr));gap:var(--sp2)}
 .kpi{
   background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.012)),var(--s1);
   border:1px solid var(--line);border-radius:var(--r-md);padding:12px 4px;text-align:center;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+  /* Ohne min-width:0 schrumpft eine Rasterzelle nie unter ihren Inhalt —
+     „9.168 kg" hätte die Kachel bei großer Schrift aus dem Bild geschoben. */
+  min-width:0;
 }
 .focuscard{border-color:var(--acc-a30);background:linear-gradient(145deg,rgba(82,156,255,.11),rgba(82,156,255,.025)),var(--s1)}
 .focusrow{display:grid;grid-template-columns:28px 1fr auto;gap:var(--sp2);align-items:center;min-height:48px;padding:var(--sp2) 0;border-top:1px solid var(--line)}
@@ -351,10 +404,11 @@ h3>.bi svg{width:15px;height:15px}
 .focusrow .ttl{font-size:var(--fs-sub);font-weight:700}
 .focusrow .meta{margin-top:2px}
 .focusval{font-size:var(--fs-sub);font-weight:750;color:var(--a7);white-space:nowrap}
-.kpi b{display:block;font-size:17px;font-weight:750;letter-spacing:-.03em}
-.kpi span{font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.07em;font-weight:650}
+.kpi b,.kpi span{overflow-wrap:anywhere}
+.kpi b{display:block;font-size:var(--fs-lg);font-weight:750;letter-spacing:-.03em}
+.kpi span{font-size:var(--fs-micro);color:var(--txt3);text-transform:uppercase;letter-spacing:.07em;font-weight:650}
 .kpi .pr{color:var(--gold)}
-.kdelta{display:block;font-style:normal;font-size:10px;font-weight:750;margin-top:3px;letter-spacing:-.01em}
+.kdelta{display:block;font-style:normal;font-size:var(--fs-micro);font-weight:750;margin-top:3px;letter-spacing:-.01em}
 
 /* ─── RINGE — vollständig entfallen (V64) ────────────────────────────
    V58 hatte den Rahmen entfernt (.rings, .ringwrap, .ringc, .ringlegend)
@@ -385,7 +439,7 @@ h3>.bi svg{width:15px;height:15px}
 .bodywrap{position:relative;z-index:1;display:flex;gap:var(--sp1);justify-content:center;align-items:flex-start;perspective:900px}
 .bodywrap>div{flex:1 1 0;min-width:0;max-width:270px;transition:transform var(--dur-4) var(--ease)}
 .bodywrap svg{width:100%;height:auto;display:block;margin:0 auto}
-.bodywrap .lbl{text-align:center;font-size:10px;color:var(--txt3);margin-top:var(--sp1);text-transform:uppercase;letter-spacing:.1em;font-weight:650}
+.bodywrap .lbl{text-align:center;font-size:var(--fs-micro);color:var(--txt3);margin-top:var(--sp1);text-transform:uppercase;letter-spacing:.1em;font-weight:650}
 /* Die Antwort über der Figur. Bis V61 stand hier ein Untertitel in
    Hilfstextgröße, der zudem die Unwahrheit sagte: „Diese Woche (Mo–So) ·
    Reset Sonntag Mitternacht", während längst der laufende Zyklus gemalt wurde.
@@ -441,7 +495,7 @@ path[data-m].fresh{animation:muskelWach 1.5s var(--ease-io) both;
 .deco{fill:none;stroke:var(--fig-line);stroke-width:.7;pointer-events:none;stroke-linecap:round}
 .deco2{display:none}
 .legend{display:flex;gap:var(--sp3);justify-content:center;margin-top:var(--sp3);flex-wrap:wrap}
-.legend span{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;color:var(--txt2)}
+.legend span{display:inline-flex;align-items:center;gap:4px;font-size:var(--fs-tiny);color:var(--txt2)}
 .dot{width:10px;height:10px;border-radius:3px;display:inline-block}
 
 /* ─── LEVEL / STREAK ─────────────────────────────────────────────── */
@@ -461,8 +515,8 @@ path[data-m].fresh{animation:muskelWach 1.5s var(--ease-io) both;
   display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:800;color:var(--on-a);
   box-shadow:var(--glow), inset 0 1px 0 rgba(255,255,255,.35);
 }
-.lvlbadge b{font-size:17px;line-height:1;letter-spacing:-.03em}
-.lvlbadge span{font-size:10px;letter-spacing:.12em;opacity:.9;font-weight:750}
+.lvlbadge b{font-size:var(--fs-lg);line-height:1;letter-spacing:-.03em}
+.lvlbadge span{font-size:var(--fs-micro);letter-spacing:.12em;opacity:.9;font-weight:750}
 /* Links hatten NIE eine eigene Regel — sie liefen auf der Browser-Vorgabe
    #0000EE. Auf schwarzem Grund sind das 2,06:1: praktisch unlesbar. Aufgefallen
    erst bei der Messung im Browser, weil die Farbe nirgends im Quelltext steht.
@@ -481,13 +535,13 @@ a:active{color:var(--a7)}
 /* ─── LISTEN ─────────────────────────────────────────────────────── */
 .item{display:flex;align-items:center;gap:var(--sp3);padding:12px 2px;border-bottom:1px solid var(--line);min-height:52px}
 .item:last-child{border-bottom:none}
-.item .ttl{font-weight:650;font-size:15px;letter-spacing:-.012em}
-.item .meta{font-size:13px;color:var(--txt2);margin-top:1px}
+.item .ttl{font-weight:650;font-size:var(--fs-body);letter-spacing:-.012em}
+.item .meta{font-size:var(--fs-sub);color:var(--txt2);margin-top:1px}
 .item.tap{cursor:pointer;transition:background var(--dur-2) var(--ease);border-radius:var(--r-sm);margin:0 -8px;padding-left:8px;padding-right:8px}
 /* Abschnittsköpfe im Übungs-Picker (Favoriten / Zuletzt / Alle) */
-.picksec{font-size:10px;font-weight:650;letter-spacing:.09em;text-transform:uppercase;color:var(--txt3);padding:12px 2px 4px;border-bottom:1px solid var(--line);margin-bottom:2px}
+.picksec{font-size:var(--fs-micro);font-weight:650;letter-spacing:.09em;text-transform:uppercase;color:var(--txt3);padding:12px 2px 4px;border-bottom:1px solid var(--line);margin-bottom:2px}
 /* Onboarding überspringen — unaufdringlich, aber immer erreichbar */
-.obskip{display:block;width:100%;margin-top:12px;padding:8px;font-size:13px;font-weight:650;color:var(--txt3);background:none;border:none;min-height:var(--hit-comfort);transition:color var(--dur-2) var(--ease)}
+.obskip{display:block;width:100%;margin-top:12px;padding:8px;font-size:var(--fs-sub);font-weight:650;color:var(--txt3);background:none;border:none;min-height:var(--hit-comfort);transition:color var(--dur-2) var(--ease)}
 .obskip:active{color:var(--txt2)}
 .picksec:first-child{padding-top:4px}
 .favbtn{position:relative;width:var(--hit-min);height:var(--hit-min);flex:none;display:inline-flex;align-items:center;justify-content:center;color:var(--txt3);background:none;border:none;transition:color var(--dur-2) var(--ease),transform var(--dur-1) var(--ease)}
@@ -497,28 +551,33 @@ a:active{color:var(--a7)}
 .favbtn:active{transform:scale(.85)}
 .empty .big svg{width:40px;height:40px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;opacity:.7}
 .item.tap:active{background:var(--s2)}
-.badge{display:inline-block;font-size:10px;font-weight:750;border-radius:6px;padding:3px 8px;letter-spacing:.03em;vertical-align:middle}
+.badge{display:inline-block;font-size:var(--fs-micro);font-weight:750;border-radius:6px;padding:3px 8px;letter-spacing:.03em;vertical-align:middle}
 .badge.pr{background:rgba(82,156,255,.14);color:var(--gold);border:1px solid rgba(82,156,255,.3)}
 .badge svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;vertical-align:-1px;margin-right:2px}
 .badge.type{background:var(--acc-a16);color:var(--acc2);border:1px solid var(--acc-a30)}
 
 /* ─── LEERZUSTÄNDE ───────────────────────────────────────────────── */
-.empty{text-align:center;color:var(--txt3);padding:var(--sp8) var(--sp4);font-size:13px;line-height:1.6}
-.empty .big{font-size:34px;margin-bottom:var(--sp3);opacity:.85;animation:float 4s var(--ease-io) infinite}
+.empty{text-align:center;color:var(--txt3);padding:var(--sp8) var(--sp4);font-size:var(--fs-sub);line-height:1.6}
+.empty .big{font-size:var(--fs-num);margin-bottom:var(--sp3);opacity:.85;animation:float 4s var(--ease-io) infinite}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-.empty b{color:var(--txt2);display:block;font-size:15px;margin-bottom:4px;font-weight:650}
+.empty b{color:var(--txt2);display:block;font-size:var(--fs-body);margin-bottom:4px;font-weight:650}
 /* Skeleton */
 @keyframes shimmer{from{background-position:100% 0}to{background-position:-100% 0}}
 
 /* ─── BALKEN ─────────────────────────────────────────────────────── */
-.mbar{display:grid;grid-template-columns:112px 1fr 50px;gap:var(--sp2);align-items:center;margin-bottom:8px;font-size:13px}
+.mbar{display:grid;grid-template-columns:112px 1fr 50px;gap:var(--sp2);align-items:center;margin-bottom:8px;font-size:var(--fs-sub)}
 .mbar .bar{height:9px;background:rgba(255,255,255,.06);border-radius:var(--r-full);overflow:hidden;position:relative}
 .mbar .bar i{display:block;height:100%;border-radius:var(--r-full);background:linear-gradient(90deg,var(--acc-deep),var(--acc2));
   transform-origin:left;animation:growx var(--dur-4) var(--ease) backwards}
 @keyframes growx{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 .mbar .zone{position:absolute;top:0;bottom:0;background:rgba(255,255,255,.10);border-left:1px solid var(--line-3);border-right:1px solid var(--line-3);pointer-events:none}
 .mbar .val{text-align:right;color:var(--txt2);font-variant-numeric:tabular-nums}
-.mbar.big{grid-template-columns:100px 1fr 56px;margin-bottom:8px;font-size:13px}
+/* Zielbalken. Schlanker als .mbar, weil er unter der Zeile sitzt und nicht
+   neben ihr — und weil die Zahl daneben die eigentliche Aussage trägt. */
+.gbar{height:7px;background:rgba(255,255,255,.06);border-radius:var(--r-full);overflow:hidden}
+.gbar i{display:block;height:100%;border-radius:var(--r-full);transition:width var(--dur-3) var(--ease)}
+@media (prefers-reduced-motion:reduce){ .gbar i{transition:none} }
+.mbar.big{grid-template-columns:100px 1fr 56px;margin-bottom:8px;font-size:var(--fs-sub)}
 /* „Ziel 9–17" unter dem Gruppennamen. Stand bis V61 mit margin-top:-2px da —
    gemeint war engerer Zeilenabstand, gebaut war ein Sonderfall im Raster.
    line-height ist das Werkzeug dafür. */
@@ -539,6 +598,11 @@ details.erkl>summary{cursor:pointer;color:var(--acc);list-style:none;min-height:
 details.erkl>summary::-webkit-details-marker{display:none}
 details.erkl>summary::after{content:'›';margin-left:6px;display:inline-block;transition:transform var(--dur-2) var(--ease)}
 details.erkl[open]>summary::after{transform:rotate(90deg)}
+/* Quellenlinks sind zum Antippen da, nicht nur zum Lesen. Ohne eigene Höhe
+   waren sie 18 px hoch — im Studio mit feuchten Händen nicht zu treffen.
+   inline-block mit Polsterung statt grösserer Zeilenhöhe, damit der Fliesstext
+   daneben unverändert umbricht. */
+details.erkl a{display:inline-block;padding:4px 0;min-height:24px}
 details.erkl>div{margin-top:6px;color:var(--txt2)}
 /* Im Training kompakter — dort zählt jede Zeile */
 details.erkl.warum{margin-top:2px}
@@ -559,7 +623,7 @@ details.erkl.warum>div{font-size:var(--fs-tiny);margin-top:2px}
 .chart .cline{stroke-dasharray:var(--len);stroke-dashoffset:var(--len);animation:draw 900ms var(--ease) forwards}
 @keyframes draw{to{stroke-dashoffset:0}}
 .cnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp3);gap:var(--sp2)}
-.cnav b{font-size:15px;font-weight:650;letter-spacing:-.015em;text-align:center;flex:1}
+.cnav b{font-size:var(--fs-body);font-weight:650;letter-spacing:-.015em;text-align:center;flex:1}
 .cnav .iconbtn{width:36px;height:36px}
 
 /* ─── TRAINING ───────────────────────────────────────────────────── */
@@ -576,10 +640,10 @@ details.erkl.warum>div{font-size:var(--fs-tiny);margin-top:2px}
   background:none;border:none;min-height:var(--hit-comfort);cursor:pointer}
 .dsday .num{position:relative;width:100%;max-width:44px;aspect-ratio:1;border-radius:50%;
   display:grid;place-items:center;background:var(--s2);color:var(--txt2);
-  font-weight:750;font-size:17px;font-variant-numeric:tabular-nums;
+  font-weight:750;font-size:var(--fs-lg);font-variant-numeric:tabular-nums;
   border:2px solid transparent;
   transition:background var(--dur-2) var(--ease),color var(--dur-2) var(--ease),border-color var(--dur-2) var(--ease)}
-.dsday .wd{font-size:11.5px;font-weight:650;color:var(--txt3);letter-spacing:.02em}
+.dsday .wd{font-size:var(--fs-tiny);font-weight:650;color:var(--txt3);letter-spacing:.02em}
 .dsday .dot{width:6px;height:6px;border-radius:50%;background:transparent}
 /* Weiß auf reinem --acc wären nur 2,76:1 — deshalb überall der Akzent-Verlauf
    (#3A70DC → --acc-deep, 4,63:1 am hellen Ende). Genau dafür prüft k1. */
@@ -600,7 +664,7 @@ details.erkl.warum>div{font-size:var(--fs-tiny);margin-top:2px}
 .dsday.geplant .mark{background:var(--gold);color:var(--on-a)}
 .dstag{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:var(--sp2)}
 .dstag h2{margin:0}
-.dsherkunft{font-size:11.5px;font-weight:650;color:var(--txt3);border:1px solid var(--line);
+.dsherkunft{font-size:var(--fs-tiny);font-weight:650;color:var(--txt3);border:1px solid var(--line);
   border-radius:var(--r-full);padding:2px 9px;letter-spacing:.02em}
 .dsherkunft.ist{color:var(--acc2);border-color:var(--acc-a30);background:var(--acc-a08)}
 .dsherkunft.plan{color:var(--gold);border-color:rgba(82,156,255,.34);background:rgba(82,156,255,.10)}
@@ -609,12 +673,12 @@ details.erkl.warum>div{font-size:var(--fs-tiny);margin-top:2px}
   padding:8px 0;border-bottom:1px solid var(--line)}
 .planrow:last-child{border-bottom:none}
 .planrow .nm{min-width:0}
-.planrow .nm b{display:block;font-size:13px;font-weight:650;letter-spacing:-.01em;
+.planrow .nm b{display:block;font-size:var(--fs-sub);font-weight:650;letter-spacing:-.01em;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.planrow .nm span{display:block;font-size:11.5px;color:var(--txt3);line-height:1.3}
+.planrow .nm span{display:block;font-size:var(--fs-tiny);color:var(--txt3);line-height:1.3}
 .planrow input{text-align:center;padding:9px 2px;font-weight:700;font-size:var(--fs-input)}
 .planhd{display:grid;grid-template-columns:1fr 62px 78px 32px;gap:8px;
-  font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--txt3);
+  font-size:var(--fs-micro);text-transform:uppercase;letter-spacing:.06em;color:var(--txt3);
   font-weight:650;padding-bottom:4px;border-bottom:1px solid var(--line)}
 .planhd span:nth-child(2),.planhd span:nth-child(3){text-align:center}
 /* .typegrid und .typebtn gehörten zum Raster „Push / Pull / Legs / Andere",
@@ -624,12 +688,12 @@ details.erkl.warum>div{font-size:var(--fs-tiny);margin-top:2px}
   margin:calc(-1 * (var(--sp3) + env(safe-area-inset-top))) calc(-1 * var(--sp4)) var(--sp3);
   padding:calc(var(--sp3) + env(safe-area-inset-top)) var(--sp4) var(--sp3);
   border-bottom:1px solid var(--line);display:flex;align-items:center;gap:var(--sp2)}
-.timer{font-weight:750;font-size:15px;letter-spacing:-.02em}
-.resttimer{background:var(--s2);border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 12px;font-weight:750;font-size:13px;flex:none;font-variant-numeric:tabular-nums;min-height:38px;transition:all var(--dur-2) var(--ease)}
+.timer{font-weight:750;font-size:var(--fs-body);letter-spacing:-.02em}
+.resttimer{background:var(--s2);border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 12px;font-weight:750;font-size:var(--fs-sub);flex:none;font-variant-numeric:tabular-nums;min-height:38px;transition:all var(--dur-2) var(--ease)}
 .resttimer.hot{border-color:var(--acc-a30);color:var(--acc2);background:var(--acc-a16);box-shadow:0 0 0 3px var(--acc-a08)}
 .excard{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.01)),var(--s1);border:1px solid var(--line);border-radius:var(--r);padding:var(--sp3) var(--sp4) var(--sp4);margin-bottom:var(--sp3);box-shadow:var(--e1),inset 0 1px 0 rgba(255,255,255,.05)}
 .excard .exhd{display:flex;align-items:flex-start;gap:var(--sp2);margin-bottom:var(--sp1)}
-.excard .exhd b{font-size:15px;font-weight:650;letter-spacing:-.015em}
+.excard .exhd b{font-size:var(--fs-body);font-weight:650;letter-spacing:-.015em}
 /* Der Übungsname ist ein Knopf: antippen öffnet die Statistik dazu (V66).
    Er sieht aus wie eine Überschrift und verhält sich wie ein Knopf — das
    kleine Diagramm-Zeichen dahinter ist der einzige Hinweis, den es braucht.
@@ -640,8 +704,8 @@ details.erkl.warum>div{font-size:var(--fs-tiny);margin-top:2px}
 .exname .bi svg{width:14px;height:14px}
 .exname:active{opacity:.6}
 .exname:active .bi{opacity:1}
-.musctags{color:var(--txt3);font-size:11.5px;margin-top:2px;line-height:1.4}
-.prevline{font-size:13px;color:var(--txt2);background:var(--s2);border-radius:var(--r-sm);padding:8px 8px;margin:8px 0;border:1px solid var(--line)}
+.musctags{color:var(--txt3);font-size:var(--fs-tiny);margin-top:2px;line-height:1.4}
+.prevline{font-size:var(--fs-sub);color:var(--txt2);background:var(--s2);border-radius:var(--r-sm);padding:8px 8px;margin:8px 0;border:1px solid var(--line)}
 .progbox{display:flex;align-items:center;gap:var(--sp3);border-radius:var(--r-md);padding:12px 12px;margin:8px 0 2px;
   background:linear-gradient(135deg,rgba(82,156,255,.15),rgba(82,156,255,.03)),var(--s1);border:1px solid var(--acc-a30);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
@@ -649,16 +713,22 @@ details.erkl.warum>div{font-size:var(--fs-tiny);margin-top:2px}
 .sethead.rir,.setrow.rir{grid-template-columns:30px 1fr 70px 58px 52px 26px}
 .sethead.uni,.setrow.uni{grid-template-columns:28px 1fr 62px 50px 50px 24px}
 .sethead.uni.rir,.setrow.uni.rir{grid-template-columns:26px .84fr 54px 42px 42px 42px 22px}
+/* Zeit- und Kardioübungen haben weniger Felder, die aber breiter sein
+   müssen: „1:30 min" braucht mehr Platz als „12". Die Klassen stehen NACH
+   den anderen, damit sie rir/uni überschreiben — beides ergibt bei einer
+   Halteübung ohnehin keinen Sinn. */
+.sethead.zeit,.setrow.zeit{grid-template-columns:30px 1fr 92px 26px}
+.sethead.kardio,.setrow.kardio{grid-template-columns:30px 1fr 82px 82px 26px}
 /* Touch-Ziele: sichtbare Größe kompakt, Trefferfläche via ::after auf Norm gebracht */
-.setdel{position:relative;width:var(--hit-min);height:var(--hit-min);border-radius:var(--r-sm);background:none;border:none;color:var(--txt3);font-size:13px;display:inline-flex;align-items:center;justify-content:center;justify-self:center;transition:color var(--dur-2) var(--ease),transform var(--dur-1) var(--ease),background var(--dur-2) var(--ease)}
+.setdel{position:relative;width:var(--hit-min);height:var(--hit-min);border-radius:var(--r-sm);background:none;border:none;color:var(--txt3);font-size:var(--fs-sub);display:inline-flex;align-items:center;justify-content:center;justify-self:center;transition:color var(--dur-2) var(--ease),transform var(--dur-1) var(--ease),background var(--dur-2) var(--ease)}
 .setdel::after{content:'';position:absolute;inset:-10px}
 .setdel:active{color:var(--red);background:rgba(242,72,63,.12);transform:scale(.85)}
 .exreorder{display:flex;flex-direction:column;gap:3px;flex:none;margin-top:1px}
-.rord{position:relative;width:28px;height:var(--hit-min);border-radius:var(--r-sm);background:var(--s2);border:1px solid var(--line);color:var(--txt2);font-size:10px;line-height:1;display:inline-flex;align-items:center;justify-content:center;transition:background var(--dur-2) var(--ease),transform var(--dur-1) var(--ease)}
+.rord{position:relative;width:28px;height:var(--hit-min);border-radius:var(--r-sm);background:var(--s2);border:1px solid var(--line);color:var(--txt2);font-size:var(--fs-micro);line-height:1;display:inline-flex;align-items:center;justify-content:center;transition:background var(--dur-2) var(--ease),transform var(--dur-1) var(--ease)}
 .rord::after{content:'';position:absolute;inset:-10px -8px}
 .rord:active{background:var(--s3);color:var(--txt);transform:scale(.9)}
 .rord[disabled]{opacity:.25;pointer-events:none}
-.sethead{font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.08em;font-weight:650;margin:8px 0 4px;padding:0 2px}
+.sethead{font-size:var(--fs-micro);color:var(--txt3);text-transform:uppercase;letter-spacing:.08em;font-weight:650;margin:8px 0 4px;padding:0 2px}
 .setrow{margin-bottom:8px}
 /* V71: Zeile im Nachbearbeiten-Blatt. Eigenes Raster, weil hier die Spalte
    „letztes Mal" fehlt — beim Korrigieren steht schon da, was war. */
@@ -668,18 +738,20 @@ details.erkl.warum>div{font-size:var(--fs-tiny);margin-top:2px}
 .werow.uni.rir,.wehead.uni.rir{grid-template-columns:30px 1fr 1fr 1fr 54px 26px}
 .werow input{text-align:center;padding:10px 4px;font-weight:750}
 .wehead>span{font-size:var(--fs-micro);letter-spacing:.06em;text-transform:uppercase;color:var(--txt3);text-align:center}
-.setrow .idx{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:750;font-size:13px;color:var(--txt3);background:var(--s2);border:1px solid var(--line);justify-self:center;transition:all var(--dur-2) var(--spring)}
+/* font-size über die Skala statt fest in px — sonst wäre diese eine Zeile
+   beim Zusammenführen aus der rem-Umstellung herausgefallen. */
+.setrow .idx{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:750;font-size:var(--fs-sub);color:var(--txt3);background:var(--s2);border:1px solid var(--line);justify-self:center;transition:all var(--dur-2) var(--spring)}
 .setrow.filled .idx{background:var(--grad-a);border-color:transparent;color:var(--on-acc);box-shadow:0 3px 10px -3px rgba(82,156,255,.8)}
 .setrow.warm .idx{background:rgba(82,156,255,.16);border-color:rgba(82,156,255,.35);color:var(--gold);box-shadow:none}
 .setrow.warm input{opacity:.6}
 .setrow.drop .idx{background:rgba(82,156,255,.16);border-color:rgba(82,156,255,.35);color:var(--purple);box-shadow:none}
-.prevpill{font-size:13px;color:var(--txt2);background:var(--s2);border:1px dashed var(--line-2);border-radius:var(--r-sm);padding:8px 4px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;text-align:center;width:100%;transition:all var(--dur-2) var(--ease);min-height:42px}
+.prevpill{font-size:var(--fs-sub);color:var(--txt2);background:var(--s2);border:1px dashed var(--line-2);border-radius:var(--r-sm);padding:8px 4px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;text-align:center;width:100%;transition:all var(--dur-2) var(--ease);min-height:42px}
 .prevpill.none{border-style:solid;color:var(--txt3)}
 .prevpill:active{border-color:var(--acc);color:var(--acc2);background:var(--acc-a08)}
 .setrow input{text-align:center;padding:12px 4px;font-weight:750}
 .setrow.filled input{border-color:rgba(82,156,255,.35);background:rgba(82,156,255,.07)}
-.riri{width:100%;text-align:center;padding:12px 2px;font-weight:750;font-size:15px !important}
-.addset{width:100%;margin-top:var(--sp1);padding:8px;border:1px dashed var(--line-2);border-radius:var(--r-sm);color:var(--txt2);font-weight:650;font-size:13px;transition:all var(--dur-2) var(--ease);min-height:var(--hit-comfort)}
+.riri{width:100%;text-align:center;padding:12px 2px;font-weight:750;font-size:var(--fs-body) !important}
+.addset{width:100%;margin-top:var(--sp1);padding:8px;border:1px dashed var(--line-2);border-radius:var(--r-sm);color:var(--txt2);font-weight:650;font-size:var(--fs-sub);transition:all var(--dur-2) var(--ease);min-height:var(--hit-comfort)}
 /* Erläuterung, die zum Kennzahlenblock gehört („Vergleich zu Zyklus 7").
    Sitzt im Fluss statt mit margin:-8px hochgezogen zu werden. */
 .kpihint{margin:4px 2px 12px;color:var(--txt3)}
@@ -730,27 +802,27 @@ details.notiz input{margin-top:4px;width:100%}
 /* ─── ERFOLGE ────────────────────────────────────────────────────── */
 .achitem{display:flex;gap:var(--sp3);align-items:center;padding:12px 2px;border-bottom:1px solid var(--line)}
 .achitem:last-child{border-bottom:none}
-.achitem .ico{width:38px;height:38px;border-radius:var(--r-sm);background:var(--s2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:17px;flex:none;transition:all var(--dur-3) var(--ease)}
+.achitem .ico{width:38px;height:38px;border-radius:var(--r-sm);background:var(--s2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:var(--fs-lg);flex:none;transition:all var(--dur-3) var(--ease)}
 .achitem.locked{opacity:.5}
 .achitem.locked .ico{filter:grayscale(1)}
-.achitem b{font-size:13px;display:block;font-weight:650;letter-spacing:-.01em}
-.achitem .d{font-size:11.5px;color:var(--txt2);line-height:1.4}
+.achitem b{font-size:var(--fs-sub);display:block;font-weight:650;letter-spacing:-.01em}
+.achitem .d{font-size:var(--fs-tiny);color:var(--txt2);line-height:1.4}
 .achbar{height:5px;background:rgba(255,255,255,.07);border-radius:var(--r-full);overflow:hidden;margin-top:4px}
 .achbar i{display:block;height:100%;background:linear-gradient(90deg,var(--acc-deep),var(--acc2));border-radius:var(--r-full);transform-origin:left;animation:growx var(--dur-4) var(--ease) backwards}
-.rchip{font-size:10px;font-weight:800;letter-spacing:.06em;border-radius:5px;padding:3px 8px;text-transform:uppercase;flex:none}
+.rchip{font-size:var(--fs-micro);font-weight:800;letter-spacing:.06em;border-radius:5px;padding:3px 8px;text-transform:uppercase;flex:none}
 .achnew{display:flex;gap:var(--sp3);align-items:center;border:1px solid rgba(82,156,255,.3);background:linear-gradient(135deg,rgba(82,156,255,.12),rgba(82,156,255,.02)),var(--s1);border-radius:var(--r-md);padding:12px 12px;margin-bottom:var(--sp2);animation:achpop var(--dur-4) var(--spring) backwards}
 @keyframes achpop{from{transform:scale(.9) translateY(8px);opacity:0}to{transform:none;opacity:1}}
 .prlist{margin-top:var(--sp3)}
 .pritem{display:flex;gap:var(--sp3);align-items:center;background:linear-gradient(135deg,rgba(82,156,255,.12),rgba(82,156,255,.02)),var(--s1);border:1px solid rgba(82,156,255,.28);border-radius:var(--r-md);padding:12px 12px;margin-bottom:var(--sp2);animation:achpop var(--dur-4) var(--spring) backwards}
-.pritem .ico{font-size:20px}
-.pritem b{font-size:13px;display:block;font-weight:650}
-.pritem .meta{font-size:13px;color:var(--gold)}
+.pritem .ico{font-size:var(--fs-h2)}
+.pritem b{font-size:var(--fs-sub);display:block;font-weight:650}
+.pritem .meta{font-size:var(--fs-sub);color:var(--gold)}
 
 /* ─── ZUSAMMENFASSUNG ────────────────────────────────────────────── */
 .sum-top{text-align:center;padding:var(--sp2) 0 var(--sp4)}
-.sum-top .emoji{font-size:44px;display:block;animation:pop-in var(--dur-4) var(--spring)}
+.sum-top .emoji{font-size:var(--fs-hero);display:block;animation:pop-in var(--dur-4) var(--spring)}
 @keyframes pop-in{from{transform:scale(.5) rotate(-12deg);opacity:0}to{transform:none;opacity:1}}
-.sum-top h2{font-size:20px;margin:var(--sp2) 0 3px}
+.sum-top h2{font-size:var(--fs-h2);margin:var(--sp2) 0 3px}
 
 /* ─── NAVIGATION ─────────────────────────────────────────────────── */
 /* Leiste klebt an der Unterkante — OHNE reservierten Abstand darunter.
@@ -763,8 +835,20 @@ details.notiz input{margin-top:4px;width:100%}
   box-shadow:0 -10px 34px rgba(0,0,0,.75)}
 .nav::after{content:'';position:absolute;top:100%;left:0;right:0;height:160px;background:var(--s1);pointer-events:none}
 .nav .inner{display:flex;width:100%;max-width:620px}
-.nav button{position:relative;flex:1;padding:8px 2px 8px;display:flex;flex-direction:column;align-items:center;gap:3px;
-  font-size:10px;font-weight:650;color:var(--txt3);letter-spacing:.01em;transition:color var(--dur-2) var(--ease);min-height:48px}
+/* Die Beschriftung der Tableiste ist der eine Ort, an dem die Schrift NICHT
+   voll mitwächst — und zwar bewusst. Fünf Wörter wie „Statistik" und
+   „Übungen" nebeneinander sprengen bei doppelter Systemschrift jede
+   Bildschirmbreite; „Übungen" war schlicht abgeschnitten.
+
+   `min()` deckelt deshalb bei 3,4 % der Fensterbreite: Bei Standardgröße
+   ändert sich nichts (10 px < 13,3 px), bei doppelter Textgröße wächst die
+   Beschriftung auf 13,3 px statt 20 px und bleibt vollständig lesbar.
+
+   Barrierefrei ist das unbedenklich: Jeder Knopf trägt ein aria-label, das
+   unabhängig von der Darstellung vorgelesen wird, und die Bedeutung liegt
+   ohnehin im Symbol. Genau so verhalten sich auch die Tableisten von iOS. */
+.nav button{position:relative;flex:1;min-width:0;overflow:hidden;padding:8px 2px 8px;display:flex;flex-direction:column;align-items:center;gap:3px;
+  font-size:min(var(--fs-micro),3.4vw);font-weight:650;color:var(--txt3);letter-spacing:.01em;transition:color var(--dur-2) var(--ease);min-height:48px}
 .nav button svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;
   transition:transform var(--dur-3) var(--spring)}
 .nav button.on{color:var(--acc)}
@@ -777,10 +861,10 @@ details.notiz input{margin-top:4px;width:100%}
 .toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(16px) scale(.96);
   background:rgba(26,30,40,.92);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);
   border:1px solid var(--line-2);color:var(--txt);padding:12px 16px;border-radius:var(--r-md);
-  font-size:13px;font-weight:650;opacity:0;pointer-events:none;z-index:99;max-width:calc(100% - 32px);text-align:center;
+  font-size:var(--fs-sub);font-weight:650;opacity:0;pointer-events:none;z-index:99;max-width:calc(100% - 32px);text-align:center;
   box-shadow:var(--e3);transition:opacity var(--dur-3) var(--ease),transform var(--dur-3) var(--spring)}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}
-.tact{background:var(--acc-a16);border:1px solid var(--acc-a30);color:var(--acc2);border-radius:var(--r-sm);padding:4px 12px;font-weight:750;font-size:13px;margin-left:var(--sp2)}
+.tact{background:var(--acc-a16);border:1px solid var(--acc-a30);color:var(--acc2);border-radius:var(--r-sm);padding:4px 12px;font-weight:750;font-size:var(--fs-sub);margin-left:var(--sp2)}
 
 /* ─── BANNER ─────────────────────────────────────────────────────── */
 .banner{display:flex;align-items:center;gap:var(--sp3);border-radius:var(--r);padding:12px 16px;margin-bottom:var(--sp3);
@@ -791,8 +875,8 @@ details.notiz input{margin-top:4px;width:100%}
 .banner.warn b{color:var(--gold)}
 
 /* ─── TABELLE ────────────────────────────────────────────────────── */
-.htable{width:100%;border-collapse:collapse;font-size:13px}
-.htable th{text-align:left;color:var(--txt3);font-size:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:650;padding:4px;border-bottom:1px solid var(--line)}
+.htable{width:100%;border-collapse:collapse;font-size:var(--fs-sub)}
+.htable th{text-align:left;color:var(--txt3);font-size:var(--fs-micro);text-transform:uppercase;letter-spacing:.08em;font-weight:650;padding:4px;border-bottom:1px solid var(--line)}
 .htable td{padding:8px 4px;border-bottom:1px solid var(--line);color:var(--txt2)}
 .htable tr:last-child td{border-bottom:none}
 .htable td:first-child,.htable th:first-child{padding-left:2px}
@@ -803,17 +887,17 @@ details.notiz input{margin-top:4px;width:100%}
 #lock::before{content:'';position:absolute;inset:0;background:radial-gradient(600px 400px at 50% 18%,rgba(82,156,255,.16),transparent 65%);pointer-events:none}
 #lock.on{display:flex;animation:screen-in var(--dur-3) var(--ease)}
 #lock>*{position:relative;z-index:1}
-#lock .logo{font-size:26px;font-weight:800;letter-spacing:-.03em;margin-bottom:2px}
+#lock .logo{font-size:var(--fs-h1);font-weight:800;letter-spacing:-.03em;margin-bottom:2px}
 #lock .pinrow{display:flex;gap:var(--sp3);margin:var(--sp6) 0 var(--sp2)}
 #lock .pindot{width:14px;height:14px;border-radius:50%;border:2px solid var(--line-3);transition:all var(--dur-2) var(--spring)}
 #lock .pindot.f{background:var(--acc);border-color:var(--acc);box-shadow:0 0 14px var(--acc-a30);transform:scale(1.15)}
 #lock.err .pinrow{animation:shake 450ms var(--ease-io)}
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px)}40%{transform:translateX(9px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
 .pad{display:grid;grid-template-columns:repeat(3,74px);gap:var(--sp3);margin-top:var(--sp5)}
-.pad button{height:64px;border-radius:50%;background:var(--s2);border:1px solid var(--line);font-size:20px;font-weight:650;
+.pad button{height:64px;border-radius:50%;background:var(--s2);border:1px solid var(--line);font-size:var(--fs-h2);font-weight:650;
   transition:all var(--dur-1) var(--ease);font-variant-numeric:tabular-nums}
 .pad button:active{background:var(--acc-a16);border-color:var(--acc-a30);transform:scale(.9)}
-.pad button.wide{font-size:13px;font-weight:650;color:var(--txt2)}
+.pad button.wide{font-size:var(--fs-sub);font-weight:650;color:var(--txt2)}
 
 /* ─── INSTALL-HINWEIS ────────────────────────────────────────────── */
 #install-hint{position:fixed;left:12px;right:12px;bottom:calc(70px + env(safe-area-inset-bottom));z-index:60;
@@ -835,7 +919,7 @@ details.notiz input{margin-top:4px;width:100%}
   .statspanel>.card{break-inside:avoid}
   .statspanel>.cnav,.statspanel>.kpis,.statspanel>.tiny{column-span:all}
   .bodywrap>div{max-width:340px}
-  h1{font-size:26px}
+  h1{font-size:var(--fs-h1)}
   .nav{background:rgba(10,12,17,.9)}
 }
 @media(min-width:1400px){ .app{max-width:1120px} }
@@ -843,9 +927,9 @@ details.notiz input{margin-top:4px;width:100%}
 /* ═══ Muskelatlas ═══ */
 #modal-muscle .modal{max-width:640px}
 .mhead{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp2);margin-bottom:var(--sp2)}
-.mhead h3{font-size:20px;margin:0 0 2px}
+.mhead h3{font-size:var(--fs-h2);margin:0 0 2px}
 .mhead .ic{background:var(--s2);border:1px solid var(--line);color:var(--txt2);width:34px;height:34px;
-  border-radius:var(--r-full);font-size:15px;cursor:pointer;flex:0 0 auto}
+  border-radius:var(--r-full);font-size:var(--fs-body);cursor:pointer;flex:0 0 auto}
 .mfig{display:flex;gap:var(--sp2);justify-content:center;margin:var(--sp1) 0 var(--sp3)}
 .mfig>div{flex:1 1 0;max-width:118px}
 .mfig svg{width:100%;height:auto;display:block}
@@ -854,8 +938,8 @@ details.notiz input{margin-top:4px;width:100%}
 .mkpi{display:flex;gap:var(--sp2);margin-bottom:var(--sp3)}
 .mkpi>div{flex:1;background:var(--s2);border:1px solid var(--line);border-radius:var(--r-md);
   padding:var(--sp2);text-align:center}
-.mkpi b{display:block;font-size:17px;font-variant-numeric:tabular-nums}
-.mkpi span{font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em}
+.mkpi b{display:block;font-size:var(--fs-lg);font-variant-numeric:tabular-nums}
+.mkpi span{font-size:var(--fs-micro);color:var(--txt3);text-transform:uppercase;letter-spacing:.06em}
 /* Urteil im Atlas — derselbe Satz, den auch die Farbe der Figur erzählt.
    Der Balken links wiederholt nur die Farbe; die Aussage steht im Text. */
 .aturteil{margin:0 0 var(--sp3);padding:var(--sp2) var(--sp3);
@@ -865,8 +949,8 @@ details.notiz input{margin-top:4px;width:100%}
 .aturteil[data-art="g0"],.aturteil[data-art="g1"]{border-left-color:var(--fig-g0)}
 .aturteil[data-art="g4"]{border-left-color:var(--fig-g4)}
 .msec{margin-bottom:var(--sp3)}
-.msec h5,.exsec h5{font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin:0 0 4px}
-.msec p,.msec li,.exsec li{font-size:13px;line-height:1.55;color:var(--txt2)}
+.msec h5,.exsec h5{font-size:var(--fs-tiny);text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin:0 0 4px}
+.msec p,.msec li,.exsec li{font-size:var(--fs-sub);line-height:1.55;color:var(--txt2)}
 .msec ul,.exsec ul,.exsec ol{margin:0;padding-left:16px}
 .msec li,.exsec li{margin-bottom:4px}
 /* --fs-input, nicht 15px: unter 16px zoomt iOS beim Antippen ins Feld und
@@ -877,12 +961,12 @@ details.notiz input{margin-top:4px;width:100%}
   color:var(--txt1);padding:12px 12px;font-size:var(--fs-input);-webkit-appearance:none}
 .mfilters{display:flex;flex-wrap:wrap;gap:4px;margin:var(--sp2) 0 var(--sp3)}
 .mfilters .chip{background:var(--s2);border:1px solid var(--line);color:var(--txt2);border-radius:var(--r-full);
-  padding:8px 12px;font-size:13px;cursor:pointer;transition:all var(--dur-2) var(--ease)}
+  padding:8px 12px;font-size:var(--fs-sub);cursor:pointer;transition:all var(--dur-2) var(--ease)}
 .mfilters .chip.on{background:var(--acc);border-color:var(--acc);color:var(--on-a);font-weight:650}
 .atcat{margin-bottom:var(--sp4)}
-.atcat h4{font-size:15px;margin:0 0 2px;display:flex;align-items:center;gap:8px}
+.atcat h4{font-size:var(--fs-body);margin:0 0 2px;display:flex;align-items:center;gap:8px}
 .atcat h4 span{background:var(--s2);border:1px solid var(--line);border-radius:var(--r-full);
-  padding:1px 8px;font-size:11.5px;color:var(--txt3);font-weight:500}
+  padding:1px 8px;font-size:var(--fs-tiny);color:var(--txt3);font-weight:500}
 .atcat>.tiny{margin:0 0 8px}
 .excard{border:1px solid var(--line);border-radius:var(--r-md);margin-bottom:8px;overflow:hidden;
   background:var(--s2);transition:border-color var(--dur-2) var(--ease)}
@@ -891,15 +975,15 @@ details.notiz input{margin-top:4px;width:100%}
   color:var(--txt1);text-align:left;cursor:pointer;min-height:44px}
 .exic{flex:0 0 auto;color:var(--acc);display:flex}
 .exmain{flex:1;min-width:0}
-.exmain b{display:block;font-size:15px;font-weight:650}
-.exmain small{display:block;font-size:11.5px;color:var(--txt3);margin-top:1px}
-.exact{flex:0 0 auto;font-size:13px;font-weight:750;color:var(--acc);font-variant-numeric:tabular-nums}
+.exmain b{display:block;font-size:var(--fs-body);font-weight:650}
+.exmain small{display:block;font-size:var(--fs-tiny);color:var(--txt3);margin-top:1px}
+.exact{flex:0 0 auto;font-size:var(--fs-sub);font-weight:750;color:var(--acc);font-variant-numeric:tabular-nums}
 .exbody{padding:0 12px 12px;animation:slideDown var(--dur-3) var(--ease)}
 @keyframes slideDown{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 .exsec{margin-bottom:12px}
 .exsec h5 i{text-transform:none;letter-spacing:0;font-style:normal;opacity:.75}
 .rbars{margin:0 0 12px}
-.rbar{display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:13px;color:var(--txt2)}
+.rbar{display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:var(--fs-sub);color:var(--txt2)}
 .rbar span{flex:0 0 118px}
 .rbar i{flex:1;height:6px;background:var(--s3,rgba(255,255,255,.07));border-radius:var(--r-full);overflow:hidden}
 .rbar b{display:block;height:100%;border-radius:var(--r-full);transition:width var(--dur-4) var(--ease)}
@@ -907,7 +991,7 @@ details.notiz input{margin-top:4px;width:100%}
 .rbar b.tc{background:var(--purple)} .rbar b.td{background:var(--gold)}
 .rbar em{flex:0 0 34px;text-align:right;font-style:normal;font-variant-numeric:tabular-nums;color:var(--txt3)}
 .exmeta{display:flex;flex-wrap:wrap;gap:4px}
-.exmeta span{font-size:10px;color:var(--txt3);background:var(--s1);border:1px solid var(--line);
+.exmeta span{font-size:var(--fs-micro);color:var(--txt3);background:var(--s1);border:1px solid var(--line);
   border-radius:var(--r-full);padding:2px 8px}
 path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
 .bodywrap path[data-m]{cursor:pointer}
@@ -916,91 +1000,91 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
 .coachstart{display:flex;align-items:center;gap:var(--sp3);justify-content:space-between;flex-wrap:wrap}
 .coachstart p{margin:4px 0 0;max-width:40ch}
 .coachcard .cchead{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp2)}
-.ccbig{display:block;font-size:34px;font-weight:750;line-height:1.05;font-variant-numeric:tabular-nums;margin-top:2px}
-.ccbig i{font-size:15px;font-weight:500;color:var(--txt3);font-style:normal;margin-left:4px}
+.ccbig{display:block;font-size:var(--fs-num);font-weight:750;line-height:1.05;font-variant-numeric:tabular-nums;margin-top:2px}
+.ccbig i{font-size:var(--fs-body);font-weight:500;color:var(--txt3);font-style:normal;margin-left:4px}
 .ccmac{display:flex;gap:var(--sp2);margin:var(--sp3) 0 var(--sp2)}
 .ccmac>div{flex:1;min-width:0}
 .ccmac i{display:block;height:5px;border-radius:var(--r-full);background:var(--acc);width:var(--w);
   min-width:8px;margin-bottom:8px;transition:width var(--dur-4) var(--ease)}
 .ccmac>div:nth-child(2) i{background:var(--purple)} .ccmac>div:nth-child(3) i{background:var(--a4)}
-.ccmac b{display:block;font-size:15px;font-variant-numeric:tabular-nums}
-.ccmac span{font-size:10px;color:var(--txt3)}
+.ccmac b{display:block;font-size:var(--fs-body);font-variant-numeric:tabular-nums}
+.ccmac span{font-size:var(--fs-micro);color:var(--txt3)}
 /* ═══ Onboarding ═══ */
 #modal-onboard .modal{max-width:560px}
 .obtop{margin-bottom:var(--sp4)}
 .obprog{height:4px;background:var(--s2);border-radius:var(--r-full);overflow:hidden}
 .obprog i{display:block;height:100%;background:var(--acc);border-radius:var(--r-full);
   transition:width var(--dur-4) var(--ease)}
-.obmeta{display:flex;justify-content:space-between;margin-top:8px;font-size:11.5px;color:var(--txt3);
+.obmeta{display:flex;justify-content:space-between;margin-top:8px;font-size:var(--fs-tiny);color:var(--txt3);
   text-transform:uppercase;letter-spacing:.06em}
 .obcontent{animation:obIn var(--dur-3) var(--ease)}
 @keyframes obIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
-.obcontent h2{font-size:20px;margin:0 0 4px}
-.obsub{font-size:13px;color:var(--txt2);margin:0 0 var(--sp3);line-height:1.5}
+.obcontent h2{font-size:var(--fs-h2);margin:0 0 4px}
+.obsub{font-size:var(--fs-sub);color:var(--txt2);margin:0 0 var(--sp3);line-height:1.5}
 .obgrid{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp2)}
-.obgrid label{display:block;font-size:11.5px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;position:relative}
+.obgrid label{display:block;font-size:var(--fs-tiny);color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;position:relative}
 .obgrid label i{font-style:normal;text-transform:none;letter-spacing:0;opacity:.7}
 .obgrid input{width:100%;margin-top:4px;background:var(--s2);border:1px solid var(--line);
-  border-radius:var(--r-md);color:var(--txt1);padding:12px 40px 12px 12px;font-size:17px;
+  border-radius:var(--r-md);color:var(--txt1);padding:12px 40px 12px 12px;font-size:var(--fs-lg);
   font-variant-numeric:tabular-nums;-webkit-appearance:none}
-.obgrid label>span{position:absolute;right:13px;bottom:14px;font-size:13px;color:var(--txt3);text-transform:none}
+.obgrid label>span{position:absolute;right:13px;bottom:14px;font-size:var(--fs-sub);color:var(--txt3);text-transform:none}
 .obsex{display:flex;gap:8px;margin-top:var(--sp3)}
 .obsex .chip{flex:1;background:var(--s2);border:1px solid var(--line);color:var(--txt2);
-  border-radius:var(--r-md);padding:12px;font-size:13px;cursor:pointer}
+  border-radius:var(--r-md);padding:12px;font-size:var(--fs-sub);cursor:pointer}
 .obsex .chip.on{background:var(--acc);border-color:var(--acc);color:var(--on-a);font-weight:650}
-.linkbtn{background:none;border:0;color:var(--acc);font-size:13px;cursor:pointer;padding:8px 0;text-decoration:underline}
+.linkbtn{background:none;border:0;color:var(--acc);font-size:var(--fs-sub);cursor:pointer;padding:8px 0;text-decoration:underline}
 .pcards{display:flex;flex-direction:column;gap:8px}
 .pcard{display:flex;align-items:center;gap:12px;width:100%;text-align:left;cursor:pointer;
   background:var(--s2);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px;
   color:var(--txt1);transition:all var(--dur-2) var(--ease);min-height:44px}
 .pcard:active{transform:scale(.985)}
 .pcard.on{border-color:var(--acc);background:color-mix(in srgb, var(--acc) 12%, var(--s2))}
-.pico{font-size:20px;flex:0 0 auto;line-height:1}
+.pico{font-size:var(--fs-h2);flex:0 0 auto;line-height:1}
 .ptxt{flex:1;min-width:0}
-.ptxt b{display:block;font-size:15px}
-.ptxt small{display:block;font-size:13px;color:var(--txt3);margin-top:2px;line-height:1.45}
+.ptxt b{display:block;font-size:var(--fs-body)}
+.ptxt small{display:block;font-size:var(--fs-sub);color:var(--txt3);margin-top:2px;line-height:1.45}
 .pmark{flex:0 0 auto;width:22px;height:22px;border-radius:var(--r-full);border:1px solid var(--line);
-  display:flex;align-items:center;justify-content:center;font-size:11.5px;color:transparent}
+  display:flex;align-items:center;justify-content:center;font-size:var(--fs-tiny);color:transparent}
 .pcard.on .pmark{background:var(--acc);border-color:var(--acc);color:var(--on-a)}
 .obdays{margin-top:var(--sp3)}
-.obdays>span{font-size:11.5px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em}
+.obdays>span{font-size:var(--fs-tiny);color:var(--txt3);text-transform:uppercase;letter-spacing:.06em}
 .daypick{display:flex;gap:8px;margin-top:8px}
 .daypick .chip{flex:1;background:var(--s2);border:1px solid var(--line);color:var(--txt2);
-  border-radius:var(--r-md);padding:12px;font-size:15px;font-weight:650;cursor:pointer}
+  border-radius:var(--r-md);padding:12px;font-size:var(--fs-body);font-weight:650;cursor:pointer}
 .daypick .chip.on{background:var(--acc);border-color:var(--acc);color:var(--on-a)}
 .obnav{display:flex;gap:var(--sp2);justify-content:space-between;margin-top:var(--sp4);align-items:center}
 .obnav .btn{min-width:130px}
 .obnav .btn:disabled{opacity:.4;pointer-events:none}
 .kcalcard{background:var(--s2);border:1px solid var(--line);border-radius:var(--r-lg);padding:var(--sp3);margin-bottom:var(--sp3)}
 .kcalbig{text-align:center;margin-bottom:var(--sp3)}
-.kcalbig b{display:block;font-size:44px;font-weight:750;line-height:1;font-variant-numeric:tabular-nums}
-.kcalbig span{font-size:13px;color:var(--txt3)}
+.kcalbig b{display:block;font-size:var(--fs-hero);font-weight:750;line-height:1;font-variant-numeric:tabular-nums}
+.kcalbig span{font-size:var(--fs-sub);color:var(--txt3)}
 .macros{display:flex;gap:var(--sp2);text-align:center}
 .macros>div{flex:1;background:var(--s1);border:1px solid var(--line);border-radius:var(--r-md);padding:12px 4px}
-.macros b{display:block;font-size:17px;font-variant-numeric:tabular-nums}
-.macros b+span{display:block;font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.05em}
-.macros i{font-size:10px;color:var(--txt3);font-style:normal}
+.macros b{display:block;font-size:var(--fs-lg);font-variant-numeric:tabular-nums}
+.macros b+span{display:block;font-size:var(--fs-micro);color:var(--txt3);text-transform:uppercase;letter-spacing:.05em}
+.macros i{font-size:var(--fs-micro);color:var(--txt3);font-style:normal}
 .obsecs{margin-bottom:var(--sp3)}
-.obsecs h5{font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin:0 0 8px}
-.obsecs p{font-size:13px;line-height:1.55;color:var(--txt2);margin:0 0 8px}
+.obsecs h5{font-size:var(--fs-tiny);text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin:0 0 8px}
+.obsecs p{font-size:var(--fs-sub);line-height:1.55;color:var(--txt2);margin:0 0 8px}
 .plday{background:var(--s2);border:1px solid var(--line);border-radius:var(--r-md);padding:12px 12px;margin-bottom:4px}
-.plday b{font-size:15px} .plday span{font-size:11.5px;color:var(--txt3);margin-left:8px}
-.plday small{display:block;font-size:11.5px;color:var(--txt3);margin-top:4px;line-height:1.5}
+.plday b{font-size:var(--fs-body)} .plday span{font-size:var(--fs-tiny);color:var(--txt3);margin-left:8px}
+.plday small{display:block;font-size:var(--fs-tiny);color:var(--txt3);margin-top:4px;line-height:1.5}
 
 /* ═══ Motivation ═══ */
 /* 13px wie das .tiny daneben in derselben Zeile. Stand auf 11,5px und war
    damit die fünfte Schriftgröße der Startseite — für ein einziges Wort. */
-.hometitel{display:inline-flex;align-items:center;gap:4px;font-size:13px;color:var(--acc);
+.hometitel{display:inline-flex;align-items:center;gap:4px;font-size:var(--fs-sub);color:var(--acc);
   background:color-mix(in srgb,var(--acc) 14%,transparent);border:1px solid color-mix(in srgb,var(--acc) 30%,transparent);
   border-radius:var(--r-full);padding:3px 8px;font-weight:650;letter-spacing:.02em}
 /* ═══ Trainings-Streak (Flamme im Kopfbereich) ═══ */
 .streakchip{display:inline-flex;align-items:center;gap:4px;height:38px;padding:0 12px;cursor:pointer;
   background:linear-gradient(135deg,color-mix(in srgb,var(--a5) 22%,var(--s2)),var(--s2));
   border:1px solid color-mix(in srgb,var(--a5) 40%,var(--line));border-radius:var(--r-full);
-  color:var(--txt1);font-weight:800;font-size:15px;font-variant-numeric:tabular-nums;
+  color:var(--txt1);font-weight:800;font-size:var(--fs-body);font-variant-numeric:tabular-nums;
   box-shadow:0 0 0 0 rgba(82,156,255,.5);transition:transform var(--dur-2) var(--ease),box-shadow var(--dur-3) var(--ease)}
 .streakchip:active{transform:scale(.94)}
-.streakchip .fl{font-size:15px;line-height:1;display:inline-flex;transform-origin:50% 90%;
+.streakchip .fl{font-size:var(--fs-body);line-height:1;display:inline-flex;transform-origin:50% 90%;
   animation:flameFlicker 2.4s ease-in-out infinite;filter:drop-shadow(0 0 4px rgba(82,156,255,.7))}
 /* Flammen-Icon: gefüllt statt Kontur, damit es wie ein Symbol wirkt */
 .fl svg{width:14px;height:14px;fill:currentColor;stroke:none}
@@ -1014,10 +1098,10 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
 @keyframes streakBump{0%{transform:scale(1)}35%{transform:scale(1.22)}100%{transform:scale(1)}}
 @media(prefers-reduced-motion:reduce){.streakchip .fl{animation:none}.streakchip.bump{animation:none}}
 /* Wochentag-Auswahl im Onboarding */
-.weekdaypick .chip{padding:12px 0;font-size:13px;font-weight:650}
+.weekdaypick .chip{padding:12px 0;font-size:var(--fs-sub);font-weight:650}
 /* kleiner Umschalter über „Sätze pro Muskelgruppe" */
 .seg.segsm{display:inline-flex;padding:2px}
-.seg.segsm button{font-size:13px;padding:4px 12px}
+.seg.segsm button{font-size:var(--fs-sub);padding:4px 12px}
 .seg.setmode-top{display:flex;width:100%;margin-bottom:12px}
 .seg.setmode-top button{flex:1}
 /* .rvd gehörte zum Wochenrückblick, der in V59 entfallen ist — raus V64. */
@@ -1030,8 +1114,8 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
 <div id="lock">
   <div class="logo">Fitness<span class="acc">Tracker</span></div>
   <div class="tiny" style="letter-spacing:.4px">created by Aaron Jeetun</div>
-  <div id="lock-title" style="margin-top:24px;font-weight:750;font-size:15px">PIN eingeben</div>
-  <div class="sub" id="lock-sub" style="font-size:13px;margin-top:3px"></div>
+  <div id="lock-title" style="margin-top:24px;font-weight:750;font-size:var(--fs-body)">PIN eingeben</div>
+  <div class="sub" id="lock-sub" style="font-size:var(--fs-sub);margin-top:3px"></div>
   <div class="pinrow" id="lock-dots"></div>
   <div class="pad" id="lock-pad"></div>
   <button class="btn btn-ghost btn-sm" id="lock-forgot" style="margin-top:20px">PIN vergessen?</button>
@@ -1041,7 +1125,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
 <div id="install-hint">
   <span class="bi" data-ico="down" style="margin:0"></span>
   <div class="grow">
-    <b style="color:var(--gold);font-size:13px">Zum Homescreen hinzufügen!</b>
+    <b style="color:var(--gold);font-size:var(--fs-sub)">Zum Homescreen hinzufügen!</b>
     <div class="tiny" style="margin-top:3px">Auf dem iPhone löscht Safari die Daten nach 7 Tagen Nichtnutzung — <b>außer</b> die App liegt auf dem Homescreen. Unten auf <b>Teilen</b> ⬆️ → <b>„Zum Home-Bildschirm"</b>.</div>
   </div>
   <button class="iconbtn" id="hint-close" aria-label="Hinweis ausblenden" data-ico-close></button>
@@ -1094,6 +1178,8 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
 
     <div id="home-level"></div>
     <div id="home-bw"></div>
+    <div id="home-balance"></div>
+    <div id="home-goals"></div>
     <div id="home-records"></div>
     <div id="home-backup"></div>
   </section>
@@ -1119,7 +1205,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     <div id="train-active" style="display:none">
       <div class="wbar">
         <div class="grow">
-          <b id="tw-type" style="font-size:15px;letter-spacing:-.02em"></b>
+          <b id="tw-type" style="font-size:var(--fs-body);letter-spacing:-.02em"></b>
           <div class="sub"><span class="timer" id="tw-timer">0:00</span> · <span id="tw-setcount"></span></div>
         </div>
         <button class="resttimer" id="btn-rest" aria-label="Pausen-Timer">⏱ Pause</button>
@@ -1198,7 +1284,11 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
   <div class="cf-ico" id="cf-ico"></div>
   <h2 id="cf-title" style="text-align:center;margin-bottom:4px"></h2>
   <p class="sub" id="cf-text" style="text-align:center;margin-bottom:16px;white-space:pre-line"></p>
-  <button class="btn btn-block btn-lg" id="cf-ok" style="margin-bottom:8px"></button>
+  <!-- Beschriftung setzt confirmModal() zur Laufzeit. Der Vorgabetext steht
+       trotzdem hier: Ein Knopf ohne Text ist für einen Screenreader nur eine
+       „Schaltfläche" — und falls die Beschriftung je ausbleibt, steht hier
+       etwas Sinnvolles statt nichts. -->
+  <button class="btn btn-block btn-lg" id="cf-ok" style="margin-bottom:8px">Ja, weiter</button>
   <button class="btn btn-ghost btn-block" id="cf-cancel">Abbrechen</button>
 </div></div>
 
@@ -1284,12 +1374,12 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
   <div class="mhd"><h2 id="xo-title">Übung einstellen</h2><button class="iconbtn" data-close aria-label="Schließen" data-ico-close></button></div>
   <div class="card">
     <div class="row" style="justify-content:space-between">
-      <div class="grow"><b style="font-size:15px">Einseitig (pro Seite)</b>
+      <div class="grow"><b style="font-size:var(--fs-body)">Einseitig (pro Seite)</b>
         <div class="tiny">Beim Training bekommst du dann pro Satz zwei Wdh-Felder (L/R). Volumen zählt beide Seiten, Sätze pro Muskel bleiben gleich. Lässt du R leer, zählt links doppelt.</div></div>
       <button class="chip" id="xo-uni">Aus</button>
     </div>
     <div id="xo-unisince-wrap" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--bd)">
-      <b style="font-size:13px">Einseitig seit</b>
+      <b style="font-size:var(--fs-sub)">Einseitig seit</b>
       <div class="tiny" style="margin:2px 0 8px">Ab diesem Datum zählt die App die Übung als einarmig. Nur nötig für Trainings von früher — bei allem, was du ab jetzt loggst, merkt sie es sich automatisch.</div>
       <div class="row" style="gap:8px"><input type="date" id="xo-unisince" style="flex:1" aria-label="Einseitig seit diesem Datum">
         <button class="btn btn-ghost btn-sm" id="xo-unisince-clr">Löschen</button></div>
@@ -1318,6 +1408,36 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
   </div>
   <div class="card" id="xo-alt"></div>
   <button class="btn btn-ghost btn-block btn-sm" id="xo-reset">Auf Standard zurücksetzen</button>
+</div></div>
+
+<div class="mback" id="modal-goal"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="goal-title">
+  <div class="grab"></div>
+  <div class="mhd"><h2 id="goal-title"><span class="bi" data-ico="star"></span>Ziel</h2><button class="iconbtn" data-close aria-label="Schließen" data-ico-close></button></div>
+  <div class="card">
+    <h3 style="margin-bottom:8px">Was willst du erreichen?</h3>
+    <div class="chips" id="goal-arten" style="margin-bottom:12px"></div>
+
+    <!-- Übungswahl nur bei übungsbezogenen Zielen; sonst ausgeblendet -->
+    <div id="goal-exrow" style="margin-bottom:12px">
+      <label class="up" for="goal-ex" style="display:block;margin-bottom:4px">Übung</label>
+      <button class="btn btn-block" id="goal-ex" style="justify-content:space-between">Übung wählen …</button>
+    </div>
+
+    <div class="row" style="gap:8px;margin-bottom:12px">
+      <div class="grow">
+        <label class="up" for="goal-wert" style="display:block;margin-bottom:4px">Zielwert</label>
+        <input type="text" inputmode="decimal" id="goal-wert" placeholder="z.B. 100" style="width:100%">
+      </div>
+      <div class="grow">
+        <label class="up" for="goal-bis" style="display:block;margin-bottom:4px">Bis wann</label>
+        <input type="date" id="goal-bis" style="width:100%">
+      </div>
+    </div>
+
+    <p class="tiny" id="goal-hinweis" style="margin-bottom:12px"></p>
+    <button class="btn btn-acc btn-block btn-lg" id="goal-save">Ziel speichern</button>
+    <button class="btn btn-danger btn-block" id="goal-del" style="margin-top:8px;display:none">Ziel löschen</button>
+  </div>
 </div></div>
 
 <div class="mback" id="modal-bw"><div class="modal" role="dialog" aria-modal="true">
@@ -1389,7 +1509,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     <p class="tiny" style="margin-bottom:8px">Ein <b>Zyklus</b> ist ein voller Durchgang durch deinen Plan: <b>Ganzkörper-Push → Ganzkörper-Pull → Rest</b>. Alle Ziele in der Statistik rechnen pro Zyklus, nicht pro Kalenderwoche — sonst schwanken die Werte nur, weil mal zwei und mal drei Einheiten in eine Woche fallen.</p>
     <div class="row"><input type="number" id="set-goal" min="1" max="14" style="width:90px" aria-label="Einheiten pro Zyklus"><span class="sub">Einheiten pro Zyklus</span></div>
     <div class="row" style="margin-top:12px;justify-content:space-between">
-      <div class="grow"><b style="font-size:15px">Beine im Zyklus</b>
+      <div class="grow"><b style="font-size:var(--fs-body)">Beine im Zyklus</b>
         <div class="tiny"><b>An</b> (Standard bei Ganzkörper-Push/Pull): Beine bekommen denselben Zielkorridor wie alles andere. <b>Aus</b>: Beine laufen nebenher und werden rollierend über 21 Tage gezeigt, ohne Ampel.</div></div>
       <button class="chip" id="set-beine">Aus</button>
     </div>
@@ -1398,7 +1518,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     <h3 style="margin-bottom:4px">Pausen-Timer</h3>
     <div class="row"><input type="number" id="set-rest" min="15" max="600" step="15" style="width:90px" aria-label="Pause in Sekunden"><span class="sub">Sekunden (pro Übung überschreibbar)</span></div>
     <div class="row" style="justify-content:space-between;margin-top:10px">
-      <div class="grow"><b style="font-size:15px">Ton am Ende</b>
+      <div class="grow"><b style="font-size:var(--fs-body)">Ton am Ende</b>
         <div class="tiny">Zwei kurze Töne, zusätzlich zur Vibration.</div></div>
       <button class="chip" id="set-restsound">An</button>
     </div>
@@ -1412,7 +1532,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
   </div>
   <div class="card">
     <div class="row" style="justify-content:space-between">
-      <div class="grow"><b style="font-size:15px">RIR erfassen</b>
+      <div class="grow"><b style="font-size:var(--fs-body)">RIR erfassen</b>
         <div class="tiny">„Reps in Reserve" — wie viele Wdh wären noch gegangen? Steuert den Progressionsvorschlag genauer (0–1 = am Limit).</div></div>
       <button class="chip" id="set-rir">Aus</button>
     </div>
@@ -1470,7 +1590,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V73 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V79 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -2453,7 +2573,7 @@ function recoveryGroups(rec){
 }
 /* ================= ÜBUNGSDATENBANK ================= */
 /* [Name, Gruppe, Gerät, primäre Muskeln, sekundäre Muskeln, Alias/Suchbegriffe] */
-const EQUIPS = ['Langhantel','Kurzhantel','Maschine','Maschine (unterstützt)','Kabel','Multipresse','Körpergewicht','SZ-Stange','Trap-Stange','Kettlebell','Widerstandsband','Hantelscheibe','Sonstiges'];
+const EQUIPS = ['Langhantel','Kurzhantel','Maschine','Maschine (unterstützt)','Kabel','Multipresse','Körpergewicht','SZ-Stange','Trap-Stange','Kettlebell','Widerstandsband','Hantelscheibe','Kardiogerät','Sonstiges'];
 const EXDB_RAW = [
 /* ---------- BRUST ---------- */
 ['Bankdrücken (Langhantel)','Brust','Langhantel',['chest'],['front_delt','triceps'],'bench press flat'],
@@ -2817,9 +2937,54 @@ const EXDB_RAW = [
 ['Human Flag (Sek. als Wdh)','Ganzkörper','Körpergewicht',['obliques'],['lats','side_delt','abs'],'human flag menschliche fahne halten'],
 ['Renegade-Rudern','Ganzkörper','Kurzhantel',['upper_back','lats'],['abs','biceps'],'renegade row',1],
 ['Wandball-Würfe','Ganzkörper','Sonstiges',['quads','front_delt'],['glutes','abs'],'wall ball wandball'],
+
+/* ── HALTEÜBUNGEN (Zeit) ──────────────────────────────────────────────
+   Achte Spalte = Übungsart: 'zeit' misst Sekunden statt Wiederholungen.
+
+   Bis V75 gab es dafür nur Behelfe: „Tuck-Planche (Sek. als Wdh)" und
+   „Human Flag (Sek. als Wdh)" — die Sekunden wurden ins Wiederholungsfeld
+   getippt. Die beiden Einträge BLEIBEN unverändert stehen, samt Namen: Wer
+   sie benutzt hat, hat dort Historie liegen, und eine Umdeutung ihrer Zahlen
+   würde diese Historie still verfälschen. Neue Halteübungen kommen hier dazu. */
+['Unterarmstütz','Bauch','Körpergewicht',['abs'],['front_delt','obliques'],'plank unterarmstütz planke halten',0,'zeit'],
+['Unterarmstütz (seitlich)','Bauch','Körpergewicht',['obliques'],['abs','side_delt'],'side plank seitstütz halten',1,'zeit'],
+['Unterarmstütz (Füße erhöht)','Bauch','Körpergewicht',['abs'],['front_delt'],'plank feet elevated erhöht halten',0,'zeit'],
+['Hohlkreuz-Halten','Bauch','Körpergewicht',['abs'],[],'hollow body hold hohlkörper halten',0,'zeit'],
+['Unterarmstütz (Liegestützposition)','Bauch','Körpergewicht',['abs'],['chest','triceps'],'high plank liegestütz halten',0,'zeit'],
+['Totenkäfer-Halten','Bauch','Körpergewicht',['abs'],[],'dead bug hold halten',0,'zeit'],
+['Hängen an der Stange','Rücken','Körpergewicht',['forearms'],['lats'],'dead hang hängen stange grip',0,'zeit'],
+['Wandsitzen','Beine','Körpergewicht',['quads'],['glutes'],'wall sit wandsitz halten',0,'zeit'],
+['Farmers Walk','Ganzkörper','Kurzhantel',['forearms','traps'],['abs','quads'],'farmers walk farmerslauf tragen',0,'zeit'],
+['Koffertragen (einseitig)','Ganzkörper','Kurzhantel',['obliques','forearms'],['traps'],'suitcase carry koffer tragen',1,'zeit'],
+['Überkopftragen','Ganzkörper','Kurzhantel',['side_delt','abs'],['traps'],'overhead carry überkopf tragen',0,'zeit'],
+['Rudergriff-Halten (Lat)','Rücken','Kabel',['upper_back'],['lats','biceps'],'iso hold rudern halten',0,'zeit'],
+['Glute-Bridge-Halten','Beine','Körpergewicht',['glutes'],['hamstrings'],'glute bridge hold hüftbrücke halten',0,'zeit'],
+['Waden-Halten (gestreckt)','Beine','Körpergewicht',['calves'],[],'calf hold waden halten',0,'zeit'],
+
+/* ── KARDIO (Zeit + Distanz) ──────────────────────────────────────────
+   'kardio' misst Sekunden UND Strecke. Volumen in Kilogramm ergibt hier
+   keinen Sinn und wird deshalb auch nicht berechnet — die Zahlen dieser
+   Übungen laufen getrennt. */
+['Laufband','Ganzkörper','Kardiogerät',['quads','calves'],['hamstrings','glutes'],'treadmill laufband laufen rennen',0,'kardio'],
+['Laufband (Steigung)','Ganzkörper','Kardiogerät',['glutes','quads'],['calves','hamstrings'],'incline walk steigung bergauf',0,'kardio'],
+['Rudergerät','Ganzkörper','Kardiogerät',['upper_back','quads'],['lats','biceps','hamstrings'],'rowing erg concept2 rudergerät',0,'kardio'],
+['Fahrradergometer','Beine','Kardiogerät',['quads'],['glutes','calves'],'bike ergometer fahrrad radfahren spinning',0,'kardio'],
+['Liegeergometer','Beine','Kardiogerät',['quads'],['glutes'],'recumbent bike liegerad',0,'kardio'],
+['Crosstrainer','Ganzkörper','Kardiogerät',['quads','glutes'],['calves','upper_back'],'elliptical crosstrainer ellipsentrainer',0,'kardio'],
+['Treppensteiger','Beine','Kardiogerät',['glutes','quads'],['calves'],'stairmaster treppe stepper steigen',0,'kardio'],
+['Skiergometer','Ganzkörper','Kardiogerät',['lats','abs'],['triceps','upper_back'],'skierg ski ergometer',0,'kardio'],
+['Air Bike','Ganzkörper','Kardiogerät',['quads','front_delt'],['lats','glutes'],'assault air bike ventilator',0,'kardio'],
+['Laufen (draußen)','Ganzkörper','Sonstiges',['quads','calves'],['hamstrings','glutes'],'running joggen laufen outdoor',0,'kardio'],
+['Radfahren (draußen)','Beine','Sonstiges',['quads'],['glutes','calves'],'cycling radfahren fahrrad outdoor',0,'kardio'],
+['Schwimmen','Ganzkörper','Sonstiges',['lats','front_delt'],['abs','quads'],'swimming schwimmen bahnen',0,'kardio'],
+['Seilspringen','Ganzkörper','Sonstiges',['calves'],['front_delt','abs'],'jump rope seilspringen springseil',0,'kardio'],
+['Schlittenschieben','Ganzkörper','Sonstiges',['quads','glutes'],['calves','abs'],'sled push prowler schlitten schieben',0,'kardio'],
 ];
 const exSlug = n=>'x-'+n.toLowerCase().replace(/[^a-z0-9äöüß]+/g,'-').replace(/^-+|-+$/g,'');
-const EXDB = EXDB_RAW.map(r=>({id:exSlug(r[0]), name:r[0], grp:r[1], eq:r[2], p:r[3], s:r[4]||[], al:(r[5]||'').toLowerCase(), uni:!!r[6]}));
+/* art: 'kraft' (Gewicht × Wiederholungen), 'zeit' (Sekunden) oder
+   'kardio' (Sekunden + Strecke). Fehlt die Spalte, ist es Kraft — damit
+   bleiben alle 337 bestehenden Einträge und alle Altdaten unberührt. */
+const EXDB = EXDB_RAW.map(r=>({id:exSlug(r[0]), name:r[0], grp:r[1], eq:r[2], p:r[3], s:r[4]||[], al:(r[5]||'').toLowerCase(), uni:!!r[6], art:r[7]||'kraft'}));
 /* ================= KERN: STATE / DATUM / PR-LOGIK ================= */
 const LS_KEY = 'ironlog_v1';
 /* Zyklus = Ganzkörper-Push → Ganzkörper-Pull → Rest. Der Vorschlag kommt
@@ -2840,6 +3005,7 @@ let state = {
   exOpt: {},           // Einstellungen pro Übung {exId:{uni,lo,hi,step,rest,sets}}
   plan: {},            // geplante Einheiten {'YYYY-MM-DD':{type,exercises:[{exId,name,sets:[{w,r}]}]}}
   measures: [],        // Körpermaße [{d, key:cm}]
+  goals: [],           // Ziele [{id,art,exId,ziel,start,bis,angelegt,erreicht}]
   settings: { goal: 5, rest: 90, lastBackup: null, backupSnooze: 0, repLo: 6, repHi: 9, defSets: 2, setGoalLo: 10, setGoalHi: 20 }
 };
 
@@ -2851,6 +3017,9 @@ function loadState(){
       if(!state.bodyweight) state.bodyweight=[];
       if(!state.measures) state.measures=[];
       if(!state.exOpt) state.exOpt={};
+      /* V73: Ziele. Rein additiv wie der Plan in V63 — fehlt der Schlüssel,
+         gibt es eben keine Ziele. Nichts, was Trainingsdaten anfassen könnte. */
+      if(!Array.isArray(state.goals)) state.goals=[];
       /* V63: Planung. Rein additiv — fehlt der Schlüssel, ist der Plan leer.
          Keine Migration, die Trainingsdaten anfassen könnte. */
       if(!state.plan || typeof state.plan !== 'object') state.plan={}; }
@@ -2887,6 +3056,18 @@ function repariereState(){
   if(!Array.isArray(state.workouts)) { state.workouts = []; n++; }
   const heileEinheit = w => {
     if(!w || typeof w!=='object') { n++; return null; }
+    /* Das Datum MUSS eine Zeichenkette sein. An mehreren Stellen wird
+       darauf `.slice(0,10)` aufgerufen, um den Tag herauszuschneiden — bei
+       einer Zahl wirft das „w.date.slice is not a function", und zwar mitten
+       im Zeichnen: weisser Bildschirm, obwohl die Daten in Ordnung sind.
+       Eine Zahl ist ein gültiger Zeitstempel, sie muss nur die richtige
+       Form bekommen. Alles Unbrauchbare wird zu einer leeren Zeichenkette,
+       mit der die Datumsfunktionen umgehen können. */
+    if(typeof w.date !== 'string'){
+      const t = Date.parse(w.date) || (isFinite(+w.date) ? +w.date : NaN);
+      w.date = isFinite(t) ? new Date(t).toISOString() : '';
+      n++;
+    }
     w.exercises = liste(w.exercises).map(e=>{
       if(!e || typeof e!=='object') { n++; return null; }
       e.sets = liste(e.sets).map(s=> (s && typeof s==='object') ? s : (n++, {w:0, r:0}));
@@ -2965,7 +3146,9 @@ function saveState(){
   if(typeof invalidateCycles==='function') invalidateCycles();   // Zyklen neu berechnen lassen
   if(typeof invalidateCuts==='function')   invalidateCuts();     // Schnittpunkte ebenso — sie hängen an Workouts UND exOpt
   if(typeof invalidateVorschlag==='function') invalidateVorschlag();   // und der Trainingsvorschlag
-  if(typeof invalidateHist==='function')   invalidateHist();     // und die gemerkten Übungsverläufe (V71)
+  if(typeof invalidateTrained==='function')   invalidateTrained();     // und „schon trainiert"
+  if(typeof invalidateAgg==='function')       invalidateAgg();         // und die Lifetime-Bilanz
+  if(typeof invalidateHist==='function')      invalidateHist();        // und die gemerkten Übungsverläufe (V71)
   try{
     localStorage.setItem(LS_KEY, JSON.stringify(state));
     _saveWarned = false;
@@ -2989,6 +3172,20 @@ function saveStateSoon(){
 function flushSave(){
   if(_saveTimer){ clearTimeout(_saveTimer); _saveTimer = null; saveState(); }
 }
+/* Entprellung für Suchfelder: Bei 365 Übungen kostet ein Suchlauf samt Neuaufbau
+   der Liste auf einem Mittelklasse-Handy mehrere Millisekunden. Ohne Entprellung
+   fiel diese Arbeit bei JEDEM Zeichen an — beim schnellen Tippen also mitten in
+   den Frames, die die Tastatur zeichnen wollte. Ein Sammelfenster von 120 ms
+   bleibt unter der Wahrnehmungsschwelle, halbiert aber die Zahl der Durchläufe. */
+function entprellt(fn, ms){
+  let t = null;
+  return function(){
+    const self = this, args = arguments;
+    if(t) clearTimeout(t);
+    t = setTimeout(()=>{ t = null; fn.apply(self, args); }, ms);
+  };
+}
+
 window.addEventListener('pagehide', flushSave);
 window.addEventListener('beforeunload', flushSave);
 document.addEventListener('visibilitychange', ()=>{ if(document.hidden) flushSave(); });
@@ -2996,9 +3193,35 @@ document.addEventListener('visibilitychange', ()=>{ if(document.hidden) flushSav
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 
 /* ---------- Übungen ---------- */
-function allExercises(){ return EXDB.concat(state.customEx); }
-function getEx(id){ return allExercises().find(e=>e.id===id); }
+/* allExercises() steckt im heissesten Pfad der App: die Suche ruft es je
+   Übung auf, also bei 365 Übungen 365-mal pro Tastenanschlag. Jedes concat()
+   legte dabei ein frisches 365er-Array an. Einmal bauen, dann halten — der
+   Cache prüft sich selbst über Referenz und Länge von state.customEx und
+   überlebt damit auch Import und Wiederherstellung, die state komplett
+   austauschen. getEx() lief zusätzlich linear über dieses Array; eine Map
+   macht daraus einen Zugriff in konstanter Zeit. */
+let _exAll = null, _exSrc = null, _exN = -1, _exById = null;
+function allExercises(){
+  const cx = state.customEx;
+  if(!_exAll || _exSrc !== cx || _exN !== cx.length){
+    _exAll = EXDB.concat(cx); _exSrc = cx; _exN = cx.length; _exById = null;
+  }
+  return _exAll;
+}
+function getEx(id){
+  const all = allExercises();
+  if(!_exById){ _exById = new Map(); for(const e of all) _exById.set(e.id, e); }
+  return _exById.get(id);
+}
+function invalidateExercises(){ _exAll = null; _exSrc = null; _exN = -1; _exById = null; }
 function exMuscleLabel(ex){ return ex.p.map(m=>MUSCLES[m]).join(', ') + (ex.s.length? ' · '+ex.s.map(m=>MUSCLES[m]).join(', ') : ''); }
+
+/* Welche Übungen wurden schon trainiert — die Suche, die Bibliothek und die
+   Übungsstatistik brauchten das je einmal, also dreimal pro Tastenanschlag ein
+   Durchlauf durch die gesamte Historie. Einmal je Datenänderung reicht;
+   invalidiert wird zentral in saveState(), wie bei den Zyklen auch. */
+let _trainedCache = null;
+function invalidateTrained(){ _trainedCache = null; }
 
 /* ---------- Datum ---------- */
 function fmtDate(d){ return new Date(d).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'}); }
@@ -3027,8 +3250,28 @@ function bwSorted(){
     .map(e=>({d:e.d, kg:+e.kg}))
     .sort((a,b)=>a.d<b.d?-1:1);
 }
+/* Das Körpergewicht zu einem Datum — die Last bei Dips, Klimmzügen,
+   Liegestützen und die Bezugsgrösse bei unterstützten Maschinen.
+
+   V78: Gibt es KEINEN Wiegeeintrag, wird auf das Gewicht aus dem
+   Coach-Profil zurückgegriffen. Vorher kam in diesem Fall 0 heraus — und
+   damit zählte ein Satz Dips genau so viel wie gar kein Training: Volumen
+   null, kein Rekord, keine Linie im Verlauf. Bei unterstützten Maschinen
+   war es dieselbe Wurzel, weil dort max(0, Körpergewicht − Hilfe)
+   gerechnet wird und aus 0 − Hilfe nie etwas anderes als 0 werden kann.
+
+   Das Profilgewicht ist eine Näherung: Es hat kein Datum und gilt deshalb
+   rückwirkend für alle Einheiten. Für die Historie ist das ungenau — aber
+   ungenau ist um Längen besser als null, und wer sich regelmässig wiegt,
+   bekommt diesen Zweig ohnehin nie zu sehen. Beim Abschliessen wird das
+   Gewicht als `bwkg` im Eintrag festgehalten; alte Einheiten behalten
+   damit ihre eigene Wahrheit, egal was hier steht. */
 function bwAt(dateStr){
-  const arr = bwSorted(); if(!arr.length) return 0;
+  const arr = bwSorted();
+  if(!arr.length){
+    const p = +((state.profile||{}).gewicht);
+    return isFinite(p) && p > 0 ? p : 0;
+  }
   const day = String(dateStr).slice(0,10); let v = arr[0].kg;
   for(const e of arr){ if(e.d<=day) v=e.kg; else break; }
   return v;
@@ -3177,7 +3420,63 @@ function clearUniSince(exId){ setExOpt(exId, {uniLog:[]}); }
    Satz-Typen:  (leer)=Arbeitssatz · 'w'=Aufwärmen · 'd'=Dropset
    Aufwärmsätze zählen NICHT in Volumen, PRs, Muskelsätze und Progression. */
 /* Ein Satz zählt, sobald links ODER rechts Wdh stehen (rr = Wdh rechte Seite bei einseitigen Übungen) */
-function validSets(ex){ return ex.sets.filter(s=>((+s.r||0)>0 || (+s.rr||0)>0) && s.t!=='w'); }
+/* ══════════════════════════════════════════════════════════════════════
+   ÜBUNGSARTEN: KRAFT, ZEIT, KARDIO                                 (V76)
+
+   Das Satzmodell kannte bis hier nur Gewicht × Wiederholungen. Ein
+   Unterarmstütz hat aber keine Wiederholungen, und ein Laufband schon gar
+   nicht — beides liess sich nur als Behelf eintragen, indem man Sekunden
+   ins Wiederholungsfeld tippte (siehe „Tuck-Planche (Sek. als Wdh)").
+
+   Neue Satzfelder, beide optional:
+     sek   Dauer in Sekunden          ('zeit' und 'kardio')
+     dist  Strecke in Metern          (nur 'kardio')
+
+   Der wichtigste Teil dieser Änderung ist, was NICHT passiert: Die
+   Volumenformel bleibt, wie sie ist. Sie rechnet Gewicht × Wiederholungen,
+   und bei einem Zeitsatz sind die Wiederholungen null — das Volumen ist
+   also von selbst null, ohne eine einzige Fallunterscheidung. Dasselbe gilt
+   für e1RM und die Gewichtsrekorde. Wer hier Sonderfälle einbaut, bricht
+   sich die Kraftstatistik an einer Stelle, an der die Mathematik ohnehin
+   schon das Richtige tut.
+   ══════════════════════════════════════════════════════════════════════ */
+function exArt(exId){ const ex = getEx(exId); return (ex && ex.art) || 'kraft'; }
+const istZeitArt = art => art === 'zeit' || art === 'kardio';
+/* Bei Einträgen im Workout: die Art der zugehörigen Übung. */
+function entryArt(e){ return exArt(e && e.exId); }
+
+/* Ein Satz zählt, wenn er etwas Gemessenes enthält — Wiederholungen ODER
+   Sekunden. Ohne das zweite Kriterium wären Halteübungen unsichtbar: Sie
+   fielen hier heraus und damit aus Historie, Statistik und Satzzählung. */
+function satzHatInhalt(s){
+  return (+s.r||0) > 0 || (+s.rr||0) > 0 || (+s.sek||0) > 0;
+}
+function validSets(ex){ return ex.sets.filter(s=>satzHatInhalt(s) && s.t!=='w'); }
+
+/* Dauer und Strecke — die Kennzahlen, die bei Zeit und Kardio an die Stelle
+   des Volumens treten. */
+function exDauerSek(e){ return validSets(e).reduce((a,s)=>a+(+s.sek||0), 0); }
+function exDistM(e){    return validSets(e).reduce((a,s)=>a+(+s.dist||0), 0); }
+function wDauerSek(w){  return w.exercises.reduce((a,e)=>a+exDauerSek(e), 0); }
+function wDistM(w){     return w.exercises.reduce((a,e)=>a+exDistM(e), 0); }
+
+/* Formatierung. Sekunden werden erst ab einer Minute umgerechnet — „45 s"
+   ist bei einem Unterarmstütz die Zahl, die zählt, „0:45" liest sich dort
+   umständlicher. */
+function fmtSek(sek){
+  sek = Math.round(+sek||0);
+  if(sek < 60) return sek + ' s';
+  const m = Math.floor(sek/60), s = sek%60;
+  if(m < 60) return s ? `${m}:${String(s).padStart(2,'0')} min` : `${m} min`;
+  const h = Math.floor(m/60);
+  return `${h}:${String(m%60).padStart(2,'0')} h`;
+}
+function fmtDist(m){
+  m = +m||0;
+  if(!m) return '';
+  return m < 1000 ? Math.round(m) + ' m'
+                  : (Math.round(m/10)/100).toLocaleString('de-DE') + ' km';
+}
 
 /* ── WIEDERHOLUNGEN EINES SATZES ────────────────────────────────────────
    Bei einseitigen Übungen gibt es zwei Werte (links/rechts). Welcher zählt,
@@ -3207,23 +3506,39 @@ function repsOf(e, s, mode){
   if(mode==='weak')  return Math.min(rl, rr);
   return Math.max(rl, rr);
 }
-function allLoggedSets(ex){ return ex.sets.filter(s=>(+s.r||0)>0 || (+s.rr||0)>0); }
+function allLoggedSets(ex){ return ex.sets.filter(satzHatInhalt); }
 const SETTYPE = {w:['A','Aufwärmsatz'], d:['D','Dropset']};
 /* Volumen einer Übung im Workout:
    - Körpergewichtsübungen: (Körpergewicht + Zusatz) × Wdh
    - einseitige Übungen: Wdh links + Wdh rechts (getrennt geloggt).
      Fehlt die rechte Seite (alte Daten oder R-Feld leer), zählt links doppelt — wie früher.
    Sätze pro Muskel bleiben unverändert (ein einseitiger Satz = ein Satz für den Muskel). */
+/* Eine Zahl, mit der man rechnen kann: endlich und nicht negativ.
+
+   `+s.w||0` fängt Text und null ab, aber nicht −50 und nicht Infinity.
+   Beides ist im Alltag ein Tippfehler und beides vergiftet das Volumen
+   dauerhaft: Ein Minuszeichen lässt die Lebensbilanz SCHRUMPFEN, und ein
+   einziges Infinity macht jede Summe, jeden Schnitt und jedes Diagramm für
+   immer zu „Infinity" — auch nach dem Löschen des Satzes, weil die Zahl
+   schon in Rekorden und Zwischenspeichern steht.
+
+   Gekappt wird bei der BERECHNUNG, nicht bei der Eingabe: Was jemand
+   eingetippt hat, bleibt unverändert stehen und lässt sich korrigieren. */
+function messwert(x){
+  const v = +x;
+  return isFinite(v) && v > 0 ? v : 0;
+}
+
 function exVol(e, dateStr){
   const assist = entryIsAssist(e);
   const isBW = !assist && (e.bw!==undefined? !!e.bw : exIsBW(e.exId));
-  const bw = isBW? (e.bwkg!==undefined? +e.bwkg : bwAt(dateStr)) : 0;
+  const bw = isBW? messwert(e.bwkg!==undefined? e.bwkg : bwAt(dateStr)) : 0;
   const uni = entryIsUni(e);
   return validSets(e).reduce((a,s)=>{
     /* unterstützt: Körpergewicht − Hilfe · sonst: Gewicht + ggf. Körpergewicht */
-    const base = assist ? setW(e,s,dateStr) : (+s.w||0)+bw;
-    const rl = +s.r||0;
-    if(uni){ const rr = (s.rr!==undefined && s.rr!=='') ? (+s.rr||0) : rl; return a + base*(rl+rr); }
+    const base = messwert(assist ? setW(e,s,dateStr) : messwert(s.w)+bw);
+    const rl = messwert(s.r);
+    if(uni){ const rr = (s.rr!==undefined && s.rr!=='') ? messwert(s.rr) : rl; return a + base*(rl+rr); }
     return a + base*rl;
   },0);
 }
@@ -3282,7 +3597,7 @@ function cycles(){
   const ws0 = state.workouts;
   const key = ws0.length + '|' + ((ws0[0]||{}).id||'') + '|' + ((ws0[ws0.length-1]||{}).id||'') + '|' + ((ws0[ws0.length-1]||{}).date||'');
   if(_cyCache && _cyKey === key) return _cyCache;
-  const ws = ws0.slice().sort((a,b)=> new Date(a.date) - new Date(b.date));
+  const ws = ws0.slice().sort((a,b)=> Date.parse(a.date) - Date.parse(b.date));
   const out = [];
   let cur = null;
   ws.forEach(w=>{
@@ -3466,7 +3781,10 @@ function exHistory(exId, before){
       });
     });
   });
-  out.sort((a,b)=>new Date(a.date)-new Date(b.date));
+  /* Date.parse statt new Date: derselbe Vergleich ohne zwei Objekte je
+     Vergleich (aus der Leistungsarbeit in V71). Der Zwischenspeicher
+     darunter stammt aus deinem V71 und bleibt unverändert. */
+  out.sort((a,b)=>Date.parse(a.date) - Date.parse(b.date));
   /* Jeder Stichtag legt einen eigenen Eintrag an; bei 300 Einheiten kann
      das im Lauf einer Sitzung wachsen. Über 4000 wird geleert statt
      unbegrenzt gehalten. */
@@ -3946,7 +4264,7 @@ function setPlan(iso, patch){
 function letzteEinheitVom(typ){
   const ws = state.workouts
     .filter(w => w.type === typ && (w.exercises||[]).length)
-    .sort((a,b)=> new Date(a.date) - new Date(b.date));
+    .sort((a,b)=> Date.parse(a.date) - Date.parse(b.date));
   return ws.length ? ws[ws.length-1] : null;
 }
 
@@ -4062,10 +4380,10 @@ function renderVorschlag(){
                 : u.quelle === 'deload' ? {c:'var(--gold)', z:'Deload'}
                 : {c:'var(--txt)', z:''};
       return `<div class="row" style="gap:8px;padding:5px 0;border-bottom:1px solid var(--line)">
-        <span class="grow" style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(u.name)}</span>
+        <span class="grow" style="font-size:var(--fs-sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(u.name)}</span>
         ${art.z? `<span class="tiny" style="color:${art.c};flex:none">${art.z}</span>`:''}
         <span class="tiny" style="color:var(--txt3);flex:none">${u.sets.length}×</span>
-        <span style="font-size:13px;font-weight:700;flex:none;color:${art.c};font-variant-numeric:tabular-nums">${kg}</span>
+        <span style="font-size:var(--fs-sub);font-weight:700;flex:none;color:${art.c};font-variant-numeric:tabular-nums">${kg}</span>
       </div>`;
     }).join('')}</div>
     <div class="row" style="gap:8px;margin-top:10px">
@@ -4217,10 +4535,20 @@ function exAgg(exId){
   }));
   return {vol,reps,sessions,maxW,streak:bestStreak(weeks)};
 }
+/* Lief bei jedem Rendern des Verlaufs komplett neu über die Historie — samt
+   wVolume() und wSets() je Einheit, also über jeden einzelnen Satz. Der
+   Verlauf zog zusätzlich die Trainingsstunden in einer zweiten Schleife;
+   die steckt jetzt im selben Durchlauf. Cache wird in saveState() geleert. */
+let _aggCache = null;
+function invalidateAgg(){ _aggCache = null; }
 function globalAgg(){
-  let vol=0,sets=0,prs=0; const weeks=new Set();
-  state.workouts.forEach(w=>{ vol+=wVolume(w); sets+=wSets(w); prs+=(w.prs||[]).length; weeks.add(weekKey(w.date)); });
-  return {wk:state.workouts.length, vol, sets, prs, streak:bestStreak(weeks)};
+  if(_aggCache) return _aggCache;
+  let vol=0,sets=0,prs=0,ms=0; const weeks=new Set();
+  state.workouts.forEach(w=>{
+    vol+=wVolume(w); sets+=wSets(w); prs+=(w.prs||[]).length; weeks.add(weekKey(w.date));
+    ms += Math.max(0, wDauer(w));
+  });
+  return _aggCache = {wk:state.workouts.length, vol, sets, prs, streak:bestStreak(weeks), hours: ms/3600000};
 }
 function achCurrent(def, agg){
   if(def.cat==='g'){ return def.gkey==='wk'?agg.wk : def.gkey==='vol'?agg.vol : def.gkey==='pr'?agg.prs : def.gkey==='streak'?agg.streak : agg.sets; }
@@ -4235,7 +4563,17 @@ function achCurrent(def, agg){
 if(!state.ach) state.ach = {};
 function achXP(){ return Object.values(state.ach||{}).reduce((a,x)=>a+(x.xp||0),0); }
 function achLevel(){ const xp=achXP(); const lvl=Math.floor(Math.sqrt(xp/150))+1; const cur=150*(lvl-1)*(lvl-1), next=150*lvl*lvl; return {lvl,xp,cur,next}; }
-function trainedExIds(){ const s=new Set(); state.workouts.forEach(w=>w.exercises.forEach(e=>s.add(e.exId))); return [...s]; }
+/* Liefert ein Set statt eines Arrays — beide Aufrufer iterierten ohnehin nur,
+   und die Suche kann jetzt in konstanter Zeit nachschlagen statt die Historie
+   ein zweites Mal zu durchlaufen. Gecacht bis zur nächsten Datenänderung. */
+function trainedExIds(){
+  if(!_trainedCache){
+    const s = new Set();
+    state.workouts.forEach(w=>w.exercises.forEach(e=>s.add(e.exId)));
+    _trainedCache = s;
+  }
+  return _trainedCache;
+}
 /* Prüft Übungen + global; schaltet Neues frei. silent=true → kein Rückgabe-Festakt */
 function evalAchievements(exIds){
   if(!state.ach) state.ach={};
@@ -4365,6 +4703,8 @@ const ICO = {
   rocket:_i('<path d="M12 2c3.5 2.2 5.5 6 5.5 10.2L15 15H9l-2.5-2.8C6.5 8 8.5 4.2 12 2zM9 19c-1 1.5-3 2-3 2s.5-2 2-3M15 19c1 1.5 3 2 3 2s-.5-2-2-3"/><circle cx="12" cy="10" r="1.6"/>'),
   search:_i('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>'),
   star:  _i('<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z"/>'),
+  /* Teilen — der Pfeil nach oben aus dem Kasten, wie ihn iOS benutzt. */
+  share: _i('<path d="M12 15V3M12 3L8.5 6.5M12 3l3.5 3.5"/><path d="M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/>'),
   undo:  _i('<path d="M9 14L4 9l5-5"/><path d="M4 9h9a7 7 0 010 14h-3"/>'),
   alert: _i('<path d="M12 8v5M12 17h.01"/><path d="M10.3 3.9L2.6 17a2 2 0 001.7 3h15.4a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/>'),
   shield:_i('<path d="M12 3l7.5 3v5.5c0 4.4-3.1 8.3-7.5 9.5-4.4-1.2-7.5-5.1-7.5-9.5V6z"/><path d="M9.2 12.2l1.9 1.9 3.7-3.9"/>'),
@@ -4469,6 +4809,25 @@ function closeModals(){
   if(_focusReturn && document.contains(_focusReturn)){ try{ _focusReturn.focus(); }catch(_){} }
   _focusReturn = null;
 }
+/* Escape schliesst das oberste offene Modal.
+   Bis hierher galt das nur für den Bestätigungsdialog — die übrigen fünfzehn
+   liessen sich mit der Tastatur überhaupt nicht schliessen. Wer keine Maus
+   benutzt, sass darin fest und kam nur über den Schliessen-Knopf wieder raus.
+   Gesperrte Modale (die Sicherungs-Warnung) bleiben ausgenommen, genau wie
+   beim Tippen daneben — sonst liesse sich die Warnung wegdrücken, die
+   ausdrücklich nicht wegdrückbar sein soll. */
+document.addEventListener('keydown', e=>{
+  if(e.key!=='Escape') return;
+  if(_cfResolve) return;                            // Bestätigungsdialog hat Vorrang
+  const oben = [...document.querySelectorAll('.mback.on')].pop();
+  if(!oben) return;
+  const inner = oben.querySelector('.modal');
+  if(inner && inner.dataset.locked==='1') return;
+  oben.classList.remove('on');
+  if(_focusReturn && document.contains(_focusReturn)){ try{ _focusReturn.focus(); }catch(_){} }
+  _focusReturn = null;
+});
+
 $$('.mback').forEach(m=>m.addEventListener('click',e=>{
   if(e.target!==m) return;
   const inner = m.querySelector('.modal');
@@ -4504,8 +4863,639 @@ function greeting(){
   const h = new Date().getHours();
   return h<5? 'Gute Nacht' : h<11? 'Guten Morgen' : h<14? 'Mahlzeit' : h<18? 'Guten Tag' : h<23? 'Guten Abend' : 'Gute Nacht';
 }
+/* ══════════════════════════════════════════════════════════════════════
+   REKORD-KARTE ALS BILD                                            (V75)
+
+   V67 hat entschieden, Trainings als TEXT zu teilen, und die Begründung
+   gilt weiter: Ein Trainingsprotokoll will gelesen werden, Text funktioniert
+   überall und verrät nichts, was nicht ohnehin auf dem Schirm steht.
+
+   Ein Rekord ist ein anderes Ding. Er will nicht gelesen, sondern angesehen
+   werden — und geteilte Screenshots sind der einzige Weg, auf dem eine App
+   ohne Backend jemals über den eigenen Bildschirm hinauskommt. Ein Bild
+   überlebt WhatsApp, Instagram und den Sperrbildschirm; drei Zeilen Text
+   nicht.
+
+   Alles wird auf ein Canvas gezeichnet: kein Dienst, kein Netz, keine
+   Bibliothek. Was das Gerät verlässt, bestimmt der Nutzer beim Teilen.
+
+   Bewusst nicht themeabhängig: Die Karte landet in fremden Feeds, nicht in
+   der App. Sie hat ein eigenes, festes Aussehen — dunkel, weil das Schwarz
+   die Marke der App ist und in jedem Feed funktioniert.
+   ══════════════════════════════════════════════════════════════════════ */
+
+const KARTE_B = 1080, KARTE_H = 1350;             // 4:5 — das Format, das Feeds am wenigsten beschneiden
+/* Die zuletzt gezeichneten Rekorde. Der Teilen-Knopf trägt nur einen Index;
+   die Daten hier zu halten spart es, ein ganzes PR-Objekt ins Markup zu
+   schreiben und wieder herauszuparsen. */
+let _letzteRekorde = [];
+
+/* Systemschriften statt geladener: Eine Webschrift wäre zum Zeichenzeitpunkt
+   womöglich noch nicht da, und die Karte käme ohne Text heraus. */
+const KARTE_FONT = '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
+
+function zeichnePrKarte(pr){
+  const c = document.createElement('canvas');
+  c.width = KARTE_B; c.height = KARTE_H;
+  const x = c.getContext('2d');
+
+  /* ── Grund ── */
+  x.fillStyle = '#000000';
+  x.fillRect(0, 0, KARTE_B, KARTE_H);
+
+  /* Derselbe Lichtschein wie auf der Startseite — die Karte soll erkennbar
+     aus dieser App kommen. */
+  const schein = x.createRadialGradient(KARTE_B*0.5, KARTE_H*0.18, 0, KARTE_B*0.5, KARTE_H*0.18, KARTE_B*0.85);
+  schein.addColorStop(0, 'rgba(82,156,255,0.20)');
+  schein.addColorStop(1, 'rgba(82,156,255,0)');
+  x.fillStyle = schein;
+  x.fillRect(0, 0, KARTE_B, KARTE_H);
+
+  const mitte = KARTE_B / 2;
+  x.textAlign = 'center';
+
+  /* ── Kopfzeile ── */
+  x.fillStyle = '#529CFF';
+  x.font = `600 34px ${KARTE_FONT}`;
+  x.letterSpacing = '6px';
+  x.fillText('NEUE BESTLEISTUNG', mitte, 150);
+  x.letterSpacing = '0px';
+
+  /* ── Übungsname, notfalls über zwei Zeilen ── */
+  const name = String(pr.name || 'Übung');
+  x.fillStyle = '#FFFFFF';
+  let namGroesse = 76;
+  x.font = `800 ${namGroesse}px ${KARTE_FONT}`;
+  /* Erst verkleinern, dann umbrechen — ein Name wie „Schrägbank-Brustpresse
+     (Maschine)" passt sonst in keiner Grösse in eine Zeile. */
+  while(x.measureText(name).width > KARTE_B - 120 && namGroesse > 44){
+    namGroesse -= 4;
+    x.font = `800 ${namGroesse}px ${KARTE_FONT}`;
+  }
+  const zeilen = umbrichText(x, name, KARTE_B - 120).slice(0, 2);
+  zeilen.forEach((z, i) => x.fillText(z, mitte, 270 + i * (namGroesse + 12)));
+
+  /* ── Der Wert: das, wofür die Karte da ist ──────────────────────────
+     Feste Höhe statt Abstand zum Namen. Hing der Wert am Namen, rutschte er
+     bei zweizeiligen Namen nach unten und riss unten ein Loch auf — die
+     Karte sah dann bei jeder Übung anders aus. So sitzt er immer gleich,
+     egal wie lang der Name ist. */
+  const wertY = Math.round(KARTE_H * 0.52);
+
+  /* Auch der Wert muss schrumpfen dürfen: „10.100 kg" bei einem
+     Volumenrekord ist mehr als doppelt so breit wie „140 kg". */
+  let wertGroesse = 190;
+  const wertTxt = String(pr.val ?? '');
+  x.font = `800 ${wertGroesse}px ${KARTE_FONT}`;
+  while(x.measureText(wertTxt).width > KARTE_B - 120 && wertGroesse > 70){
+    wertGroesse -= 6;
+    x.font = `800 ${wertGroesse}px ${KARTE_FONT}`;
+  }
+  x.fillStyle = '#FFFFFF';
+  x.fillText(wertTxt, mitte, wertY);
+
+  x.fillStyle = '#A7B0BD';
+  x.font = `650 44px ${KARTE_FONT}`;
+  x.fillText(String(pr.kind ?? ''), mitte, wertY + 78);
+
+  /* ── Der Vorher-Wert macht die Leistung erst greifbar ── */
+  if(pr.old){
+    const y = wertY + 190;
+    const txt = `vorher ${pr.old}`;
+    x.fillStyle = '#79828F';
+    x.font = `500 40px ${KARTE_FONT}`;
+    x.fillText(txt, mitte, y);
+    /* Durchgestrichen — spart das Wort „statt" und liest sich sofort. */
+    const br = x.measureText(txt).width;
+    x.strokeStyle = 'rgba(121,130,143,0.55)';
+    x.lineWidth = 3;
+    x.beginPath(); x.moveTo(mitte - br/2, y - 13); x.lineTo(mitte + br/2, y - 13); x.stroke();
+  }
+
+  /* ── Fusszeile ── */
+  const datum = pr.date ? new Date(pr.date).toLocaleDateString('de-DE',{day:'2-digit',month:'long',year:'numeric'}) : '';
+  x.fillStyle = '#79828F';
+  x.font = `500 38px ${KARTE_FONT}`;
+  x.fillText(datum, mitte, KARTE_H - 170);
+
+  x.font = `800 42px ${KARTE_FONT}`;
+  const marke = 'Fitness', marke2 = 'Tracker';
+  const b1 = x.measureText(marke).width, b2 = x.measureText(marke2).width;
+  const startX = mitte - (b1 + b2) / 2;
+  x.textAlign = 'left';
+  x.fillStyle = '#FFFFFF'; x.fillText(marke, startX, KARTE_H - 90);
+  x.fillStyle = '#529CFF'; x.fillText(marke2, startX + b1, KARTE_H - 90);
+
+  return c;
+}
+
+/* Bricht Text an Wortgrenzen auf die verfügbare Breite um. */
+function umbrichText(ctx, text, maxBreite){
+  const worte = String(text).split(/\s+/);
+  const zeilen = [];
+  let zeile = '';
+  for(const wort of worte){
+    const versuch = zeile ? zeile + ' ' + wort : wort;
+    if(ctx.measureText(versuch).width > maxBreite && zeile){ zeilen.push(zeile); zeile = wort; }
+    else zeile = versuch;
+  }
+  if(zeile) zeilen.push(zeile);
+  return zeilen;
+}
+
+const canvasZuBlob = c => new Promise(res => c.toBlob(res, 'image/png'));
+
+/* Teilen mit zwei Rückfallebenen: Datei-Teilen (Handy) → Herunterladen
+   (Desktop). Ein Abbruch durch den Nutzer ist kein Fehler und wird still
+   geschluckt — sonst meldet die App „fehlgeschlagen", wenn jemand einfach
+   nur den Teilen-Dialog zumacht. */
+async function teilePrKarte(pr){
+  let blob;
+  try{
+    blob = await canvasZuBlob(zeichnePrKarte(pr));
+  }catch(e){ console.warn('karte fail', e); return toast('Karte konnte nicht erzeugt werden'); }
+  if(!blob) return toast('Karte konnte nicht erzeugt werden');
+
+  const dateiname = `rekord-${String(pr.name||'uebung').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}.png`;
+  const datei = new File([blob], dateiname, { type:'image/png' });
+
+  if(navigator.canShare && navigator.canShare({ files:[datei] }) && navigator.share){
+    try{
+      await navigator.share({ files:[datei], title:'Neue Bestleistung' });
+      haptic('success');
+      return;
+    }catch(e){
+      if(e && e.name === 'AbortError') return;
+      /* Alles andere fällt auf den Download durch. */
+    }
+  }
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = dateiname;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 10000);
+  toast('Karte gespeichert');
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   MUSKEL-BALANCE ALS AKTIVE MELDUNG                                (V74)
+
+   Das Radar in der Statistik zeigt Ungleichgewichte seit jeher — aber nur,
+   wenn man hinsieht, es lesen kann und weiss, welcher Zacken zu kurz ist.
+   Wer seit vier Monaten zu wenig für die hintere Schulter tut, erfährt es
+   dort nicht; er müsste es sich selbst zusammenreimen.
+
+   Diese Meldung sagt es hin: welches Paar, welche Zahlen, was zu tun ist.
+
+   ── Warum 28 Tage und nicht „pro Woche" ──────────────────────────────
+   Weil die Kalenderwoche für diesen Plan kein Maßstab ist. Bei Push → Pull
+   → Rest fallen mal zwei, mal drei Einheiten in eine Woche — das sind ±50 %
+   Schwankung, ohne dass sich am Training irgendetwas geändert hätte. Die
+   Zyklenrechnung der App geht deshalb gar nicht erst über Wochen, und eine
+   Balance-Warnung auf Wochenbasis würde genau dieses Rauschen als Befund
+   melden. Vier Wochen am Stück glätten das über mehrere Zyklen hinweg.
+
+   ── Warum drei Schwellen und nicht eine ──────────────────────────────
+   Eine Warnung, die zu oft kommt, wird weggeklickt und ist dann für immer
+   wertlos. Deshalb muss ein Befund ALLE drei Hürden nehmen:
+     Verhältnis   > 1,5  — dieselbe Faustregel wie bei Push/Pull
+     Unterschied  >= 4 Sätze — 3:2 ist Rauschen, kein Ungleichgewicht
+     stärkere Seite >= 6 Sätze — wer gerade anfängt, wird nicht belehrt
+   Gemeldet wird immer nur der GRÖSSTE Befund. Fünf Warnungen gleichzeitig
+   sind keine Meldung mehr, sondern eine Tapete.
+   ══════════════════════════════════════════════════════════════════════ */
+
+const BALANCE_FENSTER = 28;          // Tage
+const BALANCE_MIN_DIFF = 4;          // Sätze Unterschied
+const BALANCE_MIN_STARK = 6;         // Sätze auf der stärkeren Seite
+
+/* Gegenspieler-Paare. Nur Paare, bei denen ein Ungleichgewicht wirklich
+   etwas bedeutet — Bauch gegen Waden zu vergleichen ergäbe keinen Sinn. */
+const BALANCE_PAARE = [
+  { a:['chest_up','chest','chest_low'], b:['lats','upper_back'],
+    an:'Brust', bn:'Rücken',
+    rat:'Ein Übergewicht der Druckseite zieht die Schultern nach vorne.' },
+  { a:['front_delt'], b:['rear_delt'],
+    an:'Vordere Schulter', bn:'Hintere Schulter',
+    rat:'Die hintere Schulter kommt fast nie beim Drücken mit — sie braucht eigene Sätze.' },
+  { a:['quads'], b:['hamstrings'],
+    an:'Quadrizeps', bn:'Beinbeuger',
+    rat:'Ein starkes Missverhältnis hier gilt als Risikofaktor für die hintere Oberschenkelmuskulatur.' },
+  { a:['triceps'], b:['biceps'],
+    an:'Trizeps', bn:'Bizeps',
+    rat:'Beide bekommen bei Grundübungen etwas ab — meist ungleich viel.' },
+  { a:['abs','obliques'], b:['lower_back'],
+    an:'Bauch', bn:'Unterer Rücken',
+    rat:'Der Rumpf trägt bei jeder schweren Übung — vorne wie hinten.' },
+];
+
+/* Die Einheiten der letzten n Tage. Bewusst über das Datum und nicht über
+   die letzten n Einträge: Wer zwei Wochen krank war, soll keine Warnung aus
+   dem Training davor bekommen. */
+function letzteTage(n){
+  const ab = Date.now() - n*864e5;
+  return state.workouts.filter(w => Date.parse(w.date) >= ab);
+}
+
+function balanceBefunde(tage){
+  const ws = letzteTage(tage || BALANCE_FENSTER);
+  if(ws.length < 4) return [];                    // zu wenig Daten für eine Aussage
+
+  const m = muscleSetsBy(ws, 'both');
+  const su = keys => keys.reduce((s,k) => s + (m[k]||0), 0);
+  const befunde = [];
+
+  for(const paar of BALANCE_PAARE){
+    const av = su(paar.a), bv = su(paar.b);
+    const stark = Math.max(av, bv), schwach = Math.min(av, bv);
+    if(stark < BALANCE_MIN_STARK) continue;
+    if(stark - schwach < BALANCE_MIN_DIFF) continue;
+    if(schwach <= 0 ? false : stark/schwach <= PP_FAUSTREGEL) continue;
+
+    const aStaerker = av > bv;
+    /* Wie viele Sätze fehlen, um unter die Faustregel zu kommen? Das ist
+       die eigentlich nützliche Zahl — „mehr machen" hilft niemandem.
+
+       ACHTUNG, zwei verschiedene Bezugsgrössen: `noetig` gilt für das ganze
+       Fenster, `proWoche` ist daraus umgerechnet. Handeln kann man nur mit
+       der Wochenzahl — aber rechnen muss man mit der Fensterzahl, sonst
+       stimmt die Probe nicht. Beide getrennt zu führen, kostet ein Feld und
+       erspart einen Text, der um den Faktor vier danebenliegt. */
+    const noetig = Math.max(1, Math.ceil(stark / PP_FAUSTREGEL) - schwach);
+    const wochen = (tage || BALANCE_FENSTER) / 7;
+
+    befunde.push({
+      stark: aStaerker ? paar.an : paar.bn,
+      schwach: aStaerker ? paar.bn : paar.an,
+      starkN: Math.round(stark*10)/10,
+      schwachN: Math.round(schwach*10)/10,
+      verhaeltnis: schwach > 0 ? stark/schwach : Infinity,
+      noetig,
+      proWoche: Math.max(1, Math.ceil(noetig / wochen)),
+      rat: paar.rat,
+    });
+  }
+
+  /* Grösstes Missverhältnis zuerst. */
+  return befunde.sort((x,y) => y.verhaeltnis - x.verhaeltnis);
+}
+
+function renderBalance(){
+  const box = $('#home-balance');
+  if(!box) return;
+
+  if(!box.dataset.wired){
+    box.dataset.wired = '1';
+    box.addEventListener('click', e => {
+      if(!e.target.closest('#bal-mehr')) return;
+      /* Direkt dorthin, wo die vollständigen Zahlen stehen. */
+      statsSetMode = statsSetMode || 'both';
+      showScreen('scr-stats');
+    });
+  }
+
+  const alle = balanceBefunde();
+  if(!alle.length){ box.innerHTML = ''; return; }
+
+  const b = alle[0];
+  const weitere = alle.length - 1;
+
+  box.innerHTML = `<div class="card" style="border-color:var(--line-2)">
+    <div class="row" style="gap:10px;align-items:flex-start">
+      <span class="bi" data-ico="alert" style="color:var(--sig);flex:none;margin:0"></span>
+      <div class="grow">
+        <h3 style="margin-bottom:2px">${esc(b.schwach)} kommt zu kurz</h3>
+        <p class="tiny" style="margin-bottom:6px">
+          In den letzten 4 Wochen: <b style="color:var(--txt2)">${esc(b.stark)} ${fmtW(b.starkN)} Sätze</b>,
+          <b style="color:var(--sig)">${esc(b.schwach)} ${fmtW(b.schwachN)}</b>.
+        </p>
+        <p class="tiny" style="margin-bottom:6px">${esc(b.rat)}</p>
+        <p class="tiny"><b style="color:var(--txt2)">${b.proWoche} ${b.proWoche===1?'Satz':'Sätze'} ${esc(b.schwach)} mehr pro Woche</b>
+          bringen das Verhältnis wieder in den Rahmen.</p>
+        ${weitere ? `<p class="tiny" style="color:var(--txt3);margin-top:6px">${weitere} weiteres Ungleichgewicht${weitere>1?'e':''} — im Radar zu sehen.</p>` : ''}
+        <button class="btn btn-sm" id="bal-mehr" style="margin-top:10px">Radar ansehen</button>
+      </div>
+    </div>
+  </div>`;
+  hydrateIcons(box);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   PERSÖNLICHE ZIELE                                                (V73)
+
+   Die App konnte bisher sehr genau sagen, was WAR — Rekorde, Zyklen,
+   Verläufe über Jahre. Sie konnte nicht sagen, wo man HIN will. Genau das
+   ist aber der Grund, warum man im Winter um sieben Uhr aufsteht.
+
+   Alle Zielarten rechnen aus Daten, die ohnehin schon da sind. Es gibt
+   nichts einzutragen und nichts zu pflegen: Wer „100 kg Bankdrücken bis
+   Dezember" setzt, muss danach nur noch trainieren.
+
+   Der Startwert wird bei der Anlage FESTGEHALTEN. Ohne ihn liesse sich der
+   Fortschritt nicht ehrlich anzeigen — wer bei 80 kg beginnt und 100 will,
+   hat bei 90 kg die Hälfte geschafft, nicht 90 %.
+   ══════════════════════════════════════════════════════════════════════ */
+
+const ZIEL_ARTEN = {
+  e1rm:     { label:'Rechnerisches 1RM', kurz:'1RM',        einheit:'kg',     ex:true,
+              hilfe:'Aus dem besten Satz hochgerechnet — du musst die 100 kg nie einzeln heben.',
+              wert:g => { const b=exBests(g.exId); return b? Math.round(b.maxE) : 0; } },
+  gewicht:  { label:'Arbeitsgewicht',    kurz:'Gewicht',    einheit:'kg',     ex:true,
+              hilfe:'Das schwerste Gewicht, mit dem du in einem Arbeitssatz gearbeitet hast.',
+              wert:g => { const b=exBests(g.exId); return b? b.maxW : 0; } },
+  wdh:      { label:'Wiederholungen',    kurz:'Wdh',        einheit:'Wdh',    ex:true,
+              hilfe:'Die meisten Wiederholungen in einem Satz — egal bei welchem Gewicht.',
+              wert:g => { const b=exBests(g.exId); return b? b.maxReps : 0; } },
+  workouts: { label:'Anzahl Workouts',   kurz:'Workouts',   einheit:'',       ex:false,
+              hilfe:'Zählt alle abgeschlossenen Einheiten. Das Ziel für alle, die einfach dranbleiben wollen.',
+              wert:() => state.workouts.length },
+  volumen:  { label:'Gesamtvolumen',     kurz:'Volumen',    einheit:'kg',     ex:false,
+              hilfe:'Alles bewegte Gewicht zusammen. In Tonnen denken hilft: 100.000 kg sind 100 t.',
+              wert:() => Math.round(globalAgg().vol) },
+  koerper:  { label:'Körpergewicht',     kurz:'Körper',     einheit:'kg',     ex:false, abwaerts:true,
+              hilfe:'Funktioniert in beide Richtungen — zunehmen wie abnehmen. Braucht Einträge unter „Körpergewicht".',
+              wert:() => { const b=bwLatest(); return b? b.kg : 0; } },
+  streak:   { label:'Wochen in Folge',   kurz:'Streak',     einheit:'Wochen', ex:false,
+              hilfe:'Deine aktuelle Serie trainierter Wochen.',
+              wert:() => currentWeekStreak() },
+};
+
+/* Verträglich gegenüber beschädigten Daten: ein kaputtes Ziel darf die
+   Startseite nicht mitreissen, also fliegt es hier still raus. */
+function zieleListe(){
+  if(!Array.isArray(state.goals)) return [];
+  return state.goals.filter(g => g && typeof g==='object' && ZIEL_ARTEN[g.art] && isFinite(+g.ziel));
+}
+
+const TAG_MS = 864e5;
+const heuteISO = () => new Date().toISOString().slice(0,10);
+const tageZwischen = (vonISO, bisISO) =>
+  Math.round((Date.parse(bisISO+'T00:00:00') - Date.parse(vonISO+'T00:00:00')) / TAG_MS);
+
+/* Der komplette Zustand eines Ziels an einem Punkt — Fortschritt, Zeit und
+   die Frage, die zählt: Reicht das Tempo? */
+function zielStand(g){
+  const art   = ZIEL_ARTEN[g.art];
+  const jetzt = art.wert(g);
+  const start = isFinite(+g.start) ? +g.start : 0;
+  const ziel  = +g.ziel;
+
+  /* Spanne kann negativ sein — beim Abnehmen ist das Ziel kleiner als der
+     Start. Der Bruch stimmt trotzdem, weil dann auch der Zähler negativ ist. */
+  const spanne    = ziel - start;
+  const geschafft = jetzt - start;
+  const anteil = spanne === 0
+    ? (geschafft >= 0 ? 1 : 0)
+    : Math.max(0, Math.min(1, geschafft / spanne));
+
+  const heute       = heuteISO();
+  const tageGesamt  = Math.max(1, tageZwischen(g.angelegt, g.bis));
+  const tageDurch   = Math.max(0, tageZwischen(g.angelegt, heute));
+  const tageRest    = tageZwischen(heute, g.bis);
+  const zeitAnteil  = Math.max(0, Math.min(1, tageDurch / tageGesamt));
+
+  const erreicht = spanne === 0 ? geschafft >= 0
+                 : spanne > 0   ? jetzt >= ziel
+                 :                jetzt <= ziel;
+
+  /* Prognose nur, wenn es überhaupt eine Bewegung in die richtige Richtung
+     gab. Aus null Fortschritt lässt sich kein Termin hochrechnen, und eine
+     erfundene Zahl wäre schlimmer als keine. */
+  let prognose = null;
+  if(!erreicht && tageDurch >= 7 && spanne !== 0 && geschafft/spanne > 0.02){
+    const tempo = (geschafft / spanne) / tageDurch;          // Anteil pro Tag
+    const restTage = Math.ceil((1 - geschafft/spanne) / tempo);
+    if(isFinite(restTage) && restTage > 0 && restTage < 3650){
+      prognose = new Date(Date.now() + restTage*TAG_MS).toISOString().slice(0,10);
+    }
+  }
+
+  return { jetzt, start, ziel, anteil, zeitAnteil, tageRest, tageGesamt,
+           erreicht, prognose, imPlan: anteil >= zeitAnteil - 0.02,
+           abgelaufen: tageRest < 0 };
+}
+
+function zielTitel(g){
+  const art = ZIEL_ARTEN[g.art];
+  const ex  = g.exId ? getEx(g.exId) : null;
+  return art.ex ? (ex ? ex.name : 'Unbekannte Übung') : art.label;
+}
+function zielWertText(g, wert){
+  const art = ZIEL_ARTEN[g.art];
+  if(g.art === 'volumen') return fmtVol(wert);
+  return fmtW(wert) + (art.einheit ? ' ' + art.einheit : '');
+}
+
+/* ── Anzeige auf der Startseite ─────────────────────────────────────── */
+function renderZiele(){
+  const box = $('#home-goals');
+  if(!box) return;
+
+  /* Der Kasten wird bei jedem renderHome neu geschrieben, der Kasten selbst
+     bleibt aber stehen — ein Listener an ihm überlebt das. */
+  if(!box.dataset.wired){
+    box.dataset.wired = '1';
+    box.addEventListener('click', e => {
+      if(e.target.closest('#goal-new')) return openZiel(null);
+      const z = e.target.closest('[data-goal]');
+      if(z) openZiel(z.dataset.goal);
+    });
+  }
+  const alle = zieleListe();
+  const offen = alle.filter(g => !g.erreicht);
+  const fertig = alle.filter(g => g.erreicht);
+
+  if(!alle.length){
+    /* Leerzustand mit Einladung — ein leerer Kasten erklärt sich nicht. */
+    box.innerHTML = `<div class="card">
+      <div class="row" style="justify-content:space-between;align-items:flex-start">
+        <div class="grow"><h3 style="margin-bottom:2px">Ziele</h3>
+          <p class="tiny">Rekorde zeigen, was war. Ein Ziel zeigt, wo du hinwillst —<br>„100 kg Bankdrücken bis Dezember".</p></div>
+      </div>
+      <button class="btn btn-block" id="goal-new" style="margin-top:10px">${ICO.plus} Erstes Ziel setzen</button>
+    </div>`;
+    return;
+  }
+
+  const zeile = g => {
+    const s = zielStand(g);
+    const art = ZIEL_ARTEN[g.art];
+    const proz = Math.round(s.anteil * 100);
+
+    /* Statuszeile: Die ehrliche Antwort auf „schaffe ich das?".
+
+       Die Farben folgen dem Haus-System: Die Akzentfamilie (--acc, --a7) ist
+       ein einziger Farbton in steigender Helligkeit und deshalb bei jeder
+       Farbsehschwäche unterscheidbar. --sig ist der einzige zweite Ton der
+       App und bleibt echten Signalen vorbehalten — genau wie beim „!" der
+       Satzzahl-Ampel. „Zu langsam" ist so ein Signal.
+
+       Die Aussage steht zusätzlich im Text. Wer die Farben gar nicht
+       auseinanderhält, liest „Im Plan" oder „Zu langsam" und weiss Bescheid. */
+    let status, farbe;
+    if(s.erreicht){
+      status = 'Geschafft ✓'; farbe = 'var(--a7)';
+    } else if(s.abgelaufen){
+      status = `Frist abgelaufen — ${proz}% erreicht`; farbe = 'var(--txt3)';
+    } else if(s.imPlan){
+      status = `Im Plan · noch ${s.tageRest} ${s.tageRest===1?'Tag':'Tage'}`; farbe = 'var(--acc)';
+    } else {
+      status = s.prognose
+        ? `Zu langsam — bei dem Tempo am ${fmtDate(s.prognose)}`
+        : `Noch ${s.tageRest} ${s.tageRest===1?'Tag':'Tage'} · erst ${proz}%`;
+      farbe = 'var(--sig)';
+    }
+
+    return `<div class="item" data-goal="${esc(g.id)}" style="cursor:pointer;display:block;padding:10px 0">
+      <div class="row" style="justify-content:space-between;gap:8px">
+        <div class="grow" style="min-width:0">
+          <div class="ttl" style="font-size:var(--fs-sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(zielTitel(g))}</div>
+          <!-- Pfeil statt „von": Beim Abnehmen ist der Zielwert KLEINER als
+               der aktuelle, und „81,4 kg von 78 kg" liest sich dann verkehrt
+               herum. Der Pfeil stimmt in beide Richtungen. -->
+          <div class="meta">${art.kurz} · ${esc(zielWertText(g, s.jetzt))} → ${esc(zielWertText(g, s.ziel))}</div>
+        </div>
+        <b style="flex:none;color:${farbe};font-size:var(--fs-lg)">${proz}%</b>
+      </div>
+      <div class="gbar" style="margin-top:6px"><i style="width:${proz}%;background:${farbe}"></i></div>
+      <div class="tiny" style="margin-top:4px;color:${farbe}">${esc(status)}</div>
+    </div>`;
+  };
+
+  box.innerHTML = `<div class="card">
+    <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:2px">
+      <h3 style="margin:0">Ziele</h3>
+      <button class="iconbtn" id="goal-new" aria-label="Neues Ziel">${ICO.plus}</button>
+    </div>
+    ${offen.map(zeile).join('')}
+    ${fertig.length ? `<div class="picksec" style="margin-top:8px">Erreicht</div>` + fertig.map(zeile).join('') : ''}
+  </div>`;
+}
+
+/* ── Anlegen und Bearbeiten ─────────────────────────────────────────── */
+let _zielEntwurf = null;
+
+function openZiel(id){
+  const vorhanden = id ? zieleListe().find(g => g.id === id) : null;
+  _zielEntwurf = vorhanden
+    ? Object.assign({}, vorhanden)
+    : { id:'g'+uid(), art:'e1rm', exId:null, ziel:'', bis:'', angelegt:heuteISO(), erreicht:null };
+
+  if(!_zielEntwurf.bis){
+    /* Vorgabe drei Monate — kurz genug, dass es drückt, lang genug, dass
+       es bei Kraftaufbau überhaupt erreichbar ist. */
+    _zielEntwurf.bis = new Date(Date.now() + 90*TAG_MS).toISOString().slice(0,10);
+  }
+  $('#goal-title').innerHTML = `<span class="bi" data-ico="star"></span>${vorhanden ? 'Ziel bearbeiten' : 'Neues Ziel'}`;
+  $('#goal-del').style.display = vorhanden ? '' : 'none';
+  $('#goal-wert').value = vorhanden ? vorhanden.ziel : '';
+  $('#goal-bis').value = _zielEntwurf.bis;
+  zielFormular();
+  openModal('#modal-goal');
+  hydrateIcons($('#modal-goal'));
+}
+
+/* Zeichnet die veränderlichen Teile des Formulars neu. */
+function zielFormular(){
+  const g = _zielEntwurf;
+  const art = ZIEL_ARTEN[g.art];
+
+  $('#goal-arten').innerHTML = Object.entries(ZIEL_ARTEN).map(([k,v]) =>
+    `<button class="chip ${k===g.art?'on':''}" data-art="${k}">${esc(v.kurz)}</button>`).join('');
+
+  $('#goal-exrow').style.display = art.ex ? '' : 'none';
+  if(art.ex){
+    const ex = g.exId ? getEx(g.exId) : null;
+    /* Der Pfeil macht sichtbar, dass hier etwas aufgeht — ohne ihn sah der
+       Knopf wie eine reine Beschriftung aus. */
+    $('#goal-ex').innerHTML = `<span class="grow" style="text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${
+      ex ? esc(ex.name) : 'Übung wählen …'}</span><span style="color:var(--txt3)" aria-hidden="true">›</span>`;
+  }
+
+  /* Der aktuelle Stand gehört ins Formular: Wer sein Ziel setzt, soll sehen,
+     wovon aus er startet — sonst tippt er eine Zahl, die er längst hat. */
+  const kannRechnen = !art.ex || g.exId;
+  const jetzt = kannRechnen ? art.wert(g) : null;
+  $('#goal-hinweis').innerHTML = art.hilfe
+    + (jetzt !== null ? `<br><b style="color:var(--txt2)">Aktuell: ${esc(zielWertText(g, jetzt))}</b>` : '');
+  $('#goal-wert').placeholder = art.einheit === 'kg' ? 'z.B. 100' : 'z.B. 20';
+}
+
+$('#goal-arten').addEventListener('click', e => {
+  const c = e.target.closest('[data-art]'); if(!c || !_zielEntwurf) return;
+  _zielEntwurf.art = c.dataset.art;
+  if(!ZIEL_ARTEN[_zielEntwurf.art].ex) _zielEntwurf.exId = null;
+  zielFormular();
+});
+
+$('#goal-ex').addEventListener('click', () => {
+  openPicker(id => { _zielEntwurf.exId = id; closeModals(); openModal('#modal-goal'); zielFormular(); });
+});
+
+$('#goal-save').addEventListener('click', () => {
+  const g = _zielEntwurf; if(!g) return;
+  const art = ZIEL_ARTEN[g.art];
+  const wert = parseFloat(String($('#goal-wert').value).replace(',', '.'));
+  const bis = $('#goal-bis').value;
+
+  if(art.ex && !g.exId)      return toast('Bitte zuerst eine Übung wählen');
+  if(!isFinite(wert) || wert <= 0) return toast('Bitte einen Zielwert eintragen');
+  if(!bis)                   return toast('Bitte eine Frist eintragen');
+  if(tageZwischen(heuteISO(), bis) < 1) return toast('Die Frist muss in der Zukunft liegen');
+
+  const jetzt = art.wert(g);
+  if(!art.abwaerts && wert <= jetzt)
+    return toast(`Das hast du schon — aktuell ${zielWertText(g, jetzt)}`);
+
+  g.ziel = wert;
+  g.bis = bis;
+  /* Startwert nur bei der ANLAGE festhalten. Beim Bearbeiten bliebe er
+     sonst nicht stehen, und der Fortschrittsbalken spränge zurück. */
+  if(!isFinite(+g.start)) g.start = jetzt;
+
+  const idx = state.goals.findIndex(x => x && x.id === g.id);
+  if(idx >= 0) state.goals[idx] = g; else state.goals.push(g);
+
+  saveState(); closeModals(); renderHome();
+  toast(idx >= 0 ? 'Ziel geändert' : 'Ziel gesetzt — viel Erfolg');
+  haptic();
+});
+
+$('#goal-del').addEventListener('click', async () => {
+  const g = _zielEntwurf; if(!g) return;
+  const idx = state.goals.findIndex(x => x && x.id === g.id);
+  if(idx < 0) return;
+  const weg = state.goals[idx];
+  state.goals.splice(idx, 1);
+  saveState(); closeModals(); renderHome();
+  withUndo('Ziel gelöscht', () => {
+    state.goals.splice(idx, 0, weg); saveState(); renderHome();
+  });
+});
+
+/* Nach jedem abgeschlossenen Training prüfen, ob ein Ziel gefallen ist.
+   Wird bewusst NICHT beim Rendern geprüft — sonst feiert die App dasselbe
+   Ziel bei jedem Bildschirmwechsel erneut. */
+function zielePruefen(){
+  let gefeiert = false;
+  zieleListe().forEach(g => {
+    if(g.erreicht) return;
+    if(zielStand(g).erreicht){
+      g.erreicht = heuteISO();
+      gefeiert = true;
+      toast(`Ziel erreicht: ${zielTitel(g)} ✓`);
+      haptic();
+    }
+  });
+  if(gefeiert) saveState();
+  return gefeiert;
+}
+
 function renderHome(){
   renderCoach();
+  renderBalance();
+  renderZiele();
   const now = new Date();
   const [a,b] = weekRange(now);
   const bEnd = new Date(b); bEnd.setDate(bEnd.getDate()-1);
@@ -4559,7 +5549,7 @@ function renderHome(){
           <span class="tiny">${achN} Erfolge${wkStreak>1? ` · ${wkStreak} Wochen aktiv`:''}</span>
         </div>
         <div class="row" style="justify-content:space-between;margin-top:4px">
-          <b style="font-size:15px"><span data-count="${L.xp}">0</span> XP</b>
+          <b style="font-size:var(--fs-body)"><span data-count="${L.xp}">0</span> XP</b>
           ${_nt? `<span class="tiny">${_nt.name} ab Level ${_nt.lvl}</span>`:''}
         </div>
         <div class="xpbar"><i style="width:0" data-w="${xpPct}"></i></div>
@@ -4573,10 +5563,22 @@ function renderHome(){
     .flatMap(w=>(w.prs||[]).map(p=>({...p, date:w.date}))).reverse().slice(0,4);
   $('#home-records').innerHTML = recentPrs.length? `<div class="card">
     <h3 style="margin-bottom:4px">Letzte Bestleistungen</h3>
-    ${recentPrs.map(p=>`<div class="item"><div class="grow"><div class="ttl" style="font-size:13px">${esc(p.name)}</div>
+    ${recentPrs.map((p,i)=>`<div class="item"><div class="grow"><div class="ttl" style="font-size:var(--fs-sub)">${esc(p.name)}</div>
       <div class="meta">${p.kind} · <b style="color:var(--gold)">${p.val}</b>${p.old?` <span class="tiny">statt ${p.old}</span>`:''}</div></div>
-      <span class="tiny">${new Date(p.date).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})}</span></div>`).join('')}
+      <span class="tiny">${new Date(p.date).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})}</span>
+      <button class="iconbtn" data-prshare="${i}" aria-label="Bestleistung „${esc(p.name)}" als Bild teilen">${ICO.share}</button></div>`).join('')}
   </div>`:'';
+  /* Die Rekorde werden bei jedem renderHome neu geschrieben — ein Listener
+     am Kasten überlebt das, einer an der Zeile nicht. */
+  const recBox = $('#home-records');
+  if(!recBox.dataset.wired){
+    recBox.dataset.wired = '1';
+    recBox.addEventListener('click', e => {
+      const b = e.target.closest('[data-prshare]');
+      if(b) teilePrKarte(_letzteRekorde[+b.dataset.prshare]);
+    });
+  }
+  _letzteRekorde = recentPrs;
 
   /* ── Fortsetzen / Backup ── */
   $('#home-resume').innerHTML = state.active ? `
@@ -4599,7 +5601,7 @@ function renderHome(){
   renderVorschlag();
   $('#btn-start-home').innerHTML = state.active
     ? '<span class="bi" data-ico="play"></span><span>Weiter trainieren</span>'
-    : `<span class="bi" data-ico="play"></span><span>Training starten</span><span style="opacity:.72;font-weight:650;font-size:15px">· ${suggestType()}</span>`;
+    : `<span class="bi" data-ico="play"></span><span>Training starten</span><span style="opacity:.72;font-weight:650;font-size:var(--fs-body)">· ${suggestType()}</span>`;
   /* Läuft schon ein Training oder gibt es einen Vorschlag, ist der große
      Knopf überflüssig — zwei Startwege nebeneinander verwirren nur. */
   $('#btn-start-home').style.display = (!state.active && $('#home-suggest').innerHTML) ? 'none' : '';
@@ -4804,7 +5806,7 @@ function renderDayBody(){
         </div>
         ${w.exercises.map(e=>{
           const ex = getEx(e.exId);
-          return `<div class="item"><div class="grow"><div class="ttl" style="font-size:13px">${esc(e.name||(ex&&ex.name)||'—')}</div>
+          return `<div class="item"><div class="grow"><div class="ttl" style="font-size:var(--fs-sub)">${esc(e.name||(ex&&ex.name)||'—')}</div>
             <div class="meta">${validSets(e).length} × ${validSets(e).map(s=>fmtW(setW(e,s,w.date))).join(' · ')} kg</div></div></div>`;
         }).join('')}</div>`
       + (t.heute && !state.active? `<button class="btn btn-ghost btn-block" id="ds-noch">Noch ein Training starten</button>`:'');
@@ -4994,7 +5996,7 @@ function renderRtEditor(){
   $('#rt-list').innerHTML = rtDraft.exIds.length? rtDraft.exIds.map((id,i)=>{
     const ex = getEx(id); if(!ex) return '';
     return `<div class="item"><span class="tiny" style="width:16px;text-align:center">${i+1}</span>
-      <div class="grow"><div class="ttl" style="font-size:13px">${esc(ex.name)}</div><div class="meta">${esc(exMuscleLabel(ex))}</div></div>
+      <div class="grow"><div class="ttl" style="font-size:var(--fs-sub)">${esc(ex.name)}</div><div class="meta">${esc(exMuscleLabel(ex))}</div></div>
       <button class="iconbtn" data-rt-up="${i}" ${i===0?'disabled':''} aria-label="Übung nach oben">${ICO.up}</button>
       <button class="iconbtn" data-rt-rm="${i}" aria-label="Übung entfernen">${ICO.close}</button></div>`;
   }).join('') : '<div class="empty" style="padding:16px">Noch keine Übungen</div>';
@@ -5118,7 +6120,7 @@ function prevSession(exId){ const h = exHistory(exId, new Date(state.active.date
    Angezeigt wird die letzte Notiz derselben Übung gedämpft: man sieht beim
    Loggen, was letztes Mal war, ohne danach zu suchen. */
 function letzteNotiz(exId, beforeTs){
-  const ws = state.workouts.slice().sort((a,b)=> new Date(b.date) - new Date(a.date));
+  const ws = state.workouts.slice().sort((a,b)=> Date.parse(b.date) - Date.parse(a.date));
   for(const w of ws){
     if(beforeTs && new Date(w.date).getTime() >= beforeTs) continue;
     for(const e of (w.exercises||[])){
@@ -5212,12 +6214,12 @@ function renderActive(){
            Beim Loggen weiß man, was man gerade macht — das ist Deko, die
            Platz kostet. Die Hinweise zur EINGABE bleiben: sie erklären, was
            die Zahl im Feld bedeutet, und ohne sie trägt man Falsches ein. */
-        (isBW||assist||o.uni)? `<div class="musctags">${isBW?'<b style="color:var(--acc2)">„+kg" = Zusatzgewicht</b>':''}${assist?`<b style="color:var(--acc2)">mehr kg = leichter${myBw?` · ${myBw} kg − Hilfe`:''}</b>`:''}${o.uni?`${isBW||assist?' · ':''}<b style="color:var(--acc2)">Wdh L/R getrennt</b>`:''}</div>`:''}</div>
+        (!istZeitArt(entryArt(e)) && (isBW||assist||o.uni))? `<div class="musctags">${isBW?'<b style="color:var(--acc2)">„+kg" = Zusatzgewicht</b>':''}${assist?`<b style="color:var(--acc2)">mehr kg = leichter${myBw?` · ${myBw} kg − Hilfe`:''}</b>`:''}${o.uni?`${isBW||assist?' · ':''}<b style="color:var(--acc2)">Wdh L/R getrennt</b>`:''}</div>`:''}</div>
         <button class="iconbtn" data-calc="${ei}" aria-label="Scheiben-Rechner">${ICO.scale}</button>
         <button class="iconbtn" data-exopt="${ei}" aria-label="Übung einstellen">${ICO.gear}</button>
         <button class="iconbtn" data-rmex="${ei}" aria-label="Übung entfernen">${ICO.trash}</button></div>
       ${prog? `<div class="progbox"><div class="grow"><div class="tiny up" style="color:var(--acc2);letter-spacing:1px">Heute empfohlen</div>
-          <b style="font-size:15px">${prog.txt}</b>
+          <b style="font-size:var(--fs-body)">${prog.txt}</b>
           <details class="erkl warum"><summary>Warum?</summary><div>${esc(prog.why)}</div></details></div>
           <button class="btn btn-acc btn-sm" data-applyprog="${ei}">Übernehmen</button></div>`:''}
       ${/* ── C9: die letzten drei Einheiten ──────────────────────────────
@@ -5229,6 +6231,22 @@ function renderActive(){
            Bei unterstützten Übungen ist es die effektive Last, bei
            Körpergewicht das Zusatzgewicht; exHistory rechnet das bereits. */
         (()=>{
+          /* Bei Halte- und Kardioübungen gibt es kein Arbeitsgewicht und keinen
+             Wiederholungsbereich. Die Verlaufszeile zeigt hier deshalb die
+             gehaltene Zeit — „67 → 70 → 75 kg" wäre bei einem Unterarmstütz
+             schlicht falsch, und „Gewicht suchen, mit dem 10–20 Wdh sauber
+             gehen" ein Rat, der zur Übung nicht passt. */
+          if(istZeitArt(entryArt(e))){
+            const hz = state.workouts
+              .filter(w => Date.parse(w.date) < new Date(a.date).getTime())
+              .flatMap(w => w.exercises.filter(x => x.exId === e.exId))
+              .map(x => Math.max(0, ...validSets(x).map(s => +s.sek||0)))
+              .filter(v => v > 0).slice(-3);
+            if(!hz.length) return `<div class="prevline">Erstes Mal — Zeit ehrlich stoppen, das ist der Ausgangswert</div>`;
+            const rauf = hz.length>1 && hz[hz.length-1] > hz[0];
+            return `<div class="prevline">Längste Zeit <b>${hz.map(fmtSek).join(' → ')}</b>${
+              rauf? ' <span style="color:var(--green)">↑</span>':''}</div>`;
+          }
           const h3 = exHistory(e.exId, new Date(a.date).getTime()).slice(-3);
           if(!h3.length) return `<div class="prevline">Erstes Mal — Gewicht suchen, mit dem ${o.lo}–${o.hi} Wdh sauber gehen</div>`;
           /* Bei einer Körpergewichtsübung OHNE Zusatzgewicht ist das Gewicht
@@ -5244,24 +6262,60 @@ function renderActive(){
                       : (bests&&bests.maxW>0? ` &nbsp;·&nbsp; Best <b>${isBW&&!assist?'+':''}${fmtW(bests.maxW)}</b>` : '');
           return `<div class="prevline">Zuletzt <b>${werte}</b>${einh}${pfeil}${best}</div>`;
         })()}
-      <div class="platewrap" data-pb="${ei}">${scheibenZeile(ei)}</div>
-      <div data-wh="${ei}">${warmVorschlag(ei)}</div>
-      <div class="sethead ${useRir?'rir':''} ${uni?'uni':''}"><span>#</span><span>Zuletzt</span><span title="${assist?'Hilfe der Maschine — mehr kg macht die Übung leichter':''}">${assist?'−kg Hilfe':isBW?'+kg':'kg'}</span>${uni?'<span title="Wdh linke Seite">Wdh L</span><span title="Wdh rechte Seite">Wdh R</span>':'<span>Wdh</span>'}${useRir?'<span title="Reps in Reserve">RIR</span>':''}<span></span></div>
-      ${e.sets.map((s,si)=>{
-        const ps = prev && prev.sets[si];
-        const filled = (+s.r||0)>0 || (+s.rr||0)>0;
-        const tcls = s.t==='w'?'warm':s.t==='d'?'drop':'';
-        const lbl = s.t? SETTYPE[s.t][0] : (si+1);
-        return `<div class="setrow ${useRir?'rir':''} ${uni?'uni':''} ${filled?'filled':''} ${tcls}" data-ei="${ei}" data-si="${si}">
-          <button class="idx" data-settype title="Satz-Typ wechseln">${lbl}</button>
-          ${ps? `<button class="prevpill" data-pf data-w="${+ps.w||0}" data-r="${ps.r||''}" data-rr="${ps.rr!==undefined?ps.rr:''}">${fmtS(ps).replace('×',' kg × ').replace('BW kg','BW')}</button>` : `<span class="prevpill none">—</span>`}
-          <input type="number" inputmode="decimal" step="0.5" min="0" placeholder="${ps? +ps.w||0 : (assist?'Hilfe':isBW?'+kg':'kg')}" value="${s.w!==''&&s.w!=null? s.w:''}" data-f="w">
-          <input type="number" inputmode="numeric" step="1" min="0" placeholder="${(e.targets&&e.targets[si])||e.target||(ps? ps.r : (uni?'L':'Wdh'))}" value="${s.r!==''&&s.r!=null? s.r:''}" data-f="r">
-          ${uni? `<input type="number" inputmode="numeric" step="1" min="0" placeholder="${ps&&ps.rr!==undefined&&ps.rr!==''?ps.rr:(ps?ps.r:'R')}" value="${s.rr!==''&&s.rr!=null&&s.rr!==undefined? s.rr:''}" data-f="rr">`:''}
-          ${useRir? `<input class="riri" type="number" inputmode="numeric" step="1" min="0" max="10" placeholder="–" value="${s.rir!==''&&s.rir!=null&&s.rir!==undefined? s.rir:''}" data-f="rir">`:''}
-          <button class="setdel" data-delset title="Satz löschen">✕</button>
-        </div>`;
-      }).join('')}
+      <!-- Scheibenrechner und Aufwaermvorschlag rechnen beide in Kilogramm.
+           Bei einer Halte- oder Kardiouebung gibt es keine, also auch keinen
+           Grund, die Zeilen ueberhaupt anzulegen. -->
+      ${istZeitArt(entryArt(e)) ? '' : `<div class="platewrap" data-pb="${ei}">${scheibenZeile(ei)}</div>
+      <div data-wh="${ei}">${warmVorschlag(ei)}</div>`}
+      ${(() => {
+        /* Zeit- und Kardioübungen bekommen eine eigene Kopfzeile und eigene
+           Felder. Alles andere bleibt Wort für Wort, wie es war — diese
+           Übungsarten sind ein Zusatz, kein Umbau der Krafteingabe. */
+        const art = entryArt(e);
+        const kopfKlasse = art==='zeit' ? 'zeit' : art==='kardio' ? 'kardio' : `${useRir?'rir':''} ${uni?'uni':''}`;
+        const kopf = art==='zeit'
+          ? `<span>#</span><span>Zuletzt</span><span title="Gehaltene Zeit in Sekunden">Sek</span><span></span>`
+          : art==='kardio'
+          ? `<span>#</span><span>Zuletzt</span><span title="Dauer in Sekunden">Sek</span><span title="Strecke in Metern">Meter</span><span></span>`
+          : `<span>#</span><span>Zuletzt</span><span title="${assist?'Hilfe der Maschine — mehr kg macht die Übung leichter':''}">${assist?'−kg Hilfe':isBW?'+kg':'kg'}</span>${uni?'<span title="Wdh linke Seite">Wdh L</span><span title="Wdh rechte Seite">Wdh R</span>':'<span>Wdh</span>'}${useRir?'<span title="Reps in Reserve">RIR</span>':''}<span></span>`;
+
+        const zeilen = e.sets.map((s,si)=>{
+          const ps = prev && prev.sets[si];
+          const filled = satzHatInhalt(s);
+          const tcls = s.t==='w'?'warm':s.t==='d'?'drop':'';
+          const lbl = s.t? SETTYPE[s.t][0] : (si+1);
+
+          if(istZeitArt(art)){
+            /* Der Vorher-Wert zeigt hier Sekunden bzw. Sekunden und Strecke.
+               Antippen übernimmt ihn, genau wie bei den Kraftsätzen. */
+            const vorher = ps
+              ? `<button class="prevpill" data-pf data-sek="${+ps.sek||0}" data-dist="${+ps.dist||0}">${
+                  fmtSek(ps.sek)}${(+ps.dist||0)? ' · '+fmtDist(ps.dist) : ''}</button>`
+              : `<span class="prevpill none">—</span>`;
+            return `<div class="setrow ${art} ${filled?'filled':''} ${tcls}" data-ei="${ei}" data-si="${si}">
+              <button class="idx" data-settype title="Satz-Typ wechseln">${lbl}</button>
+              ${vorher}
+              <input type="number" inputmode="numeric" step="5" min="0" aria-label="Sekunden"
+                     placeholder="${ps? (+ps.sek||0) : 'Sek'}" value="${s.sek!==''&&s.sek!=null? s.sek:''}" data-f="sek">
+              ${art==='kardio' ? `<input type="number" inputmode="numeric" step="10" min="0" aria-label="Meter"
+                     placeholder="${ps? (+ps.dist||0) : 'm'}" value="${s.dist!==''&&s.dist!=null? s.dist:''}" data-f="dist">` : ''}
+              <button class="setdel" data-delset title="Satz löschen">✕</button>
+            </div>`;
+          }
+
+          return `<div class="setrow ${useRir?'rir':''} ${uni?'uni':''} ${filled?'filled':''} ${tcls}" data-ei="${ei}" data-si="${si}">
+            <button class="idx" data-settype title="Satz-Typ wechseln">${lbl}</button>
+            ${ps? `<button class="prevpill" data-pf data-w="${+ps.w||0}" data-r="${ps.r||''}" data-rr="${ps.rr!==undefined?ps.rr:''}">${fmtS(ps).replace('×',' kg × ').replace('BW kg','BW')}</button>` : `<span class="prevpill none">—</span>`}
+            <input type="number" inputmode="decimal" step="0.5" min="0" placeholder="${ps? +ps.w||0 : (assist?'Hilfe':isBW?'+kg':'kg')}" value="${s.w!==''&&s.w!=null? s.w:''}" data-f="w">
+            <input type="number" inputmode="numeric" step="1" min="0" placeholder="${(e.targets&&e.targets[si])||e.target||(ps? ps.r : (uni?'L':'Wdh'))}" value="${s.r!==''&&s.r!=null? s.r:''}" data-f="r">
+            ${uni? `<input type="number" inputmode="numeric" step="1" min="0" placeholder="${ps&&ps.rr!==undefined&&ps.rr!==''?ps.rr:(ps?ps.r:'R')}" value="${s.rr!==''&&s.rr!=null&&s.rr!==undefined? s.rr:''}" data-f="rr">`:''}
+            ${useRir? `<input class="riri" type="number" inputmode="numeric" step="1" min="0" max="10" placeholder="–" value="${s.rir!==''&&s.rir!=null&&s.rir!==undefined? s.rir:''}" data-f="rir">`:''}
+            <button class="setdel" data-delset title="Satz löschen">✕</button>
+          </div>`;
+        }).join('');
+
+        return `<div class="sethead ${kopfKlasse}">${kopf}</div>${zeilen}`;
+      })()}
       <button class="addset" data-addset="${ei}">＋ Satz</button>
       <div data-nz="${ei}">${notizFeld(ei)}</div>
     </div>`;
@@ -5311,9 +6365,12 @@ function wireActiveOnce(){
     const row = inp.closest('.setrow'); if(!row) return;
     const ei = +row.dataset.ei, si = +row.dataset.si;
     const set = state.active.exercises[ei].sets[si];
-    const wasDone = (+set.r||0)>0 || (+set.rr||0)>0;
+    /* satzHatInhalt() statt der Wiederholungsprüfung: Sonst gälte ein
+       Unterarmstütz nie als „gemacht" — kein Zeitstempel, keine Markierung,
+       keine Satzzählung. */
+    const wasDone = satzHatInhalt(set);
     set[inp.dataset.f] = inp.value;
-    const isDone = (+set.r||0)>0 || (+set.rr||0)>0;
+    const isDone = satzHatInhalt(set);
     if(!wasDone && isDone) satzGestempelt(set);      // V70: die Uhr des Satzes
     row.classList.toggle('filled', isDone);
     saveStateSoon();
@@ -5383,12 +6440,23 @@ function wireActiveOnce(){
     if(pf && row){
       const ei=+row.dataset.ei, si=+row.dataset.si;
       const set = state.active.exercises[ei].sets[si];
-      const wasDone = (+set.r||0)>0 || (+set.rr||0)>0;
-      set.w = pf.dataset.w; set.r = pf.dataset.r;
-      row.querySelector('[data-f=w]').value = set.w;
-      row.querySelector('[data-f=r]').value = set.r;
-      const rrIn = row.querySelector('[data-f=rr]');
-      if(rrIn){ set.rr = (pf.dataset.rr!==undefined && pf.dataset.rr!=='') ? pf.dataset.rr : pf.dataset.r; rrIn.value = set.rr; }
+      const wasDone = satzHatInhalt(set);
+      /* Zeit- und Kardiozeilen haben kein Gewichts- und kein
+         Wiederholungsfeld. Ohne diese Abzweigung liefe der Zugriff auf
+         [data-f=w] hier ins Leere und der Knopf würde eine Ausnahme werfen. */
+      const sekIn = row.querySelector('[data-f=sek]');
+      if(sekIn){
+        set.sek = pf.dataset.sek || '';
+        sekIn.value = set.sek;
+        const distIn = row.querySelector('[data-f=dist]');
+        if(distIn){ set.dist = pf.dataset.dist || ''; distIn.value = set.dist; }
+      } else {
+        set.w = pf.dataset.w; set.r = pf.dataset.r;
+        row.querySelector('[data-f=w]').value = set.w;
+        row.querySelector('[data-f=r]').value = set.r;
+        const rrIn = row.querySelector('[data-f=rr]');
+        if(rrIn){ set.rr = (pf.dataset.rr!==undefined && pf.dataset.rr!=='') ? pf.dataset.rr : pf.dataset.r; rrIn.value = set.rr; }
+      }
       row.classList.add('filled');
       if(!wasDone) satzGestempelt(set);              // V70: die Uhr des Satzes
       refreshSetCount(); saveState(); haptic();
@@ -5514,7 +6582,13 @@ async function finishWorkout(){
        und der Nachbearbeiten-Editor hätte sie ein zweites Mal gebraucht.
        Zwei Stellen für dieselbe Frage driften auseinander; genau daran
        sind schon `rr` (rechte Seite verschwand) und `ts` (Zeitstempel
-       verschwand) fast gestorben. */
+       verschwand) fast gestorben.
+
+       V77: Genau deshalb stehen die Sekunden und die Strecke der Kardio-
+       übungen jetzt AUCH dort und nicht mehr hier. Hätte ich sie hier
+       gelassen, wäre die dritte Wiederholung derselben Falle fertig
+       gewesen — Halteübungen hätten das Abschließen überlebt und wären
+       beim Nachbearbeiten still verschwunden. */
     const o = {exId:e.exId, name:e.name, sets:allLoggedSets(e).map(satzFuerSpeicher)};
     if(exIsBW(e.exId)){ o.bw = true; const b = bwAt(a.date); if(b) o.bwkg = b; }   // fürs Vault-Protokoll
     /* unterstützt: Körpergewicht mitschreiben, sonst lässt sich die effektive
@@ -5543,6 +6617,9 @@ async function finishWorkout(){
      Einmalig — die Marke wird beim Malen verbraucht, nicht nach einer Uhr. */
   figFresh = new Set(cleaned.flatMap(e=>{ const x = getEx(e.exId); return x? x.p.concat(x.s||[]) : []; }));
   const freshAch = evalAchievements([...new Set(cleaned.map(e=>e.exId))]);
+  /* Ziele hier prüfen, nicht beim Zeichnen: Sonst würde dasselbe erreichte
+     Ziel bei jedem Bildschirmwechsel erneut gefeiert. */
+  zielePruefen();
   const lvlAfter = achLevel().lvl;
   makeSnapshot('nach Training');          // Sicherungspunkt direkt nach dem Abschluss
   haptic('success');
@@ -5630,13 +6707,13 @@ function showSummary(w, freshAch, newLevel){
          ${fmtDur(fen.vorlauf)} vor dem ersten Satz gestartet — nicht mitgerechnet.
          Gemessen wird vom ersten bis zum letzten Satz.</div>` : '';
   const lvlHtml = newLevel? `<div class="levelcard" style="margin-bottom:12px;text-align:center">
-      <div class="lvlbadge" style="margin:0 auto 8px;width:60px;height:60px"><b style="font-size:20px">${newLevel}</b><span>LEVEL</span></div>
-      <b style="font-size:17px">Level ${newLevel} erreicht!</b>
+      <div class="lvlbadge" style="margin:0 auto 8px;width:60px;height:60px"><b style="font-size:var(--fs-h2)">${newLevel}</b><span>LEVEL</span></div>
+      <b style="font-size:var(--fs-lg)">Level ${newLevel} erreicht!</b>
       <div class="tiny" style="margin-top:3px">Neuer Titel: <b style="color:var(--acc)">${titelFuer(newLevel)}</b></div></div>` : '';
   const achHtml = (freshAch&&freshAch.length)? `
     <h3 style="margin:12px 0 8px">${ICO.trophy} Neue Erfolge (+${freshAch.reduce((a,d)=>a+d.xp,0)} XP)</h3>
-    ${freshAch.slice(0,12).map(d=>`<div class="achnew"><span style="font-size:20px">${ACH_CAT[d.cat][0]}</span>
-      <div class="grow"><b style="font-size:13px">${esc(d.name)}</b><div class="tiny">${esc(d.desc)}</div></div>${rchip(d.rar)}</div>`).join('')}
+    ${freshAch.slice(0,12).map(d=>`<div class="achnew"><span style="font-size:var(--fs-h2)">${ACH_CAT[d.cat][0]}</span>
+      <div class="grow"><b style="font-size:var(--fs-sub)">${esc(d.name)}</b><div class="tiny">${esc(d.desc)}</div></div>${rchip(d.rar)}</div>`).join('')}
     ${freshAch.length>12? `<div class="tiny" style="text-align:center">+${freshAch.length-12} weitere</div>`:''}` : '';
   const muscles = muscleSets([w]);
   const mchips = Object.entries(muscles).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span class="chip mini">${MUSCLES[k]} · ${v%1? v.toFixed(1).replace('.',','):v}</span>`).join('');
@@ -5708,10 +6785,12 @@ function renderPickChips(){
      „po"      → 79 Treffer (steckt in „su-ppo-rted" aus einem Alias)
    Jetzt: Felder getrennt indiziert, gewichtet, Wortanfänge bevorzugt. */
 let _ix = null, _ixN = 0;
+const _ixLeer = {name:'',al:'',eq:'',grp:'',pm:'',sm:''};
 function searchIndex(ex){
-  if(!_ix || _ixN !== allExercises().length){
-    _ix = new Map(); _ixN = allExercises().length;
-    allExercises().forEach(x=>_ix.set(x.id, {
+  const all = allExercises();
+  if(!_ix || _ixN !== all.length){
+    _ix = new Map(); _ixN = all.length;
+    all.forEach(x=>_ix.set(x.id, {
       name: (x.name||'').toLowerCase(),
       al:   (x.al||'').toLowerCase(),
       eq:   (x.eq||'').toLowerCase(),
@@ -5720,9 +6799,9 @@ function searchIndex(ex){
       sm:   x.s.map(m=>MUSCLES[m]||'').join(' ').toLowerCase()    // sekundär
     }));
   }
-  return _ix.get(ex.id) || {name:'',al:'',eq:'',grp:'',pm:'',sm:''};
+  return _ix.get(ex.id) || _ixLeer;
 }
-function invalidateSearch(){ _ix = null; }
+function invalidateSearch(){ _ix = null; invalidateExercises(); }
 
 /* Ein Treffer am Wortanfang zählt voll, mitten im Wort nur einen Bruchteil.
    Deshalb landet „rücken" bei den Rücken-Übungen und nicht bei „Bankdrücken". */
@@ -5764,8 +6843,7 @@ function filterEx(q, grp){
     return true;
   });
   if(!terms || !terms.length) return base;
-  const trained = new Set();
-  state.workouts.forEach(w=>w.exercises.forEach(e=>trained.add(e.exId)));
+  const trained = trainedExIds();
   const out = [];
   base.forEach(ex=>{
     const ix = searchIndex(ex);
@@ -5787,7 +6865,7 @@ function filterEx(q, grp){
    337 Übungen den Suchvorgang für genau die, die man ohnehin ständig macht. */
 function recentExIds(limit){
   const seen = new Map();
-  const ws = state.workouts.slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const ws = state.workouts.slice().sort((a,b)=>Date.parse(b.date) - Date.parse(a.date));
   for(const w of ws){
     for(const e of w.exercises){ if(!seen.has(e.exId)) seen.set(e.exId, new Date(w.date).getTime()); }
     if(seen.size >= (limit||8)*3) break;
@@ -5807,7 +6885,7 @@ function pickRow(ex, badge){
       <button class="favbtn ${isFav(ex.id)?'on':''}" data-fav="${ex.id}" aria-label="${isFav(ex.id)?'Favorit entfernen':'Als Favorit merken'}">${ICO.star}</button>
       <div class="grow"><div class="ttl">${esc(ex.name)}${badge?` <span class="badge type">${badge}</span>`:''}</div>
         <div class="meta">${esc(ex.eq)} · ${esc(exMuscleLabel(ex))}</div></div>
-      <span style="color:var(--acc);font-weight:800;font-size:17px" aria-hidden="true">＋</span>
+      <span style="color:var(--acc);font-weight:800;font-size:var(--fs-lg)" aria-hidden="true">＋</span>
     </div>`;
 }
 function renderPickList(){
@@ -5825,15 +6903,21 @@ function renderPickList(){
   $('#pick-list').innerHTML = list.length
     ? head + list.map(ex=>pickRow(ex)).join('')
     : `<div class="empty"><div class="big">${ICO.search}</div><b>Keine Übung gefunden</b>Versuch es mit einem anderen Begriff —<br>Englisch funktioniert auch.</div>`;
-  $$('#pick-list [data-pick]').forEach(el=>el.addEventListener('click', e=>{
-    if(e.target.closest('[data-fav]')) return;          // Stern schließt den Picker nicht
-    pickCb && pickCb(el.dataset.pick);
-  }));
-  $$('#pick-list [data-fav]').forEach(b=>b.addEventListener('click', e=>{
-    e.stopPropagation(); toggleFav(b.dataset.fav); renderPickList();
-  }));
+  /* Ein Listener am Container statt zweier je Zeile. Die Reihenfolge der
+     Prüfung ersetzt das frühere stopPropagation: Trifft der Klick den Stern,
+     wird nur umgeschaltet und der Picker bleibt offen. */
+  const pickBox = $('#pick-list');
+  if(!pickBox.dataset.wired){
+    pickBox.dataset.wired = '1';
+    pickBox.addEventListener('click', e=>{
+      const fav = e.target.closest('[data-fav]');
+      if(fav){ toggleFav(fav.dataset.fav); renderPickList(); return; }
+      const el = e.target.closest('[data-pick]');
+      if(el) pickCb && pickCb(el.dataset.pick);
+    });
+  }
 }
-$('#pick-search').addEventListener('input',renderPickList);
+$('#pick-search').addEventListener('input', entprellt(renderPickList, 120));
 
 /* ================= EIGENE ÜBUNG ================= */
 let cxP = [], cxS = [];
@@ -5866,7 +6950,7 @@ function renderCalc(){
   const r = plateCalc(total, bar);
   $('#pc-out').innerHTML = r.ok? `
     <div class="row" style="flex-wrap:wrap;gap:8px">${r.plates.length? r.plates.map(([p,n])=>
-      `<span class="chip on" style="font-size:15px">${n}× ${fmtW(p)} kg</span>`).join('') : '<span class="chip">nur die Stange</span>'}</div>
+      `<span class="chip on" style="font-size:var(--fs-body)">${n}× ${fmtW(p)} kg</span>`).join('') : '<span class="chip">nur die Stange</span>'}</div>
     <div class="tiny" style="margin-top:8px">pro Seite · Stange ${fmtW(bar)} kg${r.rest>0? ` · <b style="color:var(--gold)">${fmtW(r.rest)} kg nicht darstellbar</b>`:''}</div>`
     : `<div class="tiny" style="color:var(--red)">${r.msg}</div>`;
   const wu = warmupSets(total, bar);
@@ -5909,7 +6993,7 @@ function openExOpt(exId){
   /* Alternativen: gleiche primäre Muskeln, anderes Gerät */
   const alts = allExercises().filter(x=>x.id!==exId && x.p[0]===ex.p[0] && x.eq!==ex.eq).slice(0,6);
   $('#xo-alt').innerHTML = `<h3 style="margin-bottom:8px">Alternativen <span class="tiny">(gleicher Zielmuskel, anderes Gerät)</span></h3>
-    ${alts.length? alts.map(a=>`<div class="item"><div class="grow"><div class="ttl" style="font-size:13px">${esc(a.name)}</div>
+    ${alts.length? alts.map(a=>`<div class="item"><div class="grow"><div class="ttl" style="font-size:var(--fs-sub)">${esc(a.name)}</div>
       <div class="meta">${esc(a.eq)}</div></div><button class="btn btn-ghost btn-sm" data-swap="${a.id}">Tauschen</button></div>`).join('')
       : '<div class="tiny">Keine passende Alternative gefunden.</div>'}`;
   $$('#xo-alt [data-swap]').forEach(b=>b.addEventListener('click',()=>{
@@ -6032,7 +7116,7 @@ function renderHomeBW(){
   $('#home-bw').innerHTML = `<div class="card" style="cursor:pointer;padding:12px 12px" onclick="openBW()">
     <div class="row" style="justify-content:space-between">
       <div class="row" style="gap:8px"><span class="iconbtn" style="pointer-events:none">${ICO.scale}</span>
-        <div><b style="font-size:15px">${last? fmtKg(last.kg) : 'Körpergewicht'}</b>
+        <div><b style="font-size:var(--fs-body)">${last? fmtKg(last.kg) : 'Körpergewicht'}</b>
         <div class="tiny">${last? 'zuletzt '+fmtDate(last.d) : 'noch kein Eintrag — abends eintragen'}</div></div></div>
       <div style="text-align:right">${trTxt}<div class="tiny">${tr!==null?'Trend (21 Tage)':''}</div></div>
     </div></div>`;
@@ -6049,7 +7133,7 @@ function renderBWModal(){
     ${svgLine(pts, v=>v.toLocaleString('de-DE',{maximumFractionDigits:1}), {avg:true, fill:true})}</div>`
     : `<div class="empty"><div class="big">${ICO.trend}</div>Ab 2 Einträgen gibt es hier den Verlauf</div>`;
   $('#bw-list').innerHTML = arr.slice(-14).reverse().map(e=>`
-    <div class="item"><div class="grow"><b style="font-size:13px">${fmtKg(e.kg)}</b><div class="meta">${fmtDate(e.d)}</div></div>
+    <div class="item"><div class="grow"><b style="font-size:var(--fs-sub)">${fmtKg(e.kg)}</b><div class="meta">${fmtDate(e.d)}</div></div>
     <button class="iconbtn" data-bw-del="${e.d}" aria-label="Körpergewichtseintrag löschen">${ICO.trash}</button></div>`).join('') || '';
   $$('[data-bw-del]').forEach(b=>b.addEventListener('click',()=>{
     state.bodyweight = state.bodyweight.filter(e=>e.d!==b.dataset.bwDel);
@@ -6133,7 +7217,7 @@ function renderAchModal(){
   $('#ach-body').innerHTML = `
     <div class="levelcard"><div class="row">
       <div class="lvlbadge"><b>${L.lvl}</b><span>LEVEL</span></div>
-      <div class="grow"><b style="font-size:15px">${L.xp.toLocaleString('de-DE')} XP · ${unlocked.length} Erfolge</b>
+      <div class="grow"><b style="font-size:var(--fs-body)">${L.xp.toLocaleString('de-DE')} XP · ${unlocked.length} Erfolge</b>
         <div class="xpbar"><i style="width:${Math.min(100,Math.round((L.xp-L.cur)/Math.max(1,L.next-L.cur)*100))}%"></i></div>
         <div class="tiny" style="margin-top:4px">Noch ${(L.next-L.xp).toLocaleString('de-DE')} XP bis Level ${L.lvl+1}</div></div>
     </div></div>
@@ -6190,7 +7274,7 @@ $('#bk-later').addEventListener('click',()=>{
 /* CSV-Export (bei Strong hinter Premium) */
 $('#btn-csv').addEventListener('click',()=>{
   const rows = [['Datum','Uhrzeit','Typ','Übung','Satz','Satztyp','Gewicht_kg','Wdh_links','Wdh_rechts','Wdh_gesamt','RIR','Volumen_kg','Körpergewicht_kg','Einseitig','Unterstützt']];
-  state.workouts.slice().sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach(w=>{
+  state.workouts.slice().sort((a,b)=>Date.parse(a.date) - Date.parse(b.date)).forEach(w=>{
     const d = new Date(w.date);
     w.exercises.forEach(e=>{
       const assist = entryIsAssist(e);
@@ -6246,7 +7330,7 @@ function renderSnapshots(){
   el.innerHTML = list.length? list.map((s,i)=>{
     const d = new Date(s.t);
     return `<div class="item"><div class="grow">
-        <div class="ttl" style="font-size:13px">${d.toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit'})}, ${d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}</div>
+        <div class="ttl" style="font-size:var(--fs-sub)">${d.toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit'})}, ${d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}</div>
         <div class="meta">${s.wk} Workouts · ${esc(s.reason||'automatisch')}${i===0?' · aktuellster':''}</div></div>
       <button class="btn btn-ghost btn-sm" data-snap="${s.t}">Zurück</button></div>`;
   }).join('') : '<div class="tiny">Noch keine Sicherungspunkte — der erste entsteht nach deinem nächsten Training.</div>';
@@ -6656,11 +7740,20 @@ function muscleSection(ws, weeks, opt){
    „toggle" steigt nicht auf, deshalb in der Capture-Phase abfangen. */
 document.addEventListener('toggle', e=>{
   const d = e.target;
-  if(!d.matches || !d.matches('details[data-heatmap]') || !d.open) return;
-  const ziel = d.querySelector('div');
-  if(!ziel || ziel.dataset.fertig) return;
-  ziel.innerHTML = yearHeatmap(+d.dataset.heatmap);
-  ziel.dataset.fertig = '1';
+  if(!d.matches || !d.open) return;
+  if(d.matches('details[data-heatmap]')){
+    const ziel = d.querySelector('div');
+    if(!ziel || ziel.dataset.fertig) return;
+    ziel.innerHTML = yearHeatmap(+d.dataset.heatmap);
+    ziel.dataset.fertig = '1';
+    return;
+  }
+  if(d.matches('details[data-statsmore]')){
+    const ziel = d.querySelector('.statsmore-body');
+    if(!ziel || ziel.dataset.fertig) return;
+    ziel.innerHTML = renderAllStatsMehr();
+    ziel.dataset.fertig = '1';
+  }
 }, true);
 
 document.addEventListener('click', e=>{
@@ -6778,7 +7871,7 @@ function renderLuecken(){
       </div>
       ${vor.length? vor.map(v=>`
         <div class="item">
-          <div class="grow"><div class="ttl" style="font-size:13px">${esc(v.ex.name)}</div>
+          <div class="grow"><div class="ttl" style="font-size:var(--fs-sub)">${esc(v.ex.name)}</div>
             <div class="meta">${esc(v.ex.eq)}${v.kennt? ' · <b>kennst du schon</b>' : v.geraetVertraut? ' · Gerät nutzt du' : ''}</div></div>
           <button class="btn btn-acc btn-sm" data-addgap="${esc(v.ex.id)}">＋</button>
         </div>`).join('')
@@ -6809,7 +7902,7 @@ document.addEventListener('click', e=>{
       <button class="iconbtn" data-close>${ICO.close}</button></div>
     ${list.length? `<div class="card" style="padding:2px 12px">${list.map(x=>`
       <div class="item" data-godetail="${esc(x.name)}" style="cursor:pointer">
-        <div class="grow"><div class="ttl" style="font-size:13px">${esc(x.name)} ${x.prim?'':'<span class="tiny">(indirekt)</span>'}</div>
+        <div class="grow"><div class="ttl" style="font-size:var(--fs-sub)">${esc(x.name)} ${x.prim?'':'<span class="tiny">(indirekt)</span>'}</div>
           <div class="meta">${x.sets%1? x.sets.toFixed(1).replace('.',','):x.sets} Sätze · ${x.sessions}× trainiert · ${fmtVol(x.vol)}</div></div>
         <span style="color:var(--txt3)">›</span></div>`).join('')}</div>`
       : '<div class="empty">Keine Übung hat diese Gruppe trainiert</div>'}
@@ -6824,7 +7917,7 @@ document.addEventListener('click', e=>{
       return `<div class="card"><h3 style="margin-bottom:2px">${fmtW(luecke.fehlt)} Sätze fehlen</h3>
         <p class="tiny" style="margin-bottom:8px">${fmtW(luecke.ist)} von ${luecke.lo}–${luecke.hi} im Zyklus. Diese Übungen schließen die Lücke:</p>
         ${vor.map(v=>`<div class="item">
-          <div class="grow"><div class="ttl" style="font-size:13px">${esc(v.ex.name)}</div>
+          <div class="grow"><div class="ttl" style="font-size:var(--fs-sub)">${esc(v.ex.name)}</div>
             <div class="meta">${esc(v.ex.eq)}${v.kennt? ' · <b>kennst du schon</b>' : v.geraetVertraut? ' · Gerät nutzt du' : ''}</div></div>
           <button class="btn btn-acc btn-sm" data-addgap="${esc(v.ex.id)}">＋</button></div>`).join('')}</div>`;
     })()}
@@ -6871,7 +7964,7 @@ function prListHtml(ws){
   const prs = ws.flatMap(w=>(w.prs||[]).map(p=>({...p,date:w.date})));
   if(!prs.length) return '';
   return `<div class="card"><h3 style="margin-bottom:8px">🏆 PRs im Zeitraum (${prs.length})</h3>${
-    prs.slice().reverse().slice(0,20).map(p=>`<div class="item"><div class="grow"><div class="ttl" style="font-size:13px">${esc(p.name)}</div>
+    prs.slice().reverse().slice(0,20).map(p=>`<div class="item"><div class="grow"><div class="ttl" style="font-size:var(--fs-sub)">${esc(p.name)}</div>
     <div class="meta">${p.kind}-PR: <b style="color:var(--gold)">${p.val}</b> · ${fmtDate(p.date)}</div></div></div>`).join('')}</div>`;
 }
 
@@ -6949,22 +8042,13 @@ function statFokus(){
 /* Seit Beginn — alle Trainings über den gesamten Zeitraum */
 function renderAllStats(){
   const el = $('#stats-all');
-  const ws = state.workouts.slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const ws = state.workouts.slice().sort((a,b)=>Date.parse(a.date) - Date.parse(b.date));
   lastStatsWs = ws;
   if(!ws.length){ el.innerHTML = `<div class="empty"><div class="big">${ICO.chart}</div><b>Noch keine Trainings</b>Sobald du das erste Training abschließt,<br>siehst du hier deine gesamte Entwicklung.</div>`; return; }
   const first = new Date(ws[0].date);
   const weeks = Math.max(1, (Date.now() - first.getTime())/(7*864e5));
   const vol = ws.reduce((a,w)=>a+wVolume(w),0), sets = ws.reduce((a,w)=>a+wSets(w),0);
   const prc = ws.reduce((a,w)=>a+(w.prs?w.prs.length:0),0);
-  // Volumen pro Monat über die gesamte Historie (max. 18 Balken)
-  let mLabels=[], mVals=[], m0=new Date(first.getFullYear(), first.getMonth(), 1); const now=new Date();
-  while(m0 <= now){
-    const m1=new Date(m0.getFullYear(), m0.getMonth()+1, 1);
-    mLabels.push(m0.toLocaleDateString('de-DE',{month:'short'}).replace('.','') + (m0.getMonth()===0? ` '`+String(m0.getFullYear()).slice(2):''));
-    mVals.push(workoutsIn([m0, m1]).reduce((x,w)=>x+wVolume(w),0));
-    m0=m1;
-  }
-  if(mLabels.length>18){ mLabels=mLabels.slice(-18); mVals=mVals.slice(-18); }
   const zAll = closedCycles();
   const tage = Math.max(1, Math.round((Date.now()-first.getTime())/864e5));
   const header = `<div class="cnav" style="justify-content:center"><b>Seit Beginn · ${fmtDate(first)} – heute</b></div>`;
@@ -6990,17 +8074,36 @@ function renderAllStats(){
     + zyklusVolumenCard()
     + statRelativeKraft()
     + statZuwachs()
-    + `<details class="statsmore"><summary>Weitere Auswertungen</summary><div>
-        <div class="card"><h3>Volumen pro Monat <span class="tiny">(Kalendermonate, rein beschreibend)</span></h3>${svgBars(mLabels, mVals, v=>fmtVol(v))}</div>
-        ${bestenlisteCard()}
-        ${statHaeufigkeit()}
-        ${statBrach()}
-        ${statDauer(ws)}
-        ${statWdh(ws)}
-        ${statAbstand(ws)}
-        ${statWochentag(ws)}
-        ${prListHtml(ws)}
-      </div></details>`;
+    /* Die zweite Ebene bleibt vollständig erhalten, wird aber erst beim
+       Öffnen gebaut. Vorher wurden neun unsichtbare Karten samt Diagrammen
+       bei jedem Reiterwechsel berechnet und in den DOM geschrieben. */
+    + `<details class="statsmore" data-statsmore><summary>Weitere Auswertungen</summary>
+        <div class="statsmore-body"><p class="tiny">Volumen pro Monat und weitere Details werden beim Öffnen geladen.</p></div>
+      </details>`;
+}
+
+function renderAllStatsMehr(){
+  const ws = state.workouts.slice().sort((a,b)=>Date.parse(a.date) - Date.parse(b.date));
+  if(!ws.length) return '';
+  const first = new Date(ws[0].date);
+  /* Volumen pro Monat über die gesamte Historie (max. 18 Balken). */
+  let mLabels=[], mVals=[], m0=new Date(first.getFullYear(), first.getMonth(), 1); const now=new Date();
+  while(m0 <= now){
+    const m1=new Date(m0.getFullYear(), m0.getMonth()+1, 1);
+    mLabels.push(m0.toLocaleDateString('de-DE',{month:'short'}).replace('.','') + (m0.getMonth()===0? ` '`+String(m0.getFullYear()).slice(2):''));
+    mVals.push(workoutsIn([m0, m1]).reduce((x,w)=>x+wVolume(w),0));
+    m0=m1;
+  }
+  if(mLabels.length>18){ mLabels=mLabels.slice(-18); mVals=mVals.slice(-18); }
+  return `<div class="card"><h3>Volumen pro Monat <span class="tiny">(Kalendermonate, rein beschreibend)</span></h3>${svgBars(mLabels, mVals, v=>fmtVol(v))}</div>
+    ${bestenlisteCard()}
+    ${statHaeufigkeit()}
+    ${statBrach()}
+    ${statDauer(ws)}
+    ${statWdh(ws)}
+    ${statAbstand(ws)}
+    ${statWochentag(ws)}
+    ${prListHtml(ws)}`;
 }
 /* ═══════════════════ STATISTIK, ZWEITE EBENE (V63) ═══════════════════
    Fünf Auswertungen, die die App aus vorhandenen Daten beantworten kann,
@@ -7138,7 +8241,7 @@ function statZuwachs(){
   if(!l.length) return `<div class="card"><h3>Stärkste Zuwächse</h3>
     <div class="empty" style="padding:16px">Ab vier Einheiten in derselben Übung steht hier, wo du am meisten zugelegt hast.</div></div>`;
   const zeile = x => `<div class="item"><div class="grow">
-      <div class="ttl" style="font-size:13px">${esc(x.name)}</div>
+      <div class="ttl" style="font-size:var(--fs-sub)">${esc(x.name)}</div>
       <div class="meta">${fmtW(x.von)} → <b>${fmtW(x.bis)} kg</b> über ${x.n} Einheiten${
         x.geschnitten? ' <span class="tiny">(ab dem Niveauwechsel gerechnet)</span>':''}</div></div>
     <span style="font-weight:750;font-variant-numeric:tabular-nums;color:${x.diff>0?'var(--green)':x.diff<0?'var(--txt3)':'var(--txt2)'}">${
@@ -7457,7 +8560,7 @@ function statBrach(){
   return `<div class="card"><h3 style="margin-bottom:2px">Nicht mehr im Plan</h3>
     <p class="tiny" style="margin-bottom:8px">Mindestens zweimal gemacht, aber in den letzten ${BRACH_ZYKLEN} Zyklen nicht mehr.</p>
     ${l.slice(0,8).map(x=>`<div class="item">
-      <div class="grow"><div class="ttl" style="font-size:13px">${esc(x.name)}</div>
+      <div class="grow"><div class="ttl" style="font-size:var(--fs-sub)">${esc(x.name)}</div>
         <div class="meta">${x.mal}× trainiert · zuletzt vor ${x.tage} ${x.tage===1?'Tag':'Tagen'}</div></div>
       <button class="btn btn-acc btn-sm" data-addgap="${esc(x.id)}">＋</button></div>`).join('')}
     <p class="kpihint tiny">Kein Vorwurf — manche Übung fällt zu Recht raus. Der Knopf legt sie
@@ -8044,7 +9147,7 @@ function exModeSwitches(exId){
 /* ---------- Übungs-Statistik ---------- */
 function renderExStats(){
   const q = $('#exstat-search').value;
-  const trained = new Set(); state.workouts.forEach(w=>w.exercises.forEach(e=>trained.add(e.exId)));
+  const trained = trainedExIds();
   let list = filterEx(q,'Alle');
   /* Nur OHNE Suchbegriff nach „schon trainiert" vorsortieren — bei einer Suche
      würde das die Relevanz kippen (eine trainierte Brustübung stünde über einer
@@ -8053,7 +9156,14 @@ function renderExStats(){
   $('#exstat-results').innerHTML = (q||!exStatId)? `<div class="card" style="padding:2px 12px">${
     list.slice(0,q?15:8).map(ex=>`<div class="item" data-exsel="${ex.id}" style="cursor:pointer">
       <div class="grow"><div class="ttl">${esc(ex.name)}</div><div class="meta">${trained.has(ex.id)?'✓ trainiert':'noch nie trainiert'}</div></div>›</div>`).join('')}</div>` : '';
-  $$('#exstat-results [data-exsel]').forEach(el=>el.addEventListener('click',()=>{ exStatId=el.dataset.exsel; $('#exstat-search').value=''; renderExStats(); }));
+  const exResBox = $('#exstat-results');
+  if(!exResBox.dataset.wired){
+    exResBox.dataset.wired = '1';
+    exResBox.addEventListener('click', e=>{
+      const el = e.target.closest('[data-exsel]'); if(!el) return;
+      exStatId = el.dataset.exsel; $('#exstat-search').value=''; renderExStats();
+    });
+  }
   if(!exStatId){ $('#exstat-detail').innerHTML=''; return; }
   const ex = getEx(exStatId); if(!ex){ $('#exstat-detail').innerHTML=''; return; }
   const h = exHistory(exStatId);
@@ -8273,18 +9383,18 @@ $('#exsheet-full').addEventListener('click',()=>{
   showScreen('scr-stats');
   renderStats();
 });
-$('#exstat-search').addEventListener('input',renderExStats);
+$('#exstat-search').addEventListener('input', entprellt(renderExStats, 120));
 
 /* ================= VERLAUF ================= */
 const HIST_STAPEL = 40;          // so viele Karten je Stapel
 let histLimit = HIST_STAPEL;
 function renderHist(){
-  const ws = state.workouts.slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const ws = state.workouts.slice().sort((a,b)=>Date.parse(b.date) - Date.parse(a.date));
   const g = globalAgg();
-  const hours = state.workouts.reduce((a,w)=>a+Math.max(0, wDauer(w)),0)/3600000;
+  const hours = g.hours;
   if(!$('#hist-search').dataset.wired){
     $('#hist-search').dataset.wired = '1';
-    $('#hist-search').addEventListener('input', ()=>{ histLimit = HIST_STAPEL; renderHist(); });
+    $('#hist-search').addEventListener('input', entprellt(()=>{ histLimit = HIST_STAPEL; renderHist(); }, 120));
   }
   $('#hist-count').textContent = ws.length? `${ws.length} Workouts seit ${fmtDate(ws[ws.length-1].date)}` : 'noch keine Einträge';
   /* Lifetime-Zahlen — machen den Verlauf zur Erfolgsbilanz statt zur Liste */
@@ -8300,7 +9410,14 @@ function renderHist(){
     ? ['Alle', ...typesUsed, 'Mit PR'].map(f=>`<button class="chip ${f===histFilter?'on':''}" data-hf="${esc(f)}">${esc(f)}</button>`).join('')
     : '';
   $('#hist-search').style.display = ws.length ? '' : 'none';
-  $$('#hist-filters .chip').forEach(c=>c.addEventListener('click',()=>{ histFilter=c.dataset.hf; histLimit=HIST_STAPEL; renderHist(); }));
+  const hfBox = $('#hist-filters');
+  if(!hfBox.dataset.wired){
+    hfBox.dataset.wired = '1';
+    hfBox.addEventListener('click', e=>{
+      const c = e.target.closest('.chip'); if(!c) return;
+      histFilter = c.dataset.hf; histLimit = HIST_STAPEL; renderHist();
+    });
+  }
 
   /* Anwenden von Filter + Suche (Suche greift auf Übungsnamen im Workout) */
   const q = ($('#hist-search').value||'').trim().toLowerCase();
@@ -8328,23 +9445,41 @@ function renderHist(){
     <div class="card tap" data-wid="${w.id}" style="padding:12px 16px">
       <div class="row" style="justify-content:space-between">
         <div class="grow">
-          <div class="row" style="gap:8px"><b style="font-size:15px">${fmtDateShort(w.date)}</b>
+          <div class="row" style="gap:8px"><b style="font-size:var(--fs-body)">${fmtDateShort(w.date)}</b>
             <span class="badge type">${esc(w.type)}</span>
             ${(w.prs&&w.prs.length)?`<span class="badge pr">${ICO.trophy} ${w.prs.length}</span>`:''}</div>
-          <div class="meta" style="margin-top:4px">${w.exercises.length} Übungen · ${wSets(w)} Sätze · <b style="color:var(--txt2)">${fmtVol(wVolume(w))}</b>${wDauer(w)? ` · ${fmtDur(wDauer(w))}`:''}</div>
+          <!-- Bei einer reinen Kardio- oder Halte-Einheit ist das Volumen null.
+               „0 kg" wäre dort keine Information, sondern eine Irreführung —
+               dann stehen stattdessen Dauer und Strecke, also das, was
+               tatsächlich gemessen wurde. -->
+          <div class="meta" style="margin-top:4px">${w.exercises.length} Übungen · ${wSets(w)} Sätze · <b style="color:var(--txt2)">${(()=>{
+            const vol = wVolume(w);
+            if(vol > 0) return fmtVol(vol);
+            const sek = wDauerSek(w), dist = wDistM(w);
+            if(sek || dist) return [sek? fmtSek(sek):'', dist? fmtDist(dist):''].filter(Boolean).join(' · ');
+            return fmtVol(0);
+          })()}</b>${wDauer(w)? ` · ${fmtDur(wDauer(w))}`:''}</div>
         </div>
-        <span style="color:var(--txt3);font-size:17px" aria-hidden="true">›</span>
+        <span style="color:var(--txt3);font-size:var(--fs-lg)" aria-hidden="true">›</span>
       </div>
     </div>`).join('')
       + (shown.length > gekuerzt.length
         ? `<button class="btn btn-ghost btn-block" id="hist-mehr">Weitere ${Math.min(HIST_STAPEL, shown.length-gekuerzt.length)} anzeigen <span class="tiny">(${gekuerzt.length} von ${shown.length})</span></button>`
         : '')
     : `<div class="empty"><div class="big">${ICO.search}</div><b>Nichts gefunden</b>${q?`Kein Training mit „${esc(q)}".`:'Kein Training in dieser Auswahl.'}<div style="height:14px"></div><button class="btn btn-ghost btn-sm" id="hist-reset">Filter zurücksetzen</button></div>`);
-  $$('#hist-list [data-wid]').forEach(el=>el.addEventListener('click',()=>{ haptic(); showDetail(el.dataset.wid); }));
-  const mehr = $('#hist-mehr');
-  if(mehr) mehr.addEventListener('click',()=>{ histLimit += HIST_STAPEL; haptic(); renderHist(); });
-  const rst = $('#hist-reset');
-  if(rst) rst.addEventListener('click',()=>{ histFilter='Alle'; histLimit=HIST_STAPEL; $('#hist-search').value=''; renderHist(); });
+  /* Karten, „Weitere anzeigen" und „Filter zurücksetzen" liegen alle in
+     #hist-list und werden bei jedem Rendern neu geschrieben — ein Listener
+     am Container überlebt das und spart bis zu 40 Anbindungen je Stapel. */
+  const hlBox = $('#hist-list');
+  if(!hlBox.dataset.wired){
+    hlBox.dataset.wired = '1';
+    hlBox.addEventListener('click', e=>{
+      if(e.target.closest('#hist-mehr')){ histLimit += HIST_STAPEL; haptic(); renderHist(); return; }
+      if(e.target.closest('#hist-reset')){ histFilter='Alle'; histLimit=HIST_STAPEL; $('#hist-search').value=''; renderHist(); return; }
+      const el = e.target.closest('[data-wid]');
+      if(el){ haptic(); showDetail(el.dataset.wid); }
+    });
+  }
   runCounters($('#scr-hist'));
 }
 /* ══════════════════════════════════════════════════════════════════════
@@ -8389,6 +9524,12 @@ function satzFuerSpeicher(s){
   if(s.t) x.t = s.t;
   if(s.rir!==''&&s.rir!=null&&s.rir!==undefined) x.rir = +s.rir;
   if(isFinite(+s.ts) && +s.ts > 0) x.ts = +s.ts;
+  /* V77: Sekunden und Strecke der Zeit- und Kardioübungen. Sie gehören
+     genau hierher und nirgendwo sonst — das ist der ganze Sinn dieser
+     Funktion. Stünden sie nur in finishWorkout(), überlebten sie das
+     Abschließen und verschwänden beim Nachbearbeiten still. */
+  if(isFinite(+s.sek)  && +s.sek  > 0) x.sek  = +s.sek;
+  if(isFinite(+s.dist) && +s.dist > 0) x.dist = +s.dist;
   return x;
 }
 function uebungFuerBearbeitung(e, datum){
@@ -8635,7 +9776,7 @@ function showDetail(wid){
     <div class="grab"></div>
     <div class="mhd"><div><h2>${esc(w.type)}-Workout</h2><div class="sub">${fmtDateShort(w.date)}${wDauer(w)? ' · '+fmtDur(wDauer(w)):''} · ${fmtVol(wVolume(w))}</div></div><button class="iconbtn" data-close aria-label="Schließen" data-ico-close></button></div>
     ${(()=>{ const f = trainingsFenster(w); return `<div class="item">
-      <div class="grow"><div class="ttl" style="font-size:13px">Dauer ${f? fmtDur(f.dauer) : 'nicht gemessen'}</div>
+      <div class="grow"><div class="ttl" style="font-size:var(--fs-sub)">Dauer ${f? fmtDur(f.dauer) : 'nicht gemessen'}</div>
         <div class="meta">${f? DAUER_QUELLE[f.quelle] : 'für dieses Training liegt keine Zeit vor'}${
           f && f.vorlauf >= VORLAUF_SCHWELLE? ' · '+fmtDur(f.vorlauf)+' Vorlauf herausgerechnet' : ''}</div></div>
       <button class="btn btn-ghost btn-sm" id="det-dur">${f && f.quelle==='korrigiert'? 'Ändern' : 'Korrigieren'}</button></div>`; })()}
@@ -8696,7 +9837,7 @@ function showDetail(wid){
     saveState(); closeModals(); renderHist(); renderHome();
     toast('Workout gelöscht', 'Rückgängig', ()=>{
       state.workouts.push(del);
-      state.workouts.sort((a,b)=>new Date(a.date)-new Date(b.date));
+      state.workouts.sort((a,b)=>Date.parse(a.date) - Date.parse(b.date));
       saveState(); renderHist(); renderHome(); toast('Wiederhergestellt ✓');
     });
   });
@@ -8707,10 +9848,21 @@ let libGrp='Alle';
 let histFilter='Alle';
 function renderLib(){
   const groups = ['Alle','Brust','Rücken','Schultern','Arme','Beine','Bauch','Ganzkörper','Eigene'];
-  $('#lib-groups').innerHTML = groups.map(g=>`<button class="chip ${g===libGrp?'on':''}" data-g="${g}">${g}</button>`).join('');
-  $$('#lib-groups .chip').forEach(c=>c.addEventListener('click',()=>{ libGrp=c.dataset.g; renderLib(); }));
+  /* Die Gruppen-Chips sind bei jedem Rendern dieselben neun Knöpfe. Einmal
+     bauen, danach nur noch die aktive Markierung umsetzen — das spart pro
+     Tastenanschlag einen HTML-Neuaufbau samt neun frischer Listener. */
+  const grpBox = $('#lib-groups');
+  if(!grpBox.dataset.wired){
+    grpBox.dataset.wired = '1';
+    grpBox.innerHTML = groups.map(g=>`<button class="chip" data-g="${g}">${g}</button>`).join('');
+    grpBox.addEventListener('click', e=>{
+      const c = e.target.closest('.chip'); if(!c) return;
+      libGrp = c.dataset.g; renderLib();
+    });
+  }
+  $$('#lib-groups .chip').forEach(c=>c.classList.toggle('on', c.dataset.g===libGrp));
   const list = filterEx($('#lib-search').value, libGrp);
-  const trained = new Set(); state.workouts.forEach(w=>w.exercises.forEach(e=>trained.add(e.exId)));
+  const trained = trainedExIds();
   $('#lib-count').textContent = list.length+' Übungen'+(libGrp==='Alle'&&!$('#lib-search').value? ' in der Datenbank':'')
     + (trained.size? ` · ${trained.size} schon trainiert`:'');
   /* content-visibility lässt den Browser Zeilen außerhalb des Sichtfelds überspringen */
@@ -8719,15 +9871,22 @@ function renderLib(){
       <div class="grow"><div class="ttl">${esc(ex.name)} ${ex.custom?'<span class="badge type">Eigene</span>':''}</div>
       <div class="meta">${esc(ex.eq)} · ${esc(exMuscleLabel(ex))}</div></div>
       ${trained.has(ex.id)? '<span class="badge type" style="flex:none">✓</span>':''}
-      <span style="color:var(--txt3);font-size:17px" aria-hidden="true">›</span>
+      <span style="color:var(--txt3);font-size:var(--fs-lg)" aria-hidden="true">›</span>
     </div>`).join('') || `<div class="empty"><div class="big">${ICO.search}</div><b>Keine Übung gefunden</b>Versuch es mit einem anderen Begriff —<br>Englisch funktioniert auch.</div>`;
-  $$('#lib-list [data-lib]').forEach(el=>el.addEventListener('click',()=>{
-    exStatId = el.dataset.lib; statsPanel='ex';
-    $$('#stats-seg button').forEach(x=>x.classList.toggle('on',x.dataset.p==='ex'));
-    showScreen('scr-stats');
-  }));
+  /* Ein Listener am Container statt 150 an den Zeilen — die Zeilen werden bei
+     jeder Suche neu geschrieben, der Listener bleibt. */
+  const libBox = $('#lib-list');
+  if(!libBox.dataset.wired){
+    libBox.dataset.wired = '1';
+    libBox.addEventListener('click', e=>{
+      const el = e.target.closest('[data-lib]'); if(!el) return;
+      exStatId = el.dataset.lib; statsPanel='ex';
+      $$('#stats-seg button').forEach(x=>x.classList.toggle('on',x.dataset.p==='ex'));
+      showScreen('scr-stats');
+    });
+  }
 }
-$('#lib-search').addEventListener('input',renderLib);
+$('#lib-search').addEventListener('input', entprellt(renderLib, 120));
 
 /* ================= PIN-SPERRE ================= */
 const PIN_KEY='ft_pin';
@@ -8942,7 +10101,7 @@ function backupText(maxWk){
     recLine = '\n\n▼ ERHOLUNG JETZT\n' + g.map(([n,v])=>`${n} ${v}%`).join(' · '); }catch(e){}
   const cutoff = Date.now() - 14*864e5;                 // letzte 14 Tage
   const recent = state.workouts.filter(w=> new Date(w.date).getTime() >= cutoff)
-    .sort((a,b)=> new Date(b.date) - new Date(a.date)).slice(0, maxWk||12);   // neueste zuerst
+    .sort((a,b)=> Date.parse(b.date) - Date.parse(a.date)).slice(0, maxWk||12);   // neueste zuerst
   let log = '';
   if(recent.length){
     log = '\n\n▼ LETZTE TRAININGS (14 Tage)\n' + recent.map(w=>{
