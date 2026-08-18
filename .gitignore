@@ -24,6 +24,7 @@
 !icon-192.png
 !icon-512.png
 !icon-512-maskable.png
+!SUPABASE-EINRICHTUNG.sql
 !.gitignore
 
 # 4) Die Testsuite — NAMENTLICH freigegeben, nicht als ganzer Ordner.

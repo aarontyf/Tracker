@@ -1106,6 +1106,38 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
 .seg.setmode-top button{flex:1}
 /* .rvd gehörte zum Wochenrückblick, der in V59 entfallen ist — raus V64. */
 
+/* ═══ Geräte-Sync (V80) ═══════════════════════════════════════════════
+   Der Status benutzt immer Symbol + Wort; die Farbe ist nur Verstärkung. */
+.sync-head{display:flex;align-items:flex-start;gap:var(--sp3)}
+.sync-head .grow{min-width:0}
+.sync-state{display:inline-flex;align-items:center;gap:6px;margin-top:5px;
+  color:var(--txt2);font-size:var(--fs-tiny);font-weight:650}
+.sync-mark{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;
+  border-radius:var(--r-full);background:var(--s3);border:1px solid var(--line-3);
+  color:var(--txt2);font-size:var(--fs-micro);font-weight:850;line-height:1}
+.sync-state[data-art="ok"] .sync-mark{background:var(--a2);border-color:var(--a5);color:var(--a7)}
+.sync-state[data-art="busy"] .sync-mark{background:var(--a1);border-color:var(--a4);color:var(--a6)}
+.sync-state[data-art="wait"] .sync-mark{background:var(--s3);border-color:var(--a6);color:var(--a6)}
+.sync-state[data-art="error"] .sync-mark,.sync-state[data-art="conflict"] .sync-mark{
+  background:color-mix(in srgb,var(--sig) 18%,var(--s2));border-color:var(--sig);color:#FFB8B4}
+.sync-panel{display:flex;flex-direction:column;gap:var(--sp3)}
+.sync-note{padding:12px;border:1px solid var(--line);border-radius:var(--r-md);
+  background:var(--s2);color:var(--txt2);font-size:var(--fs-sub);line-height:1.5}
+.sync-note b{color:var(--txt1)}
+.sync-code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.035em;
+  font-size:var(--fs-input);font-variant-numeric:tabular-nums}
+.sync-actions{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp2)}
+.sync-actions .btn:only-child{grid-column:1/-1}
+.sync-meta{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp2)}
+.sync-meta>div{padding:12px;background:var(--s2);border:1px solid var(--line);border-radius:var(--r-md)}
+.sync-meta b{display:block;font-size:var(--fs-lg);font-variant-numeric:tabular-nums}
+.sync-meta span{font-size:var(--fs-tiny);color:var(--txt3)}
+.sync-conflict{padding:14px;border:1px solid var(--sig);border-radius:var(--r-md);
+  background:color-mix(in srgb,var(--sig) 10%,var(--s1))}
+.sync-conflict h3{color:#FFB8B4;margin-bottom:5px}
+.sync-conflict p{font-size:var(--fs-sub);color:var(--txt2);line-height:1.5;margin:0 0 10px}
+@media(max-width:350px){.sync-actions{grid-template-columns:1fr}.sync-actions .btn{grid-column:1}}
+
 </style>
 </head>
 <body>
@@ -1553,8 +1585,21 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div></details>
   </div>
   <div class="card">
+    <div class="sync-head">
+      <span class="bi" data-ico="cloud" aria-hidden="true"></span>
+      <div class="grow">
+        <h3 style="margin-bottom:2px">Geräte-Sync</h3>
+        <div class="sync-state" id="sync-settings-state" data-art="off">
+          <span class="sync-mark" aria-hidden="true">–</span><span>Nicht eingerichtet</span>
+        </div>
+        <p class="tiny" id="sync-settings-detail" style="margin-top:5px">iPhone, iPad und PC können denselben verschlüsselten Stand nutzen.</p>
+      </div>
+      <button class="btn btn-ghost btn-sm" id="sync-open">Öffnen</button>
+    </div>
+  </div>
+  <div class="card">
     <h3 style="margin-bottom:4px">Backup</h3>
-    <p class="sub" style="margin-bottom:4px">Daten liegen nur in diesem Browser. Regelmäßig exportieren!</p>
+    <p class="sub" style="margin-bottom:4px">Eine zusätzliche Datei-Sicherung bleibt auch mit Geräte-Sync sinnvoll.</p>
     <p class="tiny" id="set-lastbackup" style="margin-bottom:8px"></p>
     <button class="btn btn-acc btn-block" id="btn-vault" style="margin-bottom:8px"><span class="bi" data-ico="upload"></span>Vollbackup teilen</button>
     <label class="tiny up" for="set-vaultmail">Empfänger</label>
@@ -1572,9 +1617,9 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
   </div>
   <div class="card">
     <h3 style="margin-bottom:4px"><span class="bi" data-ico="shield"></span>Deine Daten</h3>
-    <p class="tiny" style="line-height:1.6">Alle Trainingsdaten bleiben <b>auf diesem Gerät</b>. Die App sendet nichts an Server, nutzt kein Tracking, keine Werbung und keine Analyse-Dienste. Sie fordert keine Berechtigungen an (kein Standort, keine Kamera, keine Kontakte).<br><br>
-    Eine Sicherung verlässt dein Gerät nur, wenn du selbst auf „Vollbackup teilen" oder „Datei" tippst. Das Trainingsprotokoll enthält nur die letzten 14 Tage und ist ausdrücklich kein vollständiges Backup.<br><br>
-    <b>Wichtig:</b> Weil alles lokal liegt, sind deine Daten weg, wenn du den Browser-Speicher löschst oder die App entfernst. Sichere regelmäßig.</p>
+    <p class="tiny" style="line-height:1.6">Ohne Geräte-Sync bleiben alle Trainingsdaten <b>nur auf diesem Gerät</b>. Mit Geräte-Sync wird ausschließlich ein <b>Ende-zu-Ende-verschlüsseltes</b> Datenpaket in deinem Supabase-Projekt gespeichert. Supabase erhält weder deinen Kopplungsschlüssel noch lesbare Trainingsdaten.<br><br>
+    Die App nutzt kein Tracking, keine Werbung und keine Analyse-Dienste. Standort, Kamera und Kontakte werden nicht angefordert. Eine Datei-Sicherung verlässt dein Gerät nur, wenn du sie selbst teilst.<br><br>
+    <b>Wichtig:</b> Bewahre den Kopplungsschlüssel sicher auf. Ohne ihn kann auch der Entwickler die Cloud-Daten nicht entschlüsseln.</p>
   </div>
   <div class="card">
     <h3 style="margin-bottom:4px">Sicherungspunkte auf dem Gerät</h3>
@@ -1590,7 +1635,14 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V79 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V80 · created by Aaron Jeetun</p>
+</div></div>
+
+<div class="mback" id="modal-sync"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="sync-title">
+  <div class="grab"></div>
+  <div class="mhd"><div><h2 id="sync-title">Geräte-Sync</h2><div class="sub">Verschlüsselt · offline nutzbar · ohne Konto</div></div>
+    <button class="iconbtn" data-close aria-label="Schließen" data-ico-close></button></div>
+  <div id="sync-body" class="sync-panel"></div>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -3152,6 +3204,7 @@ function saveState(){
   try{
     localStorage.setItem(LS_KEY, JSON.stringify(state));
     _saveWarned = false;
+    if(typeof syncStateChanged==='function') syncStateChanged();
   }catch(e){
     console.warn('save fail', e);
     if(!_saveWarned){
@@ -3189,6 +3242,450 @@ function entprellt(fn, ms){
 window.addEventListener('pagehide', flushSave);
 window.addEventListener('beforeunload', flushSave);
 document.addEventListener('visibilitychange', ()=>{ if(document.hidden) flushSave(); });
+
+/* ================= GERÄTE-SYNC (V80) ================================
+   Offline zuerst: `ironlog_v1` bleibt die lokale Wahrheit. Supabase erhält
+   nur AES-GCM-Chiffretext. Der zufällige 256-Bit-Kopplungsschlüssel wird
+   weder an Supabase noch an irgendeinen anderen Dienst gesendet.
+
+   Konfliktregel: Haben Cloud UND dieses Gerät seit dem letzten Abgleich
+   Änderungen, gewinnt niemand automatisch. Beide Stände werden lokal als
+   Sicherungspunkt abgelegt und die Person entscheidet ausdrücklich. */
+const SYNC_LS = 'ironlog_sync_v1';
+const SYNC_URL = 'https://fbvcslmulqxaxurcdyrv.supabase.co';
+const SYNC_PUBLISHABLE = 'sb_publishable_y51mxiSo87JLzumeK6e8pg_7l4gFURL';
+const SYNC_TABLE = 'tracker_sync';
+const SYNC_FORMAT = 1;
+const SYNC_WAIT = 2500;
+let syncMeta = null;
+let syncStatus = {art:'off', text:'Nicht eingerichtet', detail:''};
+let _syncReady = false, _syncApplying = false, _syncBusy = false;
+let _syncTimer = null, _syncAgain = false, _syncGeneration = 0, _syncLastCheck = 0;
+let _syncIdentityCache = null, _syncConflict = null;
+
+function syncCryptoOk(){
+  return !!(window.crypto && crypto.subtle && crypto.getRandomValues && window.TextEncoder);
+}
+function syncBytesConcat(){
+  const teile = Array.from(arguments), n = teile.reduce((a,b)=>a+b.length,0), out = new Uint8Array(n);
+  let p=0; teile.forEach(b=>{ out.set(b,p); p+=b.length; }); return out;
+}
+function syncB64u(bytes){
+  let s=''; for(let i=0;i<bytes.length;i+=8192) s += String.fromCharCode.apply(null, bytes.subarray(i,i+8192));
+  return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function syncFromB64u(s){
+  s=String(s||'').replace(/-/g,'+').replace(/_/g,'/');
+  while(s.length%4) s+='=';
+  const raw=atob(s), out=new Uint8Array(raw.length);
+  for(let i=0;i<raw.length;i++) out[i]=raw.charCodeAt(i);
+  return out;
+}
+function syncNormalizeCode(v){
+  /* ASCII '-' gehört zum Base64URL-Alphabet und darf NICHT verschwinden.
+     Entfernt werden nur Leerraum und die typografischen Gruppentrenner. */
+  const code=String(v||'').trim().replace(/[\s\u2010-\u2015]/g,'');
+  if(!/^[A-Za-z0-9_-]{43}$/.test(code)) throw new Error('CODE');
+  const raw=syncFromB64u(code); if(raw.length!==32) throw new Error('CODE');
+  return code;
+}
+function syncFormatCode(code){ return (String(code||'').match(/.{1,4}/g)||[]).join('‑'); }
+function syncNewCode(){ const b=new Uint8Array(32); crypto.getRandomValues(b); return syncB64u(b); }
+function syncUuid(bytes){
+  const b=bytes.slice(0,16); b[6]=(b[6]&15)|80; b[8]=(b[8]&63)|128;
+  const h=Array.from(b,x=>x.toString(16).padStart(2,'0')).join('');
+  return h.slice(0,8)+'-'+h.slice(8,12)+'-'+h.slice(12,16)+'-'+h.slice(16,20)+'-'+h.slice(20);
+}
+async function syncIdentity(code){
+  code=syncNormalizeCode(code);
+  if(_syncIdentityCache && _syncIdentityCache.code===code) return _syncIdentityCache;
+  if(!syncCryptoOk()) throw new Error('CRYPTO');
+  const te=new TextEncoder(), raw=syncFromB64u(code);
+  const idHash=new Uint8Array(await crypto.subtle.digest('SHA-256',syncBytesConcat(raw,te.encode('ironlog-sync-id-v1'))));
+  const keyHash=new Uint8Array(await crypto.subtle.digest('SHA-256',syncBytesConcat(raw,te.encode('ironlog-aes-key-v1'))));
+  const key=await crypto.subtle.importKey('raw',keyHash,{name:'AES-GCM'},false,['encrypt','decrypt']);
+  return (_syncIdentityCache={code, syncId:syncUuid(idHash), key});
+}
+function syncCloudState(src){
+  const out=JSON.parse(JSON.stringify(src||state));
+  /* Diese drei Werte beschreiben nur das einzelne Gerät, nicht das Training. */
+  if(out.settings){ delete out.settings.lastBackup; delete out.settings.backupSnooze; delete out.settings.vaultMail; }
+  return out;
+}
+function syncLocalSettings(){
+  const s=(state&&state.settings)||{}, out={};
+  ['lastBackup','backupSnooze','vaultMail'].forEach(k=>{ if(s[k]!==undefined) out[k]=s[k]; });
+  return out;
+}
+async function syncStateHash(src){
+  const b=new TextEncoder().encode(JSON.stringify(syncCloudState(src)));
+  return syncB64u(new Uint8Array(await crypto.subtle.digest('SHA-256',b)));
+}
+async function syncEncryptState(src, code){
+  const ident=await syncIdentity(code), iv=new Uint8Array(12); crypto.getRandomValues(iv);
+  const plain=JSON.stringify({format:SYNC_FORMAT,savedAt:Date.now(),state:syncCloudState(src)});
+  const aad=new TextEncoder().encode('ironlog_v1|'+ident.syncId+'|'+SYNC_FORMAT);
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:aad},ident.key,new TextEncoder().encode(plain));
+  return {payload:syncB64u(new Uint8Array(ct)),iv:syncB64u(iv),syncId:ident.syncId};
+}
+async function syncDecryptRow(row, code){
+  const ident=await syncIdentity(code), iv=syncFromB64u(row.iv), ct=syncFromB64u(row.payload);
+  if(iv.length!==12) throw new Error('CHIFFRE');
+  const aad=new TextEncoder().encode('ironlog_v1|'+ident.syncId+'|'+SYNC_FORMAT);
+  let raw; try{ raw=await crypto.subtle.decrypt({name:'AES-GCM',iv,additionalData:aad},ident.key,ct); }
+  catch(_){ throw new Error('CHIFFRE'); }
+  let env; try{ env=JSON.parse(new TextDecoder().decode(raw)); }catch(_){ throw new Error('CHIFFRE'); }
+  if(!env || env.format!==SYNC_FORMAT || !env.state || !Array.isArray(env.state.workouts)) throw new Error('FORMAT');
+  return env;
+}
+function syncLoadMeta(){
+  try{
+    const m=JSON.parse(localStorage.getItem(SYNC_LS));
+    if(!m || !m.code || !m.syncId) return null;
+    m.code=syncNormalizeCode(m.code); m.revision=Math.max(0,+m.revision||0); m.dirty=!!m.dirty;
+    return m;
+  }catch(_){ return null; }
+}
+function syncSaveMeta(){
+  try{ if(syncMeta) localStorage.setItem(SYNC_LS,JSON.stringify(syncMeta)); else localStorage.removeItem(SYNC_LS); }
+  catch(e){ console.warn('sync meta fail',e); }
+}
+function syncConnected(){ return !!(syncMeta&&syncMeta.code&&syncMeta.syncId); }
+function syncMeaningful(src){
+  const s=src||state;
+  return (s.workouts||[]).length + (s.active?1:0) + (s.bodyweight||[]).length +
+    (s.measures||[]).length + (s.goals||[]).length + Object.keys(s.plan||{}).length;
+}
+function syncDeviceText(){
+  const ua=navigator.userAgent||'';
+  if(/iPad|Macintosh/.test(ua) && navigator.maxTouchPoints>1) return 'iPad';
+  if(/iPhone/.test(ua)) return 'iPhone';
+  if(/Windows/.test(ua)) return 'PC';
+  if(/Mac/.test(ua)) return 'Mac';
+  return 'Gerät';
+}
+function syncDateText(ts){
+  if(!ts) return 'noch nie';
+  const d=new Date(ts), heute=d.toDateString()===new Date().toDateString();
+  return (heute?'heute, ':d.toLocaleDateString('de-DE')+', ')+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+}
+function syncSetStatus(art,text,detail){
+  syncStatus={art,text,detail:detail||''}; syncRenderSettings(); syncRenderBody();
+}
+function syncMark(art){ return art==='ok'?'✓':art==='busy'?'↻':art==='wait'?'…':(art==='error'||art==='conflict')?'!':'–'; }
+function syncRenderSettings(){
+  const st=$('#sync-settings-state'), de=$('#sync-settings-detail'); if(!st||!de) return;
+  st.dataset.art=syncStatus.art;
+  st.innerHTML=`<span class="sync-mark" aria-hidden="true">${syncMark(syncStatus.art)}</span><span>${esc(syncStatus.text)}</span>`;
+  de.textContent=syncStatus.detail || (syncConnected()
+    ? `${state.workouts.length} ${state.workouts.length===1?'Workout':'Workouts'} · letzter Abgleich ${syncDateText(syncMeta.lastSync)}`
+    : 'iPhone, iPad und PC können denselben verschlüsselten Stand nutzen.');
+}
+function syncRenderBody(){
+  const box=$('#sync-body'); if(!box) return;
+  if(!syncConnected()){
+    box.innerHTML=`
+      <div class="sync-note"><b>Deine vorhandenen Daten bleiben auf diesem Gerät.</b><br>„Neuen Sync starten" lädt den aktuellen Stand verschlüsselt hoch. Auf iPad oder PC gibst du danach denselben Kopplungsschlüssel ein.</div>
+      <button class="btn btn-acc btn-block" id="sync-create">Neuen Sync starten</button>
+      <div class="tiny up">Vorhandenes Gerät verbinden</div>
+      <label class="tiny" for="sync-join-input">Kopplungsschlüssel</label>
+      <input class="sync-code" id="sync-join-input" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Schlüssel vom iPhone einfügen">
+      <button class="btn btn-ghost btn-block" id="sync-join">Diesen Stand laden</button>
+      <p class="tiny">Kein Konto nötig. Der 256-Bit-Schlüssel ist zugleich der einzige Zugang zu den verschlüsselten Daten. Gib ihn nur auf deinen Geräten ein.</p>`;
+    return;
+  }
+  const konflikt=_syncConflict;
+  box.innerHTML=`
+    <div class="sync-state" data-art="${syncStatus.art}"><span class="sync-mark" aria-hidden="true">${syncMark(syncStatus.art)}</span><span>${esc(syncStatus.text)}</span></div>
+    ${syncStatus.detail?`<p class="tiny">${esc(syncStatus.detail)}</p>`:''}
+    ${konflikt?`<div class="sync-conflict"><h3>Zwei unterschiedliche Stände</h3>
+      <p>${konflikt.snapshotsOk===false
+        ? 'Nichts wurde überschrieben, aber der Browser konnte nicht beide Sicherungspunkte speichern. Schaffe erst Speicherplatz und versuche es erneut.'
+        : 'Dieses Gerät und die Cloud wurden seit dem letzten Abgleich geändert. Beide Versionen liegen als Sicherungspunkt vor. Wähle, welche ab jetzt auf allen Geräten gelten soll.'}</p>
+      <div class="sync-actions"><button class="btn btn-ghost" id="sync-keep-local">Dieses Gerät behalten</button><button class="btn btn-acc" id="sync-use-cloud">Cloud-Stand nehmen</button></div></div>`:''}
+    <div class="sync-meta"><div><b>${state.workouts.length}</b><span>Workouts auf diesem Gerät</span></div><div><b>${syncMeta.revision||0}</b><span>Cloud-Version</span></div></div>
+    <label class="tiny" for="sync-code-view">Kopplungsschlüssel</label>
+    <input class="sync-code" id="sync-code-view" type="text" readonly value="${esc(syncFormatCode(syncMeta.code))}" aria-describedby="sync-code-help">
+    <p class="tiny" id="sync-code-help">Auf jedem weiteren Gerät einmal einfügen. Verlierst du alle Geräte und diesen Schlüssel, kann niemand die Cloud-Daten entschlüsseln.</p>
+    <div class="sync-actions"><button class="btn btn-ghost" id="sync-copy">Schlüssel kopieren</button><button class="btn btn-ghost" id="sync-share">Schlüssel teilen</button></div>
+    <button class="btn btn-acc btn-block" id="sync-now" ${_syncBusy?'disabled':''}>${_syncBusy?'Synchronisiert …':'Jetzt synchronisieren'}</button>
+    <button class="btn btn-ghost btn-block" id="sync-disconnect">Nur dieses Gerät trennen</button>
+    <p class="tiny">Offline kannst du normal weitertrainieren. Sobald wieder Internet da ist, wird automatisch abgeglichen.</p>`;
+}
+function syncFriendlyError(e){
+  const s=String((e&&e.message)||e||'');
+  if(/ROW MISSING/.test(s)) return 'Für diesen Kopplungsschlüssel gibt es keinen Cloud-Stand mehr.';
+  if(/PGRST205|42P01|TABLE|404/.test(s)) return 'Die Cloud-Tabelle ist noch nicht eingerichtet.';
+  if(/401|403|permission|policy/i.test(s)) return 'Supabase hat den Zugriff abgelehnt. Die Sicherheitsregeln fehlen oder sind falsch.';
+  if(/CODE/.test(s)) return 'Der Kopplungsschlüssel ist unvollständig oder falsch.';
+  if(/CHIFFRE/.test(s)) return 'Die Cloud-Daten passen nicht zu diesem Schlüssel oder wurden beschädigt.';
+  if(/FORMAT/.test(s)) return 'Die Cloud-Daten stammen aus einem unbekannten Format.';
+  if(/SNAPSHOT/.test(s)) return 'Sicherungspunkt konnte nicht gespeichert werden. Kein Stand wurde überschrieben. Bitte erst Speicherplatz schaffen.';
+  if(/CRYPTO/.test(s)) return 'Dieser Browser unterstützt die nötige Verschlüsselung nicht.';
+  if(/NETZ|Failed to fetch|NetworkError|Load failed/i.test(s)) return 'Keine Verbindung zu Supabase.';
+  return 'Synchronisierung fehlgeschlagen ('+s.slice(0,80)+').';
+}
+async function syncApi(method, query, body, prefer){
+  if(!syncMeta || !syncMeta.syncId) throw new Error('SYNC');
+  const ctrl=window.AbortController?new AbortController():null;
+  const timer=ctrl?setTimeout(()=>ctrl.abort(),12000):null;
+  const headers={
+    'apikey':SYNC_PUBLISHABLE,
+    'Authorization':'Bearer '+SYNC_PUBLISHABLE,
+    'Accept':'application/json',
+    'Content-Type':'application/json',
+    'x-sync-id':syncMeta.syncId
+  };
+  if(prefer) headers.Prefer=prefer;
+  let res;
+  try{
+    res=await fetch(SYNC_URL+'/rest/v1/'+SYNC_TABLE+(query||''),{
+      method,headers,body:body===undefined?undefined:JSON.stringify(body),cache:'no-store',credentials:'omit',
+      referrerPolicy:'no-referrer',signal:ctrl?ctrl.signal:undefined
+    });
+  }catch(e){ if(timer) clearTimeout(timer); throw new Error('NETZ '+((e&&e.message)||'')); }
+  if(timer) clearTimeout(timer);
+  const txt=await res.text();
+  if(!res.ok) throw new Error(String(res.status)+' '+txt.slice(0,240));
+  if(!txt) return null;
+  try{ return JSON.parse(txt); }catch(_){ return null; }
+}
+async function syncFetchRow(){
+  const q='?sync_id=eq.'+encodeURIComponent(syncMeta.syncId)+'&select=sync_id,payload,iv,revision,updated_at&limit=1';
+  const a=await syncApi('GET',q); return Array.isArray(a)&&a.length?a[0]:null;
+}
+async function syncInsertCurrent(snapshot){
+  const enc=await syncEncryptState(snapshot||state,syncMeta.code), now=new Date().toISOString();
+  const a=await syncApi('POST','?select=revision,updated_at',{
+    sync_id:syncMeta.syncId,payload:enc.payload,iv:enc.iv,revision:1,updated_at:now
+  },'return=representation');
+  return Array.isArray(a)&&a.length?a[0]:{revision:1,updated_at:now};
+}
+async function syncPush(row, localHash, generation){
+  const enc=await syncEncryptState(state,syncMeta.code), next=(+row.revision||0)+1, now=new Date().toISOString();
+  const q='?sync_id=eq.'+encodeURIComponent(syncMeta.syncId)+'&revision=eq.'+(+row.revision||0)+'&select=revision,updated_at';
+  const a=await syncApi('PATCH',q,{payload:enc.payload,iv:enc.iv,revision:next,updated_at:now},'return=representation');
+  if(!Array.isArray(a)||!a.length) throw new Error('REVISION');
+  const nachher=await syncStateHash(state);
+  syncMeta.revision=+a[0].revision||next; syncMeta.lastSync=Date.now(); syncMeta.lastHash=localHash;
+  syncMeta.dirty=(generation!==_syncGeneration || nachher!==localHash); syncSaveMeta();
+  if(syncMeta.dirty) syncSchedule();
+}
+function syncStoreConflict(remote,row,localHash,remoteHash){
+  let snapshotsOk=true;
+  if(!_syncConflict || _syncConflict.row.revision!==row.revision){
+    if(typeof makeSnapshotOf==='function'){
+      snapshotsOk=makeSnapshotOf(state,'Sync-Konflikt · dieses Gerät')!==false;
+      snapshotsOk=(makeSnapshotOf(remote,'Sync-Konflikt · Cloud')!==false)&&snapshotsOk;
+    }else snapshotsOk=false;
+  }else snapshotsOk=_syncConflict.snapshotsOk!==false;
+  _syncConflict={remote,row,localHash,remoteHash,snapshotsOk}; syncMeta.dirty=true; syncSaveMeta();
+  syncSetStatus('conflict','Entscheidung nötig',snapshotsOk
+    ? 'Zwei Geräte haben unterschiedliche Änderungen. Nichts wurde überschrieben.'
+    : 'Sicherungspunkte fehlgeschlagen. Nichts wurde überschrieben.');
+  toast(snapshotsOk?'Sync-Konflikt — beide Stände sind gesichert':'Sync-Konflikt — nichts überschrieben','Ansehen',syncOpen);
+}
+async function syncApplyRemote(remote,row,remoteHash,reason,expectedGeneration){
+  const startGeneration=expectedGeneration==null?_syncGeneration:expectedGeneration;
+  const vorherHash=await syncStateHash(state);
+  if(_syncGeneration!==startGeneration&&vorherHash!==remoteHash){
+    syncStoreConflict(remote,row,vorherHash,remoteHash);
+    return false;
+  }
+  if(vorherHash!==remoteHash && syncMeaningful(state)){
+    if(typeof makeSnapshotOf!=='function' || makeSnapshotOf(state,reason||'vor Cloud-Übernahme')===false)
+      throw new Error('SNAPSHOT');
+  }
+  const lokal=syncLocalSettings();
+  _syncApplying=true;
+  try{
+    state=Object.assign({workouts:[],customEx:[],templates:[],profile:null,missionsXP:{},active:null,ach:{},bodyweight:[],exOpt:{},plan:{},measures:[],goals:[],settings:{}},remote);
+    state.settings=Object.assign({goal:5,rest:90,lastBackup:null,backupSnooze:0,repLo:6,repHi:9,defSets:2,setGoalLo:10,setGoalHi:20},state.settings||{},lokal);
+    repariereState(); migrateState(); evalAchievements(); saveState();
+  }finally{ _syncApplying=false; }
+  const finalHash=await syncStateHash(state);
+  syncMeta.revision=+row.revision||0; syncMeta.lastSync=Date.now(); syncMeta.lastHash=remoteHash;
+  syncMeta.dirty=finalHash!==remoteHash; syncSaveMeta(); _syncConflict=null;
+  renderAll();
+  syncSetStatus(syncMeta.dirty?'wait':'ok',syncMeta.dirty?'Anpassung wird gesichert':'Aktuell',
+    `${state.workouts.length} ${state.workouts.length===1?'Workout':'Workouts'} · ${syncDateText(syncMeta.lastSync)}`);
+  if(syncMeta.dirty) syncSchedule();
+  return true;
+}
+async function syncNow(force){
+  if(!syncConnected()||!_syncReady) return false;
+  if(_syncConflict&&!force){ syncRenderBody(); return false; }
+  if(navigator.onLine===false){ syncSetStatus('wait','Offline','Änderungen bleiben sicher auf diesem Gerät.'); return false; }
+  if(_syncBusy){ _syncAgain=true; return false; }
+  if(!force&&!syncMeta.dirty&&Date.now()-_syncLastCheck<3000) return true;
+  _syncBusy=true; _syncLastCheck=Date.now(); const generation=_syncGeneration;
+  syncSetStatus('busy','Synchronisiert …','Cloud und dieses Gerät werden abgeglichen.');
+  try{
+    const row=await syncFetchRow(); if(!row) throw new Error('ROW MISSING');
+    const env=await syncDecryptRow(row,syncMeta.code);
+    const remoteHash=await syncStateHash(env.state), localHash=await syncStateHash(state);
+    const localChanged=!!syncMeta.dirty || !syncMeta.lastHash || localHash!==syncMeta.lastHash;
+    if(+row.revision>+syncMeta.revision){
+      if(localChanged&&localHash!==remoteHash){ syncStoreConflict(env.state,row,localHash,remoteHash); return false; }
+      if(localHash!==remoteHash) await syncApplyRemote(env.state,row,remoteHash,'vor automatischer Cloud-Übernahme',generation);
+      else{
+        const nachher=await syncStateHash(state);
+        syncMeta.revision=+row.revision; syncMeta.lastHash=remoteHash; syncMeta.lastSync=Date.now();
+        syncMeta.dirty=(generation!==_syncGeneration||nachher!==remoteHash); syncSaveMeta();
+        syncSetStatus(syncMeta.dirty?'wait':'ok',syncMeta.dirty?'Neue Änderung wartet':'Aktuell',`${state.workouts.length} ${state.workouts.length===1?'Workout':'Workouts'} · ${syncDateText(syncMeta.lastSync)}`);
+        if(syncMeta.dirty) syncSchedule();
+      }
+    }else if(+row.revision===+syncMeta.revision){
+      if(localHash===remoteHash){
+        const nachher=await syncStateHash(state);
+        syncMeta.lastHash=localHash; syncMeta.lastSync=Date.now(); syncMeta.dirty=(generation!==_syncGeneration||nachher!==localHash); syncSaveMeta();
+        syncSetStatus(syncMeta.dirty?'wait':'ok',syncMeta.dirty?'Neue Änderung wartet':'Aktuell',`${state.workouts.length} ${state.workouts.length===1?'Workout':'Workouts'} · ${syncDateText(syncMeta.lastSync)}`);
+        if(syncMeta.dirty) syncSchedule();
+      }else if(!syncMeta.lastHash) syncStoreConflict(env.state,row,localHash,remoteHash);
+      else if(localChanged){
+        await syncPush(row,localHash,generation);
+        syncSetStatus(syncMeta.dirty?'wait':'ok',syncMeta.dirty?'Neue Änderung wartet':'Aktuell',`${state.workouts.length} ${state.workouts.length===1?'Workout':'Workouts'} · ${syncDateText(syncMeta.lastSync)}`);
+      }else syncStoreConflict(env.state,row,localHash,remoteHash);
+    }else syncStoreConflict(env.state,row,localHash,remoteHash);
+    return true;
+  }catch(e){
+    if(String(e&&e.message).includes('REVISION')){
+      try{
+        const row=await syncFetchRow(), env=row?await syncDecryptRow(row,syncMeta.code):null;
+        if(row&&env){ syncStoreConflict(env.state,row,await syncStateHash(state),await syncStateHash(env.state)); return false; }
+      }catch(_){}
+    }
+    const msg=syncFriendlyError(e); syncSetStatus('error','Sync fehlgeschlagen',msg); console.warn('sync fail',e); return false;
+  }finally{
+    _syncBusy=false; syncRenderBody();
+    if(_syncAgain){ _syncAgain=false; syncSchedule(400); }
+  }
+}
+function syncSchedule(ms){
+  if(!_syncReady||!syncConnected()||_syncConflict) return;
+  if(_syncTimer) clearTimeout(_syncTimer);
+  _syncTimer=setTimeout(()=>{ _syncTimer=null; syncNow(false); },ms==null?SYNC_WAIT:ms);
+}
+function syncStateChanged(){
+  if(!_syncReady||_syncApplying||!syncConnected()) return;
+  _syncGeneration++; syncMeta.dirty=true; syncSaveMeta();
+  syncSetStatus(navigator.onLine===false?'wait':'wait',navigator.onLine===false?'Offline':'Änderung wartet',
+    navigator.onLine===false?'Wird bei der nächsten Verbindung gesichert.':'Automatischer Abgleich in wenigen Sekunden.');
+  syncSchedule();
+}
+async function syncCreate(){
+  if(_syncBusy) return;
+  if(!syncCryptoOk()){ syncSetStatus('error','Nicht unterstützt','Dieser Browser kann die nötige Verschlüsselung nicht ausführen.'); return; }
+  _syncBusy=true; syncSetStatus('busy','Richtet Sync ein …','Der aktuelle Stand wird verschlüsselt.');
+  try{
+    for(let versuch=0;versuch<3;versuch++){
+      const code=syncNewCode(), ident=await syncIdentity(code);
+      syncMeta={code,syncId:ident.syncId,revision:0,dirty:true,lastHash:null,lastSync:null};
+      const schon=await syncFetchRow(); if(schon) continue;
+      const generation=_syncGeneration, snapshot=syncCloudState(state), hash=await syncStateHash(snapshot);
+      const row=await syncInsertCurrent(snapshot), nachher=await syncStateHash(state);
+      syncMeta.revision=+row.revision||1; syncMeta.lastHash=hash; syncMeta.lastSync=Date.now();
+      syncMeta.dirty=(generation!==_syncGeneration||nachher!==hash);
+      syncSaveMeta(); _syncConflict=null;
+      syncSetStatus(syncMeta.dirty?'wait':'ok',syncMeta.dirty?'Neue Änderung wartet':'Eingerichtet',`${state.workouts.length} ${state.workouts.length===1?'Workout':'Workouts'} verschlüsselt gesichert.`);
+      if(syncMeta.dirty) syncSchedule();
+      toast('Geräte-Sync ist eingerichtet ✓'); return;
+    }
+    throw new Error('CODE KOLLISION');
+  }catch(e){
+    syncMeta=null; syncSaveMeta(); syncSetStatus('error','Einrichtung fehlgeschlagen',syncFriendlyError(e)); console.warn('sync create fail',e);
+  }finally{ _syncBusy=false; syncRenderBody(); }
+}
+async function syncJoin(){
+  if(_syncBusy) return;
+  const input=$('#sync-join-input');
+  let code; try{ code=syncNormalizeCode(input?input.value:''); }catch(e){ syncSetStatus('error','Schlüssel prüfen',syncFriendlyError(e)); return; }
+  _syncBusy=true; syncSetStatus('busy','Verbindet …','Cloud-Stand wird geprüft und entschlüsselt.');
+  try{
+    const ident=await syncIdentity(code);
+    const probe={code,syncId:ident.syncId,revision:0,dirty:false,lastHash:null,lastSync:null};
+    syncMeta=probe;
+    const row=await syncFetchRow(); if(!row) throw new Error('CODE');
+    const env=await syncDecryptRow(row,code), remoteHash=await syncStateHash(env.state), localHash=await syncStateHash(state);
+    if(localHash!==remoteHash&&syncMeaningful(state)){
+      const ok=await ask('Cloud-Stand auf diesem Gerät laden?',
+        `Cloud: ${(env.state.workouts||[]).length} Workouts · dieses Gerät: ${state.workouts.length}. Dein jetziger Stand wird vorher als Sicherungspunkt abgelegt.`,
+        {ok:'Cloud-Stand laden',tone:'warn'});
+      if(!ok){ syncMeta=null; syncSetStatus('off','Nicht eingerichtet','Auf diesem Gerät wurde nichts verändert.'); return; }
+    }
+    syncSaveMeta();
+    const angewendet=await syncApplyRemote(env.state,row,remoteHash,'vor Verbindung mit Geräte-Sync');
+    if(angewendet!==false) toast(`${syncDeviceText()} ist verbunden ✓`);
+  }catch(e){ syncMeta=null; syncSaveMeta(); syncSetStatus('error','Verbindung fehlgeschlagen',syncFriendlyError(e)); console.warn('sync join fail',e); }
+  finally{ _syncBusy=false; syncRenderBody(); }
+}
+async function syncCopy(){
+  if(!syncConnected()) return;
+  try{ await navigator.clipboard.writeText(syncMeta.code); toast('Kopplungsschlüssel kopiert ✓'); }
+  catch(_){
+    const el=$('#sync-code-view'); if(el){ el.focus(); el.select(); try{ document.execCommand('copy'); toast('Kopplungsschlüssel kopiert ✓'); }catch(e){ toast('Kopieren nicht möglich'); } }
+  }
+}
+async function syncShare(){
+  if(!syncConnected()) return;
+  const text='Fitness Tracker Kopplungsschlüssel:\n'+syncMeta.code+'\n\nNur auf deinen eigenen Geräten eingeben.';
+  if(navigator.share){ try{ await navigator.share({title:'Fitness Tracker Geräte-Sync',text}); return; }catch(e){ if(e&&e.name==='AbortError') return; } }
+  syncCopy();
+}
+async function syncDisconnect(){
+  if(!syncConnected()) return;
+  if(!await ask('Dieses Gerät trennen?','Trainingsdaten auf diesem Gerät bleiben erhalten. Die verschlüsselte Cloud-Sicherung und andere Geräte bleiben ebenfalls erhalten.',{ok:'Gerät trennen',tone:'warn'})) return;
+  if(_syncTimer) clearTimeout(_syncTimer); _syncTimer=null; _syncConflict=null; _syncIdentityCache=null;
+  syncMeta=null; syncSaveMeta(); syncSetStatus('off','Nicht eingerichtet','Die lokalen Trainingsdaten wurden nicht verändert.');
+  toast('Gerät getrennt');
+}
+async function syncUseCloud(){
+  if(!_syncConflict) return;
+  if(!await ask('Cloud-Stand übernehmen?','Der jetzige Stand dieses Geräts bleibt als Sicherungspunkt erhalten.',{ok:'Cloud übernehmen',tone:'warn'})) return;
+  const c=_syncConflict, angewendet=await syncApplyRemote(c.remote,c.row,c.remoteHash,'vor Konfliktauflösung · Cloud');
+  if(angewendet!==false) toast('Cloud-Stand übernommen ✓');
+}
+async function syncKeepLocal(){
+  if(!_syncConflict||_syncBusy) return;
+  if(!await ask('Diesen Stand für alle Geräte übernehmen?','Der Cloud-Stand bleibt als Sicherungspunkt erhalten und wird danach ersetzt.',{ok:'Diesen Stand nehmen',tone:'warn'})) return;
+  _syncBusy=true; syncSetStatus('busy','Löst Konflikt …','Dieser Stand wird verschlüsselt hochgeladen.');
+  try{
+    const row=await syncFetchRow(); if(!row) throw new Error('ROW MISSING');
+    const env=await syncDecryptRow(row,syncMeta.code);
+    if(typeof makeSnapshotOf!=='function' || makeSnapshotOf(env.state,'Konfliktkopie · Cloud')===false) throw new Error('SNAPSHOT');
+    syncMeta.revision=+row.revision; syncMeta.dirty=true; _syncConflict=null;
+    const hash=await syncStateHash(state); await syncPush(row,hash,_syncGeneration);
+    syncSetStatus('ok','Aktuell',`${state.workouts.length} ${state.workouts.length===1?'Workout':'Workouts'} · ${syncDateText(syncMeta.lastSync)}`);
+    toast('Dieser Stand gilt jetzt auf allen Geräten ✓');
+  }catch(e){ syncSetStatus('error','Konflikt nicht gelöst',syncFriendlyError(e)); }
+  finally{ _syncBusy=false; syncRenderBody(); }
+}
+function syncOpen(){ syncRenderBody(); openModal('#modal-sync'); hydrateIcons($('#modal-sync')); }
+function syncInit(){
+  syncMeta=syncLoadMeta(); _syncReady=true;
+  if(!syncCryptoOk()) syncSetStatus('error','Nicht unterstützt','Dieser Browser bietet keine sichere AES-GCM-Verschlüsselung.');
+  else if(syncConnected()){
+    syncSetStatus(syncMeta.dirty?'wait':'busy',syncMeta.dirty?'Änderung wartet':'Prüft Cloud …','Der lokale Stand ist bereits verfügbar.');
+    syncSchedule(350);
+  }else syncSetStatus('off','Nicht eingerichtet','iPhone, iPad und PC können denselben verschlüsselten Stand nutzen.');
+}
+document.getElementById('sync-open').addEventListener('click',syncOpen);
+document.addEventListener('click',e=>{
+  const id=e.target&&e.target.id;
+  if(id==='sync-create') syncCreate();
+  else if(id==='sync-join') syncJoin();
+  else if(id==='sync-copy') syncCopy();
+  else if(id==='sync-share') syncShare();
+  else if(id==='sync-now') syncNow(true);
+  else if(id==='sync-disconnect') syncDisconnect();
+  else if(id==='sync-use-cloud') syncUseCloud();
+  else if(id==='sync-keep-local') syncKeepLocal();
+});
+document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target&&e.target.id==='sync-join-input') syncJoin(); });
+window.addEventListener('online',()=>{ if(syncConnected()){ syncSetStatus('wait','Wieder online','Cloud-Abgleich startet.'); syncSchedule(150); } });
+window.addEventListener('offline',()=>{ if(syncConnected()) syncSetStatus('wait','Offline','Änderungen bleiben sicher auf diesem Gerät.'); });
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&syncConnected()) syncSchedule(250); });
+window.addEventListener('focus',()=>{ if(syncConnected()) syncSchedule(250); });
 
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 
@@ -4708,6 +5205,7 @@ const ICO = {
   undo:  _i('<path d="M9 14L4 9l5-5"/><path d="M4 9h9a7 7 0 010 14h-3"/>'),
   alert: _i('<path d="M12 8v5M12 17h.01"/><path d="M10.3 3.9L2.6 17a2 2 0 001.7 3h15.4a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/>'),
   shield:_i('<path d="M12 3l7.5 3v5.5c0 4.4-3.1 8.3-7.5 9.5-4.4-1.2-7.5-5.1-7.5-9.5V6z"/><path d="M9.2 12.2l1.9 1.9 3.7-3.9"/>'),
+  cloud: _i('<path d="M7 18h10a4 4 0 00.7-7.9A6 6 0 006.3 8.7 4.7 4.7 0 007 18z"/><path d="M12 10v6M9.5 13.5L12 16l2.5-2.5"/>'),
   /* Trainingstypen — ersetzen die bisherigen Emoji im Typ-Raster */
   push:  _i('<path d="M12 3v10M8.5 6.5L12 3l3.5 3.5"/><path d="M4 17h16M6.5 21h11"/>'),
   pull:  _i('<path d="M12 13V3M8.5 9.5L12 13l3.5-3.5"/><path d="M4 17h16M6.5 21h11"/>'),
@@ -5701,6 +6199,7 @@ $('#btn-settings').addEventListener('click',()=>{
       (bs.neu>0? ` · <span style="color:${bs.days>=7?'var(--gold)':'var(--txt3)'}">${bs.neu} ${bs.neu===1?'Workout':'Workouts'} seitdem</span>` : ' · aktuell ✓')
     : '<b style="color:var(--gold)">Noch nie gesichert</b>';
   renderSnapshots();
+  syncRenderSettings();
   openModal('#modal-settings');
 });
 $('#set-rir').addEventListener('click',()=>{
@@ -7384,8 +7883,9 @@ $('#btn-hardreload').addEventListener('click', async ()=>{
 });
 $('#btn-wipe').addEventListener('click', async ()=>{
   const n = state.workouts.length;
-  if(!await ask('Wirklich alle Daten löschen?', `${n} ${n===1?'Workout':'Workouts'}, alle Erfolge und Einstellungen werden entfernt.`, {ok:'Alles löschen', tone:'danger'})) return;
-  if(!await ask('Letzte Warnung', 'Danach ist alles weg. Ein Sicherungspunkt bleibt für 24 Stunden erhalten.', {ok:'Ja, endgültig löschen', tone:'danger'})) return;
+  const cloud = syncConnected() ? ' Beim nächsten Sync wird der leere Stand auch auf deine anderen Geräte übertragen.' : '';
+  if(!await ask('Wirklich alle Daten löschen?', `${n} ${n===1?'Workout':'Workouts'}, alle Erfolge und Einstellungen werden entfernt.${cloud}`, {ok:'Alles löschen', tone:'danger'})) return;
+  if(!await ask('Letzte Warnung', 'Danach ist der aktive Stand leer. Ein Sicherungspunkt bleibt als Rückweg erhalten.', {ok:'Ja, endgültig löschen', tone:'danger'})) return;
   makeSnapshot('vor Löschen', true);   // Rückweg offen halten
   state = {workouts:[],customEx:[],templates:[],active:null,ach:{},settings:{goal:5}};
   saveState(); closeModals(); renderAll();
@@ -10034,6 +10534,20 @@ function makeSnapshot(reason, force){
   while(list.length > SNAP_MAX) list.shift();
   writeSnapshots(list);
 }
+/* Sichert auch einen Stand, der gerade NICHT in `state` liegt. Das braucht
+   ausschließlich die Konfliktauflösung des Geräte-Syncs: lokaler und
+   Cloud-Stand müssen beide rückholbar bleiben, bevor einer gewinnt. */
+function makeSnapshotOf(src, reason){
+  if(!src || typeof src!=='object') return false;
+  let payload; try{ payload=JSON.stringify(src); }catch(_){ return false; }
+  if(payload.length>900000) return false;
+  const list=snapshots(), wk=Array.isArray(src.workouts)?src.workouts.length:0;
+  if(list.some(x=>x.data===payload)) return true;
+  const last=list[list.length-1], t=Math.max(Date.now(),last&&isFinite(+last.t)?+last.t+1:0);
+  list.push({t,reason:reason||'Sync-Sicherung',wk,data:payload});
+  while(list.length>SNAP_MAX) list.shift();
+  return writeSnapshots(list);
+}
 
 /* ---- Ebene 2: Wann ist die nächste Auslagerung fällig? ---- */
 function backupStatus(){
@@ -10055,9 +10569,10 @@ function maybeAskBackup(){
   if(!st.due) return;
   const modal = $('#modal-backup'); if(!modal) return;
   $('#bk-title').textContent = st.urgent? 'Deine Daten sind ungesichert' : 'Zeit für eine Sicherung';
+  const nurLokal = !syncConnected();
   $('#bk-text').innerHTML = st.days===null
-    ? `Du hast <b>${state.workouts.length} Workouts</b> geloggt und noch nie gesichert. Sie liegen ausschließlich auf diesem iPhone — löscht Safari die Website-Daten, sind sie weg.`
-    : `Letzte Sicherung vor <b>${st.days} Tagen</b>, seitdem <b>${st.neu} ${st.neu===1?'neues Workout':'neue Workouts'}</b>. Deine Daten liegen nur auf diesem Gerät.`;
+    ? `Du hast <b>${state.workouts.length} Workouts</b> geloggt und noch nie als Datei gesichert. ${nurLokal?'Sie liegen ausschließlich auf diesem Gerät.':'Der Geräte-Sync schützt den aktuellen Stand; eine eigene Datei bleibt der unabhängige Rückweg.'}`
+    : `Letzte Datei-Sicherung vor <b>${st.days} Tagen</b>, seitdem <b>${st.neu} ${st.neu===1?'neues Workout':'neue Workouts'}</b>. ${nurLokal?'Diese Änderungen liegen nur auf diesem Gerät.':'Die Cloud ist kein Ersatz für eine Datei, die du selbst besitzt.'}`;
   $('#bk-sub').textContent = st.urgent? 'Dauert 20 Sekunden — bitte jetzt.' : 'Ein Tipp, dann an dich selbst schicken.';
   /* Bei akuter Gefahr lässt sich die Erinnerung nicht mehr wegtippen —
      Datenverlust ist der einzige irreversible Fehler in dieser App. */
@@ -10860,6 +11375,7 @@ document.getElementById('modal-muscle').addEventListener('click',e=>{
 });
 
 renderAll();
+syncInit();
 showScreen(state.active? 'scr-train':'scr-home');
 /* PIN nur bei der ersten Nutzung des Tages. Ohne gesetzten PIN läuft
    startLock() weiterhin, damit die Ersteinrichtung erscheint. */
