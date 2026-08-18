@@ -1106,7 +1106,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
 .seg.setmode-top button{flex:1}
 /* .rvd gehörte zum Wochenrückblick, der in V59 entfallen ist — raus V64. */
 
-/* ═══ Geräte-Sync (V80) ═══════════════════════════════════════════════
+/* ═══ Geräte-Sync (V81) ═══════════════════════════════════════════════
    Der Status benutzt immer Symbol + Wort; die Farbe ist nur Verstärkung. */
 .sync-head{display:flex;align-items:flex-start;gap:var(--sp3)}
 .sync-head .grow{min-width:0}
@@ -1128,6 +1128,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
   font-size:var(--fs-input);font-variant-numeric:tabular-nums}
 .sync-actions{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp2)}
 .sync-actions .btn:only-child{grid-column:1/-1}
+.sync-restore{min-height:46px;flex-shrink:0}
 .sync-meta{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp2)}
 .sync-meta>div{padding:12px;background:var(--s2);border:1px solid var(--line);border-radius:var(--r-md)}
 .sync-meta b{display:block;font-size:var(--fs-lg);font-variant-numeric:tabular-nums}
@@ -1635,7 +1636,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V80 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V81 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="mback" id="modal-sync"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="sync-title">
@@ -3243,7 +3244,7 @@ window.addEventListener('pagehide', flushSave);
 window.addEventListener('beforeunload', flushSave);
 document.addEventListener('visibilitychange', ()=>{ if(document.hidden) flushSave(); });
 
-/* ================= GERÄTE-SYNC (V80) ================================
+/* ================= GERÄTE-SYNC (V81) ================================
    Offline zuerst: `ironlog_v1` bleibt die lokale Wahrheit. Supabase erhält
    nur AES-GCM-Chiffretext. Der zufällige 256-Bit-Kopplungsschlüssel wird
    weder an Supabase noch an irgendeinen anderen Dienst gesendet.
@@ -3255,6 +3256,7 @@ const SYNC_LS = 'ironlog_sync_v1';
 const SYNC_URL = 'https://fbvcslmulqxaxurcdyrv.supabase.co';
 const SYNC_PUBLISHABLE = 'sb_publishable_y51mxiSo87JLzumeK6e8pg_7l4gFURL';
 const SYNC_TABLE = 'tracker_sync';
+const SYNC_HISTORY_TABLE = 'tracker_sync_history';
 const SYNC_FORMAT = 1;
 const SYNC_WAIT = 2500;
 let syncMeta = null;
@@ -3262,6 +3264,7 @@ let syncStatus = {art:'off', text:'Nicht eingerichtet', detail:''};
 let _syncReady = false, _syncApplying = false, _syncBusy = false;
 let _syncTimer = null, _syncAgain = false, _syncGeneration = 0, _syncLastCheck = 0;
 let _syncIdentityCache = null, _syncConflict = null;
+let _syncHistory = null, _syncHistoryBusy = false, _syncHistoryAvailable = true;
 
 function syncCryptoOk(){
   return !!(window.crypto && crypto.subtle && crypto.getRandomValues && window.TextEncoder);
@@ -3369,8 +3372,30 @@ function syncDateText(ts){
   const d=new Date(ts), heute=d.toDateString()===new Date().toDateString();
   return (heute?'heute, ':d.toLocaleDateString('de-DE')+', ')+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
 }
+function syncRenderHome(){
+  const box=$('#home-backup'); if(!box) return;
+  if(syncConnected()){
+    const cloudN=Number.isFinite(+syncMeta.cloudWorkouts)?+syncMeta.cloudWorkouts:null;
+    const ok=syncStatus.art==='ok'&&!syncMeta.dirty;
+    const titel=ok?'✓ Cloud bestätigt':syncStatus.art==='error'?'! Sync prüfen':syncMeta.dirty?'… Änderung wartet':'↻ Cloud wird geprüft';
+    const detail=(cloudN===null?'Cloud-Stand':`${cloudN} ${cloudN===1?'Workout':'Workouts'} in der Cloud`)
+      +` · Version ${syncMeta.revision||0} · ${syncDateText(syncMeta.lastSync)}`;
+    box.innerHTML=`<div class="banner${syncStatus.art==='error'?' warn':''}"><span class="bi" data-ico="cloud" style="margin:0"></span>
+      <div class="grow"><b>${titel}</b><div class="tiny">${detail}</div></div>
+      <button class="btn btn-ghost btn-sm" id="sync-home-open">Prüfen</button></div>`;
+    hydrateIcons(box); return;
+  }
+  const lb=state.settings.lastBackup;
+  const lbDays=lb?Math.floor((Date.now()-lb)/86400000):null;
+  box.innerHTML=(state.workouts.length>=5&&(lbDays===null||lbDays>7))?`
+    <div class="banner warn"><span class="bi" data-ico="alert" style="margin:0"></span>
+      <div class="grow"><b>Kein Backup ${lbDays===null?'bisher':'seit '+lbDays+' Tagen'}</b><div class="tiny">Daten liegen nur auf diesem Gerät</div></div>
+      <button class="btn btn-ghost btn-sm" onclick="shareBackup()">Sichern</button>
+    </div>`:'';
+  hydrateIcons(box);
+}
 function syncSetStatus(art,text,detail){
-  syncStatus={art,text,detail:detail||''}; syncRenderSettings(); syncRenderBody();
+  syncStatus={art,text,detail:detail||''}; syncRenderSettings(); syncRenderBody(); syncRenderHome();
 }
 function syncMark(art){ return art==='ok'?'✓':art==='busy'?'↻':art==='wait'?'…':(art==='error'||art==='conflict')?'!':'–'; }
 function syncRenderSettings(){
@@ -3410,10 +3435,12 @@ function syncRenderBody(){
     <div class="sync-actions"><button class="btn btn-ghost" id="sync-copy">Schlüssel kopieren</button><button class="btn btn-ghost" id="sync-share">Schlüssel teilen</button></div>
     <button class="btn btn-acc btn-block" id="sync-now" ${_syncBusy?'disabled':''}>${_syncBusy?'Synchronisiert …':'Jetzt synchronisieren'}</button>
     <button class="btn btn-ghost btn-block" id="sync-disconnect">Nur dieses Gerät trennen</button>
-    <p class="tiny">Offline kannst du normal weitertrainieren. Sobald wieder Internet da ist, wird automatisch abgeglichen.</p>`;
+    <p class="tiny">Offline kannst du normal weitertrainieren. Sobald wieder Internet da ist, wird automatisch abgeglichen.</p>
+    <div class="tiny up">Wiederherstellung</div>${syncHistoryHtml()}`;
 }
 function syncFriendlyError(e){
   const s=String((e&&e.message)||e||'');
+  if(/HISTORY MISSING/.test(s)) return 'Diese Cloud-Version gibt es nicht mehr.';
   if(/ROW MISSING/.test(s)) return 'Für diesen Kopplungsschlüssel gibt es keinen Cloud-Stand mehr.';
   if(/PGRST205|42P01|TABLE|404/.test(s)) return 'Die Cloud-Tabelle ist noch nicht eingerichtet.';
   if(/401|403|permission|policy/i.test(s)) return 'Supabase hat den Zugriff abgelehnt. Die Sicherheitsregeln fehlen oder sind falsch.';
@@ -3425,7 +3452,7 @@ function syncFriendlyError(e){
   if(/NETZ|Failed to fetch|NetworkError|Load failed/i.test(s)) return 'Keine Verbindung zu Supabase.';
   return 'Synchronisierung fehlgeschlagen ('+s.slice(0,80)+').';
 }
-async function syncApi(method, query, body, prefer){
+async function syncApi(method, query, body, prefer, table){
   if(!syncMeta || !syncMeta.syncId) throw new Error('SYNC');
   const ctrl=window.AbortController?new AbortController():null;
   const timer=ctrl?setTimeout(()=>ctrl.abort(),12000):null;
@@ -3439,7 +3466,7 @@ async function syncApi(method, query, body, prefer){
   if(prefer) headers.Prefer=prefer;
   let res;
   try{
-    res=await fetch(SYNC_URL+'/rest/v1/'+SYNC_TABLE+(query||''),{
+    res=await fetch(SYNC_URL+'/rest/v1/'+(table||SYNC_TABLE)+(query||''),{
       method,headers,body:body===undefined?undefined:JSON.stringify(body),cache:'no-store',credentials:'omit',
       referrerPolicy:'no-referrer',signal:ctrl?ctrl.signal:undefined
     });
@@ -3453,6 +3480,35 @@ async function syncApi(method, query, body, prefer){
 async function syncFetchRow(){
   const q='?sync_id=eq.'+encodeURIComponent(syncMeta.syncId)+'&select=sync_id,payload,iv,revision,updated_at&limit=1';
   const a=await syncApi('GET',q); return Array.isArray(a)&&a.length?a[0]:null;
+}
+async function syncFetchHistory(){
+  const q='?sync_id=eq.'+encodeURIComponent(syncMeta.syncId)
+    +'&select=revision,archived_at,source_updated_at&order=revision.desc&limit=10';
+  const a=await syncApi('GET',q,undefined,undefined,SYNC_HISTORY_TABLE);
+  return Array.isArray(a)?a:[];
+}
+async function syncFetchHistoryRow(revision){
+  const q='?sync_id=eq.'+encodeURIComponent(syncMeta.syncId)+'&revision=eq.'+(+revision||0)
+    +'&select=sync_id,payload,iv,revision,source_updated_at&limit=1';
+  const a=await syncApi('GET',q,undefined,undefined,SYNC_HISTORY_TABLE);
+  return Array.isArray(a)&&a.length?a[0]:null;
+}
+async function syncLoadHistory(){
+  if(!syncConnected()||_syncHistoryBusy) return;
+  _syncHistoryBusy=true; syncRenderBody();
+  try{ _syncHistory=await syncFetchHistory(); _syncHistoryAvailable=true; }
+  catch(e){
+    const s=String((e&&e.message)||e||'');
+    if(/PGRST205|42P01|404/.test(s)){ _syncHistory=[]; _syncHistoryAvailable=false; }
+    else console.warn('sync history fail',e);
+  }finally{ _syncHistoryBusy=false; syncRenderBody(); }
+}
+function syncHistoryHtml(){
+  if(!_syncHistoryAvailable) return `<div class="sync-note"><b>Cloud-Verlauf noch nicht aktiviert.</b><br>Der aktuelle verschlüsselte Stand funktioniert weiter; für zehn Wiederherstellungspunkte muss einmal die V81-SQL-Erweiterung ausgeführt werden.</div>`;
+  if(_syncHistoryBusy&&_syncHistory===null) return `<div class="sync-note">↻ Cloud-Sicherungen werden geprüft …</div>`;
+  const h=_syncHistory||[];
+  return `<div class="sync-note"><b>Cloud-Sicherungen · ${h.length}/10</b><br>${h.length?'Vor jedem Überschreiben bleibt die vorherige verschlüsselte Version erhalten.':'Nach der nächsten Änderung erscheint hier die vorherige Cloud-Version.'}</div>
+    ${h.map(x=>`<div class="item"><div class="grow"><div class="ttl">Version ${x.revision}</div><div class="meta">gesichert ${syncDateText(Date.parse(x.archived_at||x.source_updated_at))}</div></div><button class="btn btn-ghost btn-sm sync-restore" data-sync-restore="${x.revision}">Wiederherstellen</button></div>`).join('')}`;
 }
 async function syncInsertCurrent(snapshot){
   const enc=await syncEncryptState(snapshot||state,syncMeta.code), now=new Date().toISOString();
@@ -3468,7 +3524,11 @@ async function syncPush(row, localHash, generation){
   if(!Array.isArray(a)||!a.length) throw new Error('REVISION');
   const nachher=await syncStateHash(state);
   syncMeta.revision=+a[0].revision||next; syncMeta.lastSync=Date.now(); syncMeta.lastHash=localHash;
+  syncMeta.cloudWorkouts=(state.workouts||[]).length;
+  syncMeta.cloudUpdatedAt=a[0].updated_at||now;
   syncMeta.dirty=(generation!==_syncGeneration || nachher!==localHash); syncSaveMeta();
+  _syncHistory=null;
+  if($('#modal-sync')&&$('#modal-sync').classList.contains('on')) setTimeout(syncLoadHistory,0);
   if(syncMeta.dirty) syncSchedule();
 }
 function syncStoreConflict(remote,row,localHash,remoteHash){
@@ -3505,6 +3565,8 @@ async function syncApplyRemote(remote,row,remoteHash,reason,expectedGeneration){
   }finally{ _syncApplying=false; }
   const finalHash=await syncStateHash(state);
   syncMeta.revision=+row.revision||0; syncMeta.lastSync=Date.now(); syncMeta.lastHash=remoteHash;
+  syncMeta.cloudWorkouts=(remote.workouts||[]).length;
+  syncMeta.cloudUpdatedAt=row.updated_at||null;
   syncMeta.dirty=finalHash!==remoteHash; syncSaveMeta(); _syncConflict=null;
   renderAll();
   syncSetStatus(syncMeta.dirty?'wait':'ok',syncMeta.dirty?'Anpassung wird gesichert':'Aktuell',
@@ -3531,6 +3593,7 @@ async function syncNow(force){
       else{
         const nachher=await syncStateHash(state);
         syncMeta.revision=+row.revision; syncMeta.lastHash=remoteHash; syncMeta.lastSync=Date.now();
+        syncMeta.cloudWorkouts=(env.state.workouts||[]).length; syncMeta.cloudUpdatedAt=row.updated_at||null;
         syncMeta.dirty=(generation!==_syncGeneration||nachher!==remoteHash); syncSaveMeta();
         syncSetStatus(syncMeta.dirty?'wait':'ok',syncMeta.dirty?'Neue Änderung wartet':'Aktuell',`${state.workouts.length} ${state.workouts.length===1?'Workout':'Workouts'} · ${syncDateText(syncMeta.lastSync)}`);
         if(syncMeta.dirty) syncSchedule();
@@ -3538,7 +3601,9 @@ async function syncNow(force){
     }else if(+row.revision===+syncMeta.revision){
       if(localHash===remoteHash){
         const nachher=await syncStateHash(state);
-        syncMeta.lastHash=localHash; syncMeta.lastSync=Date.now(); syncMeta.dirty=(generation!==_syncGeneration||nachher!==localHash); syncSaveMeta();
+        syncMeta.lastHash=localHash; syncMeta.lastSync=Date.now();
+        syncMeta.cloudWorkouts=(env.state.workouts||[]).length; syncMeta.cloudUpdatedAt=row.updated_at||null;
+        syncMeta.dirty=(generation!==_syncGeneration||nachher!==localHash); syncSaveMeta();
         syncSetStatus(syncMeta.dirty?'wait':'ok',syncMeta.dirty?'Neue Änderung wartet':'Aktuell',`${state.workouts.length} ${state.workouts.length===1?'Workout':'Workouts'} · ${syncDateText(syncMeta.lastSync)}`);
         if(syncMeta.dirty) syncSchedule();
       }else if(!syncMeta.lastHash) syncStoreConflict(env.state,row,localHash,remoteHash);
@@ -3585,6 +3650,7 @@ async function syncCreate(){
       const generation=_syncGeneration, snapshot=syncCloudState(state), hash=await syncStateHash(snapshot);
       const row=await syncInsertCurrent(snapshot), nachher=await syncStateHash(state);
       syncMeta.revision=+row.revision||1; syncMeta.lastHash=hash; syncMeta.lastSync=Date.now();
+      syncMeta.cloudWorkouts=(snapshot.workouts||[]).length; syncMeta.cloudUpdatedAt=row.updated_at||null;
       syncMeta.dirty=(generation!==_syncGeneration||nachher!==hash);
       syncSaveMeta(); _syncConflict=null;
       syncSetStatus(syncMeta.dirty?'wait':'ok',syncMeta.dirty?'Neue Änderung wartet':'Eingerichtet',`${state.workouts.length} ${state.workouts.length===1?'Workout':'Workouts'} verschlüsselt gesichert.`);
@@ -3635,7 +3701,7 @@ async function syncShare(){
 async function syncDisconnect(){
   if(!syncConnected()) return;
   if(!await ask('Dieses Gerät trennen?','Trainingsdaten auf diesem Gerät bleiben erhalten. Die verschlüsselte Cloud-Sicherung und andere Geräte bleiben ebenfalls erhalten.',{ok:'Gerät trennen',tone:'warn'})) return;
-  if(_syncTimer) clearTimeout(_syncTimer); _syncTimer=null; _syncConflict=null; _syncIdentityCache=null;
+  if(_syncTimer) clearTimeout(_syncTimer); _syncTimer=null; _syncConflict=null; _syncIdentityCache=null; _syncHistory=null;
   syncMeta=null; syncSaveMeta(); syncSetStatus('off','Nicht eingerichtet','Die lokalen Trainingsdaten wurden nicht verändert.');
   toast('Gerät getrennt');
 }
@@ -3660,7 +3726,31 @@ async function syncKeepLocal(){
   }catch(e){ syncSetStatus('error','Konflikt nicht gelöst',syncFriendlyError(e)); }
   finally{ _syncBusy=false; syncRenderBody(); }
 }
-function syncOpen(){ syncRenderBody(); openModal('#modal-sync'); hydrateIcons($('#modal-sync')); }
+async function syncRestoreHistory(revision){
+  if(_syncBusy||!syncConnected()) return;
+  revision=+revision||0; if(!revision) return;
+  if(!await ask(`Cloud-Version ${revision} wiederherstellen?`,
+    'Der jetzige Stand bleibt lokal als Sicherungspunkt und als vorherige Cloud-Version erhalten. Danach gilt die gewählte Version auf allen verbundenen Geräten.',
+    {ok:'Wiederherstellen',tone:'warn'})) return;
+  _syncBusy=true; syncSetStatus('busy','Stellt wieder her …',`Cloud-Version ${revision} wird geprüft und entschlüsselt.`);
+  try{
+    const aktuell=await syncFetchRow(); if(!aktuell) throw new Error('ROW MISSING');
+    const alt=await syncFetchHistoryRow(revision); if(!alt) throw new Error('HISTORY MISSING');
+    const env=await syncDecryptRow(alt,syncMeta.code), hash=await syncStateHash(env.state);
+    const angewendet=await syncApplyRemote(env.state,aktuell,hash,'vor Cloud-Wiederherstellung',_syncGeneration);
+    if(angewendet===false) return;
+    syncMeta.dirty=true; syncSaveMeta();
+    await syncPush(aktuell,hash,_syncGeneration);
+    _syncHistory=null;
+    syncSetStatus('ok','Wiederhergestellt',`${state.workouts.length} ${state.workouts.length===1?'Workout':'Workouts'} · neue Cloud-Version ${syncMeta.revision}`);
+    toast(`Cloud-Version ${revision} wiederhergestellt ✓`);
+  }catch(e){ syncSetStatus('error','Wiederherstellung fehlgeschlagen',syncFriendlyError(e)); console.warn('sync restore fail',e); }
+  finally{ _syncBusy=false; syncRenderBody(); syncLoadHistory(); }
+}
+function syncOpen(){
+  syncRenderBody(); openModal('#modal-sync'); hydrateIcons($('#modal-sync'));
+  if(syncConnected()&&_syncHistory===null) syncLoadHistory();
+}
 function syncInit(){
   syncMeta=syncLoadMeta(); _syncReady=true;
   if(!syncCryptoOk()) syncSetStatus('error','Nicht unterstützt','Dieser Browser bietet keine sichere AES-GCM-Verschlüsselung.');
@@ -3671,8 +3761,11 @@ function syncInit(){
 }
 document.getElementById('sync-open').addEventListener('click',syncOpen);
 document.addEventListener('click',e=>{
+  const restore=e.target&&e.target.closest&&e.target.closest('[data-sync-restore]');
+  if(restore){ syncRestoreHistory(restore.dataset.syncRestore); return; }
   const id=e.target&&e.target.id;
-  if(id==='sync-create') syncCreate();
+  if(id==='sync-home-open') syncOpen();
+  else if(id==='sync-create') syncCreate();
   else if(id==='sync-join') syncJoin();
   else if(id==='sync-copy') syncCopy();
   else if(id==='sync-share') syncShare();
@@ -4262,6 +4355,15 @@ function exHistory(exId, before){
       const sets = validSets(e); if(!sets.length) return;
       out.push({
         date:w.date, wid:w.id, sets,
+        /* Die Progression braucht zusätzlich die damalige AUSFÜHRUNG. Das
+           Rohgewicht bedeutet je nach Eintrag Arbeitsgewicht, Zusatzgewicht
+           oder Hilfe. Nur die Flags des gespeicherten Eintrags dürfen diese
+           Bedeutung festlegen; die heutige Übungseinstellung darf die
+           Vergangenheit nicht umdeuten. */
+        uni:entryIsUni(e),
+        as:e.as!==undefined? !!e.as : undefined,
+        bw:e.bw!==undefined? !!e.bw : undefined,
+        bwkg:e.bwkg!==undefined? +e.bwkg : undefined,
         vol: exVol(e, w.date),
         /* setW() liefert bei unterstützten Übungen die effektive Last
            (Körpergewicht − Hilfe), sonst unverändert das eingetragene Gewicht */
@@ -4449,7 +4551,13 @@ function bestJeSatz(exId, beforeTs){
   const h = (ab > 0 && ab < alle.length) ? alle.slice(ab) : alle;
   if(!h.length) return null;
   const letzte = h[h.length-1];
-  const eRef = {exId, uni: exIsUni(exId)};
+  const refFuer = x=>{
+    const e={exId, uni:!!x.uni};
+    if(x.as!==undefined) e.as=!!x.as;
+    if(x.bw!==undefined) e.bw=!!x.bw;
+    if(x.bwkg!==undefined) e.bwkg=+x.bwkg;
+    return e;
+  };
   const w = Math.max(...letzte.sets.map(s=>+s.w||0));
   const gleicheLast = h.filter(x=>{
     const xw = Math.max(...x.sets.map(s=>+s.w||0));
@@ -4459,7 +4567,7 @@ function bestJeSatz(exId, beforeTs){
   const muster = gleicheLast.map((x,folge)=>({
     folge,
     date:x.date,
-    reps:Array.from({length:n},(_,i)=>x.sets[i] ? repsOf(eRef,x.sets[i],'weak') : 0)
+    reps:Array.from({length:n},(_,i)=>x.sets[i] ? repsOf(refFuer(x),x.sets[i],'weak') : 0)
   }));
   /* Höchste Wiederholungssumme gewinnt. Bei Gleichstand gewinnt zuerst die
      stärkere frühe Satzposition, dann die neuere Einheit. Damit stammt JEDE
@@ -4470,17 +4578,21 @@ function bestJeSatz(exId, beforeTs){
     for(let i=0;i<n;i++) if(b.reps[i]!==a.reps[i]) return b.reps[i]-a.reps[i];
     return b.folge-a.folge;
   });
-  const basis = muster[0] || {reps:letzte.sets.map(s=>repsOf(eRef,s,'weak')),date:letzte.date};
+  const basis = muster[0] || {reps:letzte.sets.map(s=>repsOf(refFuer(letzte),s,'weak')),date:letzte.date};
   const best = basis.reps.slice();
   /* Der beste geschätzte 1RM, den er bei diesem Gewicht je hatte — die
      Messlatte für den Fall, dass das Gewicht steigt. */
-  let bestE = 0;
-  gleicheLast.forEach(x=>x.sets.forEach(s=>{
-    const e = e1rm(+s.w||0, repsOf(eRef, s, 'weak'));
-    if(e > bestE) bestE = e;
-  }));
-  return { w, best, n, einheiten: gleicheLast.length, bestE, basisDate:basis.date,
-           basisSum:best.reduce((a,x)=>a+x,0), letzteWdh: letzte.sets.map(s=>repsOf(eRef,s,'weak')) };
+  /* `bestELast` ist bereits über lastVon() gerechnet. Damit ist die
+     Messlatte bei Klimmzügen Körpergewicht + Zusatz und bei unterstützten
+     Dips Körpergewicht − Hilfe. Das Rohfeld `s.w` wäre bei beiden die
+     falsche Last. */
+  const bestE = Math.max(0,...gleicheLast.map(x=>+x.bestELast||0));
+  const assist = letzte.as!==undefined? !!letzte.as : exIsAssist(exId);
+  const bodyweight = !assist && (letzte.bw!==undefined? !!letzte.bw : exIsBW(exId));
+  return { w, best, n, einheiten: gleicheLast.length, bestE,
+           load:+letzte.bestLast||0, assist, bodyweight, basisDate:basis.date,
+           basisSum:best.reduce((a,x)=>a+x,0),
+           letzteWdh: letzte.sets.map(s=>repsOf(refFuer(letzte),s,'weak')) };
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -4502,8 +4614,11 @@ function progressionFor(exId, beforeTs){
   const o = exOpt(exId);
   const b = bestJeSatz(exId, beforeTs);
   if(!b) return null;
-  const isBW = exIsBW(exId);
-  const kg = v=>`${isBW&&v>0?'+':''}${fmtW(v)}${isBW&&v===0?'':' kg'}`;
+  const assist = !!b.assist;
+  const isBW = !!b.bodyweight;
+  const kg = v=> assist ? `${fmtW(v)} kg Hilfe`
+    : isBW ? (v>0?`+${fmtW(v)} kg`:'Körpergewicht')
+    : `${fmtW(v)} kg`;
   const stall = plateauCount(exId, beforeTs);
   /* RIR: waren noch ≥3 Wdh im Tank, war der Satz zu leicht → schneller steigern */
   const letzteSets = (exHistory(exId, beforeTs).slice(-1)[0] || {sets:[]}).sets;
@@ -4521,18 +4636,39 @@ function progressionFor(exId, beforeTs){
   const vielLuft = (avgRir !== null && avgRir >= 3);
   if(alleOben || vielLuft){
     const grosserSprung = (avgRir !== null && avgRir >= 4);
-    const nw = Math.round((b.w + o.step*(grosserSprung?2:1))*4)/4;
+    const sprung = o.step*(grosserSprung?2:1);
+    const nw = Math.round((assist ? Math.max(0,b.w-sprung) : b.w+sprung)*4)/4;
+    /* Bei 0 kg Hilfe kann die Maschine nichts mehr abziehen. Dann bleibt
+       als ehrliche Steigerung eine Wiederholung mehr, bis zur freien
+       Variante gewechselt wird. Keine erfundene negative Hilfe. */
+    if(assist && nw===b.w){
+      const perSet=b.best.slice(); perSet[0]=(perSet[0]||o.hi)+1;
+      return {kind:'reps', w:b.w, r:perSet[0], sets:nSets, perSet, hinweis,
+        txt:`${perSet.join(' · ')} @ ${kg(b.w)}`,
+        why:`0 kg Hilfe ist das Ende der Maschine. Deshalb steigt Satz 1 von ${b.best[0]} auf ${perSet[0]} Wdh; als nächster Lastsprung kommt die freie Variante infrage.`};
+    }
     /* WIE VIELE Wdh beim neuen Gewicht? Nicht einfach das untere Ende —
        das wäre rechnerisch oft ein Rückschritt: 9 Wdh mit 80 kg schätzen
        auf 104 kg, 6 Wdh mit 82,5 kg nur auf 99. Gesucht ist die kleinste
        Wiederholungszahl, bei der der geschätzte 1RM NICHT fällt. */
-    let r1 = nw > 0 ? Math.ceil(30*(b.bestE/nw - 1)) : o.lo;
+    const neueLast = assist ? b.load + (b.w-nw)
+                   : isBW  ? b.load + (nw-b.w)
+                   : nw;
+    let r1 = neueLast > 0 ? Math.ceil(30*(b.bestE/neueLast - 1)) : o.lo;
     if(!isFinite(r1) || r1 < o.lo) r1 = o.lo;
     if(r1 > o.hi) r1 = o.hi;
-    const perSet = Array.from({length:nSets}, ()=>r1);
-    return {kind:'up', w:nw, r:r1, sets:nSets, perSet, hinweis,
-      txt:`${nSets}×${r1} @ ${kg(nw)}`,
-      why: grosserSprung
+    /* Bei einem RIR-Sprung bleibt Aarons echtes Ermüdungsmuster erhalten:
+       Satz 1 darf höher sein als Satz 2/3. Nur bei „alle oben" sind die
+       Ausgangswerte ohnehin gleich. */
+    const abzug=Math.max(0,Math.max(...b.best)-r1);
+    const perSet=b.best.map(r=>Math.max(o.lo,r-abzug));
+    while(perSet.length<nSets) perSet.push(o.lo);
+    const art=assist?'assist':'up';
+    return {kind:art, w:nw, r:perSet[0], sets:nSets, perSet, hinweis,
+      txt:`${perSet.join(' · ')} @ ${kg(nw)}`,
+      why: assist
+          ? `Jede Satzposition hat ${o.hi} Wdh erreicht — Hilfe runter (${fmtW(b.w)} → ${fmtW(nw)} kg). Effektive Last ${fmtW(b.load)} → ${fmtW(neueLast)} kg; der geschätzte Bestwert fällt nicht.`
+          : grosserSprung
           ? `Zuletzt im Schnitt ${avgRir.toFixed(1)} Wdh im Tank — das war deutlich zu leicht, größerer Sprung (+${fmtW(o.step*2)} kg). Mit ${r1} Wdh liegst du über deinem bisherigen Bestwert.`
           : alleOben
           ? `Jede Satzposition hat ${o.hi} Wdh erreicht — Gewicht rauf (+${fmtW(o.step)} kg). ${r1} Wdh reichen, um deinen geschätzten Bestwert von ${fmtW(Math.round(b.bestE*10)/10)} kg zu halten oder zu übertreffen.`
@@ -4785,6 +4921,58 @@ function zyklusLuecken(){
   return out.sort((a,b)=> b.fehlt - a.fehlt);
 }
 
+/* Wiederholt fehlende Gruppen statt nur das letzte Workout zu kopieren.
+   Der Vorschlag bleibt vollständig datenbasiert: Die Lücke kommt aus
+   abgeschlossenen Zyklen, die Übung aus der vorhandenen Datenbank und ein
+   Gewicht nur aus progressionFor(). Ohne Historie bleibt es leer. */
+const CHRONIK_ZYKLEN = 6, CHRONIK_MIN = 3;
+const GK_TYP_GRUPPEN = {
+  Push:['Quadrizeps','Waden','Brust','Schultern','Trizeps','Bauch','Po'],
+  Pull:['Beinbeuger','Po','Rücken','Schultern','Bizeps','Bauch','Waden']
+};
+function chronischeLuecken(typ){
+  const cs=closedCycles().filter(c=>c.vollstaendig).slice(-CHRONIK_ZYKLEN);
+  if(cs.length<CHRONIK_MIN) return [];
+  const erlaubt=GK_TYP_GRUPPEN[typ]||[];
+  const reihe=[];
+  SETGROUPS.forEach(([gruppe,keys,mult,optional])=>{
+    if(optional || isLegGroup(gruppe) || !erlaubt.includes(gruppe)) return;
+    const ziel=groupTargetCycle(mult,1), werte=cs.map(c=>{
+      const m=muscleSetsBy(c.ws,statsSetMode);
+      return keys.reduce((a,k)=>a+(m[k]||0),0);
+    });
+    const fehltIn=werte.filter(v=>v<ziel.lo).length;
+    if(fehltIn < Math.ceil(cs.length*2/3)) return;
+    const defizit=werte.reduce((a,v)=>a+Math.max(0,ziel.lo-v),0)/cs.length;
+    reihe.push({gruppe,keys,zyklen:cs.length,fehltIn,defizit,lo:ziel.lo,
+                quote:fehltIn/cs.length,prio:erlaubt.indexOf(gruppe)});
+  });
+  return reihe.sort((a,b)=>b.quote-a.quote || b.defizit-a.defizit || a.prio-b.prio);
+}
+function decktGruppe(exId,keys){
+  const ex=getEx(exId); return !!ex && (ex.p||[]).some(k=>keys.includes(k));
+}
+function lueckenErgaenzungen(typ,vorhanden,max){
+  const ids=new Set(vorhanden||[]), raus=[];
+  for(const l of chronischeLuecken(typ)){
+    if([...ids].some(id=>decktGruppe(id,l.keys))) continue;
+    const kandidaten=uebungenFuerLuecke(l.gruppe,12);
+    const k=kandidaten.find(x=>!ids.has(x.ex.id)); if(!k) continue;
+    const ex=k.ex, prog=progressionFor(ex.id);
+    const n=prog&&prog.sets ? prog.sets : exDefSets(ex.id);
+    const gewicht=prog ? prog.w : '';
+    raus.push({exId:ex.id,name:ex.name,
+      sets:Array.from({length:n},()=>({w:gewicht,r:''})),
+      quelle:'luecke',progression:prog?prog.kind:null,
+      hinweis:prog?`${l.gruppe} fehlte in ${l.fehltIn}/${l.zyklen} Zyklen · ${prog.txt}`
+                   :`${l.gruppe} fehlte in ${l.fehltIn}/${l.zyklen} Zyklen · Gewicht bleibt leer`,
+      luecke:l});
+    ids.add(ex.id);
+    if(raus.length>=(max||2)) break;
+  }
+  return raus;
+}
+
 /* Der Vorschlag selbst.
    Gecacht wie cycles() und exCutIndex(): progressionFor() läuft je Übung
    mehrfach über die gesamte Historie, und renderHome wird bei jedem
@@ -4837,7 +5025,9 @@ function _trainingsVorschlag(typ){
       hinweis: prog ? prog.txt : null
     };
   }).filter(Boolean);
-  return { typ:t, uebungen, vorlage, luecken: zyklusLuecken() };
+  const chronisch=lueckenErgaenzungen(t,uebungen.map(x=>x.exId),2);
+  uebungen.push(...chronisch);
+  return { typ:t, uebungen, vorlage, chronisch, luecken: zyklusLuecken() };
 }
 
 /* Die Karte auf dem Startbildschirm. Kurz halten — sie ist das Erste, was
@@ -4852,16 +5042,20 @@ function renderVorschlag(){
   if(!v.uebungen.length){ box.innerHTML = ''; return; }
 
   const mitGewicht = v.uebungen.filter(u=>u.sets[0] && u.sets[0].w !== '').length;
+  const kompakt=v.uebungen.slice(0,3), weitere=v.uebungen.length-kompakt.length;
   const luecke = v.luecken.length
     ? `<div class="tiny" style="margin-top:4px;color:var(--gold)">${v.luecken.slice(0,2)
         .map(l=>`${l.gruppe} ${l.ist} von ${l.lo}`).join(' · ')} Sätzen im Zyklus</div>`
+    : '';
+  const chronisch=(v.chronisch||[]).length
+    ? `<div class="tiny" style="margin-top:4px;color:var(--a6)">+ Ausgleich: ${(v.chronisch||[]).map(x=>x.luecke.gruppe).join(' · ')}</div>`
     : '';
 
   box.innerHTML = `<div class="card" style="margin-bottom:12px;border-color:var(--acc-a30);background:linear-gradient(160deg,var(--acc-a08),transparent 60%),var(--s1)">
     <div class="label" style="color:var(--acc)">Heute${v.quelle==='plan'? ' · von dir geplant':''}</div>
     <b style="font-size:var(--fs-h2);display:block;margin:2px 0 0">${esc(v.typ)} · ${v.uebungen.length} ${v.uebungen.length===1?'Übung':'Übungen'}</b>
-    ${luecke}
-    <div style="margin:10px 0 4px">${v.uebungen.map(u=>{
+    ${chronisch||luecke}
+    <div style="margin:10px 0 4px">${kompakt.map(u=>{
       /* Die Zahl bedeutet je Übungsart etwas anderes — ohne den Zusatz liest
          man „60 kg" bei Klimmzügen als Last statt als Zusatzgewicht und bei
          der unterstützten Maschine genau verkehrt herum. */
@@ -4873,7 +5067,9 @@ function renderVorschlag(){
         : roh + ' kg';
       /* Farbe trägt hier keine Bedeutung allein — der Zusatz sagt es im
          Klartext, sonst wundert man sich über ein plötzlich kleineres Gewicht. */
-      const art = u.quelle === 'up' ? {c:'var(--green)', z:'↑'}
+      const art = u.quelle === 'up' ? {c:'var(--green)', z:'↑ Last'}
+                : u.quelle === 'assist' ? {c:'var(--green)', z:'↓ Hilfe'}
+                : u.quelle === 'luecke' ? {c:'var(--a6)', z:'+ Lücke'}
                 : u.quelle === 'deload' ? {c:'var(--gold)', z:'Deload'}
                 : {c:'var(--txt)', z:''};
       return `<div class="row" style="gap:8px;padding:5px 0;border-bottom:1px solid var(--line)">
@@ -4882,7 +5078,7 @@ function renderVorschlag(){
         <span class="tiny" style="color:var(--txt3);flex:none">${u.sets.length}×</span>
         <span style="font-size:var(--fs-sub);font-weight:700;flex:none;color:${art.c};font-variant-numeric:tabular-nums">${kg}</span>
       </div>`;
-    }).join('')}</div>
+    }).join('')}${weitere>0?`<div class="tiny" style="padding-top:6px">+ ${weitere} weitere ${weitere===1?'Übung':'Übungen'} im Training</div>`:''}</div>
     <div class="row" style="gap:8px;margin-top:10px">
       <button class="btn btn-acc grow" id="btn-vorschlag-start">Training starten</button>
       <button class="btn btn-ghost btn-sm" id="btn-vorschlag-anders">Anders</button>
@@ -4892,6 +5088,7 @@ function renderVorschlag(){
         ? `Das ist <b>dein Plan für heute</b> — im Reiter Training auf diesem Tag eingetragen. Die App hat nichts dazugerechnet.`
         : `Die Übungen sind die deiner letzten <b>${esc(v.typ)}</b>-Einheit${v.vorlage? ' vom ' + fmtDate(v.vorlage.date) : ''}.`}
       ${v.quelle !== 'plan' && mitGewicht ? `Bei ${mitGewicht} von ${v.uebungen.length} steht ein Gewicht — es kommt aus deiner Historie, ein <b>↑</b> heißt Steigerung.` : ''}
+      ${(v.chronisch||[]).length ? `<br><b>+ Lücke</b> ergänzt höchstens zwei Gruppen, die in mindestens zwei Dritteln der letzten Zyklen unter dem Korridor lagen. Die Übung ist nur ein änderbarer Vorschlag; ohne eigene Historie bleibt das Gewicht leer.` : ''}
       ${mitGewicht < v.uebungen.length ? `Wo <b>—</b> steht, fehlt die Historie; dort bleibt das Feld leer statt geraten.` : ''}
       <br>Die <b>Wiederholungen bleiben immer leer</b> — sie sind das Ergebnis des Satzes, nicht seine Vorgabe.
       Jede Zeile lässt sich im Training ändern, jede Übung tauschen.
@@ -5043,7 +5240,7 @@ function globalAgg(){
   let vol=0,sets=0,prs=0,ms=0; const weeks=new Set();
   state.workouts.forEach(w=>{
     vol+=wVolume(w); sets+=wSets(w); prs+=(w.prs||[]).length; weeks.add(weekKey(w.date));
-    ms += Math.max(0, wDauer(w));
+    ms += Math.max(0, wDauerBelastbar(w));
   });
   return _aggCache = {wk:state.workouts.length, vol, sets, prs, streak:bestStreak(weeks), hours: ms/3600000};
 }
@@ -6088,13 +6285,7 @@ function renderHome(){
       })()}</div></div>
       <button class="btn btn-acc btn-sm" onclick="showScreen('scr-train')">Weiter</button>
     </div>` : '';
-  const lb = state.settings.lastBackup;
-  const lbDays = lb? Math.floor((Date.now()-lb)/86400000) : null;
-  $('#home-backup').innerHTML = (state.workouts.length>=5 && (lbDays===null || lbDays>7)) ? `
-    <div class="banner warn"><span class="bi" data-ico="alert" style="margin:0"></span>
-      <div class="grow"><b>Kein Backup ${lbDays===null?'bisher':'seit '+lbDays+' Tagen'}</b><div class="tiny">Daten liegen nur auf diesem Gerät</div></div>
-      <button class="btn btn-ghost btn-sm" onclick="shareBackup()">Sichern</button>
-    </div>` : '';
+  syncRenderHome();
 
   renderVorschlag();
   $('#btn-start-home').innerHTML = state.active
@@ -6301,7 +6492,7 @@ function renderDayBody(){
           <div class="kpi"><b>${w.exercises.length}</b><span>Übungen</span></div>
           <div class="kpi"><b>${saetze}</b><span>Sätze</span></div>
           <div class="kpi"><b>${fmtVol(vol)}</b><span>Volumen</span></div>
-          ${wDauer(w)? `<div class="kpi"><b>${fmtDur(wDauer(w))}</b><span>Dauer</span></div>`:''}
+          ${wDauer(w)? `<div class="kpi"><b>${wDauerText(w)}</b><span>${trainingsFenster(w).quelle==='knopf'?'Zeitquelle':'Dauer'}</span></div>`:''}
         </div>
         ${w.exercises.map(e=>{
           const ex = getEx(e.exId);
@@ -7142,7 +7333,8 @@ async function finishWorkout(){
 function workoutText(w){
   if(!w) return '';
   const d = new Date(w.date).toLocaleDateString('de-DE',{weekday:'short', day:'2-digit', month:'2-digit'});
-  const kopf = `${w.type} · ${d}${wDauer(w)? ' · '+fmtDur(wDauer(w)) : ''}`;
+  const f=trainingsFenster(w);
+  const kopf = `${w.type} · ${d}${f&&f.quelle!=='knopf'? ' · '+fmtDur(f.dauer) : ''}`;
   const zahlen = `${w.exercises.length} ${w.exercises.length===1?'Übung':'Übungen'} · ${wSets(w)} Sätze · ${fmtVol(wVolume(w))}`;
   const zeilen = w.exercises.map(e=>{
     const s = validSets(e); if(!s.length) return '';
@@ -7184,7 +7376,7 @@ document.addEventListener('click', e=>{
    von #luecke-body und #detail-body. Deshalb ist er auf #scr-stats
    begrenzt — global würde er in den Modalen doppelt feuern. */
 document.addEventListener('click', e=>{
-  if(e.target.closest('#stat-bw')){ haptic(); openModal('#modal-bw'); return; }
+  if(e.target.closest('#stat-bw,#stat-bw-refresh')){ haptic(); openBW(); return; }
   const plus = e.target.closest('#scr-stats [data-addgap]');
   if(plus){
     const r = uebungEinplanen(plus.dataset.addgap);
@@ -7596,6 +7788,13 @@ $('#xo-reset').addEventListener('click',()=>{
 });
 
 /* ================= KÖRPERGEWICHT-UI ================= */
+const BW_AKTUELL_TAGE = 14;
+function bwAlter(e, bisIso){
+  if(!e||!e.d) return {tage:null,veraltet:true};
+  const bis=bisIso||heuteIso();
+  const tage=Math.max(0,tageDiff(e.d,bis));
+  return {tage,veraltet:tage>BW_AKTUELL_TAGE};
+}
 function bwTrend(){
   const arr = bwSorted(); if(arr.length<2) return null;
   const now = new Date(arr[arr.length-1].d).getTime();
@@ -7611,12 +7810,13 @@ function bwTrend(){
 function fmtKg(v){ v=+v; if(!isFinite(v)) return '–'; return v.toLocaleString('de-DE',{minimumFractionDigits:1, maximumFractionDigits:1})+' kg'; }
 function renderHomeBW(){
   const last = bwLatest(); const tr = bwTrend();
+  const stand=bwAlter(last);
   const trTxt = tr===null? '' : `<span style="color:${tr>=0.05?'var(--green)':tr<=-0.05?'var(--red)':'var(--txt2)'};font-weight:750">${tr>0?'▲ +':tr<0?'▼ ':''}${Math.abs(tr).toLocaleString('de-DE',{maximumFractionDigits:2})} kg/Woche</span>`;
   $('#home-bw').innerHTML = `<div class="card" style="cursor:pointer;padding:12px 12px" onclick="openBW()">
     <div class="row" style="justify-content:space-between">
       <div class="row" style="gap:8px"><span class="iconbtn" style="pointer-events:none">${ICO.scale}</span>
         <div><b style="font-size:var(--fs-body)">${last? fmtKg(last.kg) : 'Körpergewicht'}</b>
-        <div class="tiny">${last? 'zuletzt '+fmtDate(last.d) : 'noch kein Eintrag — abends eintragen'}</div></div></div>
+        <div class="tiny">${last? (stand.veraltet?'! '+stand.tage+' Tage alt — jetzt aktualisieren ›':'zuletzt '+fmtDate(last.d)) : 'noch kein Eintrag — abends eintragen'}</div></div></div>
       <div style="text-align:right">${trTxt}<div class="tiny">${tr!==null?'Trend (21 Tage)':''}</div></div>
     </div></div>`;
 }
@@ -8829,6 +9029,16 @@ function trainingsFenster(w){
   return null;
 }
 function wDauer(w){ const f = trainingsFenster(w); return f ? f.dauer : 0; }
+/* Nur diese Dauer darf in Mittelwerte, Dichte und Zeit-Erfolge einfließen.
+   `knopf` ist bei Altdaten Start→Fertig und kann Aarons Busfahrt enthalten. */
+function wDauerBelastbar(w){
+  const f=trainingsFenster(w);
+  return f && f.quelle!=='knopf' ? f.dauer : 0;
+}
+function wDauerText(w){
+  const f=trainingsFenster(w); if(!f) return '';
+  return fmtDur(f.dauer) + (f.quelle==='knopf'?' · Start–Fertig, unkorrigiert':'');
+}
 /* Der Stempel entsteht genau dann, wenn ein Satz fertig wird. Einmal
    gesetzt, bleibt er — eine spätere Korrektur der Zahl verschiebt die
    Uhrzeit nicht, denn gemacht wurde der Satz ja damals. */
@@ -8847,13 +9057,19 @@ function satzGestempelt(set){
    über fünf Stunden lief sie weiter. Beides würde den Schnitt kippen —
    deshalb fallen sie raus, und die Karte sagt, wie viele. */
 const DAUER_MIN = 5*60000, DAUER_MAX = 5*3600000;
-function dauerStat(ws){
-  const gut = [];
-  (ws || []).forEach(w=>{
-    const f = trainingsFenster(w);
-    if(!f || f.dauer < DAUER_MIN || f.dauer > DAUER_MAX) return;
-    gut.push({w, f});
+function dauerAuswahl(ws){
+  const gut=[], info={altKnopf:0,unplausibel:0,ohne:0};
+  (ws||[]).forEach(w=>{
+    const f=trainingsFenster(w);
+    if(!f){ info.ohne++; return; }
+    if(f.quelle==='knopf'){ info.altKnopf++; return; }
+    if(f.dauer<DAUER_MIN || f.dauer>DAUER_MAX){ info.unplausibel++; return; }
+    gut.push({w,f});
   });
+  return {gut,info};
+}
+function dauerStat(ws){
+  const auswahl=dauerAuswahl(ws), gut=auswahl.gut, info=auswahl.info;
   if(gut.length < 3) return null;
   const ms = gut.map(x => x.f.dauer);
   const summe = ms.reduce((a,x)=>a+x, 0);
@@ -8865,6 +9081,7 @@ function dauerStat(ws){
   const vor = gut.map(x=>x.f.vorlauf).filter(v => v >= VORLAUF_SCHWELLE);
   return {
     n: gut.length, ausgelassen: (ws || []).length - gut.length,
+    altKnopf:info.altKnopf, unplausibel:info.unplausibel, ohne:info.ohne,
     schnitt: summe/gut.length,
     kuerzeste: sortiert[0], laengste: sortiert[sortiert.length-1],
     gesamtStunden: summe/3600000,
@@ -8880,8 +9097,10 @@ function dauerStat(ws){
 }
 function statDauer(ws){
   const d = dauerStat(ws);
+  const info=dauerAuswahl(ws).info;
   if(!d) return `<div class="card"><h3>Trainingsdauer</h3>
-    <div class="empty" style="padding:16px">Ab drei Einheiten mit gemessener Dauer steht hier, wie lange du brauchst.</div></div>`;
+    <div class="empty" style="padding:16px">Ab drei Einheiten mit Satz-Zeitstempeln oder korrigierter Dauer steht hier, wie lange du wirklich trainierst.</div>
+    ${info.altKnopf?`<p class="kpihint tiny"><b>${info.altKnopf} alte ${info.altKnopf===1?'Einheit':'Einheiten'}</b> ${info.altKnopf===1?'hat':'haben'} nur „Start bis Fertig". ${info.altKnopf===1?'Sie wird':'Sie werden'} bewusst nicht in Ø oder Dichte eingerechnet — im Verlauf kannst du die Dauer korrigieren.</p>`:''}</div>`;
   return `<div class="card"><h3 style="margin-bottom:8px">Trainingsdauer</h3>
     ${svgLine(d.punkte.slice(-30), v=>v+' min', {fill:true, avg:true})}
     <div class="kpis" style="margin:10px 0 0">
@@ -8892,12 +9111,11 @@ function statDauer(ws){
     </div>
     <p class="kpihint tiny">Du bewegst <b>${fmtVol(Math.round(d.proMinute))} pro Minute</b>
       und brauchst <b>${d.minJeSatz.toFixed(1).replace('.',',')} Minuten je Satz</b> — Satz plus Pause.
-      ${d.ausgelassen? `${d.ausgelassen} ${d.ausgelassen===1?'Einheit hat':'Einheiten haben'} keine brauchbare Dauer und ${d.ausgelassen===1?'ist':'sind'} nicht eingerechnet.` : ''}
+      ${d.unplausibel? `${d.unplausibel} ${d.unplausibel===1?'Einheit liegt':'Einheiten liegen'} unter 5 Minuten oder über 5 Stunden und ${d.unplausibel===1?'ist':'sind'} nicht eingerechnet.` : ''}
+      ${d.ohne? `${d.ohne} ${d.ohne===1?'Einheit hat':'Einheiten haben'} gar keine Zeitmessung.` : ''}
       ${d.vorlaufN? `<br>In ${d.vorlaufN} ${d.vorlaufN===1?'Einheit':'Einheiten'} hast du im Schnitt
         <b>${fmtDur(d.vorlaufSchnitt)}</b> vor dem ersten Satz gestartet — diese Zeit ist nicht mitgerechnet.` : ''}
-      ${d.quellen.knopf? `<br>${d.quellen.knopf} ${d.quellen.knopf===1?'Einheit stammt':'Einheiten stammen'} noch aus der Zeit
-        ohne Satz-Zeitstempel und ${d.quellen.knopf===1?'ist':'sind'} von „Start" bis „Fertig" gemessen — dort steckt
-        die Vorbereitungszeit mit drin. Im Verlauf lässt sich jede Dauer von Hand richtigstellen.` : ''}
+      ${d.altKnopf? `<br><b>${d.altKnopf} alte ${d.altKnopf===1?'Einheit':'Einheiten'}</b> ${d.altKnopf===1?'hat':'haben'} nur „Start bis Fertig" — dort kann die Vorbereitung mit drinstecken. ${d.altKnopf===1?'Sie ist':'Sie sind'} deshalb aus Ø und Dichte ausgeschlossen. Im Verlauf lässt sich jede Dauer richtigstellen.` : ''}
       <details class="erkl"><summary>Was sagt die Dichte?</summary><div>
         Volumen pro Minute misst, wie viel Arbeit in der Zeit steckt. Steigt sie
         bei gleichem Volumen, machst du dasselbe schneller — kürzere Pausen oder
@@ -9005,21 +9223,23 @@ function relativeKraft(max){
     return { id, name:ex.name, maxE:b.maxELast, faktor: b.maxELast/kg,
              bw: ex.eq==='Körpergewicht' || ex.eq==='Maschine (unterstützt)' };
   }).filter(Boolean).sort((a,b)=> b.faktor - a.faktor);
-  return { kg, datum: bw[bw.length-1].d, liste: liste.slice(0, max||8), gesamt: liste.length };
+  const alter=bwAlter(bw[bw.length-1]);
+  return { kg, datum: bw[bw.length-1].d, tage:alter.tage, veraltet:alter.veraltet,
+           liste: liste.slice(0, max||8), gesamt: liste.length };
 }
 function statRelativeKraft(){
   const r = relativeKraft(8);
   if(!r) return `<div class="card"><h3>Relative Kraft</h3>
     <div class="empty" style="padding:16px">Dafür brauche ich dein Körpergewicht — trag es auf der Startseite ein.</div></div>`;
   if(!r.liste.length) return '';
-  return `<div class="card"><h3 style="margin-bottom:2px">Relative Kraft</h3>
+  return `<div class="card"><h3 style="margin-bottom:2px">Relative Kraft${r.veraltet?' <span class="badge" style="color:var(--a6)">Gewicht '+r.tage+' Tage alt</span>':''}</h3>
     <p class="tiny" style="margin-bottom:8px">Geschätzter 1RM geteilt durch dein Körpergewicht (${fmtW(r.kg)} kg, Stand ${fmtDate(r.datum)}).</p>
+    ${r.veraltet?`<div class="sync-note" style="margin-bottom:8px"><b>Nur grobe Momentaufnahme.</b> Dein Bezugsgewicht ist ${r.tage} Tage alt; schon 2 kg Unterschied verändern den Faktor um rund ${Math.round(2/r.kg*100)} %.<button class="btn btn-ghost btn-sm btn-block" id="stat-bw-refresh" style="margin-top:8px">Gewicht jetzt aktualisieren</button></div>`:''}
     <table class="htable"><tr><th>Übung</th><th>1RM</th><th>× Körpergewicht</th></tr>
     ${r.liste.map(x=>`<tr><td>${esc(x.name)}${x.bw?' <span class="tiny grpsub">mit Körpergewicht</span>':''}</td><td>${Math.round(x.maxE)} kg</td>
       <td><b>${x.faktor.toFixed(2).replace('.',',')} ×</b></td></tr>`).join('')}
     </table>
-    <p class="kpihint tiny">Diese Zahl bleibt vergleichbar, wenn sich dein Körpergewicht ändert —
-      absolute Kilos allein sagen darüber nichts.
+    <p class="kpihint tiny">${r.veraltet?'Nach einem neuen Gewichtseintrag wird jeder Faktor sofort neu berechnet.':'Diese Zahl bleibt vergleichbar, wenn sich dein Körpergewicht ändert — absolute Kilos allein sagen darüber nichts.'}
       <details class="erkl"><summary>Wie wird gerechnet?</summary><div>
         Der geschätzte 1RM kommt aus deinem besten Satz (Epley), das Körpergewicht
         aus deinem letzten Eintrag. Gerechnet wird mit der Last, die dein Körper
@@ -9958,7 +10178,7 @@ function renderHist(){
             const sek = wDauerSek(w), dist = wDistM(w);
             if(sek || dist) return [sek? fmtSek(sek):'', dist? fmtDist(dist):''].filter(Boolean).join(' · ');
             return fmtVol(0);
-          })()}</b>${wDauer(w)? ` · ${fmtDur(wDauer(w))}`:''}</div>
+          })()}</b>${wDauer(w)? ` · ${wDauerText(w)}`:''}</div>
         </div>
         <span style="color:var(--txt3);font-size:var(--fs-lg)" aria-hidden="true">›</span>
       </div>
@@ -10274,7 +10494,7 @@ function showDetail(wid){
   const prByEx = {}; (w.prs||[]).forEach(p=>{ (prByEx[p.exId]=prByEx[p.exId]||[]).push(p.kind); });
   $('#detail-body').innerHTML = `
     <div class="grab"></div>
-    <div class="mhd"><div><h2>${esc(w.type)}-Workout</h2><div class="sub">${fmtDateShort(w.date)}${wDauer(w)? ' · '+fmtDur(wDauer(w)):''} · ${fmtVol(wVolume(w))}</div></div><button class="iconbtn" data-close aria-label="Schließen" data-ico-close></button></div>
+    <div class="mhd"><div><h2>${esc(w.type)}-Workout</h2><div class="sub">${fmtDateShort(w.date)}${wDauer(w)? ' · '+wDauerText(w):''} · ${fmtVol(wVolume(w))}</div></div><button class="iconbtn" data-close aria-label="Schließen" data-ico-close></button></div>
     ${(()=>{ const f = trainingsFenster(w); return `<div class="item">
       <div class="grow"><div class="ttl" style="font-size:var(--fs-sub)">Dauer ${f? fmtDur(f.dauer) : 'nicht gemessen'}</div>
         <div class="meta">${f? DAUER_QUELLE[f.quelle] : 'für dieses Training liegt keine Zeit vor'}${

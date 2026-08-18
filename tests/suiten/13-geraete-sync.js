@@ -1,13 +1,14 @@
-/* V80: Geräte-Sync muss drei Dinge gleichzeitig leisten:
+/* V81: Geräte-Sync muss vier Dinge gleichzeitig leisten:
    1. Der Tracker bleibt offline und lokal vollständig nutzbar.
    2. Supabase sieht weder Trainingsdaten noch den Kopplungsschlüssel.
-   3. Zwei geänderte Stände überschreiben sich niemals still. */
+   3. Zwei geänderte Stände überschreiben sich niemals still.
+   4. Die letzten zehn Cloud-Versionen bleiben wiederherstellbar. */
 
 const fs = require('fs');
 const path = require('path');
 const { js, warte } = require('../lib/browser');
 
-exports.name = 'V80 verschlüsselter Geräte-Sync';
+exports.name = 'V81 verschlüsselter Geräte-Sync und Verlauf';
 exports.optionen = process.env.APP_UNDER_TEST ? {datei:process.env.APP_UNDER_TEST} : {};
 
 exports.lauf = async ({ page, p }) => {
@@ -234,6 +235,43 @@ exports.lauf = async ({ page, p }) => {
   p.pruefe('auch beim Update bleibt der Name verschlüsselt', !push.plain);
   p.gleich('erfolgreicher Push ist sauber', push.dirty, false);
 
+  /* ── Wiederherstellung: alte Version wird zur NEUEN Cloud-Revision ── */
+  const restore = await js(page, `(async () => {
+    closeModals(); ask=async()=>true;
+    const aktuell=syncCloudState(state), aktuellEnc=await syncEncryptState(aktuell,syncMeta.code);
+    const alt=syncCloudState(state); alt.settings.name='Wiederhergestellter Stand';
+    alt.workouts=alt.workouts.slice(0,1);
+    const altEnc=await syncEncryptState(alt,syncMeta.code);
+    syncMeta.revision=3; syncMeta.lastHash=await syncStateHash(state); syncMeta.dirty=false; syncSaveMeta();
+    window.__syncCalls=[];
+    window.fetch=async (url,opt={})=>{
+      __syncCalls.push({url,method:opt.method,body:opt.body||''});
+      if(url.includes(SYNC_HISTORY_TABLE)){
+        if(url.includes('payload')) return {ok:true,status:200,text:async()=>JSON.stringify([{
+          sync_id:syncMeta.syncId,payload:altEnc.payload,iv:altEnc.iv,revision:2,source_updated_at:'2026-08-18T18:30:00Z'}])};
+        return {ok:true,status:200,text:async()=>JSON.stringify([{revision:3,archived_at:'2026-08-18T19:07:00Z'}])};
+      }
+      if(opt.method==='PATCH') return {ok:true,status:200,text:async()=>JSON.stringify([{revision:4,updated_at:'2026-08-18T19:08:00Z'}])};
+      return {ok:true,status:200,text:async()=>JSON.stringify([{
+        sync_id:syncMeta.syncId,payload:aktuellEnc.payload,iv:aktuellEnc.iv,revision:3,updated_at:'2026-08-18T19:07:00Z'}])};
+    };
+    await syncRestoreHistory(2);
+    if(_syncTimer){clearTimeout(_syncTimer);_syncTimer=null;}
+    return {name:state.settings.name,workouts:state.workouts.length,revision:syncMeta.revision,
+      patch:__syncCalls.some(x=>x.method==='PATCH'),
+      historyGet:__syncCalls.some(x=>x.url.includes(SYNC_HISTORY_TABLE)&&x.url.includes('payload')),
+      snap:snapshots().some(x=>/Cloud-Wiederherstellung/.test(x.reason)),
+      cloudWorkouts:syncMeta.cloudWorkouts,status:syncStatus.text};
+  })()`);
+  p.gleich('gewählte alte Version wird lokal angewendet',restore.name,'Wiederhergestellter Stand');
+  p.gleich('ihre exakte Workout-Zahl wird wiederhergestellt',restore.workouts,1);
+  p.pruefe('historischer Chiffretext wird über die geschützte Verlaufstabelle geladen',restore.historyGet);
+  p.pruefe('vorher entsteht ein lokaler Sicherungspunkt',restore.snap);
+  p.pruefe('die Wiederherstellung wird als neue Cloud-Revision hochgeladen',restore.patch);
+  p.gleich('Revision steigt 3 → 4 statt rückwärts auf 2',restore.revision,4);
+  p.gleich('Cloud-Nachweis übernimmt die genaue Workout-Zahl',restore.cloudWorkouts,1);
+  p.gleich('Status bestätigt die Wiederherstellung',restore.status,'Wiederhergestellt');
+
   /* UI nach der Einrichtung: Schlüssel teilbar, Trennung zerstört nichts. */
   const ui = await js(page, `(() => {
     syncOpen();
@@ -277,6 +315,10 @@ exports.lauf = async ({ page, p }) => {
   p.enthaelt('Einfügen ist an die x-sync-id gebunden', sql, 'sync_insert_by_capability');
   p.enthaelt('Ändern ist an die x-sync-id gebunden', sql, 'sync_update_by_capability');
   p.pruefe('Cloud-Tabelle gibt kein DELETE an öffentliche Clients frei', !/grant[^;]*delete/i.test(sql));
+  p.enthaelt('Verlaufstabelle ist vorhanden',sql,'tracker_sync_history');
+  p.enthaelt('Verlauf ist ebenfalls an die geheime Kennung gebunden',sql,'sync_history_select_by_capability');
+  p.enthaelt('Archivierung läuft vor jedem Überschreiben',sql,'before update on public.tracker_sync');
+  p.enthaelt('höchstens zehn Cloud-Versionen bleiben',sql,'limit 10');
 
   await warte(page,50);
 };
