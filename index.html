@@ -1636,7 +1636,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V81 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V82 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="mback" id="modal-sync"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="sync-title">
@@ -2038,7 +2038,7 @@ const HOWTO = {
    'Beine leicht nach hinten, Rumpf fest.','Kontrolliert senken, bis die Oberarme etwa waagerecht sind.',
    'Über die Brust nach oben drücken, Vorlage beibehalten.'],
   e:['Aufrecht geblieben — dann arbeitet fast nur der Trizeps.','Zu tief gesenkt ohne Schulterstabilität.','Ins Hohlkreuz gefallen.']},
- 'x-klimmzüge-obergriff':{s:['Griff etwas weiter als schulterbreit, Daumen mit um die Stange oder daneben.',
+ 'x-klimmzüge':{s:['Griff etwas weiter als schulterbreit, Daumen mit um die Stange oder daneben.',
    'Aus der vollen Streckung starten, Schulterblätter zuerst nach unten ziehen.',
    'Ellbogen nach unten-hinten führen, bis das Kinn über der Stange ist.',
    'Kontrolliert ablassen bis zur vollen Streckung.'],
@@ -2667,11 +2667,11 @@ const EXDB_RAW = [
 ['Fliegende (Band)','Brust','Widerstandsband',['chest'],[],'band fly'],
 ['Überzüge (Kurzhantel)','Brust','Kurzhantel',['chest','lats'],['triceps'],'dumbbell pullover (kurzhantel)'],
 /* ---------- RÜCKEN ---------- */
-['Klimmzüge (Obergriff)','Rücken','Körpergewicht',['lats'],['biceps','upper_back'],'pull up pullup'],
-['Klimmzüge (mit Gewicht)','Rücken','Körpergewicht',['lats'],['biceps','upper_back'],'weighted pull up'],
+['Klimmzüge','Rücken','Körpergewicht',['lats'],['biceps','upper_back'],'pull up pullup klimmzüge obergriff neutraler griff weighted mit gewicht'],
+['Klimmzüge (mit Gewicht)','Rücken','Körpergewicht',['lats'],['biceps','upper_back'],'weighted pull up',0,'kraft',1],
 ['Klimmzüge (Untergriff)','Rücken','Körpergewicht',['lats','biceps'],['upper_back'],'chin up chin-ups (untergriff)'],
 ['Klimmzüge (Untergriff, mit Gewicht)','Rücken','Körpergewicht',['lats','biceps'],['upper_back'],'weighted chin up chin-ups (mit gewicht)'],
-['Klimmzüge (neutraler Griff)','Rücken','Körpergewicht',['lats'],['biceps','upper_back'],'neutral grip pull up'],
+['Klimmzüge (neutraler Griff)','Rücken','Körpergewicht',['lats'],['biceps','upper_back'],'neutral grip pull up',0,'kraft',1],
 ['Klimmzug-Maschine (assistiert)','Rücken','Maschine',['lats'],['biceps'],'assisted pull up'],
 ['Latzug (breiter Griff)','Rücken','Kabel',['lats'],['biceps','upper_back'],'lat pulldown wide'],
 ['Latzug (enger Griff)','Rücken','Kabel',['lats'],['biceps'],'close grip pulldown'],
@@ -3037,7 +3037,11 @@ const exSlug = n=>'x-'+n.toLowerCase().replace(/[^a-z0-9äöüß]+/g,'-').replac
 /* art: 'kraft' (Gewicht × Wiederholungen), 'zeit' (Sekunden) oder
    'kardio' (Sekunden + Strecke). Fehlt die Spalte, ist es Kraft — damit
    bleiben alle 337 bestehenden Einträge und alle Altdaten unberührt. */
-const EXDB = EXDB_RAW.map(r=>({id:exSlug(r[0]), name:r[0], grp:r[1], eq:r[2], p:r[3], s:r[4]||[], al:(r[5]||'').toLowerCase(), uni:!!r[6], art:r[7]||'kraft'}));
+/* Versteckte Alt-Einträge bleiben in EXDB_ALL an ihrer ursprünglichen Position,
+   damit sehr alte eNN-IDs weiterhin korrekt aufgelöst werden. In der sichtbaren
+   Datenbank gibt es dagegen nur noch die zusammengeführte Übung. */
+const EXDB_ALL = EXDB_RAW.map(r=>({id:exSlug(r[0]), name:r[0], grp:r[1], eq:r[2], p:r[3], s:r[4]||[], al:(r[5]||'').toLowerCase(), uni:!!r[6], art:r[7]||'kraft', legacy:!!r[8]}));
+const EXDB = EXDB_ALL.filter(e=>!e.legacy);
 /* ================= KERN: STATE / DATUM / PR-LOGIK ================= */
 const LS_KEY = 'ironlog_v1';
 /* Zyklus = Ganzkörper-Push → Ganzkörper-Pull → Rest. Der Vorschlag kommt
@@ -3156,6 +3160,14 @@ function repariereState(){
   return n;
 }
 const RENAME_MAP = {"x-chest-press-maschine":"x-brustpresse-maschine","x-incline-chest-press-maschine":"x-schrägbank-brustpresse-maschine","x-decline-chest-press-maschine":"x-negativ-brustpresse-maschine","x-chest-press-kabel-sitzend":"x-brustpresse-kabel-sitzend","x-bankdrücken-smith-machine":"x-bankdrücken-multipresse","x-schrägbankdrücken-smith-machine":"x-schrägbankdrücken-multipresse","x-butterfly-pec-deck-maschine":"x-butterfly-maschine","x-cable-fly-hoch-tief":"x-kabelzug-fliegende-hoch-tief","x-cable-fly-mitte":"x-kabelzug-fliegende-mitte","x-cable-fly-tief-hoch":"x-kabelzug-fliegende-tief-hoch","x-cable-fly-einarmig":"x-kabelzug-fliegende-einarmig","x-dip-maschine":"x-dip-maschine","x-svend-press-platte":"x-plattendrücken-vor-der-brust","x-floor-press-langhantel":"x-bodendrücken-langhantel","x-floor-press-kurzhantel":"x-bodendrücken-kurzhantel","x-landmine-press-brust":"x-landmine-drücken-brust","x-guillotine-press":"x-guillotine-bankdrücken","x-squeeze-press-kurzhantel":"x-enges-kurzhanteldrücken","x-squeeze-press-schrägbank":"x-enges-kurzhanteldrücken-schrägbank","x-chest-press-band":"x-brustdrücken-band","x-band-fly":"x-fliegende-band","x-pullover-kurzhantel":"x-überzüge-kurzhantel","x-chin-ups-untergriff":"x-klimmzüge-untergriff","x-chin-ups-mit-gewicht":"x-klimmzüge-untergriff-mit-gewicht","x-pulldown-maschine-plate-loaded":"x-latzug-maschine-scheiben","x-straight-arm-pulldown-kabel":"x-überzüge-am-kabel-gestreckte-arme","x-rope-pullover-kabel":"x-seilzug-überzüge","x-pendlay-row":"x-pendlay-rudern","x-t-bar-rudern":"x-t-stangen-rudern","x-t-bar-rudern-brustauflage":"x-t-stangen-rudern-brustauflage","x-seal-row":"x-rudern-in-bauchlage","x-rudermaschine-plate-loaded":"x-rudermaschine-scheiben","x-high-row-maschine":"x-rudern-von-oben-maschine","x-low-row-maschine":"x-rudern-von-unten-maschine","x-rudern-smith-machine":"x-rudern-multipresse","x-inverted-row":"x-umgekehrtes-rudern","x-meadows-row":"x-meadows-rudern","x-landmine-row":"x-landmine-rudern","x-kroc-row":"x-kroc-rudern","x-kreuzheben-trap-bar":"x-kreuzheben-trap-stange","x-kreuzheben-snatch-grip":"x-kreuzheben-reißgriff","x-rack-pulls":"x-teilkreuzheben-aus-dem-rack","x-reverse-hyperextension":"x-umgekehrter-rückenstrecker","x-superman":"x-superman-bauchlage","x-shrugs-langhantel":"x-schulterheben-langhantel","x-shrugs-kurzhantel":"x-schulterheben-kurzhantel","x-shrugs-smith-machine":"x-schulterheben-multipresse","x-shrugs-trap-bar":"x-schulterheben-trap-stange","x-shrugs-kabel":"x-schulterheben-kabel","x-arnold-press":"x-arnold-drücken","x-shoulder-press-maschine":"x-schulterpresse-maschine","x-schulterdrücken-smith-machine":"x-schulterdrücken-multipresse","x-push-press":"x-schulterdrücken-mit-schwung","x-landmine-press-schulter":"x-landmine-drücken-schulter","x-landmine-press-einarmig":"x-landmine-drücken-einarmig","x-z-press":"x-z-drücken-am-boden-sitzend","x-viking-press":"x-viking-drücken","x-lean-in-seitheben":"x-seitheben-angelehnt","x-reverse-flys-kurzhantel":"x-umgekehrte-fliegende-kurzhantel","x-reverse-pec-deck-maschine":"x-umgekehrtes-butterfly-maschine","x-reverse-cable-fly":"x-umgekehrte-fliegende-kabel","x-face-pulls-kabel":"x-gesichtsziehen-kabel","x-face-pulls-band":"x-gesichtsziehen-band","x-band-pull-aparts":"x-band-auseinanderziehen","x-cuban-rotation":"x-kubanische-rotation","x-bus-driver":"x-lenkrad-drehen-scheibe","x-bradford-press":"x-bradford-drücken","x-preacher-curls-sz-stange":"x-preacher-curls-sz-stange","x-preacher-curls-kurzhantel":"x-preacher-curls-kurzhantel","x-hammer-preacher-curls":"x-hammer-preacher-curls","x-preacher-curl-maschine":"x-preacher-curl-maschine","x-high-cable-curls":"x-kabel-curls-von-oben","x-bayesian-curls-kabel":"x-kabel-curls-hinter-dem-körper","x-spider-curls":"x-spider-curls-vorgebeugt","x-drag-curls":"x-zieh-curls-am-körper-entlang","x-zottman-curls":"x-zottman-curls","x-21s-langhantel":"x-21er-curls-langhantel","x-waiter-curls":"x-kellner-curls","x-jm-press":"x-jm-drücken","x-skull-crushers-sz-stange":"x-stirndrücken-sz-stange","x-skull-crushers-kurzhantel":"x-stirndrücken-kurzhantel","x-overhead-extension-kabel-seil":"x-trizepsdrücken-über-kopf-kabel-seil","x-kickbacks-kabel":"x-trizeps-rückdrücken-kabel","x-kickbacks-kurzhantel":"x-trizeps-rückdrücken-kurzhantel","x-bench-dips":"x-bank-dips","x-trizeps-maschine":"x-trizeps-maschine","x-overhead-triceps-extension-maschine":"x-trizepsdrücken-über-kopf-maschine","x-seated-dip-maschine":"x-dip-maschine-sitzend","x-tate-press":"x-tate-drücken","x-french-press-sitzend-sz":"x-französisches-drücken-sitzend-sz","x-enges-bankdrücken-smith":"x-enges-bankdrücken-multipresse","x-wrist-curls-langhantel":"x-handgelenk-curls-langhantel","x-reverse-wrist-curls":"x-handgelenk-curls-obergriff","x-wrist-curls-kurzhantel":"x-handgelenk-curls-kurzhantel","x-wrist-curls-hinter-rücken":"x-handgelenk-curls-hinter-dem-rücken","x-farmer-s-walk":"x-gewichte-tragen-farmers-walk","x-plate-pinch":"x-scheiben-kneifgriff","x-dead-hang":"x-hängen-an-der-stange","x-wrist-roller":"x-unterarm-roller","x-kniebeugen-low-bar":"x-kniebeugen-tiefe-auflage","x-box-squats":"x-kniebeugen-auf-box","x-pause-squats":"x-kniebeugen-mit-pause","x-goblet-squats":"x-kelch-kniebeugen","x-kniebeugen-smith-machine":"x-kniebeugen-multipresse","x-hack-squat-maschine":"x-hackenschmidt-maschine","x-pendulum-squat-maschine":"x-pendel-kniebeugenmaschine","x-v-squat-maschine":"x-v-kniebeugenmaschine","x-bulgarian-split-squats":"x-bulgarische-kniebeugen","x-split-squats":"x-geteilte-kniebeugen","x-curtsy-lunges":"x-überkreuz-ausfallschritte","x-step-ups":"x-aufsteiger-auf-box","x-sissy-squats":"x-sissy-kniebeugen","x-belt-squats":"x-gürtel-kniebeugen","x-zercher-squats":"x-zercher-kniebeugen","x-pistol-squats":"x-einbeinige-kniebeugen-pistol","x-stiff-leg-deadlift":"x-gestrecktes-kreuzheben","x-einbeiniges-rdl":"x-einbeiniges-rumänisches-kreuzheben","x-nordic-curls":"x-nordische-beinbeuger","x-glute-ham-raise":"x-beinbeuger-rückenstrecker-ghr","x-good-mornings":"x-guten-morgen-beugen","x-rdl-smith-machine":"x-rumänisches-kreuzheben-multipresse","x-beincurl-gymnastikball":"x-beinbeuger-gymnastikball","x-beincurl-slider":"x-beinbeuger-slider","x-hip-thrust-langhantel":"x-hüftstoß-langhantel","x-hip-thrust-maschine":"x-hüftstoß-maschine","x-hip-thrust-smith-machine":"x-hüftstoß-multipresse","x-glute-bridge":"x-beckenheben","x-glute-bridge-einbeinig":"x-beckenheben-einbeinig","x-b-stance-hip-thrust":"x-hüftstoß-versetzter-stand","x-kickbacks-kabel-glute":"x-beinrückheben-kabel","x-kickback-maschine":"x-beinrückheben-maschine","x-donkey-kicks":"x-eselstritte","x-fire-hydrants":"x-beinabspreizen-vierfüßler","x-frog-pumps":"x-frosch-beckenheben","x-sumo-squats":"x-sumo-kniebeugen","x-cable-pull-throughs":"x-durchziehen-am-kabel","x-band-side-walks":"x-seitschritte-mit-band","x-clamshells":"x-muschel-öffnen-seitlich-liegend","x-copenhagen-plank":"x-kopenhagener-seitstütz","x-wadenheben-smith-machine":"x-wadenheben-multipresse","x-donkey-calf-raises":"x-esel-wadenheben","x-tibialis-raises":"x-schienbeinheben","x-crunches":"x-crunches-bauchpressen","x-hanging-leg-raises":"x-beinheben-hängend","x-hanging-knee-raises":"x-knieheben-hängend","x-beinheben-captain-s-chair":"x-beinheben-beinhebemaschine","x-reverse-crunches":"x-umgekehrte-crunches","x-v-ups":"x-v-aufrichter","x-toes-to-bar":"x-zehen-zur-stange","x-ab-wheel-rollouts":"x-bauchroller-ab-wheel","x-plank-sek-als-wdh":"x-unterarmstütz-sek-als-wdh","x-plank-mit-gewicht":"x-unterarmstütz-mit-gewicht","x-side-plank-sek-als-wdh":"x-seitstütz-sek-als-wdh","x-russian-twists":"x-russische-drehungen","x-woodchopper-kabel-hoch-tief":"x-holzhacker-kabel-hoch-tief","x-woodchopper-kabel-tief-hoch":"x-holzhacker-kabel-tief-hoch","x-pallof-press":"x-pallof-drücken-anti-rotation","x-dead-bugs":"x-toter-käfer","x-bird-dogs":"x-vierfüßler-diagonal","x-mountain-climbers":"x-bergsteiger","x-dragon-flags":"x-drachenfahne","x-hollow-hold-sek-als-wdh":"x-hohlkörper-halten-sek-als-wdh","x-l-sit-sek-als-wdh":"x-l-sitz-sek-als-wdh","x-suitcase-carry":"x-koffertragen-einseitig","x-power-cleans":"x-umsetzen-power-clean","x-hang-cleans":"x-umsetzen-aus-dem-hang","x-clean-jerk":"x-umsetzen-stoßen","x-snatch":"x-reißen","x-kettlebell-swings":"x-kettlebell-schwünge","x-kettlebell-clean-press":"x-kettlebell-umsetzen-drücken","x-thrusters":"x-kniebeuge-mit-drücken-thruster","x-sled-push":"x-schlitten-schieben","x-sled-pull":"x-schlitten-ziehen","x-battle-ropes":"x-schwungseile","x-turkish-get-ups":"x-türkisches-aufstehen","x-cross-body-hammer-curls":"x-hammer-curls-quer-zum-körper","x-reverse-curls-sz-stange":"x-umgekehrte-curls-sz-stange","x-reverse-curls-langhantel":"x-umgekehrte-curls-langhantel","x-bizeps-curl-maschine":"x-bizeps-curl-maschine","x-crunch-maschine":"x-crunch-maschine","x-thruster-kniebeuge-drücken":"x-kniebeuge-mit-drücken-thruster","x-scottcurls-sz-stange":"x-preacher-curls-sz-stange","x-scottcurls-kurzhantel":"x-preacher-curls-kurzhantel","x-hammer-scottcurls":"x-hammer-preacher-curls","x-scottcurl-maschine":"x-preacher-curl-maschine"};
+/* V82: Normale, neutrale und gewichtete Klimmzüge teilen sich ab jetzt eine
+   kanonische ID. Die Rohwerte der Sätze bleiben unverändert: 0 kg bedeutet
+   Körpergewicht, eine positive Zahl ist das Zusatzgewicht. */
+Object.assign(RENAME_MAP,{
+  'x-klimmzüge-obergriff':'x-klimmzüge',
+  'x-klimmzüge-mit-gewicht':'x-klimmzüge',
+  'x-klimmzüge-neutraler-griff':'x-klimmzüge'
+});
 /* Migration: alte Positions-IDs (e12) → Namens-IDs; V7: englische → deutsche Übungsnamen */
 function migrateState(){
   /* V60: Die Übernahme des Sicherungs-Empfängers ist entfallen.
@@ -3168,19 +3180,51 @@ function migrateState(){
      sie ohnehin schon, seit V37 durchgelaufen ist. */
   const remap = id=>{
     if(typeof id!=='string') return id;
-    if(/^e\d+$/.test(id)){ const ex=EXDB[+id.slice(1)]; id = ex? ex.id : id; }
+    if(/^e\d+$/.test(id)){ const ex=EXDB_ALL[+id.slice(1)]; id = ex? ex.id : id; }
     return RENAME_MAP[id] || id;
   };
   const fixEx = e=>{ e.exId = remap(e.exId); const ex=getEx(e.exId); if(ex) e.name = ex.name; };
+  const fixList = list=>{
+    const out=[];
+    (list||[]).forEach(e=>{
+      fixEx(e);
+      if(e.exId!=='x-klimmzüge'){ out.push(e); return; }
+      const schon=out.find(x=>x.exId==='x-klimmzüge');
+      if(!schon){ e.bw=true; out.push(e); return; }
+      /* Falls beide alten Varianten in derselben Einheit vorkamen, werden nur
+         ihre Satzlisten verbunden. Kein Satz und kein Zusatzgewicht geht verloren. */
+      schon.sets=(schon.sets||[]).concat(e.sets||[]);
+      schon.bw=true;
+      if(schon.bwkg===undefined && e.bwkg!==undefined) schon.bwkg=e.bwkg;
+      if(e.note && !String(schon.note||'').includes(String(e.note)))
+        schon.note=[schon.note,e.note].filter(Boolean).join(' · ');
+    });
+    return out;
+  };
   (state.workouts||[]).forEach(w=>{
-    (w.exercises||[]).forEach(fixEx);
+    w.exercises=fixList(w.exercises);
     (w.prs||[]).forEach(p=>{ p.exId=remap(p.exId); const ex=getEx(p.exId); if(ex) p.name=ex.name; });
   });
-  (state.templates||[]).forEach(t=>{ t.exIds=(t.exIds||[]).map(remap); });
+  (state.templates||[]).forEach(t=>{ t.exIds=[...new Set((t.exIds||[]).map(remap))]; });
+  Object.values(state.plan||{}).forEach(p=>{
+    if(p && Array.isArray(p.exercises)) p.exercises=fixList(p.exercises);
+    if(p && Array.isArray(p.exIds)) p.exIds=[...new Set(p.exIds.map(remap))];
+  });
+  (state.goals||[]).forEach(g=>{ if(g && g.exId) g.exId=remap(g.exId); });
   /* Ein laufendes Training darf die aktuelle Einseitig-Einstellung befragen,
      ein abgeschlossenes niemals — deshalb hier markieren. */
-  if(state.active) (state.active.exercises||[]).forEach(e=>{ fixEx(e); e.__live = true; });
-  if(state.exOpt){ const o={}; Object.keys(state.exOpt).forEach(k=>{ o[remap(k)]=state.exOpt[k]; }); state.exOpt=o; }
+  if(state.active){
+    state.active.exercises=fixList(state.active.exercises);
+    state.active.exercises.forEach(e=>{ e.__live=true; });
+  }
+  if(state.exOpt){
+    const o={};
+    /* Erst Alt-IDs, dann die bereits kanonische ID: deren Einstellungen haben Vorrang. */
+    Object.keys(state.exOpt).sort((a,b)=>(a==='x-klimmzüge')-(b==='x-klimmzüge')).forEach(k=>{
+      const id=remap(k); o[id]=Object.assign(o[id]||{},state.exOpt[k]);
+    });
+    state.exOpt=o;
+  }
   /* Erfolge: ID-Schema "<exId>|<cat>|<target>" mitziehen */
   if(state.ach){
     const a={};
@@ -5146,8 +5190,8 @@ const ACH_SPECIAL = {
   'x-kniebeugen-langhantel|str|180':['Kniebeugen-König','180 kg Kniebeuge.'],
   'x-kreuzheben-konventionell|str|200':['Zwei Zentner','200 kg vom Boden gerissen.'],
   'x-kreuzheben-konventionell|reps|1000':['Der eiserne Griff','1.000 Wiederholungen Kreuzheben.'],
-  'x-klimmzüge-obergriff|str|40':['Schwerkraft? Nie gehört','Klimmzug mit +40 kg Zusatzgewicht.'],
-  'x-klimmzüge-obergriff|reps|1000':['Über den Wolken','1.000 Klimmzüge insgesamt.']
+  'x-klimmzüge|str|40':['Schwerkraft? Nie gehört','Klimmzug mit +40 kg Zusatzgewicht.'],
+  'x-klimmzüge|reps|1000':['Über den Wolken','1.000 Klimmzüge insgesamt.']
 };
 function achName(ex, cat, target, ti, tn){
   const sp = ACH_SPECIAL[`${ex.id}|${cat}|${target}`];

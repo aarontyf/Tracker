@@ -30,7 +30,7 @@ exports.lauf = async ({ page, p }) => {
 
   /* ── Die Einstufung stimmt ────────────────────────────────────────── */
   const einstufung = await js(page, `(() => {
-    const namen = ['Dips (Brust-Fokus)','Dips (Trizeps, Barren)','Klimmzüge (Obergriff)','Liegestütze'];
+    const namen = ['Dips (Brust-Fokus)','Dips (Trizeps, Barren)','Klimmzüge','Liegestütze'];
     const raus = {};
     namen.forEach(n => {
       const ex = EXDB.find(e => e.name === n);
@@ -84,13 +84,48 @@ exports.lauf = async ({ page, p }) => {
 
   /* ── Rekorde und Verlauf hängen an derselben Zahl ──────────────────── */
   await js(page, `state.bodyweight = []; state.profile = { done:true, gewicht:80 }; saveState();`);
-  await bau(page, 'Klimmzüge (Obergriff)', [{ w:'', r:12 }]);
+  await bau(page, 'Klimmzüge', [{ w:'', r:12 }]);
   const bests = await js(page, `(() => {
-    const ex = EXDB.find(e => e.name === 'Klimmzüge (Obergriff)');
+    const ex = EXDB.find(e => e.name === 'Klimmzüge');
     const b = exBests(ex.id);
     return b ? { maxW:b.maxW, maxE:b.maxE, maxReps:b.maxReps } : null;
   })()`);
   p.pruefe('Klimmzüge haben eine Historie', !!bests);
+
+  /* ── Normale und gewichtete Klimmzüge sind eine Übung ─────────────── */
+  const fusion = await js(page, `(() => {
+    const jetzt=Date.now(), altNeutral='x-klimmzüge-neutraler-griff',
+          altWeighted='x-klimmzüge-mit-gewicht', ziel='x-klimmzüge';
+    state.profile={done:true,gewicht:60}; state.bodyweight=[];
+    state.workouts=[
+      {id:'pull-1',date:new Date(jetzt-864e5).toISOString(),type:'Pull',start:jetzt,end:jetzt,prs:[],
+       exercises:[{exId:altNeutral,name:'Klimmzüge (neutraler Griff)',sets:[{w:0,r:10}]}]},
+      {id:'pull-2',date:new Date(jetzt).toISOString(),type:'Pull',start:jetzt,end:jetzt,prs:[],
+       exercises:[{exId:altWeighted,name:'Klimmzüge (mit Gewicht)',sets:[{w:10,r:5}]}]}
+    ];
+    state.templates=[{id:'t',name:'Pull',type:'Pull',exIds:[altNeutral,altWeighted]}];
+    state.goals=[{id:'g',art:'gewicht',exId:altWeighted,ziel:20}];
+    state.exOpt={[altNeutral]:{lo:5,hi:8},[ziel]:{step:2.5}};
+    migrateState(); saveState();
+    const h=exHistory(ziel), b=exBests(ziel);
+    return {
+      sichtbar:EXDB.filter(e=>['Klimmzüge','Klimmzüge (mit Gewicht)','Klimmzüge (neutraler Griff)'].includes(e.name)).map(e=>e.name),
+      ids:state.workouts.map(w=>w.exercises[0].exId), namen:state.workouts.map(w=>w.exercises[0].name),
+      vols:h.map(x=>x.vol), sessions:b.sessions, maxW:b.maxW,
+      tpl:state.templates[0].exIds, goal:state.goals[0].exId,
+      opt:state.exOpt[ziel]
+    };
+  })()`);
+  p.gleich('nur eine allgemeine Klimmzug-Übung ist sichtbar', fusion.sichtbar.join('|'), 'Klimmzüge');
+  p.gleich('normale und gewichtete Historie nutzen dieselbe ID', new Set(fusion.ids).size, 1);
+  p.gleich('beide Historieneinträge heißen Klimmzüge', new Set(fusion.namen).size, 1);
+  p.gleich('Körpergewichts-Volumen bleibt erhalten', fusion.vols[0], 60*10);
+  p.gleich('Zusatzgewicht bleibt im Volumen erhalten', fusion.vols[1], (60+10)*5);
+  p.gleich('beide Einheiten erscheinen in einer Statistik', fusion.sessions, 2);
+  p.gleich('Bestwert ist das Zusatzgewicht', fusion.maxW, 10);
+  p.gleich('Vorlage enthält Klimmzüge nur einmal', fusion.tpl.join('|'), 'x-klimmzüge');
+  p.gleich('Ziel wird mit umgezogen', fusion.goal, 'x-klimmzüge');
+  p.gleich('kanonische Einstellung gewinnt ohne Altwerte zu verlieren', JSON.stringify(fusion.opt), JSON.stringify({lo:5,hi:8,step:2.5}));
 
   /* ── Altdaten behalten ihr mitgeschriebenes Gewicht ─────────────────
      Beim Abschliessen wird bwkg im Eintrag festgehalten. Es muss Vorrang
