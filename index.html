@@ -5102,7 +5102,44 @@ function _trainingsVorschlag(typ){
     /* Reihenfolge: was die Progression sagt → was zuletzt wirklich gemacht
        wurde → die Vorgabe DIESER Übung (nicht mehr die globale). */
     const n = prog && prog.sets ? prog.sets : (validSets(e).length || exDefSets(e.exId));
-    /* Gewicht nur, wen�ozo+^����םclass="card" style="margin-bottom:12px;border-color:var(--acc-a30);background:linear-gradient(160deg,var(--acc-a08),transparent 60%),var(--s1)">
+    /* Gewicht nur, wenn es aus echter Historie stammt. */
+    const kg = prog ? prog.w : '';
+    return {
+      exId: e.exId, name: ex.name,
+      sets: Array.from({length:n}, ()=>({ w: (kg===''||kg==null)? '' : kg, r:'' })),
+      /* quelle macht nachvollziehbar, woher die Zahl kommt — sie steht
+         auch in der Anzeige, damit niemand eine Messung vermutet. */
+      quelle: prog ? prog.kind : 'ohne',
+      hinweis: prog ? prog.txt : null
+    };
+  }).filter(Boolean);
+  const chronisch=lueckenErgaenzungen(t,uebungen.map(x=>x.exId),2);
+  uebungen.push(...chronisch);
+  return { typ:t, uebungen, vorlage, chronisch, luecken: zyklusLuecken() };
+}
+
+/* Die Karte auf dem Startbildschirm. Kurz halten — sie ist das Erste, was
+   Aaron morgens sieht, und beantwortet EINE Frage: was mache ich heute? */
+function renderVorschlag(){
+  const box = $('#home-suggest');
+  if(!box) return;
+  if(state.active){ box.innerHTML = ''; return; }        // läuft schon eins
+  const v = trainingsVorschlag();
+
+  /* Ohne Vorlage kein Vorschlag — dann bleibt der normale Startknopf. */
+  if(!v.uebungen.length){ box.innerHTML = ''; return; }
+
+  const mitGewicht = v.uebungen.filter(u=>u.sets[0] && u.sets[0].w !== '').length;
+  const kompakt=v.uebungen.slice(0,3), weitere=v.uebungen.length-kompakt.length;
+  const luecke = v.luecken.length
+    ? `<div class="tiny" style="margin-top:4px;color:var(--gold)">${v.luecken.slice(0,2)
+        .map(l=>`${l.gruppe} ${l.ist} von ${l.lo}`).join(' · ')} Sätzen im Zyklus</div>`
+    : '';
+  const chronisch=(v.chronisch||[]).length
+    ? `<div class="tiny" style="margin-top:4px;color:var(--a6)">+ Ausgleich: ${(v.chronisch||[]).map(x=>x.luecke.gruppe).join(' · ')}</div>`
+    : '';
+
+  box.innerHTML = `<div class="card" style="margin-bottom:12px;border-color:var(--acc-a30);background:linear-gradient(160deg,var(--acc-a08),transparent 60%),var(--s1)">
     <div class="label" style="color:var(--acc)">Heute${v.quelle==='plan'? ' · von dir geplant':''}</div>
     <b style="font-size:var(--fs-h2);display:block;margin:2px 0 0">${esc(v.typ)} · ${v.uebungen.length} ${v.uebungen.length===1?'Übung':'Übungen'}</b>
     ${chronisch||luecke}
