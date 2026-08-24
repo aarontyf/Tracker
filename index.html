@@ -1636,7 +1636,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V82 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V83 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="mback" id="modal-sync"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="sync-title">
@@ -3224,6 +3224,15 @@ function migrateState(){
       const id=remap(k); o[id]=Object.assign(o[id]||{},state.exOpt[k]);
     });
     state.exOpt=o;
+  }
+  /* V83: Favoriten sind ebenfalls Verweise auf Übungs-IDs. Ein Stern auf
+     „Klimmzüge (mit Gewicht)" darf bei der V82-Fusion nicht verschwinden.
+     Dieselbe Behandlung repariert nebenbei Favoriten aus noch älteren
+     englischen IDs; Duplikate und inzwischen gelöschte eigene Übungen werden
+     aus dem reinen Schnellzugriff entfernt, niemals aus Trainingsdaten. */
+  if(state.settings){
+    const favs=Array.isArray(state.settings.favEx) ? state.settings.favEx : [];
+    state.settings.favEx=[...new Set(favs.map(remap))].filter(id=>!!getEx(id));
   }
   /* Erfolge: ID-Schema "<exId>|<cat>|<target>" mitziehen */
   if(state.ach){
@@ -7506,7 +7515,7 @@ function openPicker(cb){
   renderPickChips(); renderPickList(); openModal('#modal-picker');
 }
 function renderPickChips(){
-  const groups = ['Alle','Brust','Rücken','Schultern','Arme','Beine','Bauch','Ganzkörper','Eigene'];
+  const groups = ['Alle','Favoriten','Brust','Rücken','Schultern','Arme','Beine','Bauch','Ganzkörper','Eigene'];
   $('#pick-groups').innerHTML = groups.map(g=>`<button class="chip ${g===pickGrp?'on':''}" data-g="${g}">${g}</button>`).join('');
   $$('#pick-groups .chip').forEach(c=>c.addEventListener('click',()=>{ pickGrp=c.dataset.g; renderPickChips(); renderPickList(); }));
 }
@@ -7573,8 +7582,9 @@ function filterEx(q, grp){
   q = (q||'').toLowerCase().trim();
   const terms = q? q.split(/\s+/).filter(Boolean) : null;
   const base = allExercises().filter(ex=>{
+    if(grp==='Favoriten') return isFav(ex.id);
     if(grp==='Eigene' && !ex.custom) return false;
-    if(grp && grp!=='Alle' && grp!=='Eigene' && ex.grp!==grp) return false;
+    if(grp && grp!=='Alle' && grp!=='Eigene' && grp!=='Favoriten' && ex.grp!==grp) return false;
     return true;
   });
   if(!terms || !terms.length) return base;
@@ -7626,17 +7636,19 @@ function pickRow(ex, badge){
 function renderPickList(){
   const q = $('#pick-search').value;
   const list = filterEx(q, pickGrp).slice(0,80);
-  let head = '';
+  let head = '', quickIds = new Set();
   /* Schnellzugriff nur ohne Suche und in der Gesamtansicht — sonst stört er */
   if(!q && pickGrp==='Alle'){
     const favs = (state.settings.favEx||[]).map(getEx).filter(Boolean);
     const recent = recentExIds(6).map(getEx).filter(Boolean).filter(x=>!isFav(x.id));
+    quickIds = new Set(favs.concat(recent).map(x=>x.id));
     if(favs.length) head += `<div class="picksec">Favoriten</div>` + favs.map(x=>pickRow(x)).join('');
     if(recent.length) head += `<div class="picksec">Zuletzt benutzt</div>` + recent.map(x=>pickRow(x)).join('');
-    if(head) head += `<div class="picksec">Alle Übungen</div>`;
+    if(head && list.some(x=>!quickIds.has(x.id))) head += `<div class="picksec">Alle Übungen</div>`;
   }
-  $('#pick-list').innerHTML = list.length
-    ? head + list.map(ex=>pickRow(ex)).join('')
+  const rest = list.filter(ex=>!quickIds.has(ex.id));
+  $('#pick-list').innerHTML = head || rest.length
+    ? head + rest.map(ex=>pickRow(ex)).join('')
     : `<div class="empty"><div class="big">${ICO.search}</div><b>Keine Übung gefunden</b>Versuch es mit einem anderen Begriff —<br>Englisch funktioniert auch.</div>`;
   /* Ein Listener am Container statt zweier je Zeile. Die Reihenfolge der
      Prüfung ersetzt das frühere stopPropagation: Trifft der Klick den Stern,
@@ -10611,10 +10623,10 @@ function showDetail(wid){
 let libGrp='Alle';
 let histFilter='Alle';
 function renderLib(){
-  const groups = ['Alle','Brust','Rücken','Schultern','Arme','Beine','Bauch','Ganzkörper','Eigene'];
-  /* Die Gruppen-Chips sind bei jedem Rendern dieselben neun Knöpfe. Einmal
+  const groups = ['Alle','Favoriten','Brust','Rücken','Schultern','Arme','Beine','Bauch','Ganzkörper','Eigene'];
+  /* Die Gruppen-Chips sind bei jedem Rendern dieselben zehn Knöpfe. Einmal
      bauen, danach nur noch die aktive Markierung umsetzen — das spart pro
-     Tastenanschlag einen HTML-Neuaufbau samt neun frischer Listener. */
+     Tastenanschlag einen HTML-Neuaufbau samt zehn frischer Listener. */
   const grpBox = $('#lib-groups');
   if(!grpBox.dataset.wired){
     grpBox.dataset.wired = '1';
@@ -10632,6 +10644,7 @@ function renderLib(){
   /* content-visibility lässt den Browser Zeilen außerhalb des Sichtfelds überspringen */
   $('#lib-list').innerHTML = list.slice(0,150).map(ex=>`
     <div class="item tap" data-lib="${ex.id}" style="content-visibility:auto;contain-intrinsic-size:auto 56px">
+      <button class="favbtn ${isFav(ex.id)?'on':''}" data-fav="${ex.id}" aria-label="${isFav(ex.id)?'Favorit entfernen':'Als Favorit merken'}">${ICO.star}</button>
       <div class="grow"><div class="ttl">${esc(ex.name)} ${ex.custom?'<span class="badge type">Eigene</span>':''}</div>
       <div class="meta">${esc(ex.eq)} · ${esc(exMuscleLabel(ex))}</div></div>
       ${trained.has(ex.id)? '<span class="badge type" style="flex:none">✓</span>':''}
@@ -10643,6 +10656,8 @@ function renderLib(){
   if(!libBox.dataset.wired){
     libBox.dataset.wired = '1';
     libBox.addEventListener('click', e=>{
+      const fav = e.target.closest('[data-fav]');
+      if(fav){ toggleFav(fav.dataset.fav); renderLib(); return; }
       const el = e.target.closest('[data-lib]'); if(!el) return;
       exStatId = el.dataset.lib; statsPanel='ex';
       $$('#stats-seg button').forEach(x=>x.classList.toggle('on',x.dataset.p==='ex'));

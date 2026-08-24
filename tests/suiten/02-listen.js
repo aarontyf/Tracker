@@ -47,6 +47,21 @@ exports.lauf = async ({ page, p }) => {
   await klick(page, '#lib-groups .chip[data-g="Alle"]');
   await warte(page, 200);
 
+  /* Favoriten lassen sich direkt in der Bibliothek verwalten. Der Stern
+     öffnet nicht versehentlich die Statistik, der eigene Chip zeigt danach
+     ausschließlich die gemerkten Übungen. */
+  await js(page, `exStatId=null; state.settings.favEx=[]; saveState(); renderLib();`);
+  const libFavId = await js(page, `document.querySelector('#lib-list [data-fav]').dataset.fav`);
+  await klick(page, '#lib-list [data-fav]');
+  await warte(page, 200);
+  p.gleich('Bibliotheks-Stern öffnet nicht die Statistik', await js(page, 'exStatId'), null);
+  p.pruefe('Bibliotheks-Stern speichert den Favoriten', await js(page, `(state.settings.favEx||[]).includes(${JSON.stringify(libFavId)})`));
+  await klick(page, '#lib-groups .chip[data-g="Favoriten"]');
+  await warte(page, 200);
+  p.gleich('Favoriten-Filter zeigt genau den gemerkten Eintrag', await js(page, `document.querySelectorAll('#lib-list [data-lib]').length`), 1);
+  await klick(page, '#lib-groups .chip[data-g="Alle"]');
+  await warte(page, 200);
+
   /* Zeilenklick führt in die Übungsstatistik. */
   await klick(page, '#lib-list [data-lib]');
   await warte(page, 300);
@@ -97,7 +112,7 @@ exports.lauf = async ({ page, p }) => {
   p.gleich('Zurücksetzen stellt die Liste wieder her', await js(page, `document.querySelectorAll('#hist-list [data-wid]').length`), 40);
 
   /* ── Übungs-Picker ────────────────────────────────────────────────── */
-  await js(page, `window.__gewaehlt = null; openPicker(id => window.__gewaehlt = id);`);
+  await js(page, `state.settings.favEx=[]; saveState(); window.__gewaehlt = null; openPicker(id => window.__gewaehlt = id);`);
   await warte(page, 250);
 
   p.mind('Picker listet Übungen', await js(page, `document.querySelectorAll('#pick-list [data-pick]').length`), 20);
@@ -109,6 +124,9 @@ exports.lauf = async ({ page, p }) => {
     await warte(page, 250);
     p.gleich('Favoritenstern wählt nicht aus', await js(page, 'window.__gewaehlt'), null);
     p.mind('Favoritenstern schaltet den Favoriten um', await js(page, `(state.settings.favEx||[]).length`), 1);
+    const doppelt = await js(page, `(() => { const ids=[...document.querySelectorAll('#pick-list [data-pick]')].map(x=>x.dataset.pick); return ids.length-new Set(ids).size; })()`);
+    p.gleich('Schnellzugriff zeigt keine Übung doppelt', doppelt, 0);
+    p.pruefe('Picker bietet einen Favoriten-Filter', await dawar(page, '#pick-groups .chip[data-g="Favoriten"]'));
   }
 
   await klick(page, '#pick-list [data-pick]');

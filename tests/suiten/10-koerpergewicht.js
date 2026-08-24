@@ -106,6 +106,7 @@ exports.lauf = async ({ page, p }) => {
     state.templates=[{id:'t',name:'Pull',type:'Pull',exIds:[altNeutral,altWeighted]}];
     state.goals=[{id:'g',art:'gewicht',exId:altWeighted,ziel:20}];
     state.exOpt={[altNeutral]:{lo:5,hi:8},[ziel]:{step:2.5}};
+    state.settings.favEx=[altWeighted,altNeutral,ziel,'nicht-mehr-da'];
     migrateState(); saveState();
     const h=exHistory(ziel), b=exBests(ziel);
     return {
@@ -113,7 +114,7 @@ exports.lauf = async ({ page, p }) => {
       ids:state.workouts.map(w=>w.exercises[0].exId), namen:state.workouts.map(w=>w.exercises[0].name),
       vols:h.map(x=>x.vol), sessions:b.sessions, maxW:b.maxW,
       tpl:state.templates[0].exIds, goal:state.goals[0].exId,
-      opt:state.exOpt[ziel]
+      opt:state.exOpt[ziel], fav:state.settings.favEx
     };
   })()`);
   p.gleich('nur eine allgemeine Klimmzug-Übung ist sichtbar', fusion.sichtbar.join('|'), 'Klimmzüge');
@@ -126,6 +127,7 @@ exports.lauf = async ({ page, p }) => {
   p.gleich('Vorlage enthält Klimmzüge nur einmal', fusion.tpl.join('|'), 'x-klimmzüge');
   p.gleich('Ziel wird mit umgezogen', fusion.goal, 'x-klimmzüge');
   p.gleich('kanonische Einstellung gewinnt ohne Altwerte zu verlieren', JSON.stringify(fusion.opt), JSON.stringify({lo:5,hi:8,step:2.5}));
+  p.gleich('alte Klimmzug-Favoriten bleiben einmalig erhalten', fusion.fav.join('|'), 'x-klimmzüge');
 
   /* ── Altdaten behalten ihr mitgeschriebenes Gewicht ─────────────────
      Beim Abschliessen wird bwkg im Eintrag festgehalten. Es muss Vorrang
