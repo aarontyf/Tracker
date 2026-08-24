@@ -420,6 +420,13 @@ h3>.bi svg{width:15px;height:15px}
 .stats-overview-lead{overflow:hidden;border-color:var(--acc-a30);
   background:radial-gradient(110% 130% at 100% 0,rgba(82,156,255,.2),transparent 58%),var(--s1)}
 .stats-overview-lead .up{color:var(--a6)}
+.readycue{margin:10px 0 2px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r-md);
+  background:rgba(255,255,255,.025)}
+.readycue .head{display:flex;align-items:baseline;justify-content:space-between;gap:var(--sp2)}
+.readycue .bar,.workmeter{height:5px;background:var(--s3);border-radius:var(--r-full);overflow:hidden}
+.readycue .bar{margin-top:7px}
+.readycue .bar i,.workmeter i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--a4),var(--a7));
+  border-radius:inherit;transition:width var(--dur-3) var(--ease)}
 .ovrow{width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto 14px;gap:var(--sp2);
   align-items:center;text-align:left;min-height:52px;padding:9px 0;border-top:1px solid var(--line)}
 .ovrow:first-of-type{border-top:0}
@@ -720,6 +727,7 @@ details.erkl.warum>div{font-size:var(--fs-tiny);margin-top:2px}
   margin:calc(-1 * (var(--sp3) + env(safe-area-inset-top))) calc(-1 * var(--sp4)) var(--sp3);
   padding:calc(var(--sp3) + env(safe-area-inset-top)) var(--sp4) var(--sp3);
   border-bottom:1px solid var(--line);display:flex;align-items:center;gap:var(--sp2)}
+.workmeter{max-width:190px;margin-top:5px}
 .timer{font-weight:750;font-size:var(--fs-body);letter-spacing:-.02em}
 .resttimer{background:var(--s2);border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 12px;font-weight:750;font-size:var(--fs-sub);flex:none;font-variant-numeric:tabular-nums;min-height:38px;transition:all var(--dur-2) var(--ease)}
 .resttimer.hot{border-color:var(--acc-a30);color:var(--acc2);background:var(--acc-a16);box-shadow:0 0 0 3px var(--acc-a08)}
@@ -855,6 +863,17 @@ details.notiz input{margin-top:4px;width:100%}
 .sum-top .emoji{font-size:var(--fs-hero);display:block;animation:pop-in var(--dur-4) var(--spring)}
 @keyframes pop-in{from{transform:scale(.5) rotate(-12deg);opacity:0}to{transform:none;opacity:1}}
 .sum-top h2{font-size:var(--fs-h2);margin:var(--sp2) 0 3px}
+.sessioncheck{border-color:var(--acc-a30);background:linear-gradient(145deg,var(--acc-a08),transparent 70%),var(--s1)}
+.rpegrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:var(--sp2);margin:12px 0 5px}
+.rpebtn{min-height:var(--hit-min);border:1px solid var(--line);border-radius:var(--r-sm);background:var(--s2);
+  color:var(--txt2);font-weight:750;font-variant-numeric:tabular-nums;transition:all var(--dur-2) var(--ease)}
+.rpebtn.on{color:var(--on-acc);background:var(--grad-a);border-color:transparent;box-shadow:var(--glow)}
+.rpelabels{display:flex;justify-content:space-between;gap:var(--sp2);color:var(--txt3);font-size:var(--fs-micro)}
+.sessionnote{min-height:78px;resize:vertical;margin-top:12px}
+.histnote{margin-top:6px;color:var(--txt2);font-size:var(--fs-sub);line-height:1.35;display:-webkit-box;
+  -webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.sessiondetail{padding:11px 13px;border-left:3px solid var(--a5);background:var(--s2);border-radius:0 var(--r-md) var(--r-md) 0;
+  margin:0 0 var(--sp3);color:var(--txt2);white-space:pre-wrap;overflow-wrap:anywhere}
 
 /* ─── NAVIGATION ─────────────────────────────────────────────────── */
 /* Leiste klebt an der Unterkante — OHNE reservierten Abstand darunter.
@@ -1273,6 +1292,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
         <div class="grow">
           <b id="tw-type" style="font-size:var(--fs-body);letter-spacing:-.02em"></b>
           <div class="sub"><span class="timer" id="tw-timer">0:00</span> · <span id="tw-setcount"></span></div>
+          <div class="workmeter" id="tw-progress" role="progressbar" aria-label="Arbeitssätze abgeschlossen" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0"><i></i></div>
         </div>
         <button class="resttimer" id="btn-rest" aria-label="Pausen-Timer">⏱ Pause</button>
         <button class="btn btn-acc btn-sm" id="btn-finish">Fertig</button>
@@ -1671,7 +1691,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V84 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V85 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="mback" id="modal-sync"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="sync-title">
@@ -2659,6 +2679,27 @@ function recoveryGroups(rec){
     return [label, val];
   });
 }
+/* Erholung genau für die heute vorgeschlagenen Hauptmuskeln. Das ist eine
+   transparente Trainings-Schätzung aus Satzumfang und verstrichener Zeit —
+   kein Schlaf-, HRV- oder Gesundheitswert und deshalb niemals eine Sperre. */
+function vorschlagErholung(uebungen, now){
+  const rec = recoveryMap(now);
+  const gesehen = new Set(), rows = [];
+  (uebungen||[]).forEach(u=>{
+    const ex = getEx(u.exId); if(!ex) return;
+    (ex.p||[]).forEach(k=>{
+      const unit = recUnit(k); if(gesehen.has(unit)) return;
+      gesehen.add(unit);
+      rows.push({key:unit, name:unit==='chest'?'Brust':(MUSCLES[unit]||MUSCLES[k]||unit),
+                 value:Math.max(0,Math.min(100,rec[unit] == null ? 100 : rec[unit]))});
+    });
+  });
+  rows.sort((a,b)=>a.value-b.value);
+  if(!rows.length) return null;
+  const avg = Math.round(rows.reduce((a,x)=>a+x.value,0)/rows.length);
+  return {avg, rows, min:rows[0],
+    status:avg>=85?'gut erholt':avg>=65?'größtenteils erholt':'noch in Erholung'};
+}
 /* ================= ÜBUNGSDATENBANK ================= */
 /* [Name, Gruppe, Gerät, primäre Muskeln, sekundäre Muskeln, Alias/Suchbegriffe] */
 const EQUIPS = ['Langhantel','Kurzhantel','Maschine','Maschine (unterstützt)','Kabel','Multipresse','Körpergewicht','SZ-Stange','Trap-Stange','Kettlebell','Widerstandsband','Hantelscheibe','Kardiogerät','Sonstiges'];
@@ -3086,7 +3127,7 @@ const SPLIT = ['Push','Pull'];
 const WTYPES = ['Push','Pull','Legs','Andere'];
 
 let state = {
-  workouts: [],        // {id,date,start,end,type,exercises:[{exId,name,sets:[{w,r}]}],prs:[...]}
+  workouts: [],        // {id,date,start,end,type,rpe?,note?,exercises:[{exId,name,sets:[{w,r}]}],prs:[...]}
   customEx: [],        // gleiche Struktur wie EXDB-Einträge
   templates: [],       // {id,name,type,exIds:[]}
   profile: null,       // Coach-Profil, siehe PROFIL_LEER
@@ -5131,6 +5172,13 @@ function renderVorschlag(){
 
   const mitGewicht = v.uebungen.filter(u=>u.sets[0] && u.sets[0].w !== '').length;
   const kompakt=v.uebungen.slice(0,3), weitere=v.uebungen.length-kompakt.length;
+  const erholung=vorschlagErholung(v.uebungen);
+  const erholungHtml=erholung ? `<div class="readycue">
+      <div class="head"><b style="font-size:var(--fs-sub)">Erholung · ${esc(erholung.status)}</b>
+        <span class="tiny" style="font-variant-numeric:tabular-nums">Ø ${erholung.avg} %</span></div>
+      <div class="bar" aria-hidden="true"><i style="width:${erholung.avg}%"></i></div>
+      <div class="tiny" style="margin-top:6px">Hauptmuskeln aus bisherigen Arbeitssätzen und Zeit geschätzt${erholung.min.value<80?` · am niedrigsten ${esc(erholung.min.name)} ${erholung.min.value} %`:''}. Kein Schlaf-/HRV-Wert.</div>
+    </div>` : '';
   const luecke = v.luecken.length
     ? `<div class="tiny" style="margin-top:4px;color:var(--gold)">${v.luecken.slice(0,2)
         .map(l=>`${l.gruppe} ${l.ist} von ${l.lo}`).join(' · ')} Sätzen im Zyklus</div>`
@@ -5143,6 +5191,7 @@ function renderVorschlag(){
     <div class="label" style="color:var(--acc)">Heute${v.quelle==='plan'? ' · von dir geplant':''}</div>
     <b style="font-size:var(--fs-h2);display:block;margin:2px 0 0">${esc(v.typ)} · ${v.uebungen.length} ${v.uebungen.length===1?'Übung':'Übungen'}</b>
     ${chronisch||luecke}
+    ${erholungHtml}
     <div style="margin:10px 0 4px">${kompakt.map(u=>{
       /* Die Zahl bedeutet je Übungsart etwas anderes — ohne den Zusatz liest
          man „60 kg" bei Klimmzügen als Last statt als Zusatzgewicht und bei
@@ -6967,8 +7016,6 @@ function scheibenZeile(ei){
 function renderActive(){
   const a = state.active; if(!a) return;
   $('#tw-type').textContent = a.type+'-Workout';
-  const total = a.exercises.reduce((x,e)=>x+validSets(e).length,0);
-  $('#tw-setcount').textContent = total+' Sätze';
   const useRir = !!state.settings.rir;
   $('#tw-exlist').innerHTML = a.exercises.map((e,ei)=>{
     const ex = getEx(e.exId);
@@ -7099,6 +7146,7 @@ function renderActive(){
     </div>`;
   }).join('');
 
+  refreshSetCount();
   wireActiveOnce();
 }
 
@@ -7109,7 +7157,26 @@ function renderActive(){
    und punktgenaue DOM-Updates statt Neuaufbau. */
 let _activeWired = false;
 function totalActiveSets(){ return state.active ? state.active.exercises.reduce((x,e)=>x+validSets(e).length,0) : 0; }
-function refreshSetCount(){ $('#tw-setcount').textContent = totalActiveSets()+' Sätze'; }
+/* Geplant gegen erledigt: Aufwärmsätze sind Vorbereitung und werden auf
+   beiden Seiten bewusst ausgeschlossen. Dropsets bleiben Arbeitssätze. */
+function activeProgress(){
+  let done=0, total=0;
+  ((state.active&&state.active.exercises)||[]).forEach(e=>(e.sets||[]).forEach(s=>{
+    if(s.t==='w') return;
+    total++;
+    if(satzHatInhalt(s)) done++;
+  }));
+  return {done,total,pct:total?Math.round(done/total*100):0};
+}
+function refreshSetCount(){
+  const p=activeProgress(), count=$('#tw-setcount'), meter=$('#tw-progress');
+  if(count) count.textContent=p.done+'/'+p.total+' Sätze';
+  if(meter){
+    meter.setAttribute('aria-valuemax',String(p.total));
+    meter.setAttribute('aria-valuenow',String(p.done));
+    const fill=meter.querySelector('i'); if(fill) fill.style.width=p.pct+'%';
+  }
+}
 function startRestFor(ei, set){
   if(restEnd) return;
   const base = exOpt(state.active.exercises[ei].exId).rest || state.settings.rest || 90;
@@ -7439,7 +7506,9 @@ function workoutText(w){
     ? `\n\n${(w.prs||[]).length} neue ${(w.prs||[]).length===1?'Bestleistung':'Bestleistungen'}: `
       + w.prs.slice(0,5).map(p=>`${p.name} (${p.kind})`).join(', ')
     : '';
-  return `${kopf}\n${zahlen}\n\n${zeilen.join('\n')}${prs}\n\n— Fitness Tracker`;
+  const r=sessionRpe(w), gefuehl=r===null?'':`\nRPE ${r}/10 · ${rpeLabel(r)}${sessionLoad(w)!==null?' · Session-Load '+sessionLoad(w):''}`;
+  const notiz=w.note?`\nNotiz: ${String(w.note).trim()}`:'';
+  return `${kopf}\n${zahlen}${gefuehl}${notiz}\n\n${zeilen.join('\n')}${prs}\n\n— Fitness Tracker`;
 }
 /* Teilen mit Rückfallebene: Wo navigator.share fehlt (Desktop-Browser),
    landet der Text in der Zwischenablage. Beides meldet sich. */
@@ -7487,6 +7556,49 @@ document.addEventListener('click', e=>{
 });
 
 /* ================= ZUSAMMENFASSUNG ================= */
+function sessionCheckinHtml(w){
+  const r=sessionRpe(w), load=sessionLoad(w);
+  return `<div class="card sessioncheck">
+    <div class="row" style="align-items:flex-start;gap:var(--sp3)"><div class="grow">
+      <h3>Wie anstrengend war die Einheit?</h3>
+      <p class="tiny" style="margin-top:3px">Session-RPE bewertet das gesamte Training — unabhängig vom RIR einzelner Sätze.</p>
+    </div><b id="sum-rpe-value" style="color:var(--a7);white-space:nowrap">${r?`${r}/10 · ${rpeLabel(r)}`:'Noch offen'}</b></div>
+    <div class="rpegrid" role="group" aria-label="Session-RPE von 1 bis 10">${Array.from({length:10},(_,i)=>i+1).map(i=>
+      `<button class="rpebtn ${r===i?'on':''}" data-sum-rpe="${i}" aria-pressed="${r===i?'true':'false'}" aria-label="RPE ${i} von 10">${i}</button>`).join('')}</div>
+    <div class="rpelabels"><span>1 · locker</span><span>10 · maximal</span></div>
+    <textarea class="sessionnote" id="sum-session-note" maxlength="280" rows="3" placeholder="Session-Notiz: Was lief gut? Was änderst du nächstes Mal?">${esc(w.note||'')}</textarea>
+    <div class="tiny" id="sum-session-load" style="margin-top:7px">${r?(load!==null?`Session-Load: ${load} Punkte · Dauer × RPE`:'Für den Session-Load fehlt eine plausible Dauer.'):'Nach deiner Bewertung erscheint hier der Session-Load.'}</div>
+  </div>`;
+}
+function wireSessionCheckin(w){
+  const root=$('#summary-body'); if(!root) return;
+  const aktualisieren=()=>{
+    const r=sessionRpe(w), load=sessionLoad(w), wert=root.querySelector('#sum-rpe-value');
+    if(wert) wert.textContent=r?`${r}/10 · ${rpeLabel(r)}`:'Noch offen';
+    root.querySelectorAll('[data-sum-rpe]').forEach(b=>{
+      const on=+b.dataset.sumRpe===r;
+      b.classList.toggle('on',on); b.setAttribute('aria-pressed',on?'true':'false');
+    });
+    const out=root.querySelector('#sum-session-load');
+    if(out) out.textContent=r?(load!==null?`Session-Load: ${load} Punkte · Dauer × RPE`:'Für den Session-Load fehlt eine plausible Dauer.'):'Nach deiner Bewertung erscheint hier der Session-Load.';
+  };
+  root.querySelectorAll('[data-sum-rpe]').forEach(b=>b.addEventListener('click',()=>{
+    w.rpe=+b.dataset.sumRpe; saveState(); haptic(); aktualisieren();
+  }));
+  const note=root.querySelector('#sum-session-note');
+  if(note){
+    note.addEventListener('input',()=>{
+      const v=note.value.slice(0,280);
+      if(v.trim()) w.note=v; else delete w.note;
+      saveStateSoon();
+    });
+    note.addEventListener('change',()=>{
+      const v=note.value.trim().slice(0,280);
+      if(v){ w.note=v; note.value=v; } else delete w.note;
+      flushSave();
+    });
+  }
+}
 function showSummary(w, freshAch, newLevel){
   const fen = trainingsFenster(w);
   const dur = fen ? fmtDur(fen.dauer) : '—';
@@ -7534,6 +7646,7 @@ function showSummary(w, freshAch, newLevel){
     </div>
     ${vorHtml}
     ${cmp}
+    ${sessionCheckinHtml(w)}
     ${prHtml}
     ${achHtml}
     <h3 style="margin:16px 0 8px">Trainierte Muskeln</h3>
@@ -7546,6 +7659,7 @@ function showSummary(w, freshAch, newLevel){
     </div>`;
   openModal('#modal-summary');
   runCounters($('#summary-body'));
+  wireSessionCheckin(w);
   $('#sum-tpl').addEventListener('click',()=>{
     const name = prompt('Name der Vorlage:', w.type+'-Tag');
     if(!name) return;
@@ -8074,9 +8188,10 @@ $('#bk-later').addEventListener('click',()=>{
 });
 /* CSV-Export (bei Strong hinter Premium) */
 $('#btn-csv').addEventListener('click',()=>{
-  const rows = [['Datum','Uhrzeit','Typ','Übung','Satz','Satztyp','Gewicht_kg','Wdh_links','Wdh_rechts','Wdh_gesamt','RIR','Volumen_kg','Körpergewicht_kg','Einseitig','Unterstützt']];
+  const rows = [['Datum','Uhrzeit','Typ','Übung','Satz','Satztyp','Gewicht_kg','Wdh_links','Wdh_rechts','Wdh_gesamt','RIR','Volumen_kg','Körpergewicht_kg','Einseitig','Unterstützt','Dauer_min','Session_RPE','Session_Load','Session_Notiz']];
   state.workouts.slice().sort((a,b)=>Date.parse(a.date) - Date.parse(b.date)).forEach(w=>{
     const d = new Date(w.date);
+    const fen=trainingsFenster(w), dauerMin=fen?Math.round(fen.dauer/6000)/10:'', rpe=sessionRpe(w), load=sessionLoad(w);
     w.exercises.forEach(e=>{
       const assist = entryIsAssist(e);
       const bwk = (e.bw || assist)? (e.bwkg!=null? +e.bwkg : bwAt(w.date)) : 0;
@@ -8094,7 +8209,8 @@ $('#btn-csv').addEventListener('click',()=>{
           w.type, e.name, i+1, s.t==='w'?'Aufwärmen':s.t==='d'?'Dropset':'Arbeitssatz',
           String(+s.w||0).replace('.',','), rl, uni? rr : '', total, s.rir!=null? s.rir:'',
           String(Math.round(vol)).replace('.',','), bwk? String(bwk).replace('.',','):'',
-          uni?'ja':'', assist?'ja':'']);
+          uni?'ja':'', assist?'ja':'', dauerMin===''?'':String(dauerMin).replace('.',','),
+          rpe===null?'':rpe, load===null?'':load, w.note||'']);
       });
     });
   });
@@ -8842,12 +8958,12 @@ function renderStats(){
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   ÜBERSICHT: DIE FÜNF ANTWORTEN, DIE MAN IM STUDIO BRAUCHT       (V84)
+   ÜBERSICHT: DIE SECHS ANTWORTEN, DIE MAN IM STUDIO BRAUCHT      (V85)
 
    Die alten Reiter bleiben die vollständige Analyse. Diese Seite zieht nur
    bereits berechnete Wahrheiten zusammen: aktuelles Fenster, Volumentrend,
-   offene Muskelgruppen, Kraftzuwächse und Körpergewicht. Keine Punktzahl,
-   kein erfundener „Readiness Score" und keine neue Trainingsrechnung. */
+   offene Muskelgruppen, Kraftzuwächse, subjektive Belastung und Körpergewicht.
+   Keine undurchsichtige Gesamtpunktzahl und kein erfundener Readiness Score. */
 function overviewFenster(){
   const cs=closedCycles();
   if(cs.length){
@@ -8932,6 +9048,33 @@ function overviewStrengthCard(gains){
     }).join('')}</div>
     <button class="btn btn-ghost btn-block btn-sm" style="margin-top:8px" data-stat-tab="ex">Andere Übung suchen</button></div>`;
 }
+function overviewLoadCard(){
+  const rated=state.workouts.map(w=>{ const r=sessionRpe(w); return {w,r,load:r===null?null:sessionLoad(w)}; })
+    .filter(x=>x.r!==null && x.load!==null);
+  if(rated.length<3){
+    const fehlt=3-rated.length, last=rated[rated.length-1];
+    return `<div class="card"><h3 style="margin-bottom:3px">Belastung (Session-RPE)</h3>
+      <p class="tiny">Bewerte nach dem Training die Anstrengung von 1 bis 10. Nach drei bewerteten Einheiten entsteht dein persönlicher Belastungstrend.</p>
+      ${last?`<div class="row" style="margin-top:12px"><div class="grow"><b>Letzte Bewertung: ${last.r}/10 · ${rpeLabel(last.r)}</b>
+        <div class="meta">${last.load} Punkte · ${fmtDate(last.w.date)}</div></div><span class="badge type">${rated.length}/3</span></div>`:
+        '<div class="empty" style="padding:14px">Noch keine Einheit bewertet — die nächste Zusammenfassung fragt dich danach.</div>'}
+      <p class="kpihint tiny">Noch ${fehlt} ${fehlt===1?'bewertete Einheit':'bewertete Einheiten'} bis zum Diagramm. Session-Load = Dauer in Minuten × RPE.</p></div>`;
+  }
+  const arr=rated.slice(-8), pts=arr.map(x=>({y:x.load,l:new Date(x.w.date).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})}));
+  const avgRpe=arr.reduce((a,x)=>a+x.r,0)/arr.length;
+  let vergleich=`Ø RPE <b>${avgRpe.toLocaleString('de-DE',{minimumFractionDigits:1,maximumFractionDigits:1})}</b> in diesen ${arr.length} Einheiten.`;
+  if(arr.length>=6){
+    const alt=arr.slice(-6,-3).reduce((a,x)=>a+x.load,0)/3;
+    const neu=arr.slice(-3).reduce((a,x)=>a+x.load,0)/3;
+    const d=alt?Math.round((neu-alt)/alt*100):0;
+    vergleich=`Ø der letzten 3: <b>${Math.round(neu)} Punkte</b> · ${d===0?'unverändert':`<b style="color:${d>0?'var(--a7)':'var(--txt2)'}">${d>0?'+':''}${d} %</b>`} gegenüber den drei davor.`;
+  }
+  return `<div class="card"><div class="row" style="align-items:flex-start"><div class="grow">
+      <h3 style="margin-bottom:3px">Belastungstrend</h3><p class="tiny">Letzte ${arr.length} bewertete Einheiten · Dauer × Session-RPE.</p></div>
+      <div style="text-align:right"><b style="font-size:var(--fs-lg)">${arr[arr.length-1].load}</b><div class="tiny">Punkte</div></div></div>
+    ${svgLine(pts,v=>Math.round(v)+' Pkt.',{fill:true,avg:true})}
+    <p class="kpihint tiny">${vergleich} Der Wert ist für deinen eigenen Verlauf, keine medizinische Messung und keine Kalorienschätzung.</p></div>`;
+}
 function overviewBodyweightCard(){
   const arr=bwSorted(), last=arr[arr.length-1] || null;
   if(!last) return `<div class="card"><h3>Körpergewicht</h3>
@@ -8972,6 +9115,7 @@ function renderOverviewStats(){
     + overviewTrendCard()
     + overviewMuscleCard()
     + overviewStrengthCard(gains)
+    + overviewLoadCard()
     + overviewBodyweightCard();
 }
 /* Drei Antworten statt vierzehn gleich lauter Karten. Die Detailstatistiken
@@ -9304,6 +9448,24 @@ function wDauerBelastbar(w){
 function wDauerText(w){
   const f=trainingsFenster(w); if(!f) return '';
   return fmtDur(f.dauer) + (f.quelle==='knopf'?' · Start–Fertig, unkorrigiert':'');
+}
+/* Session-RPE: subjektive Anstrengung der gesamten Einheit von 1 bis 10.
+   Der Session-Load ist bewusst simpel und nachvollziehbar: geloggte Minuten
+   × RPE. Er dient nur dem Vergleich mit den eigenen Einheiten. */
+function sessionRpe(w){
+  const r=Math.round(+(w&&w.rpe));
+  return isFinite(r) && r>=1 && r<=10 ? r : null;
+}
+function rpeLabel(r){
+  r=+r||0;
+  return r<=2?'locker':r<=4?'moderat':r<=6?'fordernd':r<=8?'hart':r===9?'sehr hart':'maximal';
+}
+function sessionLoad(w){
+  const r=sessionRpe(w); if(r===null) return null;
+  const f=trainingsFenster(w); if(!f) return null;
+  const min=f.dauer/60000;
+  if(!isFinite(min) || min<1 || min>300) return null;
+  return Math.round(min*r);
 }
 /* Der Stempel entsteht genau dann, wenn ein Satz fertig wird. Einmal
    gesetzt, bleibt er — eine spätere Korrektur der Zahl verschiebt die
@@ -10410,7 +10572,9 @@ function renderHist(){
   let shown = ws;
   if(histFilter==='Mit PR') shown = shown.filter(w=>w.prs && w.prs.length);
   else if(histFilter!=='Alle') shown = shown.filter(w=>w.type===histFilter);
-  if(q) shown = shown.filter(w=>w.exercises.some(e=>(e.name||'').toLowerCase().includes(q)));
+  if(q) shown = shown.filter(w=>String(w.note||'').toLowerCase().includes(q)
+    || w.exercises.some(e=>(e.name||'').toLowerCase().includes(q)
+      || String(e.note||'').toLowerCase().includes(q)));
 
   const filtering = q || histFilter!=='Alle';
   if(ws.length && filtering){
@@ -10444,7 +10608,8 @@ function renderHist(){
             const sek = wDauerSek(w), dist = wDistM(w);
             if(sek || dist) return [sek? fmtSek(sek):'', dist? fmtDist(dist):''].filter(Boolean).join(' · ');
             return fmtVol(0);
-          })()}</b>${wDauer(w)? ` · ${wDauerText(w)}`:''}</div>
+          })()}</b>${wDauer(w)? ` · ${wDauerText(w)}`:''}${sessionRpe(w)!==null?` · RPE ${sessionRpe(w)}`:''}</div>
+          ${w.note?`<div class="histnote">„${esc(w.note)}“</div>`:''}
         </div>
         <span style="color:var(--txt3);font-size:var(--fs-lg)" aria-hidden="true">›</span>
       </div>
@@ -10553,6 +10718,8 @@ function openWEdit(wid){
   weDraft = {
     id: w.id, date: w.date, type: w.type,
     durMin: f ? String(Math.round(f.dauer/60000)) : '',
+    rpe: sessionRpe(w)===null ? '' : String(sessionRpe(w)),
+    sessionNote: w.note || '',
     exercises: JSON.parse(JSON.stringify(w.exercises || []))
   };
   renderWEdit();
@@ -10584,6 +10751,13 @@ function renderWEdit(){
            placeholder="leer = automatisch" value="${esc(weDraft.durMin)}" style="margin:4px 0 4px">
     <p class="tiny" style="margin-bottom:12px">Leer lassen heißt: vom ersten bis zum letzten Satz gemessen.
       Eine eingetragene Zahl gilt stattdessen.</p>
+    <label class="tiny up" for="we-rpe">Session-RPE</label>
+    <select id="we-rpe" style="margin:4px 0 12px">
+      <option value="">Nicht bewertet</option>
+      ${Array.from({length:10},(_,i)=>i+1).map(i=>`<option value="${i}" ${String(weDraft.rpe)===String(i)?'selected':''}>${i}/10 · ${rpeLabel(i)}</option>`).join('')}
+    </select>
+    <label class="tiny up" for="we-session-note">Notiz zur gesamten Einheit</label>
+    <textarea id="we-session-note" maxlength="280" rows="3" placeholder="Was lief gut? Was änderst du nächstes Mal?" style="margin:4px 0 12px">${esc(weDraft.sessionNote||'')}</textarea>
     ${weDraft.exercises.length ? weDraft.exercises.map((e,ei)=>{
       const assist = (e.as !== undefined) ? !!e.as : exIsAssist(e.exId);
       const isBW   = !assist && ((e.bw !== undefined) ? !!e.bw : exIsBW(e.exId));
@@ -10624,6 +10798,8 @@ function renderWEdit(){
   $('#we-date').addEventListener('change', e=>{ weSetzeDatum(e.target.value, null); });
   $('#we-time').addEventListener('change', e=>{ weSetzeDatum(null, e.target.value); });
   $('#we-dur').addEventListener('input', e=>{ weDraft.durMin = e.target.value; });
+  $('#we-rpe').addEventListener('change', e=>{ weDraft.rpe = e.target.value; });
+  $('#we-session-note').addEventListener('input', e=>{ weDraft.sessionNote = e.target.value; });
   $$('#we-type [data-we-t]').forEach(b=>b.addEventListener('click',()=>{
     weDraft.type = b.dataset.weT; haptic(); renderWEdit();
   }));
@@ -10713,6 +10889,10 @@ async function weSpeichern(){
     if(!ok) return;
   }
 
+  const rpeText=String(weDraft.rpe||'').trim();
+  const rpe=rpeText===''?null:Math.round(+rpeText);
+  if(rpe!==null && (!isFinite(rpe)||rpe<1||rpe>10)){ toast('Session-RPE: bitte 1 bis 10'); return; }
+
   const alt = JSON.parse(JSON.stringify(state.workouts));
   makeSnapshot('vor Bearbeitung', true);
 
@@ -10721,6 +10901,9 @@ async function weSpeichern(){
     start: state.workouts[i].start, end: state.workouts[i].end,
     exercises: uebungen, prs: []
   };
+  if(rpe!==null) neu.rpe=rpe;
+  const sessionNote=String(weDraft.sessionNote||'').trim().slice(0,280);
+  if(sessionNote) neu.note=sessionNote;
   /* Die Dauer: Eine eingetragene Zahl gilt nur, wenn sie sich vom
      gemessenen Wert unterscheidet. Sonst bleibt es automatisch — sonst
      würde jede Bearbeitung stillschweigend eine Handkorrektur anlegen. */
@@ -10760,15 +10943,20 @@ function showDetail(wid){
   const prByEx = {}; (w.prs||[]).forEach(p=>{ (prByEx[p.exId]=prByEx[p.exId]||[]).push(p.kind); });
   $('#detail-body').innerHTML = `
     <div class="grab"></div>
-    <div class="mhd"><div><h2>${esc(w.type)}-Workout</h2><div class="sub">${fmtDateShort(w.date)}${wDauer(w)? ' · '+wDauerText(w):''} · ${fmtVol(wVolume(w))}</div></div><button class="iconbtn" data-close aria-label="Schließen" data-ico-close></button></div>
+    <div class="mhd"><div><h2>${esc(w.type)}-Workout</h2><div class="sub">${fmtDateShort(w.date)}${wDauer(w)? ' · '+wDauerText(w):''} · ${fmtVol(wVolume(w))}${sessionRpe(w)!==null?' · RPE '+sessionRpe(w):''}</div></div><button class="iconbtn" data-close aria-label="Schließen" data-ico-close></button></div>
     ${(()=>{ const f = trainingsFenster(w); return `<div class="item">
       <div class="grow"><div class="ttl" style="font-size:var(--fs-sub)">Dauer ${f? fmtDur(f.dauer) : 'nicht gemessen'}</div>
         <div class="meta">${f? DAUER_QUELLE[f.quelle] : 'für dieses Training liegt keine Zeit vor'}${
           f && f.vorlauf >= VORLAUF_SCHWELLE? ' · '+fmtDur(f.vorlauf)+' Vorlauf herausgerechnet' : ''}</div></div>
       <button class="btn btn-ghost btn-sm" id="det-dur">${f && f.quelle==='korrigiert'? 'Ändern' : 'Korrigieren'}</button></div>`; })()}
+    ${(()=>{ const r=sessionRpe(w), load=sessionLoad(w); return `<div class="item">
+      <div class="grow"><div class="ttl" style="font-size:var(--fs-sub)">Session-RPE ${r===null?'nicht bewertet':r+'/10 · '+rpeLabel(r)}</div>
+        <div class="meta">${r===null?'Im Bearbeiten-Modus nachtragbar':load===null?'Für den Session-Load fehlt eine plausible Dauer':load+' Belastungspunkte · Dauer × RPE'}</div></div></div>`; })()}
+    ${w.note?`<div class="sessiondetail">${esc(w.note)}</div>`:''}
     ${w.exercises.map(e=>`
       <div class="card" style="padding:8px 12px">
         <b>${esc(e.name)}</b> ${(prByEx[e.exId]||[]).map(k=>`<span class="badge pr">${ICO.trophy} ${esc(k)}</span>`).join(' ')}
+        ${e.note?`<div class="tiny" style="margin-top:3px">${esc(e.note)}</div>`:''}
         <table class="htable" style="margin-top:4px"><tr><th>#</th><th>${entryIsAssist(e)?'−kg':'kg'}</th><th>Wdh</th><th>e1RM</th></tr>
         ${e.sets.map((s,i)=>{
           const uni = (e.uni!==undefined? !!e.uni : exIsUni(e.exId));
@@ -11117,7 +11305,10 @@ function backupText(maxWk){
           return (w2? w2 : 'BW')+'×'+r + ((rr!=null&&rr!=='')? '|'+rr : ''); }).join(', ');
         return `• ${nm}: ${body}`;
       }).filter(Boolean);
-      return `━ ${d} · ${w.type||''}\n${lines.join('\n')}`;
+      const r=sessionRpe(w), load=sessionLoad(w);
+      const gefuehl=r===null?'':` · RPE ${r}${load!==null?' · Load '+load:''}`;
+      const notiz=w.note?`\n  Notiz: ${String(w.note).trim()}`:'';
+      return `━ ${d} · ${w.type||''}${gefuehl}\n${lines.join('\n')}${notiz}`;
     }).join('\n\n');
   }
   return head + recLine + log;
