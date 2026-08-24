@@ -108,13 +108,13 @@ exports.lauf = async ({ page, p }) => {
     state.exOpt={[altNeutral]:{lo:5,hi:8},[ziel]:{step:2.5}};
     state.settings.favEx=[altWeighted,altNeutral,ziel,'nicht-mehr-da'];
     migrateState(); saveState();
-    const h=exHistory(ziel), b=exBests(ziel);
+    const h=exHistory(ziel), b=exBests(ziel), gain=zuwachsStat(2).find(x=>x.id===ziel);
     return {
       sichtbar:EXDB.filter(e=>['Klimmzüge','Klimmzüge (mit Gewicht)','Klimmzüge (neutraler Griff)'].includes(e.name)).map(e=>e.name),
       ids:state.workouts.map(w=>w.exercises[0].exId), namen:state.workouts.map(w=>w.exercises[0].name),
       vols:h.map(x=>x.vol), sessions:b.sessions, maxW:b.maxW,
       tpl:state.templates[0].exIds, goal:state.goals[0].exId,
-      opt:state.exOpt[ziel], fav:state.settings.favEx
+      opt:state.exOpt[ziel], fav:state.settings.favEx, gain
     };
   })()`);
   p.gleich('nur eine allgemeine Klimmzug-Übung ist sichtbar', fusion.sichtbar.join('|'), 'Klimmzüge');
@@ -128,6 +128,8 @@ exports.lauf = async ({ page, p }) => {
   p.gleich('Ziel wird mit umgezogen', fusion.goal, 'x-klimmzüge');
   p.gleich('kanonische Einstellung gewinnt ohne Altwerte zu verlieren', JSON.stringify(fusion.opt), JSON.stringify({lo:5,hi:8,step:2.5}));
   p.gleich('alte Klimmzug-Favoriten bleiben einmalig erhalten', fusion.fav.join('|'), 'x-klimmzüge');
+  p.gleich('Übersicht erkennt 0 → Zusatzgewicht als echten Zuwachs', fusion.gain.diff, 10);
+  p.gleich('Zuwachs von Körpergewicht aus erfindet keinen Prozentwert', fusion.gain.pct, null);
 
   /* ── Altdaten behalten ihr mitgeschriebenes Gewicht ─────────────────
      Beim Abschliessen wird bwkg im Eintrag festgehalten. Es muss Vorrang

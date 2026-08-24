@@ -1,10 +1,11 @@
-/* V79: Die zuvor getrennten V73- und V78-Linien müssen gemeinsam laufen.
-   Diese Suite prüft die Nahtstellen und die faule zweite Statistik-Ebene. */
+/* V84: Die zuvor getrennten V73- und V78-Linien müssen gemeinsam laufen.
+   Diese Suite prüft außerdem die mobile Übersicht und die faule zweite
+   Statistik-Ebene. */
 
 const { js, warte, text } = require('../lib/browser');
 const { seedCode } = require('../lib/seed');
 
-exports.name = 'V79 Zusammenführung';
+exports.name = 'V84 Zusammenführung';
 
 exports.lauf = async ({ page, p }) => {
   await js(page, seedCode({ workouts: 300 }));
@@ -23,6 +24,43 @@ exports.lauf = async ({ page, p }) => {
   p.pruefe('Kardio aus V78 ist erhalten', kern.kardio);
   p.pruefe('persönliche Ziele aus V78 sind erhalten', kern.ziele);
   p.mind('Dips werden aus V78 als Körpergewicht erkannt', kern.dips, 1);
+
+  /* V84: Die wichtigsten Antworten stehen in einer eigenen mobilen
+     Übersicht; die sechs vollständigen Reiternamen dürfen nicht mehr in
+     einer gequetschten Segmentleiste enden. */
+  const overview = await js(page, `(() => {
+    statsPanel='overview'; renderStats();
+    const tabs=[...document.querySelectorAll('#stats-seg button')];
+    const box=document.querySelector('#stats-overview');
+    return {tabs:tabs.map(x=>x.textContent.trim()),aktiv:tabs.filter(x=>x.classList.contains('on')).map(x=>x.dataset.p),
+      scroll:document.querySelector('#stats-seg').classList.contains('scroll'),
+      sichtbar:getComputedStyle(box).display!=='none', text:box.textContent,
+      karten:box.querySelectorAll('.card').length, exAction:!!box.querySelector('[data-stat-ex]'),
+      doppelt:[...document.querySelectorAll('[id]')].map(x=>x.id).filter((id,i,a)=>id&&a.indexOf(id)!==i).length};
+  })()`);
+  p.gleich('Statistik hat sechs klar benannte Bereiche',overview.tabs.join('|'),'Übersicht|Zyklus|5 Zyklen|20 Zyklen|Gesamt|Übung');
+  p.gleich('Übersicht ist der aktive Startbereich',overview.aktiv.join('|'),'overview');
+  p.pruefe('Statistik-Tabs sind auf dem Handy horizontal scrollbar',overview.scroll);
+  p.pruefe('Übersicht wird sichtbar gezeichnet',overview.sichtbar);
+  p.mind('Übersicht bündelt mehrere kompakte Karten',overview.karten,5);
+  p.pruefe('Übersicht enthält den Zyklus-Leistungstrend',/Leistungstrend/.test(overview.text));
+  p.pruefe('Übersicht enthält Muskelgruppen',/Muskelgruppen/.test(overview.text));
+  p.pruefe('Übersicht enthält Kraftentwicklung',/Kraftentwicklung/.test(overview.text));
+  p.pruefe('Übersicht enthält Körpergewicht',/Körpergewicht/.test(overview.text));
+  p.pruefe('Kraftzeilen führen direkt zur Übungsanalyse',overview.exAction);
+  p.gleich('neue Übersicht erzeugt keine doppelten IDs',overview.doppelt,0);
+
+  const sprung = await js(page, `(() => {
+    const b=document.querySelector('#stats-overview [data-stat-ex]');
+    if(!b) return null; const id=b.dataset.statEx; b.click();
+    return {id,stat:exStatId,panel:statsPanel,aktiv:document.querySelector('#stats-seg .on').dataset.p};
+  })()`);
+  p.pruefe('Direktsprung in die Übungsanalyse ist vorhanden',!!sprung);
+  if(sprung){
+    p.gleich('Direktsprung übernimmt die richtige Übung',sprung.stat,sprung.id);
+    p.gleich('Direktsprung aktiviert den Übungsreiter',sprung.panel,'ex');
+    p.gleich('aktive Tab-Markierung folgt dem Direktsprung',sprung.aktiv,'ex');
+  }
 
   const geschlossen = await js(page, `(() => {
     statsPanel='all'; renderStats();
@@ -58,5 +96,5 @@ exports.lauf = async ({ page, p }) => {
 
   await js(page, `showScreen('scr-settings')`).catch(()=>{});
   const version = await text(page, 'body');
-  p.enthaelt('ausgelieferte Oberfläche trägt Version V83', version, 'Fitness Tracker V83');
+  p.enthaelt('ausgelieferte Oberfläche trägt Version V84', version, 'Fitness Tracker V84');
 };

@@ -404,6 +404,38 @@ h3>.bi svg{width:15px;height:15px}
 .focusrow .ttl{font-size:var(--fs-sub);font-weight:700}
 .focusrow .meta{margin-top:2px}
 .focusval{font-size:var(--fs-sub);font-weight:750;color:var(--a7);white-space:nowrap}
+
+/* ─── STATISTIK V84 ──────────────────────────────────────────────────
+   Sechs Zeiträume passen nicht in eine Segmentleiste, ohne auf dem iPhone
+   zu „Übe… / Gesa…" zu schrumpfen. Die Statistik verwendet deshalb echte
+   horizontal scrollbare Tabs: vollständige Wörter, 44-px-Touchziele und der
+   aktive Zustand bleibt zusätzlich durch Fläche und Rahmen erkennbar. */
+.stats-tabs{position:sticky;top:calc(env(safe-area-inset-top) + 6px);z-index:18;
+  flex-wrap:nowrap;margin:0 0 var(--sp4);padding:4px;max-width:100%;overflow-x:auto;
+  background:rgba(12,14,18,.92);border:1px solid var(--line);border-radius:var(--r-md);
+  backdrop-filter:blur(16px);box-shadow:var(--e1);scroll-padding:4px}
+.stats-tabs .chip{border-color:transparent;background:transparent;padding:8px 13px}
+.stats-tabs .chip.on{background:var(--grad-a);border-color:transparent;color:var(--on-acc);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 4px 14px -8px var(--a5)}
+.stats-overview-lead{overflow:hidden;border-color:var(--acc-a30);
+  background:radial-gradient(110% 130% at 100% 0,rgba(82,156,255,.2),transparent 58%),var(--s1)}
+.stats-overview-lead .up{color:var(--a6)}
+.ovrow{width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto 14px;gap:var(--sp2);
+  align-items:center;text-align:left;min-height:52px;padding:9px 0;border-top:1px solid var(--line)}
+.ovrow:first-of-type{border-top:0}
+.ovrow:active{opacity:.76}
+.ovrow .ttl{font-size:var(--fs-sub);font-weight:700;overflow-wrap:anywhere}
+.ovrow .meta{margin-top:2px}
+.ovrow .value{font-size:var(--fs-sub);font-weight:750;color:var(--a7);white-space:nowrap}
+.ovrow .chev{color:var(--txt3);font-size:var(--fs-lg)}
+.ovgap{display:grid;grid-template-columns:minmax(84px,1fr) 2fr auto;gap:var(--sp2);align-items:center;
+  min-height:44px;border-top:1px solid var(--line)}
+.ovgap:first-of-type{border-top:0}
+.ovgap .bar{height:8px;background:var(--s3);border-radius:var(--r-full);overflow:hidden}
+.ovgap .bar i{display:block;height:100%;background:var(--a5);border-radius:inherit}
+.ovgap .value{font-size:var(--fs-tiny);font-weight:750;color:var(--a6);white-space:nowrap}
+.ovactions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--sp2);margin-top:var(--sp3)}
+@media(max-width:360px){.ovactions{grid-template-columns:1fr}}
 .kpi b,.kpi span{overflow-wrap:anywhere}
 .kpi b{display:block;font-size:var(--fs-lg);font-weight:750;letter-spacing:-.03em}
 .kpi span{font-size:var(--fs-micro);color:var(--txt3);text-transform:uppercase;letter-spacing:.07em;font-weight:650}
@@ -918,6 +950,7 @@ details.notiz input{margin-top:4px;width:100%}
   .statspanel{column-count:2;column-gap:var(--sp3)}
   .statspanel>.card{break-inside:avoid}
   .statspanel>.cnav,.statspanel>.kpis,.statspanel>.tiny{column-span:all}
+  #stats-overview>.stats-overview-lead{column-span:all}
   .bodywrap>div{max-width:340px}
   h1{font-size:var(--fs-h1)}
   .nav{background:rgba(10,12,17,.9)}
@@ -1254,18 +1287,20 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
   <!-- ================= STATS ================= -->
   <section class="screen" id="scr-stats">
     <div class="hd"><h1>Statistik</h1></div>
-    <div class="seg" id="stats-seg">
-      <button data-p="week" class="on">Zyklus</button>
-      <button data-p="month">5&nbsp;Zyklen</button>
-      <button data-p="year">20&nbsp;Zyklen</button>
-      <button data-p="all">Gesamt</button>
-      <button data-p="ex">Übung</button>
+    <div class="chips scroll stats-tabs" id="stats-seg" role="tablist" aria-label="Statistikbereich">
+      <button class="chip on" id="stats-tab-overview" role="tab" aria-selected="true" aria-controls="stats-overview" tabindex="0" data-p="overview">Übersicht</button>
+      <button class="chip" id="stats-tab-week" role="tab" aria-selected="false" aria-controls="stats-week" tabindex="-1" data-p="week">Zyklus</button>
+      <button class="chip" id="stats-tab-month" role="tab" aria-selected="false" aria-controls="stats-month" tabindex="-1" data-p="month">5&nbsp;Zyklen</button>
+      <button class="chip" id="stats-tab-year" role="tab" aria-selected="false" aria-controls="stats-year" tabindex="-1" data-p="year">20&nbsp;Zyklen</button>
+      <button class="chip" id="stats-tab-all" role="tab" aria-selected="false" aria-controls="stats-all" tabindex="-1" data-p="all">Gesamt</button>
+      <button class="chip" id="stats-tab-ex" role="tab" aria-selected="false" aria-controls="stats-ex" tabindex="-1" data-p="ex">Übung</button>
     </div>
-    <div id="stats-week" class="statspanel"></div>
-    <div id="stats-month" class="statspanel" style="display:none"></div>
-    <div id="stats-year" class="statspanel" style="display:none"></div>
-    <div id="stats-all" class="statspanel" style="display:none"></div>
-    <div id="stats-ex" class="statspanel" style="display:none">
+    <div id="stats-overview" class="statspanel" role="tabpanel" aria-labelledby="stats-tab-overview" aria-hidden="false"></div>
+    <div id="stats-week" class="statspanel" role="tabpanel" aria-labelledby="stats-tab-week" aria-hidden="true" style="display:none"></div>
+    <div id="stats-month" class="statspanel" role="tabpanel" aria-labelledby="stats-tab-month" aria-hidden="true" style="display:none"></div>
+    <div id="stats-year" class="statspanel" role="tabpanel" aria-labelledby="stats-tab-year" aria-hidden="true" style="display:none"></div>
+    <div id="stats-all" class="statspanel" role="tabpanel" aria-labelledby="stats-tab-all" aria-hidden="true" style="display:none"></div>
+    <div id="stats-ex" class="statspanel" role="tabpanel" aria-labelledby="stats-tab-ex" aria-hidden="true" style="display:none">
       <input type="search" id="exstat-search" placeholder="Übung suchen (z.B. Bankdrücken)…">
       <div id="exstat-results" style="margin-top:8px"></div>
       <div id="exstat-detail"></div>
@@ -1636,7 +1671,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V83 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V84 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="mback" id="modal-sync"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="sync-title">
@@ -5067,44 +5102,7 @@ function _trainingsVorschlag(typ){
     /* Reihenfolge: was die Progression sagt → was zuletzt wirklich gemacht
        wurde → die Vorgabe DIESER Übung (nicht mehr die globale). */
     const n = prog && prog.sets ? prog.sets : (validSets(e).length || exDefSets(e.exId));
-    /* Gewicht nur, wenn es aus echter Historie stammt. */
-    const kg = prog ? prog.w : '';
-    return {
-      exId: e.exId, name: ex.name,
-      sets: Array.from({length:n}, ()=>({ w: (kg===''||kg==null)? '' : kg, r:'' })),
-      /* quelle macht nachvollziehbar, woher die Zahl kommt — sie steht
-         auch in der Anzeige, damit niemand eine Messung vermutet. */
-      quelle: prog ? prog.kind : 'ohne',
-      hinweis: prog ? prog.txt : null
-    };
-  }).filter(Boolean);
-  const chronisch=lueckenErgaenzungen(t,uebungen.map(x=>x.exId),2);
-  uebungen.push(...chronisch);
-  return { typ:t, uebungen, vorlage, chronisch, luecken: zyklusLuecken() };
-}
-
-/* Die Karte auf dem Startbildschirm. Kurz halten — sie ist das Erste, was
-   Aaron morgens sieht, und beantwortet EINE Frage: was mache ich heute? */
-function renderVorschlag(){
-  const box = $('#home-suggest');
-  if(!box) return;
-  if(state.active){ box.innerHTML = ''; return; }        // läuft schon eins
-  const v = trainingsVorschlag();
-
-  /* Ohne Vorlage kein Vorschlag — dann bleibt der normale Startknopf. */
-  if(!v.uebungen.length){ box.innerHTML = ''; return; }
-
-  const mitGewicht = v.uebungen.filter(u=>u.sets[0] && u.sets[0].w !== '').length;
-  const kompakt=v.uebungen.slice(0,3), weitere=v.uebungen.length-kompakt.length;
-  const luecke = v.luecken.length
-    ? `<div class="tiny" style="margin-top:4px;color:var(--gold)">${v.luecken.slice(0,2)
-        .map(l=>`${l.gruppe} ${l.ist} von ${l.lo}`).join(' · ')} Sätzen im Zyklus</div>`
-    : '';
-  const chronisch=(v.chronisch||[]).length
-    ? `<div class="tiny" style="margin-top:4px;color:var(--a6)">+ Ausgleich: ${(v.chronisch||[]).map(x=>x.luecke.gruppe).join(' · ')}</div>`
-    : '';
-
-  box.innerHTML = `<div class="card" style="margin-bottom:12px;border-color:var(--acc-a30);background:linear-gradient(160deg,var(--acc-a08),transparent 60%),var(--s1)">
+    /* Gewicht nur, wen�ozo+^����םclass="card" style="margin-bottom:12px;border-color:var(--acc-a30);background:linear-gradient(160deg,var(--acc-a08),transparent 60%),var(--s1)">
     <div class="label" style="color:var(--acc)">Heute${v.quelle==='plan'? ' · von dir geplant':''}</div>
     <b style="font-size:var(--fs-h2);display:block;margin:2px 0 0">${esc(v.typ)} · ${v.uebungen.length} ${v.uebungen.length===1?'Übung':'Übungen'}</b>
     ${chronisch||luecke}
@@ -7429,7 +7427,18 @@ document.addEventListener('click', e=>{
    von #luecke-body und #detail-body. Deshalb ist er auf #scr-stats
    begrenzt — global würde er in den Modalen doppelt feuern. */
 document.addEventListener('click', e=>{
-  if(e.target.closest('#stat-bw,#stat-bw-refresh')){ haptic(); openBW(); return; }
+  if(e.target.closest('#stat-bw,#stat-bw-refresh,[data-stat-bw]')){ haptic(); openBW(); return; }
+  const tab=e.target.closest('#scr-stats [data-stat-tab]');
+  if(tab){
+    haptic(); waehleStatsPanel(tab.dataset.statTab);
+    window.scrollTo({top:0,behavior:REDUCED?'auto':'smooth'}); return;
+  }
+  const ex=e.target.closest('#scr-stats [data-stat-ex]');
+  if(ex){
+    exStatId=ex.dataset.statEx; $('#exstat-search').value='';
+    haptic(); waehleStatsPanel('ex'); window.scrollTo({top:0,behavior:REDUCED?'auto':'smooth'}); return;
+  }
+  if(e.target.closest('#scr-stats [data-stat-gap]')){ openLuecken(); return; }
   const plus = e.target.closest('#scr-stats [data-addgap]');
   if(plus){
     const r = uebungEinplanen(plus.dataset.addgap);
@@ -8756,20 +8765,177 @@ function yearHeatmap(year){
 }
 
 /* ================= STATISTIK-PANELS ================= */
-let statsPanel='week', weekOff=0, monthOff=0, yearOff=0, exStatId=null;
-$$('#stats-seg button').forEach(b=>b.addEventListener('click',()=>{
-  statsPanel=b.dataset.p;
-  $$('#stats-seg button').forEach(x=>x.classList.toggle('on',x===b));
-  renderStats();
-}));
+let statsPanel='overview', weekOff=0, monthOff=0, yearOff=0, exStatId=null;
+function statsTabInSicht(tab){
+  const rail=$('#stats-seg'); if(!rail || !tab) return;
+  const links=tab.offsetLeft-(rail.clientWidth-tab.offsetWidth)/2;
+  rail.scrollTo({left:Math.max(0,links),behavior:REDUCED?'auto':'smooth'});
+}
+function waehleStatsPanel(panel, fokus){
+  if(!$('#stats-'+panel)) panel='overview';
+  statsPanel=panel; renderStats();
+  const tab=$(`#stats-seg [data-p="${panel}"]`);
+  statsTabInSicht(tab);
+  if(fokus && tab) tab.focus();
+}
+$$('#stats-seg button').forEach(b=>b.addEventListener('click',()=>waehleStatsPanel(b.dataset.p)));
+$('#stats-seg').addEventListener('keydown',e=>{
+  if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key)) return;
+  const tabs=$$('#stats-seg button'), von=tabs.indexOf(document.activeElement);
+  if(von<0) return;
+  e.preventDefault();
+  let zu=e.key==='Home'?0:e.key==='End'?tabs.length-1:
+    (von+(e.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length;
+  waehleStatsPanel(tabs[zu].dataset.p,true);
+});
 function renderStats(){
-  $$('.statspanel').forEach(p=>p.style.display='none');
-  $('#stats-'+statsPanel).style.display='block';
+  $$('#stats-seg button').forEach(x=>{
+    const on=x.dataset.p===statsPanel;
+    x.classList.toggle('on',on); x.setAttribute('aria-selected',on?'true':'false'); x.tabIndex=on?0:-1;
+  });
+  $$('.statspanel').forEach(p=>{ p.style.display='none'; p.setAttribute('aria-hidden','true'); });
+  const panel=$('#stats-'+statsPanel) || $('#stats-overview');
+  panel.style.display='block'; panel.setAttribute('aria-hidden','false');
+  if(statsPanel==='overview') renderOverviewStats();
   if(statsPanel==='week') renderWeekStats();
   if(statsPanel==='month') renderMonthStats();
   if(statsPanel==='year') renderYearStats();
   if(statsPanel==='all') renderAllStats();
   if(statsPanel==='ex') renderExStats();
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   ÜBERSICHT: DIE FÜNF ANTWORTEN, DIE MAN IM STUDIO BRAUCHT       (V84)
+
+   Die alten Reiter bleiben die vollständige Analyse. Diese Seite zieht nur
+   bereits berechnete Wahrheiten zusammen: aktuelles Fenster, Volumentrend,
+   offene Muskelgruppen, Kraftzuwächse und Körpergewicht. Keine Punktzahl,
+   kein erfundener „Readiness Score" und keine neue Trainingsrechnung. */
+function overviewFenster(){
+  const cs=closedCycles();
+  if(cs.length){
+    const n=Math.min(5,cs.length), aktuell=cs.slice(-n), vorher=cs.slice(-2*n,-n);
+    return {art:'zyklen', cs:aktuell, ws:cycleWorkouts(aktuell),
+      prevWs:vorher.length===n?cycleWorkouts(vorher):null,
+      label:n===1?'Letzter abgeschlossener Zyklus':`Letzte ${n} abgeschlossene Zyklen`,
+      vergleich:vorher.length===n?(n===1?'gegen den Zyklus davor':`gegen die ${n} Zyklen davor`):''};
+  }
+  const n=Math.min(6,state.workouts.length), ws=state.workouts.slice(-n), vorher=state.workouts.slice(-2*n,-n);
+  return {art:'einheiten',cs:[],ws,
+    prevWs:vorher.length===n?vorher:null,
+    label:`Letzte ${n} ${n===1?'Einheit':'Einheiten'}`,
+    vergleich:vorher.length===n?(n===1?'gegen die Einheit davor':`gegen die ${n} Einheiten davor`):''};
+}
+function overviewTrendCard(){
+  const cs=closedCycles().slice(-8);
+  if(cs.length>=2){
+    const vals=cs.map(c=>c.ws.reduce((a,w)=>a+wVolume(w),0));
+    const pts=cs.map((c,i)=>({y:Math.round(vals[i]),l:'Z'+c.n}));
+    const fehlen=4-cs.length;
+    let aussage=`Noch ${fehlen===1?'ein weiterer abgeschlossener Zyklus':fehlen+' weitere abgeschlossene Zyklen'}, dann wird der Vergleich stabiler.`;
+    if(cs.length>=4){
+      const h=Math.floor(cs.length/2);
+      const alt=vals.slice(0,h).reduce((a,v)=>a+v,0)/h;
+      const neu=vals.slice(-h).reduce((a,v)=>a+v,0)/h;
+      const d=alt>0?Math.round((neu-alt)/alt*100):0;
+      aussage=`Ø der letzten ${h}: <b>${fmtVol(Math.round(neu))}</b> je Zyklus · ${d===0?'unverändert':`<b style="color:${d>0?'var(--a7)':'var(--txt2)'}">${d>0?'+':''}${d} %</b> gegenüber den ersten ${h}`}.`;
+    }
+    return `<div class="card"><h3 style="margin-bottom:2px">Leistungstrend</h3>
+      <p class="tiny">Volumen der letzten ${cs.length} abgeschlossenen Zyklen · laufende Zyklen sind ausgeschlossen.</p>
+      ${svgLine(pts,v=>fmtVol(v),{fill:true,avg:cs.length>=4})}
+      <p class="kpihint tiny">${aussage} Volumen ist Arbeit, nicht automatisch Kraft — die Kraftentwicklung steht separat darunter.</p>
+      <button class="btn btn-ghost btn-block btn-sm" data-stat-tab="month">5-Zyklen-Analyse öffnen</button></div>`;
+  }
+  const ws=state.workouts.slice(-8);
+  if(ws.length<2) return '';
+  const pts=ws.map(w=>({y:Math.round(wVolume(w)),l:new Date(w.date).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})}));
+  return `<div class="card"><h3 style="margin-bottom:2px">Leistungstrend</h3>
+    <p class="tiny">Volumen je Einheit · bis zwei Zyklen abgeschlossen sind.</p>
+    ${svgLine(pts,v=>fmtVol(v),{fill:true})}</div>`;
+}
+function overviewMuscleCard(){
+  const c=runningCycle() || closedCycles().slice(-1)[0] || null;
+  if(!c) return `<div class="card"><h3>Muskelgruppen im Zyklus</h3>
+    <div class="empty" style="padding:14px">Nach dem ersten Push/Pull-Zyklus steht hier sofort, welche Gruppe noch fehlt.</div></div>`;
+  const offen=offeneGruppen().slice(0,4);
+  const titel=`Zyklus ${c.n}${c.laufend?' · läuft':' · zuletzt abgeschlossen'}`;
+  if(!offen.length) return `<div class="card"><h3 style="margin-bottom:3px">Muskelgruppen</h3>
+    <p class="tiny">${titel}</p><div class="row" style="gap:10px;margin-top:12px"><span class="focusico">✓</span>
+      <div class="grow"><b>Alle verpflichtenden Gruppen im Korridor</b><div class="meta">Keine erkennbare Satzlücke.</div></div></div>
+    <button class="btn btn-ghost btn-block btn-sm" style="margin-top:12px" data-stat-tab="week">Zyklus vollständig ansehen</button></div>`;
+  return `<div class="card"><h3 style="margin-bottom:3px">Muskelgruppen</h3>
+    <p class="tiny">${titel} · die größten offenen Lücken zuerst.</p>
+    <div style="margin-top:8px">${offen.map(x=>`<div class="ovgap"><b style="font-size:var(--fs-sub)">${esc(x.gruppe)}</b>
+      <span class="bar"><i style="width:${Math.max(0,Math.min(100,x.ist/Math.max(1,x.lo)*100))}%"></i></span>
+      <span class="value">${fmtW(x.ist)}/${x.lo} · ${fmtW(x.fehlt)} fehlen</span></div>`).join('')}</div>
+    <div class="ovactions"><button class="btn btn-acc btn-sm" data-stat-gap>Übungen vorschlagen</button>
+      <button class="btn btn-ghost btn-sm" data-stat-tab="week">Zyklus ansehen</button></div></div>`;
+}
+function overviewStrengthCard(gains){
+  const alle=(gains || zuwachsStat(4).filter(x=>x.diff>0)).slice();
+  /* Favorisierte und zuletzt benutzte Übungen sind im Alltag wichtiger als
+     eine alte Übung mit zufällig größerem Prozentwert. Innerhalb derselben
+     Priorität bleibt die echte Zuwachs-Rangfolge erhalten. */
+  const neu=new Set(recentExIds(8));
+  alle.sort((a,b)=>(isFav(b.id)-isFav(a.id)) || (neu.has(b.id)-neu.has(a.id)) ||
+    ((b.pct==null?-Infinity:b.pct)-(a.pct==null?-Infinity:a.pct)) || b.diff-a.diff);
+  const l=alle.slice(0,4);
+  if(!l.length) return `<div class="card"><h3>Kraftentwicklung</h3>
+    <div class="empty" style="padding:14px">Ab vier vergleichbaren Einheiten zeigt die Übersicht deine stärksten Zuwächse.</div>
+    <button class="btn btn-ghost btn-block btn-sm" data-stat-tab="ex">Übung analysieren</button></div>`;
+  return `<div class="card"><h3 style="margin-bottom:3px">Kraftentwicklung</h3>
+    <p class="tiny">Favoriten und zuletzt trainierte Übungen zuerst · Niveauwechsel werden abgeschnitten.</p>
+    <div style="margin-top:6px">${l.map(x=>{
+      const bw=exIsBW(x.id)&&!exIsAssist(x.id);
+      const von=bw?(x.von>0?'+'+fmtW(x.von)+' kg':'Körpergewicht'):fmtW(x.von)+' kg';
+      const bis=bw?'+'+fmtW(x.bis)+' kg':fmtW(x.bis)+' kg';
+      const wert=x.pct==null?'+'+fmtW(x.diff)+' kg':'+'+Math.round(x.pct)+' %';
+      return `<button class="ovrow" data-stat-ex="${esc(x.id)}"><span><span class="ttl">${esc(x.name)}</span>
+        <span class="meta">${von} → ${bis} · ${x.n} Einheiten</span></span><span class="value">${wert}</span><span class="chev">›</span></button>`;
+    }).join('')}</div>
+    <button class="btn btn-ghost btn-block btn-sm" style="margin-top:8px" data-stat-tab="ex">Andere Übung suchen</button></div>`;
+}
+function overviewBodyweightCard(){
+  const arr=bwSorted(), last=arr[arr.length-1] || null;
+  if(!last) return `<div class="card"><h3>Körpergewicht</h3>
+    <div class="empty" style="padding:14px">Noch kein Verlauf. Für korrektes Klimmzug- und Dip-Volumen genügt ein erster Eintrag.</div>
+    <button class="btn btn-acc btn-block btn-sm" data-stat-bw>Körpergewicht eintragen</button></div>`;
+  const tr=bwTrend(), alter=bwAlter(last);
+  const pts=arr.slice(-12).map(x=>({y:x.kg,l:new Date(x.d).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})}));
+  const trend=tr===null?'noch kein 21-Tage-Trend':`${tr>0?'+':''}${tr.toLocaleString('de-DE',{maximumFractionDigits:2})} kg/Woche`;
+  return `<div class="card"><div class="row" style="justify-content:space-between;align-items:flex-start"><div>
+      <h3 style="margin-bottom:3px">Körpergewicht</h3><p class="tiny">${fmtDate(last.d)}${alter.veraltet?' · '+alter.tage+' Tage alt':''}</p></div>
+      <div style="text-align:right"><b style="font-size:var(--fs-lg)">${fmtKg(last.kg)}</b><div class="tiny" style="color:var(--a6);font-weight:700">${trend}</div></div></div>
+    ${pts.length>=2?svgLine(pts,v=>fmtKg(v),{fill:true,avg:true}):''}
+    <button class="btn btn-ghost btn-block btn-sm" style="margin-top:8px" data-stat-bw>${alter.veraltet?'Jetzt aktualisieren':'Verlauf bearbeiten'}</button></div>`;
+}
+function renderOverviewStats(){
+  const el=$('#stats-overview');
+  if(!state.workouts.length){
+    lastStatsWs=[];
+    el.innerHTML=emptyStats('Noch keine Statistik','Nach deinem ersten Training erscheinen hier Trends, Muskelgruppen und Kraftentwicklung.');
+    return;
+  }
+  const f=overviewFenster(); lastStatsWs=f.ws;
+  const gains=zuwachsStat(4).filter(x=>x.diff>0);
+  const prs=f.ws.reduce((a,w)=>a+(w.prs||[]).length,0);
+  let aussage='Dein aktueller Trainingsstand auf einen Blick.';
+  if(gains.length){
+    const x=gains[0];
+    const bw=exIsBW(x.id)&&!exIsAssist(x.id);
+    const von=bw?(x.von>0?'+'+fmtW(x.von)+' kg':'Körpergewicht'):fmtW(x.von)+' kg';
+    const bis=bw?'+'+fmtW(x.bis)+' kg':fmtW(x.bis)+' kg';
+    aussage=`${esc(x.name)}: ${von} → ${bis} · +${fmtW(x.diff)} kg.`;
+  }else if(prs) aussage=`${prs} ${prs===1?'neue Bestleistung':'neue Bestleistungen'} im aktuellen Fenster.`;
+  const letzter=state.workouts[state.workouts.length-1];
+  el.innerHTML=`<div class="card stats-overview-lead"><div class="up">Aktueller Stand</div>
+      <b style="font-size:var(--fs-lg);line-height:1.35;display:block;margin-top:5px">${aussage}</b>
+      <div class="tiny" style="margin-top:7px">${f.label} · ${f.ws.length} ${f.ws.length===1?'Workout':'Workouts'} · zuletzt ${fmtDate(letzter.date)}.</div></div>`
+    + kpiRow(f.ws,f.prevWs,f.vergleich||null)
+    + overviewTrendCard()
+    + overviewMuscleCard()
+    + overviewStrengthCard(gains)
+    + overviewBodyweightCard();
 }
 /* Drei Antworten statt vierzehn gleich lauter Karten. Die Detailstatistiken
    bleiben vollständig erhalten; diese Karte zieht nur ihre wichtigsten
@@ -8783,8 +8949,9 @@ function statFokus(){
   }else if(state.workouts.length){
     rows.push({ico:'✓',titel:'Verteilung versorgt',meta:'Keine verpflichtende Muskelgruppe liegt unter ihrem Zyklusziel.',wert:'im Ziel'});
   }
-  const plus = zuwachsStat(4).find(x=>x.pct>0);
-  if(plus) rows.push({ico:'↑',titel:`${plus.name} entwickelt sich`,meta:`${plus.n} vergleichbare Einheiten ohne Strukturbruch`,wert:`+${Math.round(plus.pct)} %`});
+  const plus = zuwachsStat(4).find(x=>x.diff>0);
+  if(plus) rows.push({ico:'↑',titel:`${plus.name} entwickelt sich`,meta:`${plus.n} vergleichbare Einheiten ohne Strukturbruch`,
+    wert:plus.pct==null?`+${fmtW(plus.diff)} kg`:`+${Math.round(plus.pct)} %`});
   const brach = brachliegend();
   if(Array.isArray(brach) && brach.length){
     rows.push({ico:'!',titel:`${brach[0].name} fehlt`,meta:`Zuletzt vor ${brach[0].tage} ${brach[0].tage===1?'Tag':'Tagen'} · früher ${brach[0].mal}× trainiert`,wert:'prüfen'});
@@ -8927,11 +9094,17 @@ function zuwachsStat(minEinheiten){
     const teil = brk? h.slice(brk.at) : h;        // nur ab dem letzten Maßstabswechsel
     if(teil.length < min) return;
     const a = teil[0].bestW, b = teil[teil.length-1].bestW;
-    if(!(a>0) || !(b>0)) return;
-    out.push({ id, name:ex.name, von:a, bis:b, diff:b-a, pct:(b-a)/a*100,
+    /* Bei Körpergewichtsübungen ist 0 kg kein fehlender Wert, sondern eine
+       echte Ausgangslage: Klimmzüge ohne Zusatz. Seit V82 folgt darauf in
+       derselben Historie z.B. +10 kg. Prozent sind von null aus undefiniert,
+       die absolute Steigerung ist aber exakt und darf nicht verschwinden. */
+    const bw=exIsBW(id)&&!exIsAssist(id);
+    if((!(a>0) && !(bw&&a===0)) || !(b>0)) return;
+    out.push({ id, name:ex.name, von:a, bis:b, diff:b-a,
+               pct:a>0?(b-a)/a*100:null, zusatz:bw,
                n:teil.length, geschnitten:!!brk });
   });
-  return out.sort((x,y)=> y.pct - x.pct);
+  return out.sort((x,y)=> (y.pct==null?-Infinity:y.pct) - (x.pct==null?-Infinity:x.pct) || y.diff-x.diff);
 }
 /* 5. Volumen je Satz — wie schwer wird pro Satz gearbeitet?
       Eine Kennzahl, die Fortschritt zeigt, ohne dass die Satzzahl steigen muss. */
@@ -10943,7 +11116,14 @@ function markBackupDone(){
   renderHome();
 }
 /* ================= INIT ================= */
-function renderAll(){ renderHome(); renderTrain(); renderHist(); renderLib(); renderStats(); }
+/* Die Statistik ist inzwischen die rechenintensivste Seite. Beim App-Start
+   war sie unsichtbar und wurde trotzdem vollständig gebaut. showScreen()
+   rendert sie beim ersten Öffnen ohnehin; nach Import/Wiederherstellung wird
+   sie nur sofort erneuert, wenn der Reiter gerade sichtbar ist. */
+function renderAll(){
+  renderHome(); renderTrain(); renderHist(); renderLib();
+  if($('#scr-stats').classList.contains('on')) renderStats();
+}
 /* SVG-Icons in statische Buttons */
 $('#btn-settings').innerHTML = ICO.gear;
 $('#btn-ach').innerHTML = ICO.trophy;
