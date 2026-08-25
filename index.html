@@ -1320,7 +1320,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
       <div class="wbar">
         <div class="grow">
           <b id="tw-type" style="font-size:var(--fs-body);letter-spacing:-.02em"></b>
-          <div class="sub"><span class="timer" id="tw-timer">0:00</span> · <span id="tw-setcount"></span></div>
+          <div class="sub"><span id="tw-date">Heute</span> · <span class="timer" id="tw-timer">0:00</span> · <span id="tw-setcount"></span></div>
           <div class="workmeter" id="tw-progress" role="progressbar" aria-label="Arbeitssätze abgeschlossen" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0"><i></i></div>
         </div>
         <button class="resttimer" id="btn-rest" aria-label="Pausen-Timer">⏱ Pause</button>
@@ -1720,7 +1720,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V86 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V87 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="mback" id="modal-sync"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="sync-title">
@@ -3968,8 +3968,8 @@ function exMuscleLabel(ex){ return ex.p.map(m=>MUSCLES[m]).join(', ') + (ex.s.le
    Übungsstatistik brauchten das je einmal, also dreimal pro Tastenanschlag ein
    Durchlauf durch die gesamte Historie. Einmal je Datenänderung reicht;
    invalidiert wird zentral in saveState(), wie bei den Zyklen auch. */
-let _trainedCache = null;
-function invalidateTrained(){ _trainedCache = null; }
+let _trainedCache = null, _trainedDay = '';
+function invalidateTrained(){ _trainedCache = null; _trainedDay = ''; }
 
 /* ---------- Datum ---------- */
 function fmtDate(d){ return new Date(d).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'}); }
@@ -4342,8 +4342,13 @@ function invalidateCycles(){ _cyCache = null; }
 function dayNr(d){ const x = new Date(d); x.setHours(0,0,0,0); return Math.round(x.getTime()/864e5); }
 
 function cycles(){
-  const ws0 = state.workouts;
-  const key = ws0.length + '|' + ((ws0[0]||{}).id||'') + '|' + ((ws0[ws0.length-1]||{}).id||'') + '|' + ((ws0[ws0.length-1]||{}).date||'');
+  /* Vorab eingetragene Einheiten gehören ihrem ZIELTAG. Vor diesem Tag
+     dürfen sie den heutigen Trainingsvorschlag und den laufenden Zyklus
+     noch nicht weiterschalten. In Verlauf und Kalender sind sie trotzdem
+     sofort sichtbar — dort steht ihr korrektes zukünftiges Datum. */
+  const heute = heuteIso();
+  const ws0 = workoutsBisHeute();
+  const key = heute + '|' + ws0.length + '|' + ((ws0[0]||{}).id||'') + '|' + ((ws0[ws0.length-1]||{}).id||'') + '|' + ((ws0[ws0.length-1]||{}).date||'');
   if(_cyCache && _cyKey === key) return _cyCache;
   const ws = ws0.slice().sort((a,b)=> Date.parse(a.date) - Date.parse(b.date));
   const out = [];
@@ -4355,12 +4360,12 @@ function cycles(){
     }
     cur.ws.push(w); cur.bis = w.date;
   });
-  const heute = dayNr(new Date());
+  const heuteNr = dayNr(new Date());
   out.forEach((c,i)=>{
     const nx = out[i+1];
     const start = dayNr(c.von);
     c.tage = nx ? Math.max(1, dayNr(nx.von) - start)
-                : Math.max(1, heute - start + 1);
+                : Math.max(1, heuteNr - start + 1);
     c.push = c.ws.filter(w=>w.type==='Push').length;
     c.pull = c.ws.filter(w=>w.type==='Pull').length;
     c.beine = c.ws.filter(w=>w.type==='Legs').length;
@@ -4451,7 +4456,7 @@ function beineImZyklus(){ return state.settings.beineImZyklus !== false; }
 function isLegGroup(g){ return !beineImZyklus() && LEG_GROUPS.indexOf(g) >= 0; }
 function legRolling(mode){
   const ab = Date.now() - LEG_ROLL_DAYS*864e5;
-  const ws = state.workouts.filter(w=> new Date(w.date).getTime() >= ab);
+  const ws = workoutsBisHeute().filter(w=> new Date(w.date).getTime() >= ab);
   return { m: muscleSetsBy(ws, mode||statsSetMode), tage: LEG_ROLL_DAYS, einheiten: ws.length };
 }
 
@@ -4502,12 +4507,18 @@ function e1rm(w,r){ w=+w||0; r=Math.min(+r||0,20); if(w<=0||r<=0) return 0; if(r
 let _hCache = new Map();
 function invalidateHist(){ _hCache = new Map(); }
 function exHistory(exId, before){
-  const key = exId + '|' + (before || '');
+  /* Ohne ausdrücklichen historischen Stichtag gilt „bis heute". Ein schon
+     eingetragener Dienstag darf am Montag weder Bestwerte noch den nächsten
+     Progressionsvorschlag verändern; ab Dienstag gehört er automatisch zur
+     Historie. Explizite Stichtage (PR-Erkennung, alte Zusammenfassungen)
+     behalten ihre bisherige Bedeutung. */
+  const grenze = before || tagDanachBeginn(heuteIso());
+  const key = exId + '|' + grenze;
   const merk = _hCache.get(key);
   if(merk) return merk.slice();
   const out = [];
   state.workouts.forEach(w=>{
-    if(before && new Date(w.date).getTime() >= before) return;
+    if(new Date(w.date).getTime() >= grenze) return;
     w.exercises.forEach(e=>{
       if(e.exId!==exId) return;
       const sets = validSets(e); if(!sets.length) return;
@@ -4651,7 +4662,7 @@ let _cutCache = null, _cutKey = '';
 function invalidateCuts(){ _cutCache = null; }
 function exCutIndex(exId){
   const ws = state.workouts;
-  const key = ws.length + '|' + ((ws[ws.length-1]||{}).id||'') + '|' + ((ws[ws.length-1]||{}).date||'');
+  const key = heuteIso() + '|' + ws.length + '|' + ((ws[ws.length-1]||{}).id||'') + '|' + ((ws[ws.length-1]||{}).date||'');
   if(!_cutCache || _cutKey !== key){ _cutCache = {}; _cutKey = key; }
   if(_cutCache[exId] !== undefined) return _cutCache[exId];
   const sw = exModeSwitches(exId).switches;
@@ -4923,12 +4934,12 @@ function warmupSets(work, bar){
    Das ist keine Lücke, das ist eine falsche Behauptung. Sie sagt jetzt
    stattdessen, dass sie diesen Plan nicht auswerten kann. */
 function planPasstZuZyklen(){
-  const ws = state.workouts;
+  const ws = workoutsBisHeute();
   if(!ws.length) return true;                 // noch nichts da — nichts zu behaupten
   return ws.some(w => w.type === 'Push');
 }
 function planHinweis(){
-  const n = state.workouts.length;
+  const n = workoutsBisHeute().length;
   return `${n} ${n===1?'Einheit':'Einheiten'} aufgezeichnet, aber keine als <b>Push</b> angelegt. `
        + `Die Zyklus-Auswertung richtet sich nach dem Wechsel Push → Pull — ohne Push gibt es keinen Zyklus.`;
 }
@@ -4969,6 +4980,25 @@ function isoTag(d){
 function heuteIso(){ return isoTag(new Date()); }
 function isoZuDatum(iso){ const [y,m,d]=String(iso).split('-').map(Number); return new Date(y, m-1, d, 12, 0, 0, 0); }
 function tagPlus(iso, n){ const x = isoZuDatum(iso); x.setDate(x.getDate()+n); return isoTag(x); }
+/* Ein ausgewählter Kalendertag muss die Wahrheit bleiben, auch wenn das
+   Training schon am Vortag eingetragen wird. Die aktuelle lokale Uhrzeit
+   wird auf den Zieltage gesetzt; dadurch landet das ISO-Datum selbst rund
+   um Sommerzeitwechsel zuverlässig wieder auf genau diesem Kalendertag. */
+function workoutDatumFuerTag(iso){
+  const ziel = isoZuDatum(iso), jetzt = new Date();
+  if(isNaN(ziel.getTime())) return jetzt.toISOString();
+  ziel.setHours(jetzt.getHours(), jetzt.getMinutes(), jetzt.getSeconds(), jetzt.getMilliseconds());
+  return ziel.toISOString();
+}
+function aktiverTag(a){ return isoTag((a||state.active||{}).date) || heuteIso(); }
+function aktivesTrainingIstZukunft(){ return !!state.active && aktiverTag(state.active) > heuteIso(); }
+function tagDanachBeginn(iso){
+  const d=isoZuDatum(tagPlus(iso,1)); d.setHours(0,0,0,0); return d.getTime();
+}
+function workoutsBisHeute(){
+  const heute = heuteIso();
+  return (state.workouts||[]).filter(w=>isoTag(w.date) <= heute);
+}
 function tageDiff(a, b){ return Math.round((isoZuDatum(b) - isoZuDatum(a)) / 864e5); }
 function planAmTag(iso){ const p = (state.plan||{})[iso]; return (p && p.type)? p : null; }
 /* workoutAmTag() ist in V63 entstanden und wurde nie gebraucht — belegteTage()
@@ -5054,7 +5084,7 @@ function setPlan(iso, patch){
 /* Die letzte abgeschlossene Einheit eines Typs — die Vorlage für heute. */
 function letzteEinheitVom(typ){
   const ws = state.workouts
-    .filter(w => w.type === typ && (w.exercises||[]).length)
+    .filter(w => isoTag(w.date) <= heuteIso() && w.type === typ && (w.exercises||[]).length)
     .sort((a,b)=> Date.parse(a.date) - Date.parse(b.date));
   return ws.length ? ws[ws.length-1] : null;
 }
@@ -5358,7 +5388,7 @@ function genGlobalDefs(){
 }
 /* ---------- Streak: aufeinanderfolgende Wochen bis heute ---------- */
 function currentWeekStreak(){
-  const weeks = new Set(state.workouts.map(w=>weekKey(w.date)));
+  const weeks = new Set(workoutsBisHeute().map(w=>weekKey(w.date)));
   if(!weeks.size) return 0;
   let k = weekKey(new Date()), n = 0;
   if(!weeks.has(k)) k -= 7*86400000;           // laufende Woche darf noch leer sein
@@ -5367,7 +5397,7 @@ function currentWeekStreak(){
 }
 /* Trainingstage in Folge (Ruhetage ≤2 unterbrechen die Serie nicht) */
 function currentDayStreak(){
-  const days = [...new Set(state.workouts.map(w=>w.date.slice(0,10)))].sort().reverse();
+  const days = [...new Set(workoutsBisHeute().map(w=>isoTag(w.date)))].sort().reverse();
   if(!days.length) return 0;
   const dayN = s=>Math.floor(new Date(s+'T12:00:00').getTime()/86400000);
   const today = Math.floor(Date.now()/86400000);
@@ -5387,7 +5417,7 @@ function bestStreak(weekSet){
 }
 function exAgg(exId){
   let vol=0,reps=0,sessions=0,maxW=0; const weeks=new Set();
-  state.workouts.forEach(w=>w.exercises.forEach(e=>{
+  workoutsBisHeute().forEach(w=>w.exercises.forEach(e=>{
     if(e.exId!==exId) return; const sets=validSets(e); if(!sets.length) return;
     sessions++; weeks.add(weekKey(w.date));
     vol += exVol(e, w.date);
@@ -5399,16 +5429,19 @@ function exAgg(exId){
    wVolume() und wSets() je Einheit, also über jeden einzelnen Satz. Der
    Verlauf zog zusätzlich die Trainingsstunden in einer zweiten Schleife;
    die steckt jetzt im selben Durchlauf. Cache wird in saveState() geleert. */
-let _aggCache = null;
-function invalidateAgg(){ _aggCache = null; }
+let _aggCache = null, _aggDay = '';
+function invalidateAgg(){ _aggCache = null; _aggDay = ''; }
 function globalAgg(){
-  if(_aggCache) return _aggCache;
+  const heute = heuteIso();
+  if(_aggCache && _aggDay===heute) return _aggCache;
+  const ws = workoutsBisHeute();
   let vol=0,sets=0,prs=0,ms=0; const weeks=new Set();
-  state.workouts.forEach(w=>{
+  ws.forEach(w=>{
     vol+=wVolume(w); sets+=wSets(w); prs+=(w.prs||[]).length; weeks.add(weekKey(w.date));
     ms += Math.max(0, wDauerBelastbar(w));
   });
-  return _aggCache = {wk:state.workouts.length, vol, sets, prs, streak:bestStreak(weeks), hours: ms/3600000};
+  _aggDay=heute;
+  return _aggCache = {wk:ws.length, vol, sets, prs, streak:bestStreak(weeks), hours: ms/3600000};
 }
 function achCurrent(def, agg){
   if(def.cat==='g'){ return def.gkey==='wk'?agg.wk : def.gkey==='vol'?agg.vol : def.gkey==='pr'?agg.prs : def.gkey==='streak'?agg.streak : agg.sets; }
@@ -5427,10 +5460,12 @@ function achLevel(){ const xp=achXP(); const lvl=Math.floor(Math.sqrt(xp/150))+1
    und die Suche kann jetzt in konstanter Zeit nachschlagen statt die Historie
    ein zweites Mal zu durchlaufen. Gecacht bis zur nächsten Datenänderung. */
 function trainedExIds(){
-  if(!_trainedCache){
+  const heute = heuteIso();
+  if(!_trainedCache || _trainedDay!==heute){
     const s = new Set();
-    state.workouts.forEach(w=>w.exercises.forEach(e=>s.add(e.exId)));
+    workoutsBisHeute().forEach(w=>w.exercises.forEach(e=>s.add(e.exId)));
     _trainedCache = s;
+    _trainedDay = heute;
   }
   return _trainedCache;
 }
@@ -5956,7 +5991,7 @@ const BALANCE_PAARE = [
    dem Training davor bekommen. */
 function letzteTage(n){
   const ab = Date.now() - n*864e5;
-  return state.workouts.filter(w => Date.parse(w.date) >= ab);
+  return workoutsBisHeute().filter(w => Date.parse(w.date) >= ab);
 }
 
 function balanceBefunde(tage){
@@ -6070,7 +6105,7 @@ const ZIEL_ARTEN = {
               wert:g => { const b=exBests(g.exId); return b? b.maxReps : 0; } },
   workouts: { label:'Anzahl Workouts',   kurz:'Workouts',   einheit:'',       ex:false,
               hilfe:'Zählt alle abgeschlossenen Einheiten. Das Ziel für alle, die einfach dranbleiben wollen.',
-              wert:() => state.workouts.length },
+              wert:() => workoutsBisHeute().length },
   volumen:  { label:'Gesamtvolumen',     kurz:'Volumen',    einheit:'kg',     ex:false,
               hilfe:'Alles bewegte Gewicht zusammen. In Tonnen denken hilft: 100.000 kg sind 100 t.',
               wert:() => Math.round(globalAgg().vol) },
@@ -6420,7 +6455,7 @@ function renderHome(){
 
   /* ── Rekorde der letzten 30 Tage ── */
   const since = Date.now()-30*86400000;
-  const recentPrs = state.workouts.filter(w=>new Date(w.date).getTime()>=since)
+  const recentPrs = state.workouts.filter(w=>new Date(w.date).getTime()>=since && isoTag(w.date)<=heuteIso())
     .flatMap(w=>(w.prs||[]).map(p=>({...p, date:w.date}))).reverse().slice(0,4);
   $('#home-records').innerHTML = recentPrs.length? `<div class="card">
     <h3 style="margin-bottom:4px">Letzte Bestleistungen</h3>
@@ -6445,6 +6480,9 @@ function renderHome(){
   $('#home-resume').innerHTML = state.active ? `
     <div class="banner"><span class="bi" data-ico="play" style="margin:0"></span>
       <div class="grow"><b>${esc(state.active.type)}-Workout läuft</b><div class="tiny">${(()=>{
+        const tag = aktiverTag(state.active);
+        if(tag > heuteIso()) return 'vorbereitet für '
+          + isoZuDatum(tag).toLocaleDateString('de-DE',{weekday:'long',day:'2-digit',month:'2-digit'});
         const ts = satzStempel(state.active);          // V70: dieselbe Uhr wie im Training
         return ts.length ? 'seit ' + fmtDur(Date.now()-ts[0])
                          : 'vorbereitet, noch kein Satz eingetragen';
@@ -6653,7 +6691,8 @@ function renderDayBody(){
   /* 1. Aufgezeichnet — Tatsache, nichts zu planen. */
   if(t.ist){
     const w = t.ist, saetze = wSets(w), vol = wVolume(w);
-    box.innerHTML = kopf(`${t.heute?'Heute':lang} · ${esc(w.type)}`, 'aufgezeichnet', 'ist')
+    const status = w.vorab ? 'vorab eingetragen' : 'aufgezeichnet';
+    box.innerHTML = kopf(`${t.heute?'Heute':lang} · ${esc(w.type)}`, status, 'ist')
       + `<div class="card"><div class="kpis" style="margin-bottom:10px">
           <div class="kpi"><b>${w.exercises.length}</b><span>Übungen</span></div>
           <div class="kpi"><b>${saetze}</b><span>Sätze</span></div>
@@ -6665,8 +6704,10 @@ function renderDayBody(){
           return `<div class="item"><div class="grow"><div class="ttl" style="font-size:var(--fs-sub)">${esc(e.name||(ex&&ex.name)||'—')}</div>
             <div class="meta">${validSets(e).length} × ${validSets(e).map(s=>fmtW(setW(e,s,w.date))).join(' · ')} kg</div></div></div>`;
         }).join('')}</div>`
+      + (w.vorab? `<button class="btn btn-ghost btn-block btn-sm" id="ds-vorab-edit">Vorab-Eintrag bearbeiten</button>`:'')
       + (t.heute && !state.active? `<button class="btn btn-ghost btn-block" id="ds-noch">Noch ein Training starten</button>`:'');
     const n = $('#ds-noch'); if(n) n.addEventListener('click',()=>startWorkout(suggestType()));
+    const e = $('#ds-vorab-edit'); if(e) e.addEventListener('click',()=>openWEdit(w.id));
     return;
   }
 
@@ -6691,6 +6732,7 @@ function renderDayBody(){
      Übungen ist eine Absicht, keine Planung — und der Unterschied ist genau
      der, ob noch etwas zu tun ist. */
   const herkunft = gefuellt? 'geplant' : plan? 'Typ gesetzt' : t.art==='pause'? 'Pause laut Rhythmus' : 'Vorausschau';
+  const wochentag = isoZuDatum(t.iso).toLocaleDateString('de-DE',{weekday:'long'});
   box.innerHTML = kopf(`${t.heute?'Heute':lang}`, herkunft, gefuellt? 'plan':'')
     + `<div class="card">
         <div class="row" style="gap:6px;flex-wrap:wrap;margin-bottom:12px">
@@ -6702,8 +6744,8 @@ function renderDayBody(){
              <div id="plan-list"></div>
              <button class="btn btn-ghost btn-block btn-sm" id="plan-add" style="margin-top:10px">＋ Übung</button>`}
       </div>`
-    + (typ!=='Rest' && t.heute && !state.active
-        ? `<button class="btn btn-acc btn-block btn-lg" id="plan-start">${esc(typ)} starten</button>` : '')
+    + (typ!=='Rest' && !state.active
+        ? `<button class="btn btn-acc btn-block btn-lg" id="plan-start">${t.zukunft? `${esc(typ)} für ${esc(wochentag)} eintragen` : `${esc(typ)} starten`}</button>` : '')
     + (typ!=='Rest' && !gefuellt
         ? `<button class="btn btn-ghost btn-block btn-sm" id="plan-uebernehmen">Übungen vom letzten ${esc(typ)} übernehmen</button>` : '')
     + (plan? `<button class="btn btn-ghost btn-block btn-sm" id="plan-loeschen" style="margin-top:8px">Plan für diesen Tag löschen</button>`:'');
@@ -6723,7 +6765,7 @@ function renderDayBody(){
     renderTrain();
   }));
   const start = $('#plan-start');
-  if(start) start.addEventListener('click',()=>startWorkout(typ, null, planAmTag(dsWahl)));
+  if(start) start.addEventListener('click',()=>startWorkout(typ, null, planAmTag(dsWahl), dsWahl));
   const uebern = $('#plan-uebernehmen');
   if(uebern) uebern.addEventListener('click',()=>{
     const v = letzteEinheitVom(typ);
@@ -6811,14 +6853,20 @@ function renderTrain(){
     renderDaystrip();
     renderDayBody();
     const tpls = state.templates;
+    /* Wer in der Tagesleiste einen künftigen Tag ausgewählt hat, meint auch
+       bei „Meine Workouts" genau diesen Tag. Ein Vorlagenstart darf nicht
+       still wieder auf heute zurückspringen. Bei einem vergangenen Tag
+       bleibt „Start" dagegen bewusst ein Start für heute. */
+    const tplTag = dsWahl && dsWahl >= heuteIso() ? dsWahl : heuteIso();
+    const tplTagName = isoZuDatum(tplTag).toLocaleDateString('de-DE',{weekday:'long'});
     $('#tpl-section').innerHTML = `<h2>Meine Workouts</h2>` + (tpls.length ? `<div class="card" style="padding:2px 12px">${
       tpls.map(t=>`<div class="item"><div class="grow"><div class="ttl">${esc(t.name)}</div><div class="meta">${t.exIds.length} Übungen · ${esc(t.type)}</div></div>
-        <button class="btn btn-acc btn-sm" data-start-tpl="${t.id}">Start</button>
+        <button class="btn btn-acc btn-sm" data-start-tpl="${t.id}">${tplTag>heuteIso()? `Für ${esc(tplTagName)}` : 'Start'}</button>
         <button class="iconbtn" data-edit-tpl="${t.id}" aria-label="Workout bearbeiten">${ICO.edit}</button>
         <button class="iconbtn" data-del-tpl="${t.id}" aria-label="Workout löschen">${ICO.trash}</button></div>`).join('')
     }</div>` : `<div class="empty" style="padding:16px"><div class="big">${ICO.inbox}</div>Noch keine Workouts angelegt.<br>Erstell dir z.B. „Push A" mit deinen festen Übungen.</div>`)
     + `<button class="btn btn-ghost btn-block" id="btn-new-rt">＋ Workout erstellen</button>`;
-    $$('[data-start-tpl]').forEach(b=>b.addEventListener('click',()=>startWorkout(null,b.dataset.startTpl)));
+    $$('[data-start-tpl]').forEach(b=>b.addEventListener('click',()=>startWorkout(null,b.dataset.startTpl,null,tplTag)));
     $$('[data-edit-tpl]').forEach(b=>b.addEventListener('click',()=>openRoutineEditor(b.dataset.editTpl)));
     $$('[data-del-tpl]').forEach(b=>b.addEventListener('click',()=>{
       const id = b.dataset.delTpl;
@@ -6875,7 +6923,7 @@ $('#rt-save').addEventListener('click',()=>{
   else { rtDraft.id=uid(); state.templates.push({...rtDraft}); }
   saveState(); closeModals(); toast('Workout gespeichert ✓'); renderTrain();
 });
-function startWorkout(type, tplId, plan){
+function startWorkout(type, tplId, plan, zielIso){
   let exs = [], t = type;
   if(tplId){ const tpl = state.templates.find(x=>x.id===tplId); if(!tpl) return;
     t = tpl.type; exs = tpl.exIds.map(id=>{ const ex=getEx(id); return ex? {exId:id,name:ex.name,__live:true,sets:leereSaetze(id)} : null; }).filter(Boolean);
@@ -6892,7 +6940,13 @@ function startWorkout(type, tplId, plan){
                sets:(e.sets||[]).map(s=>({ w:(s.w===0||s.w)? s.w : '', r:'' })) };
     }).filter(Boolean);
   }
-  state.active = { id:uid(), date:new Date().toISOString(), start:Date.now(), type:t, exercises:exs };
+  const tag = zielIso && zielIso >= heuteIso() ? zielIso : heuteIso();
+  const jetzt = Date.now();
+  state.active = { id:uid(), date:workoutDatumFuerTag(tag), start:jetzt, type:t, exercises:exs };
+  if(tag > heuteIso()){
+    state.active.vorab = true;
+    state.active.erfasst = jetzt;
+  }
   saveState(); renderTrain();
 }
 
@@ -6938,17 +6992,27 @@ function startTicker(){ stopTicker(); tickerI = setInterval(tick, 1000); tick();
 function stopTicker(){ if(tickerI){ clearInterval(tickerI); tickerI=null; } }
 function tick(){
   if(!state.active) return;
+  const tEl = $('#tw-timer'), btn = $('#btn-rest');
+  /* Beim Vorab-Eintragen läuft kein erfundener Trainings-Timer. Die Werte
+     werden zwar vollständig erfasst, eine Dauer entsteht aber erst, wenn
+     das Training am Zieltag tatsächlich geloggt wird. */
+  if(aktivesTrainingIstZukunft()){
+    tEl.textContent = 'Vorab';
+    tEl.title = 'Eintrag für einen künftigen Tag — keine Trainingsdauer gemessen';
+    if(restEnd){ restEnd=null; btn.classList.remove('hot'); btn.innerHTML=ICO.timer+' Pause'; }
+    return;
+  }
   /* V70: Bis zum ersten Satz läuft die Uhr ab „Start" — danach ab dem
      ersten Satz. Der Sprung zurück ist gewollt: Wer im Bus schon Gewichte
      einträgt, hat noch nicht trainiert. */
   const ts = satzStempel(state.active);
-  const ab = ts.length ? ts[0] : state.active.start;
+  /* Ein Vorab-Entwurf, der am Zieltag noch offen ist, beginnt zeitlich erst
+     mit dem ersten echten Satz — nicht mit dem Antippen am Vortag. */
+  const ab = ts.length ? ts[0] : state.active.vorab ? Date.now() : state.active.start;
   const s = Math.max(0, Math.floor((Date.now()-ab)/1000));
-  const tEl = $('#tw-timer');
   tEl.textContent = Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
   tEl.title = ts.length ? 'seit dem ersten Satz'
                         : 'seit dem Start — die Trainingszeit beginnt mit dem ersten Satz';
-  const btn = $('#btn-rest');
   if(restEnd){
     const left = Math.ceil((restEnd-Date.now())/1000);
     if(left<=0){ restEnd=null; btn.classList.remove('hot'); btn.innerHTML=ICO.timer+' Pause'; toast('Pause vorbei — weiter 💪'); haptic('error'); pausenTon(); }
@@ -6956,6 +7020,10 @@ function tick(){
   }
 }
 $('#btn-rest').addEventListener('click',()=>{
+  if(aktivesTrainingIstZukunft()){
+    toast('Vorab-Eintrag — der Pausen-Timer startet erst am Trainingstag');
+    return;
+  }
   if(restEnd){ restEnd=null; $('#btn-rest').classList.remove('hot'); $('#btn-rest').textContent='⏱ Pause'; }
   else { restEnd = Date.now() + (state.settings.rest||90)*1000; tick(); }
 });
@@ -7217,6 +7285,10 @@ function scheibenZeile(ei){
 function renderActive(){
   const a = state.active; if(!a) return;
   $('#tw-type').textContent = a.type+'-Workout';
+  const tag = aktiverTag(a), heute = heuteIso(), morgen = tagPlus(heute,1);
+  $('#tw-date').textContent = tag===heute ? 'Heute'
+    : tag===morgen ? 'Morgen · '+isoZuDatum(tag).toLocaleDateString('de-DE',{weekday:'short'}).replace('.','')
+    : isoZuDatum(tag).toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit'}).replace('.','');
   const useRir = !!state.settings.rir;
   $('#tw-exlist').innerHTML = a.exercises.map((e,ei)=>{
     const ex = getEx(e.exId);
@@ -7384,7 +7456,7 @@ function refreshSetCount(){
   }
 }
 function startRestFor(ei, set){
-  if(restEnd) return;
+  if(restEnd || aktivesTrainingIstZukunft()) return;
   const base = exOpt(state.active.exercises[ei].exId).rest || state.settings.rest || 90;
   restEnd = Date.now() + (set.t==='w' ? Math.round(base/2) : base)*1000; tick();
 }
@@ -7625,6 +7697,8 @@ $('#btn-finish').addEventListener('click',finishWorkout);
 
 async function finishWorkout(){
   const a = state.active;
+  const zielTag = aktiverTag(a);
+  const istNochZukunft = zielTag > heuteIso();
   const cleaned = a.exercises.map(e=>{
     /* V71: EINE Stelle, die aus einem getippten Satz einen gespeicherten
        macht — `satzFuerSpeicher`. Vorher stand die Umwandlung nur hier,
@@ -7654,27 +7728,40 @@ async function finishWorkout(){
   }).filter(e=>e.sets.length);
   if(!cleaned.length){ toast('Keine gültigen Sätze eingetragen'); return; }
   const nSets = cleaned.reduce((x,e)=>x+e.sets.length,0);
-  if(!await ask('Training abschließen?', `${nSets} ${nSets===1?'Satz':'Sätze'} in ${cleaned.length} ${cleaned.length===1?'Übung':'Übungen'} werden gespeichert.`, {ok:'Abschließen'})) return;
+  const zielText = istNochZukunft
+    ? ` für ${isoZuDatum(zielTag).toLocaleDateString('de-DE',{weekday:'long',day:'2-digit',month:'2-digit'})}` : '';
+  if(!await ask(istNochZukunft?'Vorab-Eintrag speichern?':'Training abschließen?', `${nSets} ${nSets===1?'Satz':'Sätze'} in ${cleaned.length} ${cleaned.length===1?'Übung':'Übungen'} werden${zielText} gespeichert.`, {ok:istNochZukunft?'Für den Tag speichern':'Abschließen'})) return;
   const lvlBefore = achLevel().lvl;
-  const w = { id:a.id, date:a.date, start:a.start, end:Date.now(), type:a.type, exercises:cleaned };
+  const ohneGemesseneZeit = istNochZukunft || (a.vorab && !satzStempel(a).length);
+  const w = { id:a.id, date:a.date, start:ohneGemesseneZeit?null:a.start,
+              end:ohneGemesseneZeit?null:Date.now(), type:a.type, exercises:cleaned };
+  if(a.vorab){
+    w.vorab = true;
+    w.erfasst = a.erfasst || a.start || Date.now();
+  }
   w.prs = detectPRs(w);
   state.workouts.push(w);
+  /* Vorab-Einträge können zeitlich hinter einem später noch eingetragenen
+     heutigen Workout liegen. Die Liste bleibt deshalb nach jedem Abschluss
+     chronologisch — mehrere ältere Auswertungen nutzen bewusst slice(-n). */
+  state.workouts.sort((x,y)=>Date.parse(x.date)-Date.parse(y.date));
   state.active = null;
   saveState(); stopTicker();
   /* Der beste Augenblick, den die App zu vergeben hat: Beim nächsten Blick auf
      die Startseite leuchten genau die Muskeln auf, die eben gearbeitet haben.
      Einmalig — die Marke wird beim Malen verbraucht, nicht nach einer Uhr. */
-  figFresh = new Set(cleaned.flatMap(e=>{ const x = getEx(e.exId); return x? x.p.concat(x.s||[]) : []; }));
-  const freshAch = evalAchievements([...new Set(cleaned.map(e=>e.exId))]);
+  figFresh = istNochZukunft ? null
+    : new Set(cleaned.flatMap(e=>{ const x = getEx(e.exId); return x? x.p.concat(x.s||[]) : []; }));
+  const freshAch = istNochZukunft ? [] : evalAchievements([...new Set(cleaned.map(e=>e.exId))]);
   /* Ziele hier prüfen, nicht beim Zeichnen: Sonst würde dasselbe erreichte
      Ziel bei jedem Bildschirmwechsel erneut gefeiert. */
-  zielePruefen();
+  if(!istNochZukunft) zielePruefen();
   const lvlAfter = achLevel().lvl;
   makeSnapshot('nach Training');          // Sicherungspunkt direkt nach dem Abschluss
   haptic('success');
   showSummary(w, freshAch, lvlAfter>lvlBefore? lvlAfter : 0);
-  if(lvlAfter>lvlBefore) celebrate('big');
-  else if(w.prs.length) celebrate();
+  if(!istNochZukunft && lvlAfter>lvlBefore) celebrate('big');
+  else if(!istNochZukunft && w.prs.length) celebrate();
   renderTrain();
 }
 
@@ -9707,6 +9794,11 @@ function sessionLoad(w){
    Uhrzeit nicht, denn gemacht wurde der Satz ja damals. */
 function satzGestempelt(set){
   if(!state.active || !set) return;
+  /* Ein am Montag für Dienstag ausgefüllter Satz hat am Montag nicht
+     stattgefunden. Gewicht und Wiederholungen werden gespeichert, aber ein
+     Zeitstempel — und damit eine scheinbar gemessene Dauer — wäre erfunden. */
+  if(aktivesTrainingIstZukunft()) return;
+  if(state.active.vorab && isoTag(state.active.start)!==heuteIso()) state.active.start=Date.now();
   set.ts = Date.now();
   const ts = satzStempel(state.active);
   if(ts.length === 1 && state.active.start
@@ -10832,6 +10924,7 @@ function renderHist(){
         <div class="grow">
           <div class="row" style="gap:8px"><b style="font-size:var(--fs-body)">${fmtDateShort(w.date)}</b>
             <span class="badge type">${esc(w.type)}</span>
+            ${w.vorab?`<span class="badge">Vorab</span>`:''}
             ${(w.prs&&w.prs.length)?`<span class="badge pr">${ICO.trophy} ${w.prs.length}</span>`:''}</div>
           <!-- Bei einer reinen Kardio- oder Halte-Einheit ist das Volumen null.
                „0 kg" wäre dort keine Information, sondern eine Irreführung —
@@ -10952,6 +11045,7 @@ function openWEdit(wid){
   const f = trainingsFenster(w);
   weDraft = {
     id: w.id, date: w.date, type: w.type,
+    vorab: !!w.vorab, erfasst: w.erfasst || null,
     durMin: f ? String(Math.round(f.dauer/60000)) : '',
     rpe: sessionRpe(w)===null ? '' : String(sessionRpe(w)),
     sessionNote: w.note || '',
@@ -11136,6 +11230,7 @@ async function weSpeichern(){
     start: state.workouts[i].start, end: state.workouts[i].end,
     exercises: uebungen, prs: []
   };
+  if(weDraft.vorab){ neu.vorab=true; neu.erfasst=weDraft.erfasst || Date.now(); }
   if(rpe!==null) neu.rpe=rpe;
   const sessionNote=String(weDraft.sessionNote||'').trim().slice(0,280);
   if(sessionNote) neu.note=sessionNote;
