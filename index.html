@@ -431,8 +431,8 @@ h3>.bi svg{width:15px;height:15px}
   align-items:center;text-align:left;min-height:52px;padding:9px 0;border-top:1px solid var(--line)}
 .ovrow:first-of-type{border-top:0}
 .ovrow:active{opacity:.76}
-.ovrow .ttl{font-size:var(--fs-sub);font-weight:700;overflow-wrap:anywhere}
-.ovrow .meta{margin-top:2px}
+.ovrow .ttl{display:block;font-size:var(--fs-sub);font-weight:700;overflow-wrap:anywhere}
+.ovrow .meta{display:block;margin-top:2px;font-size:var(--fs-tiny);color:var(--txt2);line-height:1.35}
 .ovrow .value{font-size:var(--fs-sub);font-weight:750;color:var(--a7);white-space:nowrap}
 .ovrow .chev{color:var(--txt3);font-size:var(--fs-lg)}
 .ovgap{display:grid;grid-template-columns:minmax(84px,1fr) 2fr auto;gap:var(--sp2);align-items:center;
@@ -770,6 +770,19 @@ details.erkl.warum>div{font-size:var(--fs-tiny);margin-top:2px}
 .rord[disabled]{opacity:.25;pointer-events:none}
 .sethead{font-size:var(--fs-micro);color:var(--txt3);text-transform:uppercase;letter-spacing:.08em;font-weight:650;margin:8px 0 4px;padding:0 2px}
 .setrow{margin-bottom:8px}
+/* V86: Direkt unter einem fertigen Satz steht der faire Vergleich mit
+   derselben Satzposition der letzten Einheit. Die Zeile nimmt nur dann
+   Platz ein, wenn es wirklich zwei vergleichbare Messwerte gibt. */
+.setfeedback{display:flex;align-items:flex-start;gap:6px;margin:-3px 30px 8px 38px;
+  color:var(--txt3);font-size:var(--fs-tiny);line-height:1.35;min-height:0}
+.setfeedback:empty{display:none}
+.setfeedback .mark{width:17px;height:17px;display:inline-grid;place-items:center;flex:none;
+  border-radius:var(--r-full);background:var(--s2);font-weight:850;font-size:var(--fs-micro)}
+.setfeedback.up{color:var(--green)}
+.setfeedback.up .mark{background:rgba(45,191,126,.13)}
+.setfeedback.same{color:var(--txt2)}
+.setfeedback.down{color:var(--txt3)}
+.setfeedback .basis{color:var(--txt3)}
 /* V71: Zeile im Nachbearbeiten-Blatt. Eigenes Raster, weil hier die Spalte
    „letztes Mal" fehlt — beim Korrigieren steht schon da, was war. */
 .wehead,.werow{display:grid;grid-template-columns:30px 1fr 1fr 26px;gap:var(--sp2);align-items:center;margin-bottom:8px}
@@ -870,6 +883,22 @@ details.notiz input{margin-top:4px;width:100%}
 .rpebtn.on{color:var(--on-acc);background:var(--grad-a);border-color:transparent;box-shadow:var(--glow)}
 .rpelabels{display:flex;justify-content:space-between;gap:var(--sp2);color:var(--txt3);font-size:var(--fs-micro)}
 .sessionnote{min-height:78px;resize:vertical;margin-top:12px}
+.progressreport{border-color:var(--acc-a30);background:linear-gradient(145deg,rgba(82,156,255,.09),transparent 72%),var(--s1)}
+.progresssummary{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}
+.progresssummary span{font-size:var(--fs-tiny);font-weight:750;border-radius:var(--r-full);padding:4px 8px;
+  background:var(--s2);border:1px solid var(--line);color:var(--txt2)}
+.progresssummary .up{color:var(--green);border-color:rgba(45,191,126,.28);background:rgba(45,191,126,.08)}
+.progressrow{width:100%;display:grid;grid-template-columns:28px minmax(0,1fr) 14px;gap:var(--sp2);
+  align-items:center;text-align:left;min-height:58px;padding:9px 0;border-top:1px solid var(--line)}
+.progressrow:first-of-type{border-top:0}
+.progressrow .mark{width:28px;height:28px;border-radius:var(--r-sm);display:grid;place-items:center;
+  background:var(--s2);color:var(--txt2);font-weight:850}
+.progressrow.up .mark{color:var(--green);background:rgba(45,191,126,.13)}
+.progressrow.down .mark{color:var(--txt3)}
+.progressrow .ttl{display:block;font-size:var(--fs-sub);font-weight:700}
+.progressrow .meta{display:block;margin-top:2px;font-size:var(--fs-tiny);color:var(--txt2);line-height:1.35}
+.progressrow .next{color:var(--a6)}
+.progressrow .chev{color:var(--txt3);font-size:var(--fs-lg)}
 .histnote{margin-top:6px;color:var(--txt2);font-size:var(--fs-sub);line-height:1.35;display:-webkit-box;
   -webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .sessiondetail{padding:11px 13px;border-left:3px solid var(--a5);background:var(--s2);border-radius:0 var(--r-md) var(--r-md) 0;
@@ -1691,7 +1720,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V85 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V86 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="mback" id="modal-sync"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="sync-title">
@@ -6934,6 +6963,178 @@ $('#btn-rest').addEventListener('click',()=>{
 function prevSession(exId){ const h = exHistory(exId, new Date(state.active.date).getTime()); return h.length? h[h.length-1] : null; }
 
 /* ══════════════════════════════════════════════════════════════════════
+   SATZ- UND WORKOUT-VERGLEICH                                     (V86)
+
+   Ein Fortschrittswert muss dieselbe Bedeutung behalten, egal ob gerade
+   geloggt oder spaeter in der Zusammenfassung angesehen wird. Deshalb
+   laufen beide Anzeigen durch dieselben Helfer:
+     · Kraft: gleicher Feldwert → Wiederholungen direkt vergleichen.
+       Aendert sich die Last, wird die tatsaechlich bewegte Last ueber das
+       geschaetzte e1RM verglichen (bei Koerpergewicht inklusive Gewicht,
+       bei Unterstuetzung nach Abzug der Hilfe).
+     · Halten: Sekunden.
+     · Kardio: Tempo, sobald Strecke UND Zeit da sind; sonst der vorhandene
+       Messwert.
+
+   Es wird nichts automatisch als geschafft eingetragen. Die Anzeige liest
+   ausschliesslich Werte, die wirklich im Satz stehen. */
+function historieAlsEintrag(exId, h){
+  if(!h) return null;
+  const e={exId, sets:h.sets||[], uni:!!h.uni};
+  if(h.as!==undefined) e.as=!!h.as;
+  if(h.bw!==undefined) e.bw=!!h.bw;
+  if(h.bwkg!==undefined) e.bwkg=+h.bwkg;
+  return e;
+}
+function liveAlsEintrag(e){
+  if(!e) return null;
+  return Object.assign({},e,{__live:true,uni:exIsUni(e.exId),as:exIsAssist(e.exId),bw:exIsBW(e.exId)});
+}
+/* exHistory entfernt Aufwaermsaetze. Ein eingefuegtes Warm-up darf deshalb
+   die Positionen nicht verschieben: Satz 1 Arbeit bleibt Satz 1 Arbeit. */
+function vorherigerSatzFuer(e, si, prev){
+  const s=e&&e.sets&&e.sets[si];
+  if(!s || s.t==='w' || !prev) return null;
+  const typ=s.t==='d'?'d':'a';
+  const gleich=x=>x.t!=='w' && (x.t==='d'?'d':'a')===typ;
+  const pos=e.sets.slice(0,si+1).filter(gleich).length-1;
+  return (prev.sets||[]).filter(gleich)[pos] || null;
+}
+function vergleichStatus(neu, alt, toleranz){
+  const t=toleranz||0;
+  return neu>alt+t?'up':neu<alt-t?'down':'same';
+}
+function plusZahl(v, stellen){
+  const n=Math.abs(+v||0), z=stellen==null?0:stellen;
+  const txt=n.toLocaleString('de-DE',{minimumFractionDigits:z,maximumFractionDigits:z});
+  return (v>0?'+':v<0?'−':'')+txt;
+}
+function satzVergleich(neuE, neuS, neuDatum, altE, altS, altDatum){
+  if(!neuE || !altE || !satzHatInhalt(neuS||{}) || !satzHatInhalt(altS||{})) return null;
+  /* Bei einer laufenden einseitigen Uebung erst sprechen, wenn wirklich
+     beide Seiten eingegeben sind. Sonst wuerde die noch leere rechte Seite
+     durch die Altdaten-Regel still als identisch zur linken gelten. */
+  if(neuE.__live && entryIsUni(neuE) && (neuS.rr==='' || neuS.rr==null)) return null;
+  const art=entryArt(neuE);
+  if(art==='zeit'){
+    const n=+neuS.sek||0, a=+altS.sek||0; if(!(n>0&&a>0)) return null;
+    const d=n-a, status=vergleichStatus(n,a,0.5);
+    return {status,
+      text:status==='same'?`Gleiche Haltezeit: ${fmtSek(n)}`:`${d>0?'+':'−'}${fmtSek(Math.abs(d))} Haltezeit`,
+      basis:`${fmtSek(a)} → ${fmtSek(n)}`};
+  }
+  if(art==='kardio'){
+    const ns=+neuS.sek||0, as=+altS.sek||0, nd=+neuS.dist||0, ad=+altS.dist||0;
+    if(nd>0 && ad>0 && ns>0 && as>0){
+      const nv=nd/ns, av=ad/as, pct=(nv-av)/av*100, status=vergleichStatus(pct,0,0.5);
+      return {status,
+        text:status==='same'?'Tempo praktisch gleich':`Tempo ${plusZahl(pct,1)} %`,
+        basis:`${fmtDist(ad)} in ${fmtSek(as)} → ${fmtDist(nd)} in ${fmtSek(ns)}`};
+    }
+    if(nd>0 && ad>0){
+      const d=nd-ad, status=vergleichStatus(nd,ad,0.5);
+      return {status,text:status==='same'?`Gleiche Strecke: ${fmtDist(nd)}`:`${d>0?'+':'−'}${fmtDist(Math.abs(d))} Strecke`,
+        basis:`${fmtDist(ad)} → ${fmtDist(nd)}`};
+    }
+    if(ns>0 && as>0){
+      const d=ns-as, status=vergleichStatus(ns,as,0.5);
+      return {status,text:status==='same'?`Gleiche Dauer: ${fmtSek(ns)}`:`${d>0?'+':'−'}${fmtSek(Math.abs(d))} Dauer`,
+        basis:`${fmtSek(as)} → ${fmtSek(ns)}`};
+    }
+    return null;
+  }
+
+  const nr=repsOf(neuE,neuS,'weak'), ar=repsOf(altE,altS,'weak');
+  if(!(nr>0&&ar>0)) return null;
+  const nAssist=entryIsAssist(neuE), aAssist=entryIsAssist(altE);
+  const nBW=!nAssist && (neuE.bw!==undefined?!!neuE.bw:exIsBW(neuE.exId));
+  const aBW=!aAssist && (altE.bw!==undefined?!!altE.bw:exIsBW(altE.exId));
+  const nw=+neuS.w||0, aw=+altS.w||0;
+  const gleicheArt=nAssist===aAssist && nBW===aBW;
+  if(gleicheArt && Math.abs(nw-aw)<0.001){
+    const d=nr-ar, status=vergleichStatus(nr,ar,0);
+    const last=nAssist?`${fmtW(nw)} kg Hilfe`:nBW?(nw>0?`+${fmtW(nw)} kg`:'Körpergewicht'):`${fmtW(nw)} kg`;
+    return {status,
+      text:status==='same'?`Wie letztes Mal: ${nr} Wdh bei ${last}`:`${plusZahl(d)} Wdh bei ${last}`,
+      basis:`Satzposition zuletzt ${ar} Wdh`};
+  }
+  const nl=lastVon(neuE,neuS,neuDatum), al=lastVon(altE,altS,altDatum);
+  const ne=e1rm(nl,nr), ae=e1rm(al,ar);
+  if(!(ne>0&&ae>0)){
+    const d=nr-ar, status=vergleichStatus(nr,ar,0);
+    return {status,text:status==='same'?`Wie letztes Mal: ${nr} Wdh`:`${plusZahl(d)} Wdh`,basis:`${ar} → ${nr} Wdh`};
+  }
+  const pct=(ne-ae)/ae*100, status=vergleichStatus(pct,0,0.5);
+  return {status,
+    text:status==='same'?'Geschätzte Satzleistung praktisch gleich':`Geschätzte Satzleistung ${plusZahl(pct,1)} %`,
+    basis:`${fmtW(al)} kg × ${ar} → ${fmtW(nl)} kg × ${nr}${Math.max(nr,ar)>E1RM_RELIABLE_MAX?' · >12 Wdh ungenauer':''}`};
+}
+function satzFeedbackInhalt(v){
+  if(!v) return '';
+  const mark=v.status==='up'?'↑':v.status==='down'?'↘':'=';
+  return `<span class="mark" aria-hidden="true">${mark}</span><span>${esc(v.text)} <span class="basis">· ${esc(v.basis)}</span></span>`;
+}
+function liveSatzVergleich(ei, si){
+  const e=state.active&&state.active.exercises[ei]; if(!e) return null;
+  const prev=prevSession(e.exId), ps=vorherigerSatzFuer(e,si,prev);
+  if(!prev || !ps) return null;
+  return satzVergleich(liveAlsEintrag(e),e.sets[si],state.active.date,
+    historieAlsEintrag(e.exId,prev),ps,prev.date);
+}
+function refreshSetFeedback(ei, si){
+  const box=$(`#tw-exlist [data-setfeedback="${ei}-${si}"]`); if(!box) return;
+  const v=liveSatzVergleich(ei,si);
+  box.className='setfeedback'+(v?' '+v.status:'');
+  box.innerHTML=satzFeedbackInhalt(v);
+}
+function satzVergleichsScore(e,s,date){
+  const art=entryArt(e);
+  if(art==='zeit') return +s.sek||0;
+  if(art==='kardio'){
+    const sek=+s.sek||0, dist=+s.dist||0;
+    return dist>0&&sek>0 ? dist/sek : dist>0 ? dist : sek;
+  }
+  const r=repsOf(e,s,'weak'), last=lastVon(e,s,date);
+  return e1rm(last,r) || r;
+}
+function besterVergleichsSatz(e,date){
+  const sets=validSets(e); if(!sets.length) return null;
+  return sets.slice().sort((a,b)=>satzVergleichsScore(e,b,date)-satzVergleichsScore(e,a,date))[0];
+}
+function workoutProgressReport(w){
+  if(!w) return [];
+  const vor=new Date(w.date).getTime();
+  return (w.exercises||[]).map(e=>{
+    const jetzt=besterVergleichsSatz(e,w.date); if(!jetzt) return null;
+    const h=exHistory(e.exId,vor), alt=h[h.length-1];
+    const next=!istZeitArt(entryArt(e))?progressionFor(e.exId):null;
+    if(!alt) return {id:e.exId,name:getEx(e.exId)?.name||e.name,status:'new',text:'Erster Vergleichswert gespeichert',basis:'Ab jetzt wird derselbe Bestsatz verglichen',next};
+    const altE=historieAlsEintrag(e.exId,alt), altS=besterVergleichsSatz(altE,alt.date);
+    const v=satzVergleich(e,jetzt,w.date,altE,altS,alt.date);
+    if(!v) return null;
+    return {id:e.exId,name:getEx(e.exId)?.name||e.name,status:v.status,text:v.text,basis:v.basis,next};
+  }).filter(Boolean);
+}
+function workoutProgressHtml(w){
+  const rows=workoutProgressReport(w); if(!rows.length) return '';
+  const n=art=>rows.filter(x=>x.status===art).length;
+  const teile=[];
+  if(n('up')) teile.push(`<span class="up">${n('up')} verbessert</span>`);
+  if(n('same')) teile.push(`<span>${n('same')} gehalten</span>`);
+  if(n('down')) teile.push(`<span>${n('down')} unter letztem Bestsatz</span>`);
+  if(n('new')) teile.push(`<span>${n('new')} neu</span>`);
+  const marks={up:'↑',same:'=',down:'↘',new:'•'};
+  return `<div class="card progressreport"><h3 style="margin-bottom:3px">Fortschrittsbericht</h3>
+    <p class="tiny">Bester Arbeitssatz je Übung gegen die letzte Einheit derselben Übung.</p>
+    <div class="progresssummary">${teile.join('')}</div>
+    <div>${rows.slice(0,8).map(x=>`<button class="progressrow ${x.status}" data-sum-ex="${esc(x.id)}">
+      <span class="mark" aria-hidden="true">${marks[x.status]}</span><span><span class="ttl">${esc(x.name)}</span>
+      <span class="meta">${esc(x.text)} · ${esc(x.basis)}</span>${x.next?`<span class="meta next">Nächstes Ziel: ${esc(x.next.txt)}</span>`:''}</span><span class="chev">›</span></button>`).join('')}</div>
+    ${rows.length>8?`<p class="tiny">+${rows.length-8} weitere Übungen im Verlauf.</p>`:''}
+    <p class="kpihint tiny">Bei geänderter Last wird die tatsächlich bewegte Last per e1RM geschätzt; über 12 Wiederholungen ist die Schätzung ungenauer. Antippen öffnet die Übungsanalyse.</p></div>`;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
    NOTIZEN                                                        (V57/C2)
    „Schulter gezwickt", „Griff enger", „Bank Stufe 3" — Dinge, die man sich
    beim nächsten Mal merken will und sonst vergisst.
@@ -7029,9 +7230,12 @@ function renderActive(){
       if(assist) return `${w0>0? '−'+w0 : '0'}×${rt}`;
       return isBW? (w0>0?`+${w0}×${rt}`:`BW×${rt}`) : `${w0}×${rt}`; };
     const prev = prevSession(e.exId);
+    const prevRef = historieAlsEintrag(e.exId,prev), liveRef=liveAlsEintrag(e);
     const bests = exBests(e.exId, new Date(a.date).getTime());
     const prevTxt = prev? prev.sets.map(fmtS).join(' · ') : null;
-    const prog = progressionFor(e.exId, new Date(a.date).getTime());
+    /* Zeit und Kardio haben keine Doppelprogression aus kg × Wdh. Vor V86
+       konnte dort deshalb ein sachlich falscher kg-Vorschlag auftauchen. */
+    const prog = istZeitArt(entryArt(e)) ? null : progressionFor(e.exId, new Date(a.date).getTime());
     return `<div class="excard" data-ei="${ei}">
       <div class="exhd">${a.exercises.length>1?`<div class="exreorder"><button class="rord" data-exup="${ei}" ${ei===0?'disabled':''} title="nach oben">▲</button><button class="rord" data-exdown="${ei}" ${ei===a.exercises.length-1?'disabled':''} title="nach unten">▼</button></div>`:''}<div class="grow"><button class="exname" data-exstat="${ei}" aria-label="Statistik zu ${esc(e.name)} öffnen"><b>${esc(e.name)}</b><span class="bi" data-ico="chart" aria-hidden="true"></span></button>${
         /* ── V55/B: Muskelnamen raus ──────────────────────────────────────
@@ -7105,10 +7309,12 @@ function renderActive(){
           : `<span>#</span><span>Zuletzt</span><span title="${assist?'Hilfe der Maschine — mehr kg macht die Übung leichter':''}">${assist?'−kg Hilfe':isBW?'+kg':'kg'}</span>${uni?'<span title="Wdh linke Seite">Wdh L</span><span title="Wdh rechte Seite">Wdh R</span>':'<span>Wdh</span>'}${useRir?'<span title="Reps in Reserve">RIR</span>':''}<span></span>`;
 
         const zeilen = e.sets.map((s,si)=>{
-          const ps = prev && prev.sets[si];
+          const ps = vorherigerSatzFuer(e,si,prev);
           const filled = satzHatInhalt(s);
           const tcls = s.t==='w'?'warm':s.t==='d'?'drop':'';
           const lbl = s.t? SETTYPE[s.t][0] : (si+1);
+          const cmp = ps&&prevRef ? satzVergleich(liveRef,s,a.date,prevRef,ps,prev.date) : null;
+          const feedback = `<div class="setfeedback${cmp?' '+cmp.status:''}" data-setfeedback="${ei}-${si}">${satzFeedbackInhalt(cmp)}</div>`;
 
           if(istZeitArt(art)){
             /* Der Vorher-Wert zeigt hier Sekunden bzw. Sekunden und Strecke.
@@ -7125,7 +7331,7 @@ function renderActive(){
               ${art==='kardio' ? `<input type="number" inputmode="numeric" step="10" min="0" aria-label="Meter"
                      placeholder="${ps? (+ps.dist||0) : 'm'}" value="${s.dist!==''&&s.dist!=null? s.dist:''}" data-f="dist">` : ''}
               <button class="setdel" data-delset title="Satz löschen">✕</button>
-            </div>`;
+            </div>${feedback}`;
           }
 
           return `<div class="setrow ${useRir?'rir':''} ${uni?'uni':''} ${filled?'filled':''} ${tcls}" data-ei="${ei}" data-si="${si}">
@@ -7136,7 +7342,7 @@ function renderActive(){
             ${uni? `<input type="number" inputmode="numeric" step="1" min="0" placeholder="${ps&&ps.rr!==undefined&&ps.rr!==''?ps.rr:(ps?ps.r:'R')}" value="${s.rr!==''&&s.rr!=null&&s.rr!==undefined? s.rr:''}" data-f="rr">`:''}
             ${useRir? `<input class="riri" type="number" inputmode="numeric" step="1" min="0" max="10" placeholder="–" value="${s.rir!==''&&s.rir!=null&&s.rir!==undefined? s.rir:''}" data-f="rir">`:''}
             <button class="setdel" data-delset title="Satz löschen">✕</button>
-          </div>`;
+          </div>${feedback}`;
         }).join('');
 
         return `<div class="sethead ${kopfKlasse}">${kopf}</div>${zeilen}`;
@@ -7220,6 +7426,7 @@ function wireActiveOnce(){
     row.classList.toggle('filled', isDone);
     saveStateSoon();
     refreshSetCount();
+    refreshSetFeedback(ei,si);
     if((inp.dataset.f==='r'||inp.dataset.f==='rr') && !wasDone && isDone) startRestFor(ei, set);
     /* C3: Scheiben mitziehen, sobald sich das Gewicht ändert. Punktgenau,
        ohne die Liste neu zu bauen — sonst verliert das Feld den Fokus. */
@@ -7267,11 +7474,7 @@ function wireActiveOnce(){
       const ei=+row.dataset.ei, si=+row.dataset.si;
       const set = state.active.exercises[ei].sets[si];
       set.t = set.t==='w' ? 'd' : set.t==='d' ? undefined : 'w';
-      saveState(); haptic();
-      row.classList.toggle('warm', set.t==='w');
-      row.classList.toggle('drop', set.t==='d');
-      st.textContent = set.t ? SETTYPE[set.t][0] : (si+1);
-      refreshSetCount();
+      saveState(); haptic(); renderActive();
       /* Korrigiert: Nur AUFWÄRMSÄTZE sind aus dem Volumen ausgeschlossen
          (validSets filtert t==='w'). Dropsets sind echte Arbeit und zählen
          voll mit — der frühere Text behauptete das Gegenteil. */
@@ -7305,6 +7508,7 @@ function wireActiveOnce(){
       row.classList.add('filled');
       if(!wasDone) satzGestempelt(set);              // V70: die Uhr des Satzes
       refreshSetCount(); saveState(); haptic();
+      refreshSetFeedback(ei,si);
       if(!wasDone) startRestFor(ei, set);
       return;
     }
@@ -7598,6 +7802,10 @@ function wireSessionCheckin(w){
       flushSave();
     });
   }
+  root.querySelectorAll('[data-sum-ex]').forEach(b=>b.addEventListener('click',()=>{
+    flushSave(); exStatId=b.dataset.sumEx; statsPanel='ex';
+    closeModals(); haptic(); showScreen('scr-stats');
+  }));
 }
 function showSummary(w, freshAch, newLevel){
   const fen = trainingsFenster(w);
@@ -7646,6 +7854,7 @@ function showSummary(w, freshAch, newLevel){
     </div>
     ${vorHtml}
     ${cmp}
+    ${workoutProgressHtml(w)}
     ${sessionCheckinHtml(w)}
     ${prHtml}
     ${achHtml}
@@ -7908,7 +8117,7 @@ function openExOpt(exId){
     const i = state.active.exercises.findIndex(e=>e.exId===xoId);
     if(i<0){ toast('Übung ist nicht im aktuellen Training'); return; }
     const nx = getEx(b.dataset.swap);
-    state.active.exercises[i] = {exId:nx.id, name:nx.name, sets:leereSaetze(nx.id)};
+    state.active.exercises[i] = {exId:nx.id, name:nx.name, __live:true, sets:leereSaetze(nx.id)};
     saveState(); closeModals(); renderActive(); toast('Getauscht: '+nx.name);
   }));
   openModal('#modal-exopt');
@@ -8958,7 +9167,7 @@ function renderStats(){
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   ÜBERSICHT: DIE SECHS ANTWORTEN, DIE MAN IM STUDIO BRAUCHT      (V85)
+   ÜBERSICHT: DIE WICHTIGSTEN ANTWORTEN FÜRS TRAINING             (V86)
 
    Die alten Reiter bleiben die vollständige Analyse. Diese Seite zieht nur
    bereits berechnete Wahrheiten zusammen: aktuelles Fenster, Volumentrend,
@@ -9048,6 +9257,31 @@ function overviewStrengthCard(gains){
     }).join('')}</div>
     <button class="btn btn-ghost btn-block btn-sm" style="margin-top:8px" data-stat-tab="ex">Andere Übung suchen</button></div>`;
 }
+function overviewNextGoalsCard(){
+  const fav=(state.settings.favEx||[]), zuletzt=recentExIds(18);
+  const ids=[...new Set(fav.concat(zuletzt))];
+  const reihenfolge=new Map(zuletzt.map((id,i)=>[id,i]));
+  const rows=ids.map(id=>{
+    const ex=getEx(id); if(!ex || istZeitArt(exArt(id))) return null;
+    const p=progressionFor(id); if(!p) return null;
+    const stall=plateauCount(id), sprung=p.kind==='up'||p.kind==='assist';
+    const badge=p.kind==='assist'?'Hilfe runter':p.kind==='up'?'Gewicht rauf':'+1 Wdh';
+    return {id,name:ex.name,p,stall,sprung,badge,fav:isFav(id),pos:reihenfolge.has(id)?reihenfolge.get(id):999};
+  }).filter(Boolean).sort((a,b)=>(b.sprung-a.sprung) || ((b.stall>=3)-(a.stall>=3)) ||
+    (b.fav-a.fav) || a.pos-b.pos).slice(0,5);
+  if(!rows.length) return `<div class="card"><h3>Nächste Ziele</h3>
+    <div class="empty" style="padding:14px">Nach der ersten vergleichbaren Kraftübung stehen hier konkrete Last- und Wiederholungsziele.</div></div>`;
+  const spruenge=rows.filter(x=>x.sprung).length, plateaus=rows.filter(x=>x.stall>=3).length;
+  const lead=spruenge?`${spruenge} ${spruenge===1?'Lastsprung':'Lastsprünge'} bereit`
+    :'Die nächste Wiederholung ist festgelegt';
+  return `<div class="card"><div class="row" style="align-items:flex-start"><div class="grow">
+      <h3 style="margin-bottom:3px">Nächste Ziele</h3><p class="tiny">${lead}${plateaus?` · ${plateaus} ${plateaus===1?'Plateau':'Plateaus'} im Blick`:''}.</p></div>
+      <span class="badge type">Live-Coach</span></div>
+    <div style="margin-top:6px">${rows.map(x=>`<button class="ovrow" data-stat-ex="${esc(x.id)}">
+      <span><span class="ttl">${x.fav?'★ ':''}${esc(x.name)}</span><span class="meta">${esc(x.p.txt)}${x.stall>=3?` · ${x.stall} Einheiten ohne Bestwert`:''}</span></span>
+      <span class="value">${esc(x.badge)}</span><span class="chev">›</span></button>`).join('')}</div>
+    <p class="kpihint tiny">Aus echten vollständigen Einheiten berechnet. Ziele sind Platzhalter fürs nächste Training und werden nie als geschafft eingetragen.</p></div>`;
+}
 function overviewLoadCard(){
   const rated=state.workouts.map(w=>{ const r=sessionRpe(w); return {w,r,load:r===null?null:sessionLoad(w)}; })
     .filter(x=>x.r!==null && x.load!==null);
@@ -9115,6 +9349,7 @@ function renderOverviewStats(){
     + overviewTrendCard()
     + overviewMuscleCard()
     + overviewStrengthCard(gains)
+    + overviewNextGoalsCard()
     + overviewLoadCard()
     + overviewBodyweightCard();
 }
