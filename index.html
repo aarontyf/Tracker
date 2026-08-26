@@ -1220,6 +1220,20 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
 .sync-conflict p{font-size:var(--fs-sub);color:var(--txt2);line-height:1.5;margin:0 0 10px}
 @media(max-width:350px){.sync-actions{grid-template-columns:1fr}.sync-actions .btn{grid-column:1}}
 
+/* ═══ ChatGPT-Lesezugriff (V88) ════════════════════════════════════════
+   Gleiche Statussprache wie der Geräte-Sync, aber bewusst als getrennte
+   Funktion: Hier liegt nach Einwilligung eine bereinigte Klartextkopie. */
+.ai-list{display:grid;gap:6px;margin:10px 0}
+.ai-list>div{padding:9px 11px;border:1px solid var(--line);border-radius:var(--r-sm);
+  background:var(--s2);font-size:var(--fs-tiny);color:var(--txt2)}
+.ai-list>div::before{content:'✓';color:var(--a7);font-weight:850;margin-right:8px}
+.ai-endpoint{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:var(--fs-tiny);
+  overflow-wrap:anywhere;color:var(--txt2);padding:10px;border:1px solid var(--line);
+  border-radius:var(--r-sm);background:var(--s2);margin:8px 0}
+.ai-auth input{margin:4px 0 8px}
+.ai-sensitive{border-color:color-mix(in srgb,var(--gold) 45%,var(--line));
+  background:color-mix(in srgb,var(--gold) 7%,var(--s2))}
+
 </style>
 </head>
 <body>
@@ -1683,6 +1697,19 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <div class="card">
+    <div class="sync-head">
+      <span class="bi" data-ico="bolt" aria-hidden="true"></span>
+      <div class="grow">
+        <h3 style="margin-bottom:2px">ChatGPT-Zugriff</h3>
+        <div class="sync-state" id="ai-settings-state" data-art="off">
+          <span class="sync-mark" aria-hidden="true">–</span><span>Nicht freigegeben</span>
+        </div>
+        <p class="tiny" id="ai-settings-detail" style="margin-top:5px">Optionaler Nur-Lese-Zugriff auf eine bereinigte Kopie.</p>
+      </div>
+      <button class="btn btn-ghost btn-sm" id="ai-open">Öffnen</button>
+    </div>
+  </div>
+  <div class="card">
     <h3 style="margin-bottom:4px">Backup</h3>
     <p class="sub" style="margin-bottom:4px">Eine zusätzliche Datei-Sicherung bleibt auch mit Geräte-Sync sinnvoll.</p>
     <p class="tiny" id="set-lastbackup" style="margin-bottom:8px"></p>
@@ -1702,9 +1729,10 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
   </div>
   <div class="card">
     <h3 style="margin-bottom:4px"><span class="bi" data-ico="shield"></span>Deine Daten</h3>
-    <p class="tiny" style="line-height:1.6">Ohne Geräte-Sync bleiben alle Trainingsdaten <b>nur auf diesem Gerät</b>. Mit Geräte-Sync wird ausschließlich ein <b>Ende-zu-Ende-verschlüsseltes</b> Datenpaket in deinem Supabase-Projekt gespeichert. Supabase erhält weder deinen Kopplungsschlüssel noch lesbare Trainingsdaten.<br><br>
+    <p class="tiny" style="line-height:1.6">Ohne eine Cloud-Funktion bleiben alle Trainingsdaten <b>nur auf diesem Gerät</b>. Der Geräte-Sync speichert ausschließlich ein <b>Ende-zu-Ende-verschlüsseltes</b> Datenpaket; dabei erhält Supabase weder deinen Kopplungsschlüssel noch lesbare Trainingsdaten. Der optionale ChatGPT-Zugriff ist getrennt davon: Nach deiner Einwilligung wird eine <b>bereinigte, lesbare Kopie</b> gespeichert, damit ChatGPT sie auswerten kann.<br><br>
     Die App nutzt kein Tracking, keine Werbung und keine Analyse-Dienste. Standort, Kamera und Kontakte werden nicht angefordert. Eine Datei-Sicherung verlässt dein Gerät nur, wenn du sie selbst teilst.<br><br>
-    <b>Wichtig:</b> Bewahre den Kopplungsschlüssel sicher auf. Ohne ihn kann auch der Entwickler die Cloud-Daten nicht entschlüsseln.</p>
+    <b>Ausgeschlossen von der ChatGPT-Kopie:</b> Name, E-Mail, Standort, PIN und Geräte-Sync-Schlüssel. Trainings- und Übungsnotizen werden als Trainingsdaten mitgeteilt. Du kannst die Kopie jederzeit wieder löschen.<br><br>
+    <b>Wichtig:</b> Bewahre den Kopplungsschlüssel sicher auf. Ohne ihn kann auch der Entwickler den Geräte-Sync nicht entschlüsseln.</p>
   </div>
   <div class="card">
     <h3 style="margin-bottom:4px">Sicherungspunkte auf dem Gerät</h3>
@@ -1720,7 +1748,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V87 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V88 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="mback" id="modal-sync"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="sync-title">
@@ -1728,6 +1756,13 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
   <div class="mhd"><div><h2 id="sync-title">Geräte-Sync</h2><div class="sub">Verschlüsselt · offline nutzbar · ohne Konto</div></div>
     <button class="iconbtn" data-close aria-label="Schließen" data-ico-close></button></div>
   <div id="sync-body" class="sync-panel"></div>
+</div></div>
+
+<div class="mback" id="modal-ai"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="ai-title">
+  <div class="grab"></div>
+  <div class="mhd"><div><h2 id="ai-title">ChatGPT-Zugriff</h2><div class="sub">Freiwillig · bereinigt · nur lesen</div></div>
+    <button class="iconbtn" data-close aria-label="Schließen" data-ico-close></button></div>
+  <div id="ai-body" class="sync-panel"></div>
 </div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -3364,6 +3399,7 @@ function saveState(){
     localStorage.setItem(LS_KEY, JSON.stringify(state));
     _saveWarned = false;
     if(typeof syncStateChanged==='function') syncStateChanged();
+    if(typeof aiStateChanged==='function') aiStateChanged();
   }catch(e){
     console.warn('save fail', e);
     if(!_saveWarned){
@@ -3937,6 +3973,368 @@ window.addEventListener('online',()=>{ if(syncConnected()){ syncSetStatus('wait'
 window.addEventListener('offline',()=>{ if(syncConnected()) syncSetStatus('wait','Offline','Änderungen bleiben sicher auf diesem Gerät.'); });
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&syncConnected()) syncSchedule(250); });
 window.addEventListener('focus',()=>{ if(syncConnected()) syncSchedule(250); });
+
+/* ================= CHATGPT-LESEZUGRIFF (V88) ========================
+   Anders als der Geräte-Sync MUSS diese Kopie lesbar sein, sonst könnte ein
+   genehmigter ChatGPT-Client sie nicht auswerten. Deshalb ist sie opt-in,
+   ausdrücklich bereinigt und in Supabase an ein echtes Benutzerkonto sowie
+   RLS gebunden. OAuth-Clients dürfen die Zeile nur SELECTen. */
+const AI_LS = 'ironlog_ai_v1';
+const AI_TABLE = 'tracker_ai_snapshots';
+const AI_AUTH_STORAGE = 'gymtracker-chatgpt-auth-v1';
+const AI_SDK_URL = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4/+esm';
+const AI_MCP_URL = 'https://fbvcslmulqxaxurcdyrv.supabase.co/functions/v1/gymtracker-mcp/mcp';
+const AI_WAIT = 3500;
+let aiMeta = null, aiUser = null, aiGrants = [];
+let aiStatus = {art:'off',text:'Nicht freigegeben',detail:''};
+let _aiReady = false, _aiBusy = false, _aiTimer = null, _aiAgain = false, _aiGeneration = 0;
+let _aiClientPromise = null;
+
+function aiLoadMeta(){
+  try{
+    const m=JSON.parse(localStorage.getItem(AI_LS));
+    if(!m || typeof m!=='object') return {enabled:false,dirty:false,lastUpload:null,workoutCount:0};
+    return {enabled:!!m.enabled,dirty:!!m.dirty,lastUpload:+m.lastUpload||null,
+      workoutCount:Math.max(0,+m.workoutCount||0)};
+  }catch(_){ return {enabled:false,dirty:false,lastUpload:null,workoutCount:0}; }
+}
+function aiSaveMeta(){
+  try{ localStorage.setItem(AI_LS,JSON.stringify(aiMeta)); }
+  catch(_){ /* Trainingsdaten bleiben weiterhin sicher in ironlog_v1. */ }
+}
+function aiString(v,max){ return typeof v==='string' ? v.slice(0,max||1000) : ''; }
+function aiObject(v){ return v&&typeof v==='object'&&!Array.isArray(v) ? v : {}; }
+function aiList(v){ return Array.isArray(v) ? v : []; }
+function aiPick(src, keys){
+  src=aiObject(src); const out={};
+  keys.forEach(k=>{
+    const v=src[k];
+    if(typeof v==='string'){ if(v!=='') out[k]=v; }
+    else if(typeof v==='number'){ if(isFinite(v)) out[k]=v; }
+    else if(typeof v==='boolean') out[k]=v;
+  });
+  return out;
+}
+function aiSet(set){ return aiPick(set,['w','r','rr','t','rir','ts','sek','dist']); }
+function aiExercise(entry){
+  const e=aiObject(entry), out=aiPick(e,['exId','name','bw','bwkg','as','uni','note']);
+  if(out.name) out.name=aiString(out.name,160);
+  if(out.note) out.note=aiString(out.note,1000);
+  out.sets=aiList(e.sets).filter(x=>x&&typeof x==='object').map(aiSet);
+  return out;
+}
+function aiWorkout(entry){
+  const w=aiObject(entry), out=aiPick(w,['id','date','start','end','type','rpe','note','durFix','vorab','erfasst']);
+  if(out.note) out.note=aiString(out.note,2000);
+  out.exercises=aiList(w.exercises).filter(x=>x&&typeof x==='object').map(aiExercise);
+  return out;
+}
+function aiPlanEntry(entry){
+  const p=aiObject(entry), out=aiPick(p,['type']);
+  if(Array.isArray(p.exIds)) out.exIds=p.exIds.filter(x=>typeof x==='string').map(x=>x.slice(0,160));
+  out.exercises=aiList(p.exercises).filter(x=>x&&typeof x==='object').map(aiExercise);
+  return out;
+}
+function aiBuildSnapshot(src){
+  const s=aiObject(src), profile=aiObject(s.profile), settings=aiObject(s.settings);
+  const plan={};
+  Object.entries(aiObject(s.plan)).forEach(([date,value])=>{
+    if(/^\d{4}-\d{2}-\d{2}$/.test(date)) plan[date]=aiPlanEntry(value);
+  });
+  const exOpt={};
+  Object.entries(aiObject(s.exOpt)).forEach(([id,value])=>{
+    if(id.length<=180) exOpt[id]=aiPick(value,['uni','bw','as','lo','hi','step','rest','sets']);
+  });
+  const measures=aiList(s.measures).map(m=>aiPick(m,['d','chest','arm','waist','thigh','shoulder','calf','neck']));
+  const customEx=aiList(s.customEx).map(value=>{
+    const e=aiObject(value), out=aiPick(e,['id','name','grp','eq','al','custom','uni','art']);
+    out.p=aiList(e.p).filter(x=>typeof x==='string').map(x=>x.slice(0,80));
+    out.s=aiList(e.s).filter(x=>typeof x==='string').map(x=>x.slice(0,80));
+    return out;
+  });
+  const templates=aiList(s.templates).map(value=>{
+    const t=aiObject(value), out=aiPick(t,['id','name','type']);
+    out.exIds=aiList(t.exIds).filter(x=>typeof x==='string').map(x=>x.slice(0,160));
+    return out;
+  });
+  const trainingProfile={};
+  const profileMap={alter:'ageYears',sex:'sex',groesse:'heightCm',gewicht:'weightKg',kfa:'bodyFatPercent',
+    ziel:'goal',erfahrung:'experience',tage:'trainingDaysPerWeek',alltag:'dailyActivity',split:'preferredSplit'};
+  Object.entries(profileMap).forEach(([from,to])=>{
+    const v=profile[from];
+    if((typeof v==='string'&&v!=='')||(typeof v==='number'&&isFinite(v))||typeof v==='boolean') trainingProfile[to]=v;
+  });
+  if(Array.isArray(profile.trainingsTage)) trainingProfile.trainingWeekdays=profile.trainingsTage
+    .map(Number).filter(x=>Number.isInteger(x)&&x>=0&&x<=6);
+  const trainingPreferences={
+    cycleSessions:Math.max(1,+settings.goal||5),
+    defaultRestSeconds:Math.max(0,+settings.rest||90),
+    repRange:{min:Math.max(1,+settings.repLo||6),max:Math.max(1,+settings.repHi||9)},
+    defaultSets:Math.max(1,+settings.defSets||2),
+    weeklySetTarget:{min:Math.max(1,+settings.setGoalLo||10),max:Math.max(1,+settings.setGoalHi||20)},
+    rirTracking:!!settings.rir,
+    legsInCycle:settings.beineImZyklus!==false,
+    favoriteExerciseIds:aiList(settings.favEx).filter(x=>typeof x==='string').map(x=>x.slice(0,160)),
+  };
+  return {
+    schemaVersion:1,
+    generatedAt:new Date().toISOString(),
+    sharedCategories:['workoutHistory','activeWorkout','bodyMetrics','trainingPlan','goals','exerciseOptions','trainingProfile'],
+    state:{
+      workouts:aiList(s.workouts).filter(x=>x&&typeof x==='object').map(aiWorkout),
+      active:s.active&&typeof s.active==='object'?aiWorkout(s.active):null,
+      bodyweight:aiList(s.bodyweight).map(x=>aiPick(x,['d','kg'])),
+      measures,
+      goals:aiList(s.goals).map(x=>aiPick(x,['id','art','exId','ziel','start','bis','angelegt','erreicht'])),
+      plan,templates,customEx,exOpt,
+    },
+    trainingProfile,
+    trainingPreferences,
+  };
+}
+function aiGetClient(){
+  if(!_aiClientPromise){
+    _aiClientPromise=import(AI_SDK_URL).then(mod=>mod.createClient(SYNC_URL,SYNC_PUBLISHABLE,{
+      auth:{storageKey:AI_AUTH_STORAGE,persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
+    })).catch(e=>{ _aiClientPromise=null; throw e; });
+  }
+  return _aiClientPromise;
+}
+function aiFriendlyError(e){
+  const s=String(e&&e.message||e||'');
+  if(/Invalid login|credentials/i.test(s)) return 'E-Mail-Adresse oder Passwort stimmt nicht.';
+  if(/Email not confirmed/i.test(s)) return 'Bitte bestätige zuerst die E-Mail-Adresse.';
+  if(/already registered|already been registered/i.test(s)) return 'Für diese E-Mail gibt es schon ein Konto — nutze „Anmelden".';
+  if(/PGRST205|42P01|schema cache|relation/i.test(s)) return 'Die ChatGPT-Tabelle ist in Supabase noch nicht eingerichtet.';
+  if(/401|403|JWT|permission|policy/i.test(s)) return 'Die Anmeldung ist abgelaufen oder Supabase hat den Zugriff abgelehnt.';
+  if(/payload|too large|4000000|413/i.test(s)) return 'Die freigegebene Kopie ist zu groß. Bitte melde das, ohne das Backup öffentlich zu senden.';
+  if(/Failed to fetch|Network|Load failed|Importing/i.test(s)) return 'Keine Verbindung zu Supabase.';
+  return 'Die Freigabe konnte gerade nicht aktualisiert werden.';
+}
+function aiSetStatus(art,text,detail){
+  aiStatus={art,text,detail:detail||''}; aiRenderSettings(); aiRenderBody();
+}
+function aiRenderSettings(){
+  const st=$('#ai-settings-state'), de=$('#ai-settings-detail'); if(!st) return;
+  st.dataset.art=aiStatus.art;
+  st.innerHTML=`<span class="sync-mark" aria-hidden="true">${syncMark(aiStatus.art)}</span><span>${esc(aiStatus.text)}</span>`;
+  de.textContent=aiStatus.detail || (aiMeta&&aiMeta.enabled
+    ? `${aiMeta.workoutCount||0} ${aiMeta.workoutCount===1?'Workout':'Workouts'} · zuletzt ${syncDateText(aiMeta.lastUpload)}`
+    : 'Optionaler Nur-Lese-Zugriff auf eine bereinigte Kopie.');
+}
+function aiGrantClientId(grant){
+  const g=aiObject(grant), c=aiObject(g.client);
+  return aiString(g.client_id||g.clientId||c.client_id||c.clientId||c.id,200);
+}
+function aiGrantName(grant){
+  const g=aiObject(grant), c=aiObject(g.client);
+  return aiString(g.client_name||g.clientName||c.name,120) || 'Autorisierte Anwendung';
+}
+function aiGrantsHtml(){
+  if(!aiGrants.length) return '';
+  return `<div class="tiny up">Autorisierte OAuth-Anwendungen</div><div class="card" style="padding:2px 12px;margin:0">${aiGrants.map(g=>{
+    const id=aiGrantClientId(g); if(!id) return '';
+    return `<div class="item"><div class="grow"><div class="ttl" style="font-size:var(--fs-sub)">${esc(aiGrantName(g))}</div><div class="meta">Kann widerrufen werden · Token werden ungültig</div></div><button class="btn btn-ghost btn-sm" data-ai-revoke="${esc(id)}">Widerrufen</button></div>`;
+  }).join('')}</div>`;
+}
+function aiRenderBody(){
+  const box=$('#ai-body'); if(!box || !aiMeta) return;
+  if(_aiBusy && !aiUser){ box.innerHTML='<div class="sync-note"><b>Verbindung wird geprüft …</b></div>'; return; }
+  if(!aiUser){
+    box.innerHTML=`<div class="sync-note ai-sensitive"><b>Getrennt vom Geräte-Sync.</b><br>Für ChatGPT wird nach deiner Zustimmung eine bereinigte, lesbare Kopie angelegt. Dein verschlüsselter Geräte-Sync und sein Schlüssel bleiben unverändert.</div>
+      <form class="ai-auth" id="ai-auth-form">
+        <label class="tiny up" for="ai-email">E-Mail-Adresse</label>
+        <input id="ai-email" type="email" inputmode="email" autocomplete="email" required placeholder="deine@mail.de">
+        <label class="tiny up" for="ai-password">Passwort</label>
+        <input id="ai-password" type="password" autocomplete="current-password" minlength="8" required placeholder="mindestens 8 Zeichen">
+        <button class="btn btn-acc btn-block" id="ai-auth-login" type="submit">Anmelden</button>
+        <button class="btn btn-ghost btn-block" id="ai-auth-signup" type="button" style="margin-top:8px">Konto anlegen</button>
+      </form>
+      <p class="tiny">Das Konto ordnet die Freigabe dir zu. Die E-Mail-Adresse gehört zur Anmeldung und wird nicht Teil der Trainingskopie.</p>
+      ${(aiStatus.art==='error'||aiStatus.art==='wait')?`<div class="sync-note"><b>${esc(aiStatus.text)}</b><br>${esc(aiStatus.detail)}</div>`:''}`;
+    return;
+  }
+  const daten=`<div class="ai-list"><div>Workouts mit Übungen, Sätzen, RIR, Zeiten und Notizen</div><div>Körpergewicht und Körpermaße</div><div>Trainingsplan, Vorlagen, Ziele und Übungseinstellungen</div><div>Trainingsprofil ohne Name und Standort</div></div>`;
+  if(!aiMeta.enabled){
+    box.innerHTML=`<div class="sync-note"><b>Angemeldet als ${esc(aiUser.email||'dein Konto')}</b><br>Noch wurden keine lesbaren Trainingsdaten hochgeladen.</div>
+      <h3>Diese Trainingsdaten werden geteilt</h3>${daten}
+      <div class="sync-note ai-sensitive"><b>Nicht enthalten:</b><br>Name, E-Mail-Adresse, Standort, PIN, Backup-Empfänger und Geräte-Sync-Schlüssel. Freitext in Workout- und Übungsnotizen ist enthalten.</div>
+      <button class="btn btn-acc btn-block" id="ai-enable">Trainingsdaten freigeben</button>
+      ${aiGrantsHtml()}
+      <button class="btn btn-ghost btn-block" id="ai-logout">Von diesem Konto abmelden</button>`;
+    return;
+  }
+  box.innerHTML=`<div class="sync-state" data-art="${aiStatus.art}"><span class="sync-mark" aria-hidden="true">${syncMark(aiStatus.art)}</span><span>${esc(aiStatus.text)}</span></div>
+    ${aiStatus.detail?`<p class="tiny">${esc(aiStatus.detail)}</p>`:''}
+    <div class="sync-meta"><div><b>${aiMeta.workoutCount||0}</b><span>freigegebene Workouts</span></div><div><b>${aiMeta.lastUpload?'✓':'–'}</b><span>${aiMeta.lastUpload?syncDateText(aiMeta.lastUpload):'noch kein Upload'}</span></div></div>
+    <p class="tiny">Nach jeder Änderung wird die Kopie automatisch aktualisiert. ChatGPT kann sie ausschließlich lesen.</p>
+    <div class="tiny up">MCP-Adresse für ChatGPT</div><div class="ai-endpoint">${AI_MCP_URL}</div>
+    <div class="sync-actions"><button class="btn btn-ghost" id="ai-copy-url">Adresse kopieren</button><button class="btn btn-acc" id="ai-upload-now" ${_aiBusy?'disabled':''}>${_aiBusy?'Aktualisiert …':'Jetzt aktualisieren'}</button></div>
+    <button class="btn btn-danger btn-block" id="ai-disable">Freigabe beenden &amp; Cloud-Kopie löschen</button>
+    ${aiGrantsHtml()}
+    <p class="tiny">Beim Widerrufen werden die Token dieser Anwendung ungültig. Entferne den Connector zusätzlich in ChatGPT, wenn du ihn dort nicht mehr verwenden willst.</p>`;
+}
+async function aiRefreshGrants(client){
+  try{
+    const result=await client.auth.oauth.listGrants();
+    aiGrants=result.error ? [] : Array.isArray(result.data) ? result.data : Array.isArray(result.data&&result.data.grants) ? result.data.grants : [];
+  }catch(_){ aiGrants=[]; }
+}
+async function aiLoadSession(){
+  _aiBusy=true; aiRenderBody();
+  try{
+    const client=await aiGetClient(), ses=await client.auth.getSession();
+    if(!ses.data.session){ aiUser=null; return false; }
+    const got=await client.auth.getUser();
+    if(got.error||!got.data.user){ aiUser=null; return false; }
+    aiUser=got.data.user; await aiRefreshGrants(client); return true;
+  }catch(e){ aiUser=null; aiSetStatus('error','Verbindung fehlgeschlagen',aiFriendlyError(e)); return false; }
+  finally{ _aiBusy=false; aiRenderBody(); }
+}
+async function aiAuth(create){
+  if(_aiBusy) return;
+  const email=($('#ai-email')||{}).value||'', password=($('#ai-password')||{}).value||'';
+  if(!validMail(email.trim())){ aiSetStatus('error','E-Mail prüfen','Bitte eine vollständige E-Mail-Adresse eintragen.'); return; }
+  if(password.length<8){ aiSetStatus('error','Passwort zu kurz','Mindestens 8 Zeichen verwenden.'); return; }
+  _aiBusy=true; aiRenderBody();
+  try{
+    const client=await aiGetClient();
+    const result=create
+      ? await client.auth.signUp({email:email.trim(),password,options:{emailRedirectTo:new URL('./',location.href).href}})
+      : await client.auth.signInWithPassword({email:email.trim(),password});
+    if(result.error) throw result.error;
+    if(!result.data.session){
+      aiUser=null; aiSetStatus('wait','E-Mail bestätigen','Öffne die Bestätigungs-Mail und melde dich danach hier an.');
+      toast('Bestätigungs-Mail gesendet'); return;
+    }
+    aiUser=result.data.user; await aiRefreshGrants(client);
+    aiSetStatus('off','Noch nicht freigegeben','Prüfe den Umfang und bestätige die Freigabe.');
+  }catch(e){ aiSetStatus('error',create?'Konto nicht angelegt':'Anmeldung fehlgeschlagen',aiFriendlyError(e)); }
+  finally{ _aiBusy=false; aiRenderBody(); }
+}
+async function aiUploadNow(force,allowCreate){
+  if(!aiMeta||!aiMeta.enabled||!_aiReady) return false;
+  if(navigator.onLine===false){ aiMeta.dirty=true; aiSaveMeta(); aiSetStatus('wait','Offline','Die lesbare Kopie wird aktualisiert, sobald dieses Gerät wieder online ist.'); return false; }
+  if(_aiBusy){ _aiAgain=true; return false; }
+  if(!force&&!aiMeta.dirty) return true;
+  _aiBusy=true; const generation=_aiGeneration;
+  aiSetStatus('busy','Aktualisiert …','Die bereinigte Trainingskopie wird zu Supabase übertragen.');
+  try{
+    const client=await aiGetClient(), got=await client.auth.getUser();
+    if(got.error||!got.data.user) throw new Error('JWT Anmeldung abgelaufen');
+    aiUser=got.data.user;
+    const payload=aiBuildSnapshot(state), raw=JSON.stringify(payload);
+    if(raw.length>3800000) throw new Error('payload too large');
+    const row={user_id:aiUser.id,schema_version:1,payload,workout_count:payload.state.workouts.length};
+    const result=allowCreate
+      ? await client.from(AI_TABLE).upsert(row,{onConflict:'user_id'})
+      : await client.from(AI_TABLE).update(row).eq('user_id',aiUser.id).select('user_id').maybeSingle();
+    if(result.error) throw result.error;
+    if(!allowCreate&&!result.data){
+      if(_aiTimer) clearTimeout(_aiTimer); _aiTimer=null;
+      aiMeta={enabled:false,dirty:false,lastUpload:null,workoutCount:0}; aiSaveMeta();
+      aiSetStatus('off','Nicht freigegeben','Die Cloud-Kopie wurde auf einem anderen Gerät gelöscht und nicht neu angelegt.');
+      return false;
+    }
+    aiMeta.lastUpload=Date.now(); aiMeta.workoutCount=payload.state.workouts.length;
+    aiMeta.dirty=generation!==_aiGeneration; aiSaveMeta();
+    aiSetStatus(aiMeta.dirty?'wait':'ok',aiMeta.dirty?'Neue Änderung wartet':'Freigabe aktuell',
+      `${aiMeta.workoutCount} ${aiMeta.workoutCount===1?'Workout':'Workouts'} · ${syncDateText(aiMeta.lastUpload)}`);
+    if(aiMeta.dirty) aiSchedule();
+    return true;
+  }catch(e){ aiMeta.dirty=true; aiSaveMeta(); aiSetStatus('error','Aktualisierung fehlgeschlagen',aiFriendlyError(e)); return false; }
+  finally{
+    _aiBusy=false; aiRenderBody();
+    if(_aiAgain){ _aiAgain=false; aiSchedule(400); }
+  }
+}
+function aiSchedule(ms){
+  if(!_aiReady||!aiMeta||!aiMeta.enabled) return;
+  if(_aiTimer) clearTimeout(_aiTimer);
+  _aiTimer=setTimeout(()=>{ _aiTimer=null; aiUploadNow(false); },ms==null?AI_WAIT:ms);
+}
+function aiStateChanged(){
+  if(!_aiReady||!aiMeta||!aiMeta.enabled) return;
+  _aiGeneration++; aiMeta.dirty=true; aiSaveMeta();
+  aiSetStatus('wait',navigator.onLine===false?'Offline':'Änderung wartet',navigator.onLine===false
+    ? 'Die ChatGPT-Kopie wird nach der nächsten Verbindung aktualisiert.'
+    : 'Die ChatGPT-Kopie wird in wenigen Sekunden aktualisiert.');
+  aiSchedule();
+}
+async function aiEnable(){
+  if(_aiBusy||!aiUser) return;
+  if(navigator.onLine===false){ toast('Zum Freigeben ist eine Verbindung nötig'); return; }
+  if(!await ask('Lesbare Trainingskopie freigeben?','ChatGPT erhält nach deiner gesonderten OAuth-Zustimmung Nur-Lese-Zugriff. Workout- und Übungsnotizen sind enthalten; Name, E-Mail, Standort, PIN und Sync-Schlüssel nicht.',{ok:'Freigeben',tone:'warn'})) return;
+  aiMeta.enabled=true; aiMeta.dirty=true; aiSaveMeta();
+  const ok=await aiUploadNow(true,true); if(ok) toast('ChatGPT-Freigabe ist bereit ✓');
+}
+async function aiDisable(){
+  if(_aiBusy||!aiMeta.enabled) return;
+  if(navigator.onLine===false){ toast('Zum Löschen der Cloud-Kopie ist eine Verbindung nötig'); return; }
+  if(!await ask('ChatGPT-Freigabe beenden?','Die lesbare Trainingskopie wird aus Supabase gelöscht. Lokale Daten und verschlüsselter Geräte-Sync bleiben erhalten.',{ok:'Kopie löschen',tone:'danger'})) return;
+  _aiBusy=true; aiRenderBody();
+  try{
+    const client=await aiGetClient(), got=await client.auth.getUser();
+    if(got.error||!got.data.user) throw new Error('JWT Anmeldung abgelaufen');
+    const result=await client.from(AI_TABLE).delete().eq('user_id',got.data.user.id);
+    if(result.error) throw result.error;
+    if(_aiTimer) clearTimeout(_aiTimer); _aiTimer=null;
+    aiMeta={enabled:false,dirty:false,lastUpload:null,workoutCount:0}; aiSaveMeta();
+    aiSetStatus('off','Nicht freigegeben','Die lesbare Cloud-Kopie wurde gelöscht.');
+    await aiRefreshGrants(client);
+    toast('ChatGPT-Kopie gelöscht ✓');
+  }catch(e){ aiSetStatus('error','Löschen fehlgeschlagen',aiFriendlyError(e)); }
+  finally{ _aiBusy=false; aiRenderBody(); }
+}
+async function aiLogout(){
+  if(aiMeta.enabled) return;
+  try{ const client=await aiGetClient(); await client.auth.signOut({scope:'local'}); }catch(_){}
+  aiUser=null; aiGrants=[]; aiSetStatus('off','Nicht freigegeben','Optionaler Nur-Lese-Zugriff auf eine bereinigte Kopie.');
+}
+async function aiRevoke(clientId){
+  if(_aiBusy||!clientId) return;
+  const grant=aiGrants.find(g=>aiGrantClientId(g)===clientId), name=grant?aiGrantName(grant):'diese Anwendung';
+  if(!await ask('OAuth-Zugriff widerrufen?',`${name} wird sofort abgemeldet; vorhandene Zugriffs- und Aktualisierungs-Token werden ungültig.`,{ok:'Widerrufen',tone:'danger'})) return;
+  _aiBusy=true; aiRenderBody();
+  try{
+    const client=await aiGetClient(), result=await client.auth.oauth.revokeGrant({clientId});
+    if(result.error) throw result.error;
+    await aiRefreshGrants(client); toast('OAuth-Zugriff widerrufen ✓');
+  }catch(e){ aiSetStatus('error','Widerruf fehlgeschlagen',aiFriendlyError(e)); }
+  finally{ _aiBusy=false; aiRenderBody(); }
+}
+async function aiCopyUrl(){
+  try{ await navigator.clipboard.writeText(AI_MCP_URL); toast('MCP-Adresse kopiert ✓'); }
+  catch(_){ toast('Kopieren nicht möglich'); }
+}
+async function aiOpen(){
+  aiRenderBody(); openModal('#modal-ai'); hydrateIcons($('#modal-ai'));
+  await aiLoadSession();
+  if(aiMeta.enabled&&aiMeta.dirty) aiSchedule(100);
+}
+function aiInit(){
+  aiMeta=aiLoadMeta(); _aiReady=true;
+  if(aiMeta.enabled){
+    aiSetStatus(aiMeta.dirty?'wait':'ok',aiMeta.dirty?'Aktualisierung wartet':'Freigabe aktiv',
+      aiMeta.lastUpload?`${aiMeta.workoutCount} ${aiMeta.workoutCount===1?'Workout':'Workouts'} · zuletzt ${syncDateText(aiMeta.lastUpload)}`:'Erster Upload wird vorbereitet.');
+    aiSchedule(700);
+  }else aiSetStatus('off','Nicht freigegeben','Optionaler Nur-Lese-Zugriff auf eine bereinigte Kopie.');
+}
+document.getElementById('ai-open').addEventListener('click',aiOpen);
+document.addEventListener('submit',e=>{ if(e.target&&e.target.id==='ai-auth-form'){ e.preventDefault(); aiAuth(false); } });
+document.addEventListener('click',e=>{
+  const id=e.target&&e.target.closest&&e.target.closest('button')&&e.target.closest('button').id;
+  if(id==='ai-auth-signup') aiAuth(true);
+  else if(id==='ai-enable') aiEnable();
+  else if(id==='ai-upload-now') aiUploadNow(true);
+  else if(id==='ai-disable') aiDisable();
+  else if(id==='ai-logout') aiLogout();
+  else if(id==='ai-copy-url') aiCopyUrl();
+  else if(e.target&&e.target.closest&&e.target.closest('[data-ai-revoke]')) aiRevoke(e.target.closest('[data-ai-revoke]').dataset.aiRevoke);
+});
+window.addEventListener('online',()=>{ if(aiMeta&&aiMeta.enabled){ aiSetStatus('wait','Wieder online','Die ChatGPT-Kopie wird aktualisiert.'); aiSchedule(150); } });
+window.addEventListener('offline',()=>{ if(aiMeta&&aiMeta.enabled) aiSetStatus('wait','Offline','Die letzte Cloud-Kopie bleibt lesbar; neue Änderungen warten.'); });
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&aiMeta&&aiMeta.enabled&&aiMeta.dirty) aiSchedule(250); });
 
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 
@@ -6595,6 +6993,7 @@ $('#btn-settings').addEventListener('click',()=>{
     : '<b style="color:var(--gold)">Noch nie gesichert</b>';
   renderSnapshots();
   syncRenderSettings();
+  aiRenderSettings();
   openModal('#modal-settings');
 });
 $('#set-rir').addEventListener('click',()=>{
@@ -8597,7 +8996,8 @@ $('#btn-hardreload').addEventListener('click', async ()=>{
 });
 $('#btn-wipe').addEventListener('click', async ()=>{
   const n = state.workouts.length;
-  const cloud = syncConnected() ? ' Beim nächsten Sync wird der leere Stand auch auf deine anderen Geräte übertragen.' : '';
+  const cloud = (syncConnected() ? ' Beim nächsten Sync wird der leere Stand auch auf deine anderen Geräte übertragen.' : '')
+    + (aiMeta&&aiMeta.enabled ? ' Die ChatGPT-Kopie wird ebenfalls geleert, sobald dieses Gerät online ist.' : '');
   if(!await ask('Wirklich alle Daten löschen?', `${n} ${n===1?'Workout':'Workouts'}, alle Erfolge und Einstellungen werden entfernt.${cloud}`, {ok:'Alles löschen', tone:'danger'})) return;
   if(!await ask('Letzte Warnung', 'Danach ist der aktive Stand leer. Ein Sicherungspunkt bleibt als Rückweg erhalten.', {ok:'Ja, endgültig löschen', tone:'danger'})) return;
   makeSnapshot('vor Löschen', true);   // Rückweg offen halten
@@ -12393,6 +12793,7 @@ document.getElementById('modal-muscle').addEventListener('click',e=>{
 
 renderAll();
 syncInit();
+aiInit();
 showScreen(state.active? 'scr-train':'scr-home');
 /* PIN nur bei der ersten Nutzung des Tages. Ohne gesetzten PIN läuft
    startLock() weiterhin, damit die Ersteinrichtung erscheint. */

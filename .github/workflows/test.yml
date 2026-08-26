@@ -1,0 +1,39 @@
+name: Tracker pruefen
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.pw-browsers
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Edge Function typpruefen
+        run: deno check supabase/functions/gymtracker-mcp/index.ts
+      - name: Testabhaengigkeiten installieren
+        working-directory: tests
+        run: npm install --ignore-scripts
+      - name: Chromium installieren
+        working-directory: tests
+        run: npx playwright install --with-deps chromium
+      - name: MCP- und Sicherheitslogik pruefen
+        working-directory: tests
+        run: npm run test:mcp
+      - name: App im echten Browser pruefen
+        working-directory: tests
+        run: npm run test:leise

@@ -6,6 +6,7 @@
   "scripts": {
     "test": "node run.js",
     "test:leise": "node run.js --leise",
+    "test:mcp": "node --experimental-strip-types mcp.js",
     "bench": "node bench.js",
     "setup": "npm install && npx playwright install chromium"
   },

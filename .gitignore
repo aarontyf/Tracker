@@ -25,7 +25,17 @@
 !icon-512.png
 !icon-512-maskable.png
 !SUPABASE-EINRICHTUNG.sql
+!CHATGPT-EINRICHTUNG.md
 !.gitignore
+
+# 3b) Nur die geprüfte Supabase-Funktion, Migration und der manuelle Deploy.
+!.github/workflows/deploy-supabase.yml
+!.github/workflows/test.yml
+!supabase/config.toml
+!supabase/migrations/20260825000000_chatgpt_readonly.sql
+!supabase/functions/gymtracker-mcp/index.ts
+!supabase/functions/gymtracker-mcp/lib.ts
+!oauth/consent/index.html
 
 # 4) Die Testsuite — NAMENTLICH freigegeben, nicht als ganzer Ordner.
 #    Der Ordner liegt im Obsidian-Vault: daneben stehen private Notizen und
@@ -36,6 +46,7 @@
 !tests/package.json
 !tests/run.js
 !tests/bench.js
+!tests/mcp.js
 !tests/lib/*.js
 !tests/suiten/*.js
 

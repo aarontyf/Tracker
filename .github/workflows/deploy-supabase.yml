@@ -1,0 +1,29 @@
+name: Supabase fuer ChatGPT bereitstellen
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      PROJECT_REF: fbvcslmulqxaxurcdyrv
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Projekt verbinden
+        run: supabase link --project-ref "$PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
+      - name: Datenbankregeln anwenden
+        run: supabase db push --linked
+      - name: Read-only MCP-Funktion bereitstellen
+        run: supabase functions deploy gymtracker-mcp --project-ref "$PROJECT_REF" --no-verify-jwt
+      - name: Oeffentlichen Endpunkt pruefen
+        run: curl --fail --silent --show-error "https://$PROJECT_REF.supabase.co/functions/v1/gymtracker-mcp/health"
