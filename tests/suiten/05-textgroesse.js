@@ -42,10 +42,24 @@ const MESSE = `(() => {
 const UEBERLAUF = `(() => {
   const b = document.body;
   const de = document.documentElement;
+  const rand = de.clientWidth;
+  const quellen = [...document.querySelectorAll('body *')].map(el => {
+    const r = el.getBoundingClientRect(), css = getComputedStyle(el);
+    return { el, r, css };
+  }).filter(x => x.r.width > 0 && x.r.height > 0 && x.css.display !== 'none'
+    && (x.r.right > rand + 2 || x.r.left < -2))
+    .sort((a,b) => (b.r.right-rand) - (a.r.right-rand)).slice(0,8)
+    .map(x => ({
+      tag:x.el.tagName.toLowerCase(), id:x.el.id || '', klasse:String(x.el.className || '').slice(0,80),
+      links:Math.round(x.r.left), rechts:Math.round(x.r.right), breite:Math.round(x.r.width),
+      scroll:x.el.scrollWidth, client:x.el.clientWidth,
+      text:(x.el.textContent || '').replace(/\\s+/g,' ').trim().slice(0,80),
+    }));
   return {
     bodyScroll: b.scrollWidth,
     fenster: de.clientWidth,
     ueber: Math.max(0, b.scrollWidth - de.clientWidth),
+    quellen,
   };
 })()`;
 
@@ -96,6 +110,7 @@ exports.lauf = async ({ page, p }) => {
     await warte(page, 200);
     const u = await js(page, UEBERLAUF);
     p.hoechstens(`${s} läuft bei 200% Text nicht seitlich über`, u.ueber, 2);
+    if(u.ueber > 2) p.pruefe(`${s} nennt die Quelle des Überlaufs`, false, JSON.stringify(u.quellen));
   }
 
   /* ── 3. Auch bei kleiner Schrift darf nichts brechen ──────────────── */
