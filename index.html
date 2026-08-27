@@ -9814,9 +9814,9 @@ function overviewBodyweightCard(){
   const tr=bwTrend(), alter=bwAlter(last);
   const pts=arr.slice(-12).map(x=>({y:x.kg,l:new Date(x.d).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})}));
   const trend=tr===null?'noch kein 21-Tage-Trend':`${tr>0?'+':''}${tr.toLocaleString('de-DE',{maximumFractionDigits:2})} kg/Woche`;
-  return `<div class="card"><div class="row" style="justify-content:space-between;align-items:flex-start"><div>
+  return `<div class="card"><div class="row" style="justify-content:space-between;align-items:flex-start"><div class="grow">
       <h3 style="margin-bottom:3px">Körpergewicht</h3><p class="tiny">${fmtDate(last.d)}${alter.veraltet?' · '+alter.tage+' Tage alt':''}</p></div>
-      <div style="text-align:right"><b style="font-size:var(--fs-lg)">${fmtKg(last.kg)}</b><div class="tiny" style="color:var(--a6);font-weight:700">${trend}</div></div></div>
+      <div style="text-align:right;flex:none;max-width:50%"><b style="font-size:var(--fs-lg)">${fmtKg(last.kg)}</b><div class="tiny" style="color:var(--a6);font-weight:700;overflow-wrap:anywhere">${trend}</div></div></div>
     ${pts.length>=2?svgLine(pts,v=>fmtKg(v),{fill:true,avg:true}):''}
     <button class="btn btn-ghost btn-block btn-sm" style="margin-top:8px" data-stat-bw>${alter.veraltet?'Jetzt aktualisieren':'Verlauf bearbeiten'}</button></div>`;
 }
