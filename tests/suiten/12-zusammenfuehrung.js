@@ -32,7 +32,7 @@ exports.lauf = async ({ page, p }) => {
     statsPanel='overview'; renderStats();
     const tabs=[...document.querySelectorAll('#stats-seg button')];
     const box=document.querySelector('#stats-overview');
-    return {tabs:tabs.map(x=>x.textContent.trim()),aktiv:tabs.filter(x=>x.classList.contains('on')).map(x=>x.dataset.p),
+    return {tabs:tabs.map(x=>x.textContent.replace(/\\s+/g,' ').trim()),aktiv:tabs.filter(x=>x.classList.contains('on')).map(x=>x.dataset.p),
       scroll:document.querySelector('#stats-seg').classList.contains('scroll'),
       sichtbar:getComputedStyle(box).display!=='none', text:box.textContent,
       karten:box.querySelectorAll('.card').length, exAction:!!box.querySelector('[data-stat-ex]'),

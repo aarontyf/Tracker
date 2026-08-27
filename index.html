@@ -85,7 +85,9 @@
   --acc-a30:rgba(82,156,255,.34);
 
   /* Touch-Ziel-Norm (WCAG 2.2 · 2.5.8 = 24px, Apple HIG = 44px) */
-  --hit-min:24px; --hit-comfort:44px;
+  /* Ein Pixel Reserve verhindert, dass Browser-Zwischenwerte wie 23,999 px
+     ein formal 24-px-grosses Ziel unter die WCAG-Grenze runden. */
+  --hit-min:25px; --hit-comfort:44px;
 
   /* ── Der eine Signalton ──────────────────────────────────────────────
      Warum es ihn überhaupt gibt: Sähe „Training verwerfen" aus wie „Fertig",
@@ -398,8 +400,9 @@ h3>.bi svg{width:15px;height:15px}
   min-width:0;
 }
 .focuscard{border-color:var(--acc-a30);background:linear-gradient(145deg,rgba(82,156,255,.11),rgba(82,156,255,.025)),var(--s1)}
-.focusrow{display:grid;grid-template-columns:28px 1fr auto;gap:var(--sp2);align-items:center;min-height:48px;padding:var(--sp2) 0;border-top:1px solid var(--line)}
+.focusrow{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:var(--sp2);align-items:center;min-height:48px;padding:var(--sp2) 0;border-top:1px solid var(--line)}
 .focusrow:first-of-type{border-top:0}
+.focusrow>div{min-width:0}
 .focusico{width:28px;height:28px;border-radius:var(--r-sm);display:grid;place-items:center;background:var(--acc-a16);color:var(--a7);font-weight:800}
 .focusrow .ttl{font-size:var(--fs-sub);font-weight:700}
 .focusrow .meta{margin-top:2px}
@@ -411,7 +414,7 @@ h3>.bi svg{width:15px;height:15px}
    horizontal scrollbare Tabs: vollständige Wörter, 44-px-Touchziele und der
    aktive Zustand bleibt zusätzlich durch Fläche und Rahmen erkennbar. */
 .stats-tabs{position:sticky;top:calc(env(safe-area-inset-top) + 6px);z-index:18;
-  flex-wrap:nowrap;margin:0 0 var(--sp4);padding:4px;max-width:100%;overflow-x:auto;
+  flex-wrap:nowrap;margin:0 0 var(--sp4);padding:4px;width:100%;max-width:100%;min-width:0;overflow-x:auto;
   background:rgba(12,14,18,.92);border:1px solid var(--line);border-radius:var(--r-md);
   backdrop-filter:blur(16px);box-shadow:var(--e1);scroll-padding:4px}
 .stats-tabs .chip{border-color:transparent;background:transparent;padding:8px 13px}
@@ -443,6 +446,13 @@ h3>.bi svg{width:15px;height:15px}
 .ovgap .value{font-size:var(--fs-tiny);font-weight:750;color:var(--a6);white-space:nowrap}
 .ovactions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--sp2);margin-top:var(--sp3)}
 @media(max-width:360px){.ovactions{grid-template-columns:1fr}}
+/* Bei sehr grosser Systemschrift bekommt der Wert eine eigene Zeile. So
+   bleibt die Statistik innerhalb des Sichtfensters, ohne Text abzuschneiden. */
+@media(max-width:15em){
+  .ovgap{grid-template-columns:minmax(0,1fr) auto}
+  .ovgap .bar{grid-column:1/-1;grid-row:2}
+  .ovgap .value{grid-column:2;grid-row:1;white-space:normal;text-align:right;overflow-wrap:anywhere}
+}
 .kpi b,.kpi span{overflow-wrap:anywhere}
 .kpi b{display:block;font-size:var(--fs-lg);font-weight:750;letter-spacing:-.03em}
 .kpi span{font-size:var(--fs-micro);color:var(--txt3);text-transform:uppercase;letter-spacing:.07em;font-weight:650}
@@ -878,7 +888,7 @@ details.notiz input{margin-top:4px;width:100%}
 .sum-top h2{font-size:var(--fs-h2);margin:var(--sp2) 0 3px}
 .sessioncheck{border-color:var(--acc-a30);background:linear-gradient(145deg,var(--acc-a08),transparent 70%),var(--s1)}
 .rpegrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:var(--sp2);margin:12px 0 5px}
-.rpebtn{min-height:var(--hit-min);border:1px solid var(--line);border-radius:var(--r-sm);background:var(--s2);
+.rpebtn{min-height:var(--hit-comfort);border:1px solid var(--line);border-radius:var(--r-sm);background:var(--s2);
   color:var(--txt2);font-weight:750;font-variant-numeric:tabular-nums;transition:all var(--dur-2) var(--ease)}
 .rpebtn.on{color:var(--on-acc);background:var(--grad-a);border-color:transparent;box-shadow:var(--glow)}
 .rpelabels{display:flex;justify-content:space-between;gap:var(--sp2);color:var(--txt3);font-size:var(--fs-micro)}

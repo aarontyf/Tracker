@@ -289,9 +289,15 @@ exports.lauf = async ({ page, p }) => {
 
   for(const [geraet,breite,hoehe] of [['iPad',820,1180],['PC',1366,768]]){
     await page.setViewportSize({width:breite,height:hoehe});
-    const layout=await js(page, `(() => {
+    await js(page, `(() => {
       closeModals(); statsPanel='all'; renderStats(); showScreen('scr-stats');
       syncOpen();
+    })()`);
+    /* Das Modal fährt sichtbar ein. Während dieser Skalierungsanimation ist
+       auch getBoundingClientRect() kleiner, obwohl das fertige Touchziel
+       korrekt 44 px misst. Erst den stabilen Endzustand prüfen. */
+    await warte(page, 380);
+    const layout=await js(page, `(() => {
       const m=document.querySelector('#modal-sync .modal').getBoundingClientRect();
       /* .iconbtn ist sichtbar 36 px, erweitert die Trefferfläche aber per
          ::after auf 44 px; hier messen wir nur die normalen Textknöpfe. */
