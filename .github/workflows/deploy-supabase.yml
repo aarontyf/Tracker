@@ -34,3 +34,10 @@ jobs:
         run: supabase functions deploy gymtracker-mcp --project-ref "$PROJECT_REF" --no-verify-jwt
       - name: Oeffentlichen Endpunkt pruefen
         run: curl --fail --silent --show-error "https://$PROJECT_REF.supabase.co/functions/v1/gymtracker-mcp/health"
+      - name: OAuth PKCE-Metadaten pruefen
+        run: |
+          curl --fail --silent --show-error \
+            "https://$PROJECT_REF.supabase.co/.well-known/oauth-authorization-server/auth/v1" \
+            | jq '{issuer, registration_endpoint, code_challenge_methods_supported}' \
+            | tee /tmp/oauth-metadata.json
+          jq -e '.code_challenge_methods_supported | index("S256")' /tmp/oauth-metadata.json
