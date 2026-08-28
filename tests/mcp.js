@@ -105,6 +105,7 @@ const path = require('node:path');
   assert(/target\.hostname === 'chatgpt\.com'/.test(consent), 'consent must reject non-ChatGPT callback hosts');
   assert(/connector_platform_oauth_redirect/.test(consent) && /connector\\\/oauth\\\//.test(consent), 'consent must allow only documented ChatGPT callback paths');
   assert(!/client\.logo_uri|img-src https:/.test(consent), 'consent must not load untrusted client images');
+  assert(/signInWithOtp/.test(consent) && /shouldCreateUser:\s*false/.test(consent), 'consent must offer a passwordless login without creating unknown accounts');
 
   console.log('MCP: 7 Werkzeuge, Rechenlogik und Sicherheitsgrenzen geprüft.');
 })().catch((error) => {

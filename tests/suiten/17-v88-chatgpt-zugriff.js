@@ -11,6 +11,7 @@ exports.lauf = async ({ page, p }) => {
   const statisch = await js(page, `(() => ({
     opener:!!document.querySelector('#ai-open'),
     dialog:!!document.querySelector('#modal-ai .modal[aria-labelledby="ai-title"]'),
+    magicLink:document.body.textContent.includes('Anmeldelink per E-Mail'),
     status:document.querySelector('#ai-settings-state').textContent.trim(),
     endpoint:AI_MCP_URL,
     getrennt:AI_LS!==SYNC_LS && AI_LS!==LS_KEY,
@@ -18,6 +19,7 @@ exports.lauf = async ({ page, p }) => {
   }))()`);
   p.pruefe('Einstellungen haben einen sichtbaren ChatGPT-Öffner', statisch.opener);
   p.pruefe('Freigabe-Modal ist als Dialog beschriftet', statisch.dialog);
+  p.pruefe('Anmeldung bietet einen passwortlosen E-Mail-Link', statisch.magicLink);
   p.enthaelt('Leerzustand sagt ausdrücklich „nicht freigegeben"', statisch.status, 'Nicht freigegeben');
   p.pruefe('MCP-Adresse ist ein stabiler HTTPS-Endpunkt', /^https:\/\/[^/]+\/functions\/v1\/gymtracker-mcp\/mcp$/.test(statisch.endpoint));
   p.pruefe('Freigabe-Metadaten sind von Trainings- und Sync-Speicher getrennt', statisch.getrennt);
