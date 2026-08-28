@@ -53,6 +53,18 @@ function protectedResourceMetadata(request: Request): JsonObject {
   return {
     resource: urls.resource,
     authorization_servers: [AUTHORIZATION_SERVER],
+    // ChatGPT's manual connector builder currently keeps OAuth endpoint
+    // discovery local to the protected-resource document. Supabase publishes
+    // the same values in its RFC 8414 document; repeating these harmless
+    // metadata fields here keeps PKCE/DCR discovery interoperable without
+    // changing the issuer or token validation boundary.
+    authorization_endpoint: `${AUTHORIZATION_SERVER}/oauth/authorize`,
+    token_endpoint: `${AUTHORIZATION_SERVER}/oauth/token`,
+    registration_endpoint: `${AUTHORIZATION_SERVER}/oauth/clients/register`,
+    code_challenge_methods_supported: ['S256'],
+    grant_types_supported: ['authorization_code', 'refresh_token'],
+    response_types_supported: ['code'],
+    token_endpoint_auth_methods_supported: ['none'],
     scopes_supported: [READ_SCOPE],
     bearer_methods_supported: ['header'],
     resource_name: 'Fitness Tracker Trainingsdaten',

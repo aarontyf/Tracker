@@ -91,6 +91,8 @@ const path = require('node:path');
   assert.equal((edge.match(/readOnlyHint:\s*true/g) || []).length, 1, 'shared read-only annotation is required');
   assert(/client_id/.test(edge) && /client_id/.test(sql), 'OAuth client boundary is required in code and RLS');
   assert(/hasAudience\(claims\.aud/.test(edge), 'MCP server must validate the OAuth audience');
+  assert(/code_challenge_methods_supported:\s*\['S256'\]/.test(edge), 'OAuth metadata must advertise PKCE S256');
+  assert(/registration_endpoint:\s*`\$\{AUTHORIZATION_SERVER\}\/oauth\/clients\/register`/.test(edge), 'OAuth metadata must advertise Supabase DCR');
   assert(/claims\.fitness_tracker_mcp !== true/.test(edge), 'MCP server must validate the read-only token claim');
   assert(/claims\.sub !== userId \|\| claims\.user_id !== userId/.test(edge), 'MCP server must bind subject and user ID to the verified Auth user');
   assert(/tracker_ai_access_token_hook/.test(sql), 'migration must bind OAuth tokens to this MCP');
