@@ -1,6 +1,13 @@
 name: Supabase fuer ChatGPT bereitstellen
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/functions/gymtracker-mcp/**'
+      - 'supabase/migrations/**'
+      - 'supabase/config.toml'
+      - '.github/workflows/deploy-supabase.yml'
   workflow_dispatch:
 
 permissions:
