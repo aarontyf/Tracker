@@ -45,3 +45,12 @@ jobs:
               | tee -a /tmp/oauth-metadata.json
           done
           jq -e -s 'all(.[]; .code_challenge_methods_supported | index("S256"))' /tmp/oauth-metadata.json
+      - name: MCP OAuth-Verweis pruefen
+        run: |
+          base="https://$PROJECT_REF.supabase.co/functions/v1/gymtracker-mcp"
+          status="$(curl --silent --output /tmp/mcp-body.json --dump-header /tmp/mcp-headers.txt \
+            --write-out '%{http_code}' "$base/mcp")"
+          test "$status" = "401"
+          grep -i 'www-authenticate:.*resource_metadata=' /tmp/mcp-headers.txt
+          curl --fail --silent --show-error "$base/.well-known/oauth-protected-resource" \
+            | jq -e '.authorization_servers == ["https://fbvcslmulqxaxurcdyrv.supabase.co/auth/v1"] and (.code_challenge_methods_supported | index("S256"))'
