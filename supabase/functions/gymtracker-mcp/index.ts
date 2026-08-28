@@ -40,7 +40,12 @@ type AuthContext = {
 
 function endpointUrls(request: Request) {
   const origin = new URL(request.url).origin
-  const base = `${origin}/functions/v1/${FUNCTION_NAME}`
+  // Supabase terminates TLS before the Edge Function and can expose the
+  // internal request URL as http. OAuth discovery must always advertise the
+  // public HTTPS project URL, otherwise clients reject the metadata link.
+  const base = SUPABASE_URL
+    ? `${SUPABASE_URL}/functions/v1/${FUNCTION_NAME}`
+    : `${origin}/functions/v1/${FUNCTION_NAME}`
   return {
     resource: SUPABASE_URL ? MCP_RESOURCE : `${base}/mcp`,
     metadata: `${base}/.well-known/oauth-protected-resource`,
