@@ -146,7 +146,11 @@ async function authenticate(request: Request): Promise<AuthContext> {
   if (!response.ok) throw new AuthenticationError('Sitzung ist ungültig oder abgelaufen')
   const user = await response.json()
   const userId = typeof user?.id === 'string' ? user.id : ''
-  if (!userId || claims.sub !== userId || claims.user_id !== userId) {
+  // Supabase access tokens expose the authenticated user ID in the standard
+  // JWT `sub` claim. `user_id` belongs to the access-token hook event, but is
+  // not a required JWT claim. The live Auth lookup above validates the token;
+  // matching its user ID to `sub` keeps the request bound to that exact user.
+  if (!userId || claims.sub !== userId) {
     throw new AuthenticationError('Identität konnte nicht bestätigt werden')
   }
   return { accessToken, userId, clientId }
