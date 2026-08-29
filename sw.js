@@ -2,7 +2,7 @@
    WICHTIG: Bei jedem App-Update die Versionsnummer hochzählen (z.B. v6 → v7).
    Sonst zeigt das Handy weiter die alte Version aus dem Cache.
    Trainingsdaten liegen in localStorage und werden davon NIE angefasst. */
-const VERSION = 'ft-v89';
+const VERSION = 'ft-v90';
 const SHELL = './index.html';
 const SHELL_MARKER = 'Fitness Tracker V89';
 const ASSETS = [SHELL, './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-180.png', './recovery.html'];
@@ -43,9 +43,14 @@ self.addEventListener('fetch', e=>{
   const req = e.request;
   if(req.method!=='GET' || !req.url.startsWith(self.location.origin)) return;
   e.respondWith((async()=>{
+    const url = new URL(req.url);
+    /* Die OAuth-Zustimmungsseite ist eine eigene Anwendung. Sie darf niemals
+       als vermeintlich beschädigte App-Hülle verworfen oder durch den
+       Fitness-Tracker aus dem Offline-Cache ersetzt werden. */
+    const oauthConsent = req.mode==='navigate'
+      && (/\/oauth\/consent\/?$/.test(url.pathname));
     try{
-      const url = new URL(req.url);
-      const appShell = req.mode==='navigate' && !url.pathname.endsWith('/recovery.html')
+      const appShell = req.mode==='navigate' && !url.pathname.endsWith('/recovery.html') && !oauthConsent
         || url.pathname.endsWith('/index.html');
       /* Kein HTTP-Zwischencache für die App-Hülle: So kann ein einmal
          beschädigtes HTML nicht erneut in den Offline-Cache gelangen. */
@@ -55,7 +60,8 @@ self.addEventListener('fetch', e=>{
       await cache.put(appShell ? SHELL : req, net.clone());
       return net;
     }catch(_){
-      const hit = await caches.match(req) || (req.mode==='navigate' ? await caches.match(SHELL) : null);
+      const hit = await caches.match(req)
+        || (req.mode==='navigate' && !oauthConsent ? await caches.match(SHELL) : null);
       if(hit) return hit;
       throw _;
     }

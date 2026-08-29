@@ -84,6 +84,7 @@ const path = require('node:path');
   const edge = fs.readFileSync(path.join(__dirname, '../supabase/functions/gymtracker-mcp/index.ts'), 'utf8');
   const sql = fs.readFileSync(path.join(__dirname, '../supabase/migrations/20260825000000_chatgpt_readonly.sql'), 'utf8');
   const consent = fs.readFileSync(path.join(__dirname, '../oauth/consent/index.html'), 'utf8');
+  const serviceWorker = fs.readFileSync(path.join(__dirname, '../sw.js'), 'utf8');
   assert(!/service[_-]?role|sb_secret_/i.test(edge), 'Edge Function must not contain a privileged key');
   assert(!/@modelcontextprotocol\/sdk@1\.(?:1[0-9]|2[0-5])\./.test(edge), 'MCP SDK must include the cross-client isolation security fix');
   assert(/npm:hono@4\.12\.23/.test(edge), 'Hono must include the 2026 security fixes');
@@ -106,6 +107,8 @@ const path = require('node:path');
   assert(/connector_platform_oauth_redirect/.test(consent) && /connector\\\/oauth\\\//.test(consent), 'consent must allow only documented ChatGPT callback paths');
   assert(!/client\.logo_uri|img-src https:/.test(consent), 'consent must not load untrusted client images');
   assert(/signInWithOtp/.test(consent) && /shouldCreateUser:\s*false/.test(consent), 'consent must offer a passwordless login without creating unknown accounts');
+  assert(/oauthConsent\s*=\s*req\.mode==='navigate'[\s\S]*oauth\\\/consent/.test(serviceWorker), 'service worker must recognize the OAuth consent navigation');
+  assert(/req\.mode==='navigate'\s*&&\s*!oauthConsent\s*\?\s*await caches\.match\(SHELL\)/.test(serviceWorker), 'OAuth consent must never fall back to the cached app shell');
 
   console.log('MCP: 7 Werkzeuge, Rechenlogik und Sicherheitsgrenzen geprüft.');
 })().catch((error) => {
