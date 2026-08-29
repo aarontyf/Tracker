@@ -1647,7 +1647,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
   </div>
   <div class="card">
     <h3 style="margin-bottom:4px">Trainingsrhythmus</h3>
-    <p class="tiny" style="margin-bottom:8px">Ein <b>Zyklus</b> ist ein voller Durchgang durch deinen Plan: <b>Ganzkörper-Push → Ganzkörper-Pull → Rest</b>. Alle Ziele in der Statistik rechnen pro Zyklus, nicht pro Kalenderwoche — sonst schwanken die Werte nur, weil mal zwei und mal drei Einheiten in eine Woche fallen.</p>
+    <p class="tiny" style="margin-bottom:8px">Ein <b>Zyklus</b> ist ein voller Durchgang durch deinen Plan: <b>Push A → Pull A → Rest → Push B → Pull B → Rest</b>. Alle Ziele in der Statistik rechnen pro Zyklus, nicht pro Kalenderwoche — der Sechs-Tage-Takt wandert bewusst durch die Woche.</p>
     <div class="row"><input type="number" id="set-goal" min="1" max="14" style="width:90px" aria-label="Einheiten pro Zyklus"><span class="sub">Einheiten pro Zyklus</span></div>
     <div class="row" style="margin-top:12px;justify-content:space-between">
       <div class="grow"><b style="font-size:var(--fs-body)">Beine im Zyklus</b>
@@ -1758,7 +1758,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V90 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V91 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="mback" id="modal-sync"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="sync-title">
@@ -3194,11 +3194,60 @@ const EXDB_ALL = EXDB_RAW.map(r=>({id:exSlug(r[0]), name:r[0], grp:r[1], eq:r[2]
 const EXDB = EXDB_ALL.filter(e=>!e.legacy);
 /* ================= KERN: STATE / DATUM / PR-LOGIK ================= */
 const LS_KEY = 'ironlog_v1';
-/* Zyklus = Ganzkörper-Push → Ganzkörper-Pull → Rest. Der Vorschlag kommt
-   inzwischen aus suggestType() über den laufenden Zyklus; SPLIT bleibt nur
-   noch als Beschriftung für den Split-Generator stehen. */
+/* V91: Aarons Rhythmus ist Push A → Pull A → Rest → Push B → Pull B → Rest.
+   `type` bleibt absichtlich Push/Pull, damit jeder alte Datensatz und jede
+   bestehende Auswertung lesbar bleibt. Nur neue Einträge ergänzen
+   `variant:'A'|'B'`. */
 const SPLIT = ['Push','Pull'];
 const WTYPES = ['Push','Pull','Legs','Andere'];
+const ROTATION = [
+  {type:'Push',variant:'A'}, {type:'Pull',variant:'A'}, {type:'Rest',variant:'A'},
+  {type:'Push',variant:'B'}, {type:'Pull',variant:'B'}, {type:'Rest',variant:'B'}
+];
+const ROTATION_LABELS = ['Push A','Pull A','Rest','Push B','Pull B','Rest'];
+const WORKOUT_LABELS = ['Push A','Pull A','Push B','Pull B','Legs','Andere'];
+function saubereVariante(v){ v=String(v||'').toUpperCase(); return v==='A'||v==='B'?v:null; }
+function varianteAusName(name, type){
+  const n=String(name||'').trim();
+  const m=n.match(/\b(?:push|pull)\s*[-–]?\s*([ab])\b/i);
+  return m && (!type || new RegExp('^'+type,'i').test(n)) ? m[1].toUpperCase() : null;
+}
+function einheitVariante(x){
+  if(!x) return null;
+  return saubereVariante(x.variant) || varianteAusName(x.name, x.type);
+}
+function einheitLabel(x){
+  if(!x) return '';
+  const type=typeof x==='string'?x:x.type;
+  const v=typeof x==='string'?null:einheitVariante(x);
+  return (type==='Push'||type==='Pull') && v ? `${type} ${v}` : (type||'');
+}
+function schrittAusLabel(label){
+  const s=String(label||'').trim(), m=s.match(/^(Push|Pull)\s+([AB])$/i);
+  if(m) return {type:m[1][0].toUpperCase()+m[1].slice(1).toLowerCase(),variant:m[2].toUpperCase()};
+  return {type:s,variant:null};
+}
+function gleicherSchritt(a,b){ return !!a && !!b && a.type===b.type && einheitVariante(a)===einheitVariante(b); }
+function rotationsIndex(x){
+  if(!x) return -1;
+  const type=typeof x==='string'?x:x.type, v=typeof x==='string'?null:einheitVariante(x);
+  let i=ROTATION.findIndex(s=>s.type===type && s.variant===v);
+  if(i>=0) return i;
+  /* Altdaten ohne Variante steigen am Anfang der A-Hälfte ein. */
+  if(type==='Push') return 0;
+  if(type==='Pull') return 1;
+  if(type==='Rest') return 2;
+  return -1;
+}
+function naechsterSchritt(x){
+  const i=rotationsIndex(x); if(i<0) return null;
+  return {...ROTATION[(i+1)%ROTATION.length]};
+}
+function naechstesTraining(x){
+  let s=naechsterSchritt(x), guard=0;
+  while(s && s.type==='Rest' && guard++<ROTATION.length) s=naechsterSchritt(s);
+  return s;
+}
 
 let state = {
   workouts: [],        // {id,date,start,end,type,rpe?,note?,exercises:[{exId,name,sets:[{w,r}]}],prs:[...]}
@@ -4741,14 +4790,16 @@ function muscleSetsBy(workouts, mode){
 function muscleSets(workouts){ return muscleSetsBy(workouts, 'both'); }
 
 /* ═══════════════════ ZYKLEN ═══════════════════════════════════════════
-   Aarons Plan ab 08/2026: Push → Pull → Rest → wiederholen. Nominal 3 Tage.
+   Aarons Plan ab V91: Push A → Pull A → Rest → Push B → Pull B → Rest.
+   Nominal 6 Tage, davon vier Trainingstage und zwei echte Pausentage.
    Die Kalenderwoche ist damit als Maßstab unbrauchbar: mal fallen 2, mal 3
    Einheiten hinein — das sind ±50 % Schwankung, ohne dass sich am Training
    irgendetwas ändert. Jede Ampel, die auf Wochen rechnet, misst dann das
    Datum statt das Training.
 
-   DEFINITION: Jede Push-Einheit beginnt einen Zyklus. Alles bis unmittelbar
-   vor die nächste Push-Einheit gehört dazu.
+   DEFINITION: Push A beginnt einen neuen A/B-Zyklus; Push B gehört in
+   denselben Durchgang. Bei alten Einträgen ohne A/B bleibt die bisherige
+   Regel erhalten: jeder Push beginnt einen Legacy-Zyklus.
 
    Warum genau diese Regel:
    · Fällt ein Pull aus, bleibt der Zyklus bestehen und wird als unvollständig
@@ -4760,10 +4811,10 @@ function muscleSets(workouts){ return muscleSetsBy(workouts, 'both'); }
      Sichtbar statt versteckt.
    · Einheiten vor der allerersten Push-Einheit bilden einen Vorlauf, der als
      solcher markiert und aus Durchschnitten herausgehalten wird.  */
-const CYCLE_SOLL_TAGE = 3;
-const CYCLE_MIN_TAGE  = 2;
-const CYCLE_MAX_TAGE  = 5;
-const CYCLES_PER_WEEK = 7 / CYCLE_SOLL_TAGE;          // 2,333
+const CYCLE_SOLL_TAGE = 6;
+const CYCLE_MIN_TAGE  = 4;
+const CYCLE_MAX_TAGE  = 9;
+const CYCLES_PER_WEEK = 7 / CYCLE_SOLL_TAGE;          // 1,167
 /* Robinson/Pelland, „Is There Too Much of a Good Thing?" (SportRxiv):
    ab ~11 fraktionalen Sätzen pro Muskel und EINHEIT kein messbarer Vorteil mehr. */
 const SESSION_EFF_MAX = 11;
@@ -4785,8 +4836,10 @@ function cycles(){
   const out = [];
   let cur = null;
   ws.forEach(w=>{
-    if(w.type==='Push' || !cur){
-      cur = { n:0, von:w.date, bis:w.date, ws:[], vorlauf:(w.type!=='Push' && out.length===0) };
+    const v=einheitVariante(w);
+    const beginnt = w.type==='Push' && v!=='B';       // Push A oder alter Push
+    if(beginnt || !cur){
+      cur = { n:0, von:w.date, bis:w.date, ws:[], vorlauf:(!beginnt && out.length===0) };
       out.push(cur);
     }
     cur.ws.push(w); cur.bis = w.date;
@@ -4800,7 +4853,17 @@ function cycles(){
     c.push = c.ws.filter(w=>w.type==='Push').length;
     c.pull = c.ws.filter(w=>w.type==='Pull').length;
     c.beine = c.ws.filter(w=>w.type==='Legs').length;
-    c.vollstaendig = c.push>0 && c.pull>0;
+    c.pushA = c.ws.filter(w=>w.type==='Push'&&einheitVariante(w)==='A').length;
+    c.pullA = c.ws.filter(w=>w.type==='Pull'&&einheitVariante(w)==='A').length;
+    c.pushB = c.ws.filter(w=>w.type==='Push'&&einheitVariante(w)==='B').length;
+    c.pullB = c.ws.filter(w=>w.type==='Pull'&&einheitVariante(w)==='B').length;
+    c.ab = c.ws.some(w=>!!einheitVariante(w));
+    c.vollstaendig = c.ab
+      ? c.pushA>0 && c.pullA>0 && c.pushB>0 && c.pullB>0
+      : c.push>0 && c.pull>0;
+    c.fehlt = c.ab ? [
+      c.pushA?'':'Push A', c.pullA?'':'Pull A', c.pushB?'':'Push B', c.pullB?'':'Pull B'
+    ].filter(Boolean) : [c.push?'':'Push',c.pull?'':'Pull'].filter(Boolean);
     c.auffaellig = c.tage < CYCLE_MIN_TAGE || c.tage > CYCLE_MAX_TAGE;
   });
   /* Nur echte Zyklen werden nummeriert; der Vorlauf bekommt die 0. */
@@ -4826,6 +4889,11 @@ function runningCycle(){ const a = cycles(); const l = a[a.length-1]; return (l 
    sie, und sie ist die naheliegende Schnittstelle für den nächsten Reiter. */
 function lastCycles(n){ const a = closedCycles(); return n>0? a.slice(-n) : a; }
 function cycleWorkouts(cs){ return cs.reduce((a,c)=>a.concat(c.ws), []); }
+function cycleSplitText(c){
+  return c.ab
+    ? `${c.pushA} Push A · ${c.pullA} Pull A · ${c.pushB} Push B · ${c.pullB} Pull B`
+    : `${c.push} Push · ${c.pull} Pull${c.beine?' · '+c.beine+' Beine':''}`;
+}
 /* Zyklusnummer zu einem Datum — für die x-Achse der Diagramme */
 function cycleOfDate(dateStr){
   const t = new Date(dateStr).getTime();
@@ -5372,20 +5440,29 @@ function planPasstZuZyklen(){
 function planHinweis(){
   const n = workoutsBisHeute().length;
   return `${n} ${n===1?'Einheit':'Einheiten'} aufgezeichnet, aber keine als <b>Push</b> angelegt. `
-       + `Die Zyklus-Auswertung richtet sich nach dem Wechsel Push → Pull — ohne Push gibt es keinen Zyklus.`;
+       + `Die Zyklus-Auswertung richtet sich nach Push A/B und Pull A/B — ohne Push gibt es keinen Zyklus.`;
 }
 
-function suggestType(){
-  /* Steht für heute ein Plan, ist das die Antwort — er ist von Hand gesetzt
-     und schlägt jede Ableitung. */
-  const p = planAmTag(heuteIso());
-  if(p && p.type && p.type!=='Rest') return p.type;
-  const c = runningCycle();
-  if(!c) return 'Push';                       // frischer Start oder Zyklus gerade zu
-  if(c.push>0 && c.pull===0) return 'Pull';   // Push steht, Pull fehlt
-  if(c.pull>0 && c.push===0) return 'Push';
-  return 'Push';                              // Zyklus voll → der nächste beginnt mit Push
+function suggestSchritt(){
+  /* Ein von Hand gesetzter Plan für heute schlägt jede Ableitung. */
+  const p=planAmTag(heuteIso());
+  if(p && p.type) return {type:p.type,variant:einheitVariante(p)};
+  const bel=belegteTage(), keys=Object.keys(bel).sort();
+  const heute=heuteIso(), b=bel[heute];
+  /* Wurde heute schon trainiert, ist beim ausdrücklichen Start eines
+     weiteren Workouts der logisch nächste Schritt gemeint. */
+  if(b && b.ist) return naechsterSchritt(b.ist) || {type:'Push',variant:'A'};
+  const pjt=projizierterTyp(heute,keys,bel);
+  return pjt || {type:'Push',variant:'A'};
 }
+function suggestWorkout(){
+  let s=suggestSchritt();
+  if(s.type==='Rest') s=naechstesTraining(s) || {type:'Push',variant:'A'};
+  return s;
+}
+function suggestType(){ return suggestWorkout().type; }
+function suggestVariant(){ return suggestWorkout().variant; }
+function suggestLabel(){ return einheitLabel(suggestWorkout()); }
 
 /* ══════════════════════════════════════════════════════════════════════
    PLANUNG — was steht an welchem Tag an?                          (V63)
@@ -5397,7 +5474,7 @@ function suggestType(){
    Drei Quellen, in dieser Reihenfolge:
      1. aufgezeichnet — das Training liegt in state.workouts. Tatsache.
      2. geplant       — Aaron hat den Tag selbst gefüllt (state.plan).
-     3. Vorausschau   — abgeleitet aus Push → Pull → Rest. Eine RECHNUNG,
+     3. Vorausschau   — aus dem Sechs-Tage-A/B-Rhythmus abgeleitet. Eine RECHNUNG,
                         keine Zusage, und in der Oberfläche auch so benannt.
 
    WICHTIG: cycles() bleibt unberührt. Dort zählen weiterhin ausschließlich
@@ -5434,9 +5511,9 @@ function tageDiff(a, b){ return Math.round((isoZuDatum(b) - isoZuDatum(a)) / 864
 function planAmTag(iso){ const p = (state.plan||{})[iso]; return (p && p.type)? p : null; }
 /* workoutAmTag() ist in V63 entstanden und wurde nie gebraucht — belegteTage()
    sammelt dasselbe in einem Durchgang für die ganze Leiste. Entfernt V64. */
-/* Push → Pull → Rest → Push. Legs und Andere brechen die Kette bewusst ab:
-   sie sind im Zyklus nicht vorgesehen, also wird auch nichts vorhergesagt. */
-function naechsterTyp(t){ return t==='Push'? 'Pull' : t==='Pull'? 'Rest' : t==='Rest'? 'Push' : null; }
+/* Kompatibilitäts-Helfer für ältere Aufrufer; die Wahrheit ist ab V91 ein
+   vollständiger Schritt mit Variante. */
+function naechsterTyp(t){ const s=naechsterSchritt(typeof t==='string'?{type:t}:t); return s?s.type:null; }
 /* Alle Tage, über die die App etwas WEISS — aufgezeichnet oder geplant. */
 function belegteTage(){
   const m = {};
@@ -5449,11 +5526,13 @@ function projizierterTyp(iso, keys, bel){
   for(let i=keys.length-1; i>=0; i--){ if(keys[i] < iso){ letzter = keys[i]; break; } }
   if(!letzter) return null;
   const b = bel[letzter];
-  let typ = b.ist ? b.ist.type : b.plan.type;
+  let schritt = b.ist
+    ? {type:b.ist.type,variant:einheitVariante(b.ist)}
+    : {type:b.plan.type,variant:einheitVariante(b.plan)};
   const abstand = tageDiff(letzter, iso);
   if(abstand < 1 || abstand > PLAN_MAX_LUECKE) return null;
-  for(let d=0; d<abstand; d++){ typ = naechsterTyp(typ); if(!typ) return null; }
-  return typ;
+  for(let d=0; d<abstand; d++){ schritt = naechsterSchritt(schritt); if(!schritt) return null; }
+  return schritt;
 }
 /* n Tage ab vonIso, jeder mit Herkunft. Eine Abfrage für die ganze Leiste. */
 function tageInfo(vonIso, n){
@@ -5462,14 +5541,15 @@ function tageInfo(vonIso, n){
   for(let i=0; i<n; i++){
     const iso = tagPlus(vonIso, i);
     const b = bel[iso] || {};
-    let art, typ;
-    if(b.ist){ art = 'erledigt'; typ = b.ist.type; }
-    else if(b.plan){ art = 'geplant'; typ = b.plan.type; }
+    let art, typ, variant=null;
+    if(b.ist){ art = 'erledigt'; typ = b.ist.type; variant=einheitVariante(b.ist); }
+    else if(b.plan){ art = 'geplant'; typ = b.plan.type; variant=einheitVariante(b.plan); }
     else {
-      typ = projizierterTyp(iso, keys, bel);
+      const s=projizierterTyp(iso, keys, bel);
+      typ=s&&s.type; variant=s&&s.variant;
       art = !typ ? 'offen' : typ==='Rest' ? 'pause' : 'vorschau';
     }
-    out.push({ iso, art, typ,
+    out.push({ iso, art, typ, variant, label:einheitLabel({type:typ,variant}),
       ist: b.ist || null, plan: b.plan || null,
       heute: iso === heute, vergangen: iso < heute, zukunft: iso > heute,
       wtag: isoZuDatum(iso).toLocaleDateString('de-DE',{weekday:'short'}).replace('.',''),
@@ -5485,7 +5565,7 @@ function setPlan(iso, patch){
   const alt = state.plan[iso] || { type:null, exercises:[] };
   const neu = Object.assign({}, alt, patch);
   if(!neu.type || (neu.type==='Rest' && !(neu.exercises||[]).length)) {
-    if(neu.type==='Rest') state.plan[iso] = { type:'Rest', exercises:[] };
+    if(neu.type==='Rest') state.plan[iso] = { type:'Rest', variant:saubereVariante(neu.variant), exercises:[] };
     else delete state.plan[iso];
   } else state.plan[iso] = neu;
   saveState();
@@ -5512,12 +5592,19 @@ function setPlan(iso, patch){
      ohne dass jemand trainiert hat.
    ══════════════════════════════════════════════════════════════════════ */
 
-/* Die letzte abgeschlossene Einheit eines Typs — die Vorlage für heute. */
-function letzteEinheitVom(typ){
-  const ws = state.workouts
+/* Die letzte abgeschlossene Einheit desselben A/B-Schritts. Gibt es für
+   eine neue Variante noch keine Historie, darf nur ein alter Eintrag ohne
+   A/B als Rückfallebene dienen — niemals still Push A als Push B ausgeben. */
+function letzteEinheitVom(typ, variant){
+  const v=saubereVariante(variant);
+  const alle = state.workouts
     .filter(w => isoTag(w.date) <= heuteIso() && w.type === typ && (w.exercises||[]).length)
     .sort((a,b)=> Date.parse(a.date) - Date.parse(b.date));
-  return ws.length ? ws[ws.length-1] : null;
+  const ws = v ? alle.filter(w=>einheitVariante(w)===v) : alle;
+  if(ws.length) return ws[ws.length-1];
+  const legacy=v ? alle.filter(w=>!einheitVariante(w)) : [];
+  if(legacy.length) return legacy[legacy.length-1];
+  return null;
 }
 
 /* Was fehlt im laufenden Zyklus noch? Liefert [{gruppe, ist, lo, hi}].
@@ -5600,24 +5687,25 @@ function lueckenErgaenzungen(typ,vorhanden,max){
    Invalidierung in saveState(), zusammen mit Zyklen und Schnittpunkten. */
 let _vorCache = null, _vorKey = '';
 function invalidateVorschlag(){ _vorCache = null; }
-function trainingsVorschlag(typ){
+function trainingsVorschlag(typ, variant){
   const ws0 = state.workouts;
-  const key = (typ||'') + '|' + ws0.length + '|' + ((ws0[ws0.length-1]||{}).id||'')
+  const key = (typ||'') + '|' + (variant||'') + '|' + ws0.length + '|' + ((ws0[ws0.length-1]||{}).id||'')
             + '|' + ((ws0[ws0.length-1]||{}).date||'') + '|' + (state.settings.defSets||2)
             + '|' + heuteIso() + '|' + JSON.stringify((state.plan||{})[heuteIso()]||null).length;
   if(_vorCache && _vorKey === key) return _vorCache;
-  const erg = _trainingsVorschlag(typ);
+  const erg = _trainingsVorschlag(typ, variant);
   _vorKey = key; _vorCache = erg;
   return erg;
 }
-function _trainingsVorschlag(typ){
-  const t = typ || suggestType();
+function _trainingsVorschlag(typ, variant){
+  const s = typ ? {type:typ,variant:saubereVariante(variant)} : suggestWorkout();
+  const t = s.type, v=s.variant;
   /* Steht für heute ein Plan, ist ER der Vorschlag. Das ist der Sinn der
      Planung: was Aaron am Sonntag für Dienstag einträgt, muss am Dienstag
      auch dort stehen — und nicht das, was die App sich selbst ableitet. */
   const heutePlan = planAmTag(heuteIso());
-  if(heutePlan && heutePlan.type === t && (heutePlan.exercises||[]).length){
-    return { typ:t, quelle:'plan', luecken: zyklusLuecken(), vorlage:null,
+  if(heutePlan && gleicherSchritt(heutePlan,s) && (heutePlan.exercises||[]).length){
+    return { typ:t, variant:v, label:einheitLabel(s), quelle:'plan', luecken: zyklusLuecken(), vorlage:null,
       uebungen: heutePlan.exercises.map(e=>{
         const ex = getEx(e.exId); if(!ex) return null;
         return { exId:e.exId, name:ex.name,
@@ -5625,7 +5713,7 @@ function _trainingsVorschlag(typ){
                  quelle:'plan', hinweis:'von dir geplant' };
       }).filter(Boolean) };
   }
-  const vorlage = letzteEinheitVom(t);
+  const vorlage = letzteEinheitVom(t,v);
   const uebungen = (vorlage ? vorlage.exercises : []).map(e=>{
     const ex = getEx(e.exId);
     if(!ex) return null;                                  // gelöschte Übung überspringen
@@ -5646,7 +5734,7 @@ function _trainingsVorschlag(typ){
   }).filter(Boolean);
   const chronisch=lueckenErgaenzungen(t,uebungen.map(x=>x.exId),2);
   uebungen.push(...chronisch);
-  return { typ:t, uebungen, vorlage, chronisch, luecken: zyklusLuecken() };
+  return { typ:t, variant:v, label:einheitLabel(s), uebungen, vorlage, chronisch, luecken: zyklusLuecken() };
 }
 
 /* Die Karte auf dem Startbildschirm. Kurz halten — sie ist das Erste, was
@@ -5679,7 +5767,7 @@ function renderVorschlag(){
 
   box.innerHTML = `<div class="card" style="margin-bottom:12px;border-color:var(--acc-a30);background:linear-gradient(160deg,var(--acc-a08),transparent 60%),var(--s1)">
     <div class="label" style="color:var(--acc)">Heute${v.quelle==='plan'? ' · von dir geplant':''}</div>
-    <b style="font-size:var(--fs-h2);display:block;margin:2px 0 0">${esc(v.typ)} · ${v.uebungen.length} ${v.uebungen.length===1?'Übung':'Übungen'}</b>
+    <b style="font-size:var(--fs-h2);display:block;margin:2px 0 0">${esc(v.label||v.typ)} · ${v.uebungen.length} ${v.uebungen.length===1?'Übung':'Übungen'}</b>
     ${chronisch||luecke}
     ${erholungHtml}
     <div style="margin:10px 0 4px">${kompakt.map(u=>{
@@ -5713,7 +5801,7 @@ function renderVorschlag(){
     <details class="erkl"><summary>Woher kommen die Zahlen?</summary><div>
       ${v.quelle === 'plan'
         ? `Das ist <b>dein Plan für heute</b> — im Reiter Training auf diesem Tag eingetragen. Die App hat nichts dazugerechnet.`
-        : `Die Übungen sind die deiner letzten <b>${esc(v.typ)}</b>-Einheit${v.vorlage? ' vom ' + fmtDate(v.vorlage.date) : ''}.`}
+        : `Die Übungen sind die deiner letzten <b>${esc(v.label||v.typ)}</b>-Einheit${v.vorlage? ' vom ' + fmtDate(v.vorlage.date) : ''}.`}
       ${v.quelle !== 'plan' && mitGewicht ? `Bei ${mitGewicht} von ${v.uebungen.length} steht ein Gewicht — es kommt aus deiner Historie, ein <b>↑</b> heißt Steigerung.` : ''}
       ${(v.chronisch||[]).length ? `<br><b>+ Lücke</b> ergänzt höchstens zwei Gruppen, die in mindestens zwei Dritteln der letzten Zyklen unter dem Korridor lagen. Die Übung ist nur ein änderbarer Vorschlag; ohne eigene Historie bleibt das Gewicht leer.` : ''}
       ${mitGewicht < v.uebungen.length ? `Wo <b>—</b> steht, fehlt die Historie; dort bleibt das Feld leer statt geraten.` : ''}
@@ -5721,15 +5809,15 @@ function renderVorschlag(){
       Jede Zeile lässt sich im Training ändern, jede Übung tauschen.
     </div></details>
   </div>`;
-  $('#btn-vorschlag-start').addEventListener('click', ()=>starteVorschlag(v.typ));
+  $('#btn-vorschlag-start').addEventListener('click', ()=>starteVorschlag(v.typ,v.variant));
   $('#btn-vorschlag-anders').addEventListener('click', ()=>showScreen('scr-train'));
 }
 
 /* Vorschlag übernehmen: startet das Training mit den vorbefüllten Übungen. */
-function starteVorschlag(typ){
-  const v = trainingsVorschlag(typ);
-  if(!v.uebungen.length){ startWorkout(v.typ); return; }   // nichts zu übernehmen
-  state.active = { id:uid(), date:new Date().toISOString(), start:Date.now(), type:v.typ,
+function starteVorschlag(typ, variant){
+  const v = trainingsVorschlag(typ,variant);
+  if(!v.uebungen.length){ startWorkout(v.typ,null,null,null,v.variant); return; }   // nichts zu übernehmen
+  state.active = { id:uid(), date:new Date().toISOString(), start:Date.now(), type:v.typ, variant:v.variant,
     exercises: v.uebungen.map(u=>({ exId:u.exId, name:u.name, __live:true,
                                     sets:u.sets.map(s=>({w:s.w, r:s.r})) })) };
   saveState(); haptic('success'); renderTrain(); showScreen('scr-train');
@@ -6910,7 +6998,7 @@ function renderHome(){
   /* ── Fortsetzen / Backup ── */
   $('#home-resume').innerHTML = state.active ? `
     <div class="banner"><span class="bi" data-ico="play" style="margin:0"></span>
-      <div class="grow"><b>${esc(state.active.type)}-Workout läuft</b><div class="tiny">${(()=>{
+      <div class="grow"><b>${esc(einheitLabel(state.active))}-Workout läuft</b><div class="tiny">${(()=>{
         const tag = aktiverTag(state.active);
         if(tag > heuteIso()) return 'vorbereitet für '
           + isoZuDatum(tag).toLocaleDateString('de-DE',{weekday:'long',day:'2-digit',month:'2-digit'});
@@ -6925,7 +7013,7 @@ function renderHome(){
   renderVorschlag();
   $('#btn-start-home').innerHTML = state.active
     ? '<span class="bi" data-ico="play"></span><span>Weiter trainieren</span>'
-    : `<span class="bi" data-ico="play"></span><span>Training starten</span><span style="opacity:.72;font-weight:650;font-size:var(--fs-body)">· ${suggestType()}</span>`;
+    : `<span class="bi" data-ico="play"></span><span>Training starten</span><span style="opacity:.72;font-weight:650;font-size:var(--fs-body)">· ${suggestLabel()}</span>`;
   /* Läuft schon ein Training oder gibt es einen Vorschlag, ist der große
      Knopf überflüssig — zwei Startwege nebeneinander verwirren nur. */
   $('#btn-start-home').style.display = (!state.active && $('#home-suggest').innerHTML) ? 'none' : '';
@@ -7100,7 +7188,7 @@ function renderDaystrip(){
     const cls = ['dsday', t.art, t.heute? 'heute':'', t.iso===dsWahl? 'on':''].filter(Boolean).join(' ');
     const titel = t.heute? 'Heute' : isoZuDatum(t.iso).toLocaleDateString('de-DE',{weekday:'long', day:'2-digit', month:'long'});
     return `<button class="${cls}" data-tag="${t.iso}" role="tab" aria-selected="${t.iso===dsWahl}"
-        aria-label="${titel}${t.typ? ' · '+t.typ:''}${t.art==='erledigt'? ' · erledigt':t.art==='geplant'? ' · geplant':''}">
+        aria-label="${titel}${t.label? ' · '+t.label:''}${t.art==='erledigt'? ' · erledigt':t.art==='geplant'? ' · geplant':''}">
       <span class="num">${t.nr}${MARK[t.art]? `<i class="mark">${MARK[t.art]}</i>`:''}</span>
       <span class="wd">${t.wbuchstabe}</span><span class="dot"></span></button>`;
   }).join('');
@@ -7124,7 +7212,7 @@ function renderDayBody(){
   if(t.ist){
     const w = t.ist, saetze = wSets(w), vol = wVolume(w);
     const status = w.vorab ? 'vorab eingetragen' : 'aufgezeichnet';
-    box.innerHTML = kopf(`${t.heute?'Heute':lang} · ${esc(w.type)}`, status, 'ist')
+    box.innerHTML = kopf(`${t.heute?'Heute':lang} · ${esc(einheitLabel(w))}`, status, 'ist')
       + `<div class="card"><div class="kpis" style="margin-bottom:10px">
           <div class="kpi"><b>${w.exercises.length}</b><span>Übungen</span></div>
           <div class="kpi"><b>${saetze}</b><span>Sätze</span></div>
@@ -7138,7 +7226,7 @@ function renderDayBody(){
         }).join('')}</div>`
       + (w.vorab? `<button class="btn btn-ghost btn-block btn-sm" id="ds-vorab-edit">Vorab-Eintrag bearbeiten</button>`:'')
       + (t.heute && !state.active? `<button class="btn btn-ghost btn-block" id="ds-noch">Noch ein Training starten</button>`:'');
-    const n = $('#ds-noch'); if(n) n.addEventListener('click',()=>startWorkout(suggestType()));
+    const n = $('#ds-noch'); if(n) n.addEventListener('click',()=>{ const s=suggestWorkout(); startWorkout(s.type,null,null,null,s.variant); });
     const e = $('#ds-vorab-edit'); if(e) e.addEventListener('click',()=>openWEdit(w.id));
     return;
   }
@@ -7147,7 +7235,7 @@ function renderDayBody(){
   if(t.vergangen){
     box.innerHTML = kopf(lang, t.typ==='Rest'? 'Pausentag':'kein Training', '')
       + `<div class="empty" style="padding:20px">${t.typ && t.typ!=='Rest'
-          ? `Für diesen Tag wäre <b>${t.typ}</b> dran gewesen — aufgezeichnet ist nichts.`
+          ? `Für diesen Tag wäre <b>${esc(t.label||t.typ)}</b> dran gewesen — aufgezeichnet ist nichts.`
           : 'Kein Training aufgezeichnet.'}<br>
          <span class="tiny">Nachtragen geht über den Verlauf.</span></div>`;
     return;
@@ -7156,7 +7244,9 @@ function renderDayBody(){
   /* 3. Heute und Zukunft — planbar. */
   const plan = t.plan;
   const gefuellt = !!(plan && (plan.exercises||[]).length);
-  const typ  = plan? plan.type : (t.typ || suggestType());
+  const schritt = plan ? {type:plan.type,variant:einheitVariante(plan)}
+    : t.typ ? {type:t.typ,variant:t.variant} : suggestWorkout();
+  const typ=schritt.type, variante=schritt.variant, label=einheitLabel(schritt);
   /* „Vorausschau" heißt: die App hat es abgeleitet. Das gilt auch für einen
      Ruhetag — der stand vorher fälschlich als „von dir so gesetzt" da. */
   const istVorschau = !plan;
@@ -7168,23 +7258,24 @@ function renderDayBody(){
   box.innerHTML = kopf(`${t.heute?'Heute':lang}`, herkunft, gefuellt? 'plan':'')
     + `<div class="card">
         <div class="row" style="gap:6px;flex-wrap:wrap;margin-bottom:12px">
-          ${PLAN_TYPEN.map(x=>`<button class="chip ${x===typ?'on':''}" data-plantyp="${x}">${x}</button>`).join('')}
+          ${PLAN_TYPEN.map(x=>`<button class="chip ${x===label?'on':''}" data-plantyp="${x}">${x}</button>`).join('')}
         </div>
         ${typ==='Rest'
-          ? `<div class="empty" style="padding:16px">Pausentag. ${istVorschau? 'So sieht es der Rhythmus Push → Pull → Rest vor.':'Von dir so gesetzt.'}</div>`
+          ? `<div class="empty" style="padding:16px">Pausentag. ${istVorschau? 'So sieht es der Rhythmus Push A → Pull A → Rest → Push B → Pull B → Rest vor.':'Von dir so gesetzt.'}</div>`
           : `<div class="planhd"><span>Übung</span><span>Sätze</span><span>kg</span><span></span></div>
              <div id="plan-list"></div>
              <button class="btn btn-ghost btn-block btn-sm" id="plan-add" style="margin-top:10px">＋ Übung</button>`}
       </div>`
     + (typ!=='Rest' && !state.active
-        ? `<button class="btn btn-acc btn-block btn-lg" id="plan-start">${t.zukunft? `${esc(typ)} für ${esc(wochentag)} eintragen` : `${esc(typ)} starten`}</button>` : '')
+        ? `<button class="btn btn-acc btn-block btn-lg" id="plan-start">${t.zukunft? `${esc(label)} für ${esc(wochentag)} eintragen` : `${esc(label)} starten`}</button>` : '')
     + (typ!=='Rest' && !gefuellt
-        ? `<button class="btn btn-ghost btn-block btn-sm" id="plan-uebernehmen">Übungen vom letzten ${esc(typ)} übernehmen</button>` : '')
+        ? `<button class="btn btn-ghost btn-block btn-sm" id="plan-uebernehmen">Übungen vom letzten ${esc(label)} übernehmen</button>` : '')
     + (plan? `<button class="btn btn-ghost btn-block btn-sm" id="plan-loeschen" style="margin-top:8px">Plan für diesen Tag löschen</button>`:'');
 
   $$('[data-plantyp]').forEach(b=>b.addEventListener('click',()=>{
-    const neu = b.dataset.plantyp;
-    setPlan(dsWahl, { type:neu, exercises: neu==='Rest'? [] : ((plan&&plan.exercises)||[]) });
+    const s = schrittAusLabel(b.dataset.plantyp);
+    if(s.type==='Rest') s.variant = variante || t.variant || 'A';
+    setPlan(dsWahl, { type:s.type, variant:s.variant, exercises: s.type==='Rest'? [] : ((plan&&plan.exercises)||[]) });
     haptic(); renderTrain();
   }));
   if(typ!=='Rest') renderPlanListe(typ);
@@ -7192,17 +7283,17 @@ function renderDayBody(){
   if(add) add.addEventListener('click',()=>openPicker(id=>{
     const ex = getEx(id); if(!ex) return;
     const cur = (planAmTag(dsWahl)||{}).exercises || [];
-    setPlan(dsWahl, { type:typ, exercises: cur.concat([{ exId:id, name:ex.name, sets:leereSaetze(id) }]) });
+    setPlan(dsWahl, { type:typ, variant:variante, exercises: cur.concat([{ exId:id, name:ex.name, sets:leereSaetze(id) }]) });
     $('#modal-picker').classList.remove('on');
     renderTrain();
   }));
   const start = $('#plan-start');
-  if(start) start.addEventListener('click',()=>startWorkout(typ, null, planAmTag(dsWahl), dsWahl));
+  if(start) start.addEventListener('click',()=>startWorkout(typ, null, planAmTag(dsWahl), dsWahl, variante));
   const uebern = $('#plan-uebernehmen');
   if(uebern) uebern.addEventListener('click',()=>{
-    const v = letzteEinheitVom(typ);
-    if(!v){ toast(`Noch kein ${typ} aufgezeichnet — es gibt nichts zu übernehmen`); return; }
-    setPlan(dsWahl, { type:typ, exercises: v.exercises.map(e=>{
+    const v = letzteEinheitVom(typ,variante);
+    if(!v){ toast(`Noch kein ${label} aufgezeichnet — es gibt nichts zu übernehmen`); return; }
+    setPlan(dsWahl, { type:typ, variant:variante, exercises: v.exercises.map(e=>{
       const ex = getEx(e.exId); if(!ex) return null;
       const prog = progressionFor(e.exId);
       const n = validSets(e).length || exDefSets(e.exId);
@@ -7218,7 +7309,7 @@ function renderDayBody(){
     withUndo('Plan gelöscht', ()=>{ state.plan[dsWahl] = backup; saveState(); renderTrain(); });
   });
 }
-const PLAN_TYPEN = ['Push','Pull','Legs','Rest'];
+const PLAN_TYPEN = ['Push A','Pull A','Rest','Push B','Pull B'];
 
 /* Eine Zeile je Übung: Sätze und Gewicht. Mehr braucht ein Plan nicht —
    Wiederholungen trägt man beim Training ein, nicht vorher. */
@@ -7245,7 +7336,7 @@ function renderPlanListe(typ){
     const p = planAmTag(dsWahl); if(!p) return;
     const kopie = JSON.parse(JSON.stringify(p.exercises));
     f(kopie[i]);
-    setPlan(dsWahl, { type:p.type, exercises:kopie });
+    setPlan(dsWahl, { type:p.type, variant:einheitVariante(p), exercises:kopie });
   };
   $$('[data-plansets]').forEach(inp=>inp.addEventListener('change',()=>{
     const i = +inp.dataset.plansets;
@@ -7268,12 +7359,12 @@ function renderPlanListe(typ){
     const i = +b.dataset.planrm;
     const p = planAmTag(dsWahl); if(!p) return;
     const kopie = p.exercises.slice(); const weg = kopie.splice(i,1)[0];
-    setPlan(dsWahl, { type:p.type, exercises:kopie });
+    setPlan(dsWahl, { type:p.type, variant:einheitVariante(p), exercises:kopie });
     renderTrain();
     withUndo(`„${weg.name}" aus dem Plan entfernt`, ()=>{
       const p2 = planAmTag(dsWahl) || { type:typ, exercises:[] };
       const zurueck = p2.exercises.slice(); zurueck.splice(i,0,weg);
-      setPlan(dsWahl, { type:p2.type||typ, exercises:zurueck }); renderTrain();
+      setPlan(dsWahl, { type:p2.type||typ, variant:einheitVariante(p2), exercises:zurueck }); renderTrain();
     });
   }));
 }
@@ -7292,7 +7383,7 @@ function renderTrain(){
     const tplTag = dsWahl && dsWahl >= heuteIso() ? dsWahl : heuteIso();
     const tplTagName = isoZuDatum(tplTag).toLocaleDateString('de-DE',{weekday:'long'});
     $('#tpl-section').innerHTML = `<h2>Meine Workouts</h2>` + (tpls.length ? `<div class="card" style="padding:2px 12px">${
-      tpls.map(t=>`<div class="item"><div class="grow"><div class="ttl">${esc(t.name)}</div><div class="meta">${t.exIds.length} Übungen · ${esc(t.type)}</div></div>
+      tpls.map(t=>`<div class="item"><div class="grow"><div class="ttl">${esc(t.name)}</div><div class="meta">${t.exIds.length} Übungen · ${esc(einheitLabel(t))}</div></div>
         <button class="btn btn-acc btn-sm" data-start-tpl="${t.id}">${tplTag>heuteIso()? `Für ${esc(tplTagName)}` : 'Start'}</button>
         <button class="iconbtn" data-edit-tpl="${t.id}" aria-label="Workout bearbeiten">${ICO.edit}</button>
         <button class="iconbtn" data-del-tpl="${t.id}" aria-label="Workout löschen">${ICO.trash}</button></div>`).join('')
@@ -7320,15 +7411,19 @@ $('#ds-heute').addEventListener('click',()=>{ dsSpringe(heuteIso()); haptic(); }
 let rtDraft = null;
 function openRoutineEditor(tplId){
   const t = tplId? state.templates.find(x=>x.id===tplId) : null;
-  rtDraft = t? {id:t.id, name:t.name, type:t.type, exIds:t.exIds.slice()} : {id:null, name:'', type:suggestType(), exIds:[]};
+  const s=suggestWorkout();
+  rtDraft = t? {id:t.id, name:t.name, type:t.type, variant:einheitVariante(t), exIds:t.exIds.slice()}
+             : {id:null, name:'', type:s.type, variant:s.variant, exIds:[]};
   $('#rt-title').textContent = t? 'Workout bearbeiten' : 'Workout erstellen';
   $('#rt-name').value = rtDraft.name;
   renderRtEditor();
   openModal('#modal-routine');
 }
 function renderRtEditor(){
-  $('#rt-type').innerHTML = WTYPES.map(t=>`<button class="chip ${t===rtDraft.type?'on':''}" data-t="${t}">${t}</button>`).join('');
-  $$('#rt-type .chip').forEach(c=>c.addEventListener('click',()=>{ rtDraft.type=c.dataset.t; renderRtEditor(); }));
+  $('#rt-type').innerHTML = WORKOUT_LABELS.map(t=>`<button class="chip ${t===einheitLabel(rtDraft)?'on':''}" data-t="${t}">${t}</button>`).join('');
+  $$('#rt-type .chip').forEach(c=>c.addEventListener('click',()=>{
+    const s=schrittAusLabel(c.dataset.t); rtDraft.type=s.type; rtDraft.variant=s.variant; renderRtEditor();
+  }));
   $('#rt-list').innerHTML = rtDraft.exIds.length? rtDraft.exIds.map((id,i)=>{
     const ex = getEx(id); if(!ex) return '';
     return `<div class="item"><span class="tiny" style="width:16px;text-align:center">${i+1}</span>
@@ -7355,17 +7450,17 @@ $('#rt-save').addEventListener('click',()=>{
   else { rtDraft.id=uid(); state.templates.push({...rtDraft}); }
   saveState(); closeModals(); toast('Workout gespeichert ✓'); renderTrain();
 });
-function startWorkout(type, tplId, plan, zielIso){
-  let exs = [], t = type;
+function startWorkout(type, tplId, plan, zielIso, variant){
+  let exs = [], t = type, v=saubereVariante(variant);
   if(tplId){ const tpl = state.templates.find(x=>x.id===tplId); if(!tpl) return;
-    t = tpl.type; exs = tpl.exIds.map(id=>{ const ex=getEx(id); return ex? {exId:id,name:ex.name,__live:true,sets:leereSaetze(id)} : null; }).filter(Boolean);
+    t = tpl.type; v=einheitVariante(tpl); exs = tpl.exIds.map(id=>{ const ex=getEx(id); return ex? {exId:id,name:ex.name,__live:true,sets:leereSaetze(id)} : null; }).filter(Boolean);
   }
   /* Aus dem Plan starten: Übungen, Satzzahl und Gewicht sind schon gesetzt,
      die Wiederholungen bleiben leer — die trägt man beim Heben ein.
      Der Plan wird dabei NICHT gelöscht; erst das fertige Training macht ihn
      überflüssig, und dann steht die Tatsache ohnehin darüber. */
   else if(plan && plan.exercises && plan.exercises.length){
-    t = plan.type || type;
+    t = plan.type || type; v=einheitVariante(plan)||v;
     exs = plan.exercises.map(e=>{
       const ex = getEx(e.exId); if(!ex) return null;
       return { exId:e.exId, name:ex.name, __live:true,
@@ -7374,7 +7469,7 @@ function startWorkout(type, tplId, plan, zielIso){
   }
   const tag = zielIso && zielIso >= heuteIso() ? zielIso : heuteIso();
   const jetzt = Date.now();
-  state.active = { id:uid(), date:workoutDatumFuerTag(tag), start:jetzt, type:t, exercises:exs };
+  state.active = { id:uid(), date:workoutDatumFuerTag(tag), start:jetzt, type:t, variant:v, exercises:exs };
   if(tag > heuteIso()){
     state.active.vorab = true;
     state.active.erfasst = jetzt;
@@ -7716,7 +7811,7 @@ function scheibenZeile(ei){
 
 function renderActive(){
   const a = state.active; if(!a) return;
-  $('#tw-type').textContent = a.type+'-Workout';
+  $('#tw-type').textContent = einheitLabel(a)+'-Workout';
   const tag = aktiverTag(a), heute = heuteIso(), morgen = tagPlus(heute,1);
   $('#tw-date').textContent = tag===heute ? 'Heute'
     : tag===morgen ? 'Morgen · '+isoZuDatum(tag).toLocaleDateString('de-DE',{weekday:'short'}).replace('.','')
@@ -8166,7 +8261,7 @@ async function finishWorkout(){
   const lvlBefore = achLevel().lvl;
   const ohneGemesseneZeit = istNochZukunft || (a.vorab && !satzStempel(a).length);
   const w = { id:a.id, date:a.date, start:ohneGemesseneZeit?null:a.start,
-              end:ohneGemesseneZeit?null:Date.now(), type:a.type, exercises:cleaned };
+              end:ohneGemesseneZeit?null:Date.now(), type:a.type, variant:einheitVariante(a), exercises:cleaned };
   if(a.vorab){
     w.vorab = true;
     w.erfasst = a.erfasst || a.start || Date.now();
@@ -8212,7 +8307,7 @@ function workoutText(w){
   if(!w) return '';
   const d = new Date(w.date).toLocaleDateString('de-DE',{weekday:'short', day:'2-digit', month:'2-digit'});
   const f=trainingsFenster(w);
-  const kopf = `${w.type} · ${d}${f&&f.quelle!=='knopf'? ' · '+fmtDur(f.dauer) : ''}`;
+  const kopf = `${einheitLabel(w)} · ${d}${f&&f.quelle!=='knopf'? ' · '+fmtDur(f.dauer) : ''}`;
   const zahlen = `${w.exercises.length} ${w.exercises.length===1?'Übung':'Übungen'} · ${wSets(w)} Sätze · ${fmtVol(wVolume(w))}`;
   const zeilen = w.exercises.map(e=>{
     const s = validSets(e); if(!s.length) return '';
@@ -8352,18 +8447,18 @@ function showSummary(w, freshAch, newLevel){
       <div><b>${esc(p.name)}</b><span class="meta">${p.kind}-PR: <b>${p.val}</b>${p.old? ' (vorher '+p.old+')':' (erster Eintrag)'}</span></div></div>`).join('')}</div>`
     : `<div class="card" style="text-align:center;color:var(--txt2)">Keine neuen PRs — nächstes Mal! 😤</div>`;
   /* Vergleich zum letzten gleichartigen Workout — gibt der Zahl Bedeutung */
-  const prevSame = state.workouts.filter(x=>x.type===w.type && x.id!==w.id).slice(-1)[0];
+  const prevSame = state.workouts.filter(x=>gleicherSchritt(x,w) && x.id!==w.id).slice(-1)[0];
   const dVol = prevSame? wVolume(w)-wVolume(prevSame) : 0;
   /* Gehört zum Kennzahlenblock darüber — also .kpihint statt eines negativen
      Rands, der den Satz nachträglich wieder heranzieht (wie in V58 gelernt). */
   const cmp = prevSame? `<div class="tiny kpihint" style="text-align:center">
-      ${dVol>0? `<span style="color:var(--green)">▲ ${fmtVol(dVol)} mehr als beim letzten ${esc(w.type)}</span>`
-        : dVol<0? `<span style="color:var(--txt3)">▼ ${fmtVol(-dVol)} weniger als beim letzten ${esc(w.type)}</span>`
+      ${dVol>0? `<span style="color:var(--green)">▲ ${fmtVol(dVol)} mehr als beim letzten ${esc(einheitLabel(w))}</span>`
+        : dVol<0? `<span style="color:var(--txt3)">▼ ${fmtVol(-dVol)} weniger als beim letzten ${esc(einheitLabel(w))}</span>`
         : 'gleiches Volumen wie beim letzten Mal'}</div>` : '';
   $('#summary-body').innerHTML = `
     <div class="grab"></div>
     <div class="sum-top"><span class="emoji">${newLevel?ICO.rocket:w.prs&&w.prs.length?ICO.trophy:ICO.check}</span>
-      <h2>${esc(w.type)} abgeschlossen</h2><div class="sub">${fmtDateShort(w.date)} · ${dur}</div></div>
+      <h2>${esc(einheitLabel(w))} abgeschlossen</h2><div class="sub">${fmtDateShort(w.date)} · ${dur}</div></div>
     ${lvlHtml}
     <div class="kpis stagger" style="margin-bottom:8px">
       <div class="kpi"><b data-count="${Math.round(wVolume(w))}" data-cfmt="vol">0</b><span>Volumen</span></div>
@@ -8389,9 +8484,9 @@ function showSummary(w, freshAch, newLevel){
   runCounters($('#summary-body'));
   wireSessionCheckin(w);
   $('#sum-tpl').addEventListener('click',()=>{
-    const name = prompt('Name der Vorlage:', w.type+'-Tag');
+    const name = prompt('Name der Vorlage:', einheitLabel(w)+'-Tag');
     if(!name) return;
-    state.templates.push({id:uid(), name, type:w.type, exIds:w.exercises.map(e=>e.exId)});
+    state.templates.push({id:uid(), name, type:w.type, variant:einheitVariante(w), exIds:w.exercises.map(e=>e.exId)});
     saveState(); toast('Vorlage gespeichert ✓');
   });
 }
@@ -8934,7 +9029,7 @@ $('#btn-csv').addEventListener('click',()=>{
         const total = repsOf(e,s,'total');
         const vol = s.t==='w'? 0 : load * total;
         rows.push([d.toLocaleDateString('de-DE'), d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),
-          w.type, e.name, i+1, s.t==='w'?'Aufwärmen':s.t==='d'?'Dropset':'Arbeitssatz',
+          einheitLabel(w), e.name, i+1, s.t==='w'?'Aufwärmen':s.t==='d'?'Dropset':'Arbeitssatz',
           String(+s.w||0).replace('.',','), rl, uni? rr : '', total, s.rir!=null? s.rir:'',
           String(Math.round(vol)).replace('.',','), bwk? String(bwk).replace('.',','):'',
           uni?'ja':'', assist?'ja':'', dauerMin===''?'':String(dauerMin).replace('.',','),
@@ -9485,12 +9580,13 @@ function uebungEinplanen(exId){
   }
   const tag = heuteIso();
   const vorhanden = planAmTag(tag);
-  const typ = (vorhanden && vorhanden.type) || suggestType();
+  const s = vorhanden ? {type:vorhanden.type,variant:einheitVariante(vorhanden)} : suggestWorkout();
+  const typ=s.type, variant=s.variant;
   const liste = (vorhanden && vorhanden.exercises) || [];
   if(liste.some(e=>e.exId === exId)) return {ziel:'schon', txt:`„${ex.name}" steht schon im Plan für heute`};
-  setPlan(tag, { type:typ, exercises: liste.concat([{exId, name:ex.name, sets:leereSaetze(exId)}]) });
+  setPlan(tag, { type:typ, variant, exercises: liste.concat([{exId, name:ex.name, sets:leereSaetze(exId)}]) });
   if(typeof renderTrain==='function') renderTrain();
-  return {ziel:'plan', txt:`„${ex.name}" für heute eingeplant (${typ})`};
+  return {ziel:'plan', txt:`„${ex.name}" für heute eingeplant (${einheitLabel(s)})`};
 }
 
 /* Das Blatt: alle offenen Gruppen, jede mit konkreten Übungen und einem
@@ -9739,16 +9835,16 @@ function overviewTrendCard(){
     <p class="tiny">Volumen je Einheit · bis zwei Zyklen abgeschlossen sind.</p>
     ${svgLine(pts,v=>fmtVol(v),{fill:true})}</div>`;
 }
-/* Konsistenz ohne erfundenen Gesamtscore. Entscheidend sind bei Aarons
-   Push/Pull/Rest-Rhythmus drei überprüfbare Größen: Wurde der Zyklus
+/* Konsistenz ohne erfundenen Gesamtscore. Entscheidend sind beim
+   Push-A/Pull-A/Rest/Push-B/Pull-B/Rest-Rhythmus drei überprüfbare Größen: Wurde der Zyklus
    vollständig, wie lange dauerte er und wie regelmäßig wurde trainiert? */
 function overviewRhythmCard(){
   if(!planPasstZuZyklen()) return '';
   const hist=workoutsBisHeute(), alle=closedCycles(), cs=alle.slice(-8), lauf=runningCycle();
   if(cs.length<2){
     const sub=lauf
-      ? `Zyklus ${lauf.n} läuft · ${lauf.ws.length} ${lauf.ws.length===1?'Einheit':'Einheiten'}${lauf.pull?'':' · Pull steht noch aus'}.`
-      : 'Der erste Push startet die Messung.';
+      ? `Zyklus ${lauf.n} läuft · ${lauf.ws.length} ${lauf.ws.length===1?'Einheit':'Einheiten'}${lauf.fehlt.length?' · offen: '+lauf.fehlt.join(', '):' · alle vier Workouts erledigt'}.`
+      : 'Der erste Push A startet die Messung.';
     return `<div class="card"><h3 style="margin-bottom:3px">Trainingsrhythmus</h3>
       <p class="tiny">${sub}</p><div class="empty" style="padding:14px">Ab zwei abgeschlossenen Zyklen zeigt die App Vollständigkeit, Dauer und Trainingsabstand.</div></div>`;
   }
@@ -9762,7 +9858,7 @@ function overviewRhythmCard(){
   else if(quote<75){ lead='Mehrere Zyklen blieben unvollständig'; col='var(--gold)'; }
   else if(avg>CYCLE_MAX_TAGE){ lead='Die Zyklen dauern aktuell zu lang'; col='var(--gold)'; }
   const aktuell=lauf
-    ? `Aktuell: Zyklus ${lauf.n}, Tag ${lauf.tage} · ${lauf.ws.length} ${lauf.ws.length===1?'Einheit':'Einheiten'}${lauf.vollstaendig?' · Push und Pull erledigt':lauf.pull?' · Push fehlt':' · Pull fehlt'}.`
+    ? `Aktuell: Zyklus ${lauf.n}, Tag ${lauf.tage} · ${lauf.ws.length} ${lauf.ws.length===1?'Einheit':'Einheiten'}${lauf.vollstaendig?' · A und B erledigt':' · offen: '+lauf.fehlt.join(', ')}.`
     : 'Aktuell ist kein offener Zyklus vorhanden.';
   return `<div class="card"><div class="row" style="align-items:flex-start"><div class="grow">
       <h3 style="margin-bottom:3px">Trainingsrhythmus</h3><b style="color:${col}">${lead}</b></div>
@@ -9778,7 +9874,7 @@ function overviewRhythmCard(){
 function overviewMuscleCard(){
   const c=runningCycle() || closedCycles().slice(-1)[0] || null;
   if(!c) return `<div class="card"><h3>Muskelgruppen im Zyklus</h3>
-    <div class="empty" style="padding:14px">Nach dem ersten Push/Pull-Zyklus steht hier sofort, welche Gruppe noch fehlt.</div></div>`;
+    <div class="empty" style="padding:14px">Nach dem ersten A/B-Zyklus steht hier sofort, welche Gruppe noch fehlt.</div></div>`;
   const offen=offeneGruppen().slice(0,4);
   const titel=`Zyklus ${c.n}${c.laufend?' · läuft':' · zuletzt abgeschlossen'}`;
   if(!offen.length) return `<div class="card"><h3 style="margin-bottom:3px">Muskelgruppen</h3>
@@ -10027,7 +10123,7 @@ function wochentagStat(ws){
   return { zaehl, namen, summe, max, stark, nie };
 }
 /* 2. Wie viele Tage liegen zwischen zwei Einheiten?
-      Beantwortet: „halte ich den 3-Tage-Rhythmus wirklich ein?" */
+      Beantwortet: „halte ich den 6-Tage-A/B-Rhythmus wirklich ein?" */
 function abstandStat(ws){
   const t = ws.map(w=>isoZuDatum(isoTag(w.date)).getTime()).sort((a,b)=>a-b);
   const l = [];
@@ -10100,8 +10196,8 @@ function statWochentag(ws){
     <p class="tiny" style="margin-top:8px">Am häufigsten <b>${st.stark.join(' · ')}</b>${
       st.nie.length? ` · nie an <b>${st.nie.join(' · ')}</b>` : ''}.
       <details class="erkl"><summary>Was sagt mir das?</summary><div>
-        Reine Beobachtung, keine Bewertung: Dein Plan läuft auf Push → Pull → Rest,
-        also im 3-Tage-Takt — der wandert bewusst durch die Woche und trifft nie
+        Reine Beobachtung, keine Bewertung: Dein Plan läuft auf Push A → Pull A → Rest → Push B → Pull B → Rest,
+        also im 6-Tage-Takt — der wandert bewusst durch die Woche und trifft nie
         dieselben Wochentage. Eine Häufung ist deshalb weder gut noch schlecht,
         sie zeigt nur, wo dein Alltag den Takt verschiebt.
       </div></details></p></div>`;
@@ -10109,7 +10205,7 @@ function statWochentag(ws){
 function statAbstand(ws){
   const st = abstandStat(ws);
   if(!st) return '';
-  const soll = CYCLE_SOLL_TAGE/2;                 // zwei Einheiten je Zyklus → ~1,5 Tage
+  const soll = CYCLE_SOLL_TAGE/4;                 // vier Einheiten je Zyklus → ~1,5 Tage
   const labels = ['1 Tag','2','3','4','5+'];
   return `<div class="card"><h3 style="margin-bottom:8px">Abstand zwischen zwei Einheiten</h3>
     ${svgBars(labels, st.eimer, v=>v)}
@@ -10118,9 +10214,9 @@ function statAbstand(ws){
       <div class="kpi"><b>${st.median}</b><span>Median</span></div>
       <div class="kpi"><b>${st.laengste}</b><span>längste Pause</span></div>
     </div>
-    <p class="kpihint tiny">Bei Push → Pull → Rest liegen rechnerisch <b>${soll.toFixed(1).replace('.',',')} Tage</b>
+    <p class="kpihint tiny">Bei vier Workouts in sechs Tagen liegen rechnerisch <b>${soll.toFixed(1).replace('.',',')} Tage</b>
       zwischen zwei Einheiten. ${st.schnitt > soll*1.5
-        ? 'Deine Abstände sind deutlich größer — die Zyklen dauern damit länger als drei Tage.'
+        ? 'Deine Abstände sind deutlich größer — die Zyklen dauern damit länger als sechs Tage.'
         : 'Das passt zu deinem Rhythmus.'}</p></div>`;
 }
 function statWdh(ws){
@@ -10623,7 +10719,7 @@ function zyklusVolumenCard(){
       <details class="erkl"><summary>Warum Zyklen und nicht Monate?</summary><div>
         In einen Kalendermonat fallen mal neun, mal elf Einheiten — das sind über
         20 % Unterschied, ohne dass sich am Training etwas geändert hat. Ein
-        Zyklus ist bei dir immer Push → Pull → Rest und damit vergleichbar.
+        Zyklus ist bei dir immer Push A → Pull A → Rest → Push B → Pull B → Rest und damit vergleichbar.
         Gestrichelt: der gleitende Schnitt über vier Zyklen.
       </div></details></p></div>`;
 }
@@ -10713,9 +10809,9 @@ function renderWeekStats(){
     lastStatsWs = lauf? lauf.ws : [];
     el.innerHTML = lauf
       ? leadCard('Dein erster Zyklus läuft gerade.', 'neutral',
-          `${lauf.ws.length} ${lauf.ws.length===1?'Einheit':'Einheiten'} bisher${lauf.pull?'':' · Pull steht noch aus'}. Sobald der nächste Push beginnt, ist dieser Zyklus abgeschlossen und wird hier ausgewertet.`)
+          `${lauf.ws.length} ${lauf.ws.length===1?'Einheit':'Einheiten'} bisher${lauf.fehlt.length?' · offen: '+lauf.fehlt.join(', '):' · alle vier Workouts erledigt'}. Nach dem zweiten Rest wird dieser Zyklus ausgewertet.`)
         + muscleSection(lauf.ws, 1, {zyklen:1, laufend:true})
-      : emptyStats('Noch keine Trainings', 'Sobald du deinen ersten Push abschließt,<br>fängt Zyklus 1 an.');
+      : emptyStats('Noch keine Trainings', 'Sobald du deinen ersten Push A abschließt,<br>fängt Zyklus 1 an.');
     return;
   }
   const i = Math.max(0, Math.min(closed.length-1, closed.length-1+cycOff));
@@ -10734,9 +10830,9 @@ function renderWeekStats(){
   }).map(([g])=>g);
   let txt, ton, sub;
   if(!c.vollstaendig){
-    txt = `Zyklus ${c.n} war unvollständig — ${c.push? 'der Pull fehlt' : 'der Push fehlt'}.`;
+    txt = `Zyklus ${c.n} war unvollständig — ${c.fehlt.join(', ')} ${c.fehlt.length===1?'fehlt':'fehlen'}.`;
     ton = 'warn';
-    sub = `${c.push} Push · ${c.pull} Pull${c.beine?' · '+c.beine+' Beine':''} in ${c.tage} Tagen.`;
+    sub = `${cycleSplitText(c)} in ${c.tage} Tagen.`;
   } else if(c.auffaellig){
     txt = `Zyklus ${c.n} dauerte ${c.tage} Tage statt ${CYCLE_SOLL_TAGE}.`;
     ton = 'warn';
@@ -10746,23 +10842,23 @@ function renderWeekStats(){
   } else if(!luecken.length){
     txt = `Zyklus ${c.n} war vollständig. Jede Gruppe im Korridor.`;
     ton = 'gut';
-    sub = `${c.push} Push · ${c.pull} Pull${c.beine?' · '+c.beine+' Beine':''} in ${c.tage} Tagen.`;
+    sub = `${cycleSplitText(c)} in ${c.tage} Tagen.`;
   } else {
     txt = `Zyklus ${c.n} war vollständig. ${luecken.length===1? luecken[0]+' lag' : luecken.slice(0,3).join(', ')+' lagen'} unter dem Korridor.`;
     ton = 'neutral';
-    sub = `${c.push} Push · ${c.pull} Pull${c.beine?' · '+c.beine+' Beine':''} in ${c.tage} Tagen.`;
+    sub = `${cycleSplitText(c)} in ${c.tage} Tagen.`;
   }
 
   /* Volumen je Einheit statt je Kalendertag — leere Wochentage sagen bei
-     einem 3-Tage-Rhythmus gar nichts aus. */
-  const uLab = c.ws.map(w=>w.type.slice(0,2)+' '+new Date(w.date).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'}));
+     einem wandernden 6-Tage-Rhythmus gar nichts aus. */
+  const uLab = c.ws.map(w=>einheitLabel(w).replace('Push','Pu').replace('Pull','Pl')+' '+new Date(w.date).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'}));
   const uVol = c.ws.map(w=>wVolume(w));
 
   /* Der Hinweis auf den laufenden Zyklus stand bis V61 als eigenes <div>
      darunter und wurde mit margin:-4px wieder an die Karte herangezogen.
      Er gehört inhaltlich in die Karte — leadCard nimmt ihn als Untertitel. */
   const subPlus = (lauf && i===closed.length-1)
-    ? sub + ` Der aktuelle Zyklus läuft noch (${lauf.ws.length} ${lauf.ws.length===1?'Einheit':'Einheiten'}) und wird erst gewertet, wenn der nächste Push beginnt.`
+    ? sub + ` Der aktuelle Zyklus läuft noch (${lauf.ws.length} ${lauf.ws.length===1?'Einheit':'Einheiten'}) und wird nach dem zweiten Rest gewertet.`
     : sub;
 
   el.innerHTML = nav.html
@@ -11365,7 +11461,7 @@ function renderHist(){
       <div class="kpi"><b data-count="${Math.round(hours)}">0</b><span>Stunden</span></div>
     </div>` : '';
   /* Filterleiste: Typen aus den echten Daten + PR-Filter */
-  const typesUsed = [...new Set(state.workouts.map(w=>w.type))];
+  const typesUsed = [...new Set(state.workouts.map(einheitLabel))];
   $('#hist-filters').innerHTML = ws.length
     ? ['Alle', ...typesUsed, 'Mit PR'].map(f=>`<button class="chip ${f===histFilter?'on':''}" data-hf="${esc(f)}">${esc(f)}</button>`).join('')
     : '';
@@ -11383,7 +11479,7 @@ function renderHist(){
   const q = ($('#hist-search').value||'').trim().toLowerCase();
   let shown = ws;
   if(histFilter==='Mit PR') shown = shown.filter(w=>w.prs && w.prs.length);
-  else if(histFilter!=='Alle') shown = shown.filter(w=>w.type===histFilter);
+  else if(histFilter!=='Alle') shown = shown.filter(w=>einheitLabel(w)===histFilter);
   if(q) shown = shown.filter(w=>String(w.note||'').toLowerCase().includes(q)
     || w.exercises.some(e=>(e.name||'').toLowerCase().includes(q)
       || String(e.note||'').toLowerCase().includes(q)));
@@ -11408,7 +11504,7 @@ function renderHist(){
       <div class="row" style="justify-content:space-between">
         <div class="grow">
           <div class="row" style="gap:8px"><b style="font-size:var(--fs-body)">${fmtDateShort(w.date)}</b>
-            <span class="badge type">${esc(w.type)}</span>
+            <span class="badge type">${esc(einheitLabel(w))}</span>
             ${w.vorab?`<span class="badge">Vorab</span>`:''}
             ${(w.prs&&w.prs.length)?`<span class="badge pr">${ICO.trophy} ${w.prs.length}</span>`:''}</div>
           <!-- Bei einer reinen Kardio- oder Halte-Einheit ist das Volumen null.
@@ -11529,7 +11625,7 @@ function openWEdit(wid){
   const w = state.workouts.find(x=>x.id===wid); if(!w) return;
   const f = trainingsFenster(w);
   weDraft = {
-    id: w.id, date: w.date, type: w.type,
+    id: w.id, date: w.date, type: w.type, variant:einheitVariante(w),
     vorab: !!w.vorab, erfasst: w.erfasst || null,
     durMin: f ? String(Math.round(f.dauer/60000)) : '',
     rpe: sessionRpe(w)===null ? '' : String(sessionRpe(w)),
@@ -11558,7 +11654,7 @@ function renderWEdit(){
     </div>
     <label class="tiny up">Art</label>
     <div class="chips" id="we-type" style="margin:4px 0 12px">
-      ${WTYPES.map(t=>`<button class="chip ${t===weDraft.type?'on':''}" data-we-t="${esc(t)}">${esc(t)}</button>`).join('')}
+      ${WORKOUT_LABELS.map(t=>`<button class="chip ${t===einheitLabel(weDraft)?'on':''}" data-we-t="${esc(t)}">${esc(t)}</button>`).join('')}
     </div>
     <label class="tiny up" for="we-dur">Dauer in Minuten</label>
     <input type="number" inputmode="numeric" min="1" max="300" id="we-dur"
@@ -11615,7 +11711,7 @@ function renderWEdit(){
   $('#we-rpe').addEventListener('change', e=>{ weDraft.rpe = e.target.value; });
   $('#we-session-note').addEventListener('input', e=>{ weDraft.sessionNote = e.target.value; });
   $$('#we-type [data-we-t]').forEach(b=>b.addEventListener('click',()=>{
-    weDraft.type = b.dataset.weT; haptic(); renderWEdit();
+    const s=schrittAusLabel(b.dataset.weT); weDraft.type=s.type; weDraft.variant=s.variant; haptic(); renderWEdit();
   }));
   $('#we-exadd').addEventListener('click',()=>openPicker(id=>{
     const ex = getEx(id); if(!ex) return;
@@ -11711,7 +11807,7 @@ async function weSpeichern(){
   makeSnapshot('vor Bearbeitung', true);
 
   const neu = {
-    id: weDraft.id, date: weDraft.date, type: weDraft.type,
+    id: weDraft.id, date: weDraft.date, type: weDraft.type, variant:einheitVariante(weDraft),
     start: state.workouts[i].start, end: state.workouts[i].end,
     exercises: uebungen, prs: []
   };
@@ -11758,7 +11854,7 @@ function showDetail(wid){
   const prByEx = {}; (w.prs||[]).forEach(p=>{ (prByEx[p.exId]=prByEx[p.exId]||[]).push(p.kind); });
   $('#detail-body').innerHTML = `
     <div class="grab"></div>
-    <div class="mhd"><div><h2>${esc(w.type)}-Workout</h2><div class="sub">${fmtDateShort(w.date)}${wDauer(w)? ' · '+wDauerText(w):''} · ${fmtVol(wVolume(w))}${sessionRpe(w)!==null?' · RPE '+sessionRpe(w):''}</div></div><button class="iconbtn" data-close aria-label="Schließen" data-ico-close></button></div>
+    <div class="mhd"><div><h2>${esc(einheitLabel(w))}-Workout</h2><div class="sub">${fmtDateShort(w.date)}${wDauer(w)? ' · '+wDauerText(w):''} · ${fmtVol(wVolume(w))}${sessionRpe(w)!==null?' · RPE '+sessionRpe(w):''}</div></div><button class="iconbtn" data-close aria-label="Schließen" data-ico-close></button></div>
     ${(()=>{ const f = trainingsFenster(w); return `<div class="item">
       <div class="grow"><div class="ttl" style="font-size:var(--fs-sub)">Dauer ${f? fmtDur(f.dauer) : 'nicht gemessen'}</div>
         <div class="meta">${f? DAUER_QUELLE[f.quelle] : 'für dieses Training liegt keine Zeit vor'}${
@@ -11816,8 +11912,8 @@ function showDetail(wid){
     if(typeof renderStats === 'function') renderStats();
   });
   $('#det-tpl').addEventListener('click',()=>{
-    const name = prompt('Name der Vorlage:', w.type+'-Tag'); if(!name) return;
-    state.templates.push({id:uid(), name, type:w.type, exIds:w.exercises.map(e=>e.exId)});
+    const name = prompt('Name der Vorlage:', einheitLabel(w)+'-Tag'); if(!name) return;
+    state.templates.push({id:uid(), name, type:w.type, variant:einheitVariante(w), exIds:w.exercises.map(e=>e.exId)});
     saveState(); toast('Vorlage gespeichert ✓');
   });
   $('#det-del').addEventListener('click',()=>{
@@ -12123,7 +12219,7 @@ function backupText(maxWk){
       const r=sessionRpe(w), load=sessionLoad(w);
       const gefuehl=r===null?'':` · RPE ${r}${load!==null?' · Load '+load:''}`;
       const notiz=w.note?`\n  Notiz: ${String(w.note).trim()}`:'';
-      return `━ ${d} · ${w.type||''}${gefuehl}\n${lines.join('\n')}${notiz}`;
+      return `━ ${d} · ${einheitLabel(w)}${gefuehl}\n${lines.join('\n')}${notiz}`;
     }).join('\n\n');
   }
   return head + recLine + log;
@@ -12244,7 +12340,7 @@ function naechsterTitel(lvl){
    Die Serie war damit entweder dauerhaft 0 oder es erschien für immer der
    „Trainingstage festlegen"-Hinweis.
    Neu gezählt wird, wie viele abgeschlossene Zyklen in Folge VOLLSTÄNDIG
-   waren (mindestens ein Push und ein Pull) und nicht überlang. Der laufende
+   waren (Push A, Pull A, Push B und Pull B) und nicht überlang. Der laufende
    Zyklus bricht die Serie nicht — er ist ja noch nicht vorbei. */
 function zyklusStreak(){
   const cs = closedCycles();
@@ -12295,7 +12391,7 @@ function renderStreak(){
   const bump = (_lastStreak!==null && s>_lastStreak);
   _lastStreak = s;
   box.innerHTML = `<button class="streakchip ${s===0?'zero':''} ${bump?'bump':''}" id="streak-setup"
-      title="${s} vollständige ${s===1?'Zyklus':'Zyklen'} in Folge (Push + Pull, höchstens ${CYCLE_MAX_TAGE} Tage)">
+      title="${s} vollständige ${s===1?'Zyklus':'Zyklen'} in Folge (Push A/B + Pull A/B, höchstens ${CYCLE_MAX_TAGE} Tage)">
       <span class="fl">${ICO.flame}</span><span class="stx" data-count="${s}">${s}</span></button>`;
 }
 document.addEventListener('click', e=>{
