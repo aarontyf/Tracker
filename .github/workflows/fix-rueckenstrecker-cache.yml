@@ -1,0 +1,48 @@
+name: Complete Rückenstrecker jump fix
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/fix-rueckenstrecker-cache.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fix Rückenstrecker variants and bump app cache
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          old = "if(ex && ex.name === 'Rückenstrecker (Hyperextension)') return null;"
+          new = "if(ex && (ex.name === 'Rückenstrecker (Hyperextension)' || ex.name === 'Rückenstrecker (mit Gewicht)')) return null;"
+          if old not in s and new not in s:
+              raise SystemExit('Rückenstrecker exception target not found')
+          if old in s:
+              s = s.replace(old, new, 1)
+          p.write_text(s, encoding='utf-8')
+
+          sw = Path('sw.js')
+          w = sw.read_text(encoding='utf-8')
+          if "const VERSION = 'ft-v90';" in w:
+              w = w.replace("const VERSION = 'ft-v90';", "const VERSION = 'ft-v91';", 1)
+          elif "const VERSION = 'ft-v91';" not in w:
+              raise SystemExit('Unexpected service-worker version')
+          sw.write_text(w, encoding='utf-8')
+          PY
+      - name: Commit fix and remove temporary workflow
+        run: |
+          rm .github/workflows/fix-rueckenstrecker-cache.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html sw.js .github/workflows/fix-rueckenstrecker-cache.yml
+          git diff --cached --quiet && exit 0
+          git commit -m "Fix Rückenstrecker jump detection and refresh cache"
+          git push
