@@ -378,7 +378,13 @@ app.all('/mcp', async (context) => {
 
   try {
     const server = createServer(auth)
-    const transport = new WebStandardStreamableHTTPServerTransport()
+    // Supabase Edge Functions sind zustandslos und erzeugen für jede HTTP-
+    // Anfrage eine neue Instanz. Ohne den expliziten Stateless-Modus würde
+    // der SDK-Transport beim folgenden tools/list eine zuvor lokal erzeugte
+    // Session-ID erwarten, die auf der neuen Instanz nicht existieren kann.
+    const transport = new WebStandardStreamableHTTPServerTransport({
+      sessionIdGenerator: undefined,
+    })
     await server.connect(transport)
     return await transport.handleRequest(context.req.raw)
   } catch {
