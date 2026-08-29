@@ -1758,7 +1758,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V89 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V90 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="mback" id="modal-sync"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="sync-title">
@@ -4412,7 +4412,11 @@ function weekRange(anchor){ const a = mondayOf(anchor); const b = new Date(a); b
    geworden — die Kalenderwoche ist als Maßstab ausdrücklich verworfen.
    Entfernt V64, nachdem gemessen war, dass sie niemand mehr aufruft. */
 function inRange(dateStr,[a,b]){ const t=new Date(dateStr).getTime(); return t>=a.getTime() && t<b.getTime(); }
-function workoutsIn(range){ return state.workouts.filter(w=>inRange(w.date,range)); }
+/* Statistik zählt nur Einheiten, die bereits stattgefunden haben. Seit V87
+   können Workouts für morgen vorab ausgefüllt werden; sie bleiben im Verlauf
+   sichtbar, dürfen aber weder Monatsvolumen noch Rekorde oder Gesamtzahlen
+   vorzeitig erhöhen. */
+function workoutsIn(range){ return workoutsBisHeute().filter(w=>inRange(w.date,range)); }
 function fmtDur(ms){ const m=Math.round(ms/60000); return m>=60? Math.floor(m/60)+'h '+(m%60)+'min' : m+' min'; }
 function fmtVol(v){ return v>=10000? (v/1000).toFixed(1).replace('.',',')+' t' : Math.round(v).toLocaleString('de-DE')+' kg'; }
 
@@ -9614,8 +9618,11 @@ function prListHtml(ws){
 /* ---------- Jahres-Heatmap (bei Hevy Pro) ---------- */
 function yearHeatmap(year){
   const byDay = {};
-  state.workouts.forEach(w=>{ const d=new Date(w.date); if(d.getFullYear()!==year) return;
-    const k=w.date.slice(0,10); byDay[k]=(byDay[k]||0)+wSets(w); });
+  workoutsBisHeute().forEach(w=>{ const d=new Date(w.date); if(d.getFullYear()!==year) return;
+    /* ISO-UTC abschneiden verschiebt deutsche Abend-/Mitternachts-Workouts
+       gelegentlich auf den Nachbartag. Die ganze App arbeitet deshalb mit
+       isoTag() als lokaler Kalenderwahrheit — der Kalender jetzt ebenfalls. */
+    const k=isoTag(w.date); byDay[k]=(byDay[k]||0)+wSets(w); });
   const start = mondayOf(new Date(year,0,1));
   const cell=9, gap=2, cols=53;
   const W = cols*(cell+gap), H = 7*(cell+gap)+16;
@@ -9624,7 +9631,7 @@ function yearHeatmap(year){
   for(let c=0;c<cols;c++) for(let r=0;r<7;r++){
     const d = new Date(start.getTime() + ((c*7+r)*86400000));
     if(d.getFullYear()>year) continue;
-    const k = d.toISOString().slice(0,10);
+    const k = isoTag(d);
     const v = byDay[k]||0;
     /* Sequenzielle Skala: dunkel = wenig, hell = viel. Der leere Tag nimmt
        die Eingabefläche des Designs, die Stufen bleiben eine eigene Skala —
@@ -9639,7 +9646,7 @@ function yearHeatmap(year){
   });
   s += '</svg>';
   const days = Object.keys(byDay).length;
-  return `<div class="chart">${s}</div><div class="tiny" style="margin-top:4px">${days} Trainingstage in ${year} · dunkler = mehr Sätze</div>`;
+  return `<div class="chart">${s}</div><div class="tiny" style="margin-top:4px">${days} Trainingstage in ${year} · heller = mehr Sätze</div>`;
 }
 
 /* ================= STATISTIK-PANELS ================= */
@@ -9698,7 +9705,8 @@ function overviewFenster(){
       label:n===1?'Letzter abgeschlossener Zyklus':`Letzte ${n} abgeschlossene Zyklen`,
       vergleich:vorher.length===n?(n===1?'gegen den Zyklus davor':`gegen die ${n} Zyklen davor`):''};
   }
-  const n=Math.min(6,state.workouts.length), ws=state.workouts.slice(-n), vorher=state.workouts.slice(-2*n,-n);
+  const hist=workoutsBisHeute();
+  const n=Math.min(6,hist.length), ws=hist.slice(-n), vorher=hist.slice(-2*n,-n);
   return {art:'einheiten',cs:[],ws,
     prevWs:vorher.length===n?vorher:null,
     label:`Letzte ${n} ${n===1?'Einheit':'Einheiten'}`,
@@ -9724,12 +9732,48 @@ function overviewTrendCard(){
       <p class="kpihint tiny">${aussage} Volumen ist Arbeit, nicht automatisch Kraft — die Kraftentwicklung steht separat darunter.</p>
       <button class="btn btn-ghost btn-block btn-sm" data-stat-tab="month">5-Zyklen-Analyse öffnen</button></div>`;
   }
-  const ws=state.workouts.slice(-8);
+  const ws=workoutsBisHeute().slice(-8);
   if(ws.length<2) return '';
   const pts=ws.map(w=>({y:Math.round(wVolume(w)),l:new Date(w.date).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})}));
   return `<div class="card"><h3 style="margin-bottom:2px">Leistungstrend</h3>
     <p class="tiny">Volumen je Einheit · bis zwei Zyklen abgeschlossen sind.</p>
     ${svgLine(pts,v=>fmtVol(v),{fill:true})}</div>`;
+}
+/* Konsistenz ohne erfundenen Gesamtscore. Entscheidend sind bei Aarons
+   Push/Pull/Rest-Rhythmus drei überprüfbare Größen: Wurde der Zyklus
+   vollständig, wie lange dauerte er und wie regelmäßig wurde trainiert? */
+function overviewRhythmCard(){
+  if(!planPasstZuZyklen()) return '';
+  const hist=workoutsBisHeute(), alle=closedCycles(), cs=alle.slice(-8), lauf=runningCycle();
+  if(cs.length<2){
+    const sub=lauf
+      ? `Zyklus ${lauf.n} läuft · ${lauf.ws.length} ${lauf.ws.length===1?'Einheit':'Einheiten'}${lauf.pull?'':' · Pull steht noch aus'}.`
+      : 'Der erste Push startet die Messung.';
+    return `<div class="card"><h3 style="margin-bottom:3px">Trainingsrhythmus</h3>
+      <p class="tiny">${sub}</p><div class="empty" style="padding:14px">Ab zwei abgeschlossenen Zyklen zeigt die App Vollständigkeit, Dauer und Trainingsabstand.</div></div>`;
+  }
+  const voll=cs.filter(c=>c.vollstaendig).length;
+  const quote=Math.round(voll/cs.length*100);
+  const avg=cs.reduce((a,c)=>a+c.tage,0)/cs.length;
+  const seit30=hist.filter(w=>Date.parse(w.date)>=Date.now()-30*864e5).length;
+  const ab=abstandStat(hist.slice(-14));
+  let lead='Rhythmus wird stabiler', col='var(--txt)';
+  if(quote>=90 && avg<=CYCLE_MAX_TAGE){ lead='Rhythmus stabil'; col='var(--green)'; }
+  else if(quote<75){ lead='Mehrere Zyklen blieben unvollständig'; col='var(--gold)'; }
+  else if(avg>CYCLE_MAX_TAGE){ lead='Die Zyklen dauern aktuell zu lang'; col='var(--gold)'; }
+  const aktuell=lauf
+    ? `Aktuell: Zyklus ${lauf.n}, Tag ${lauf.tage} · ${lauf.ws.length} ${lauf.ws.length===1?'Einheit':'Einheiten'}${lauf.vollstaendig?' · Push und Pull erledigt':lauf.pull?' · Push fehlt':' · Pull fehlt'}.`
+    : 'Aktuell ist kein offener Zyklus vorhanden.';
+  return `<div class="card"><div class="row" style="align-items:flex-start"><div class="grow">
+      <h3 style="margin-bottom:3px">Trainingsrhythmus</h3><b style="color:${col}">${lead}</b></div>
+      <span class="badge type">${cs.length} Zyklen</span></div>
+    <div class="kpis" style="margin:12px 0 0">
+      <div class="kpi"><b>${quote} %</b><span>vollständig</span></div>
+      <div class="kpi"><b>${avg.toLocaleString('de-DE',{maximumFractionDigits:1})}</b><span>Ø Tage/Zyklus</span></div>
+      <div class="kpi"><b>${seit30}</b><span>Workouts/30 Tage</span></div>
+    </div>
+    <p class="kpihint tiny">${aktuell}${ab? ` Median zwischen den letzten Einheiten: <b>${ab.median} ${ab.median===1?'Tag':'Tage'}</b>.`:''}
+      Nur abgeschlossene, bereits stattgefundene Einheiten fließen in die Kennzahlen ein.</p></div>`;
 }
 function overviewMuscleCard(){
   const c=runningCycle() || closedCycles().slice(-1)[0] || null;
@@ -9799,7 +9843,7 @@ function overviewNextGoalsCard(){
     <p class="kpihint tiny">Aus echten vollständigen Einheiten berechnet. Ziele sind Platzhalter fürs nächste Training und werden nie als geschafft eingetragen.</p></div>`;
 }
 function overviewLoadCard(){
-  const rated=state.workouts.map(w=>{ const r=sessionRpe(w); return {w,r,load:r===null?null:sessionLoad(w)}; })
+  const rated=workoutsBisHeute().map(w=>{ const r=sessionRpe(w); return {w,r,load:r===null?null:sessionLoad(w)}; })
     .filter(x=>x.r!==null && x.load!==null);
   if(rated.length<3){
     const fehlt=3-rated.length, last=rated[rated.length-1];
@@ -9841,7 +9885,8 @@ function overviewBodyweightCard(){
 }
 function renderOverviewStats(){
   const el=$('#stats-overview');
-  if(!state.workouts.length){
+  const hist=workoutsBisHeute();
+  if(!hist.length){
     lastStatsWs=[];
     el.innerHTML=emptyStats('Noch keine Statistik','Nach deinem ersten Training erscheinen hier Trends, Muskelgruppen und Kraftentwicklung.');
     return;
@@ -9857,12 +9902,13 @@ function renderOverviewStats(){
     const bis=bw?'+'+fmtW(x.bis)+' kg':fmtW(x.bis)+' kg';
     aussage=`${esc(x.name)}: ${von} → ${bis} · +${fmtW(x.diff)} kg.`;
   }else if(prs) aussage=`${prs} ${prs===1?'neue Bestleistung':'neue Bestleistungen'} im aktuellen Fenster.`;
-  const letzter=state.workouts[state.workouts.length-1];
+  const letzter=hist[hist.length-1];
   el.innerHTML=`<div class="card stats-overview-lead"><div class="up">Aktueller Stand</div>
       <b style="font-size:var(--fs-lg);line-height:1.35;display:block;margin-top:5px">${aussage}</b>
       <div class="tiny" style="margin-top:7px">${f.label} · ${f.ws.length} ${f.ws.length===1?'Workout':'Workouts'} · zuletzt ${fmtDate(letzter.date)}.</div></div>`
     + kpiRow(f.ws,f.prevWs,f.vergleich||null)
     + overviewTrendCard()
+    + overviewRhythmCard()
     + overviewMuscleCard()
     + overviewStrengthCard(gains)
     + overviewNextGoalsCard()
@@ -9878,7 +9924,7 @@ function statFokus(){
   if(offen.length){
     const x=offen[0];
     rows.push({ico:'↓',titel:`${x.gruppe} zuerst`,meta:`${fmtW(x.ist)} von ${x.lo}–${x.hi} Sätzen im laufenden Zyklus`,wert:`${fmtW(x.fehlt)} fehlen`});
-  }else if(state.workouts.length){
+  }else if(workoutsBisHeute().length){
     rows.push({ico:'✓',titel:'Verteilung versorgt',meta:'Keine verpflichtende Muskelgruppe liegt unter ihrem Zyklusziel.',wert:'im Ziel'});
   }
   const plus = zuwachsStat(4).find(x=>x.diff>0);
@@ -9897,7 +9943,7 @@ function statFokus(){
 /* Seit Beginn — alle Trainings über den gesamten Zeitraum */
 function renderAllStats(){
   const el = $('#stats-all');
-  const ws = state.workouts.slice().sort((a,b)=>Date.parse(a.date) - Date.parse(b.date));
+  const ws = workoutsBisHeute().slice().sort((a,b)=>Date.parse(a.date) - Date.parse(b.date));
   lastStatsWs = ws;
   if(!ws.length){ el.innerHTML = `<div class="empty"><div class="big">${ICO.chart}</div><b>Noch keine Trainings</b>Sobald du das erste Training abschließt,<br>siehst du hier deine gesamte Entwicklung.</div>`; return; }
   const first = new Date(ws[0].date);
@@ -9938,7 +9984,7 @@ function renderAllStats(){
 }
 
 function renderAllStatsMehr(){
-  const ws = state.workouts.slice().sort((a,b)=>Date.parse(a.date) - Date.parse(b.date));
+  const ws = workoutsBisHeute().slice().sort((a,b)=>Date.parse(a.date) - Date.parse(b.date));
   if(!ws.length) return '';
   const first = new Date(ws[0].date);
   /* Volumen pro Monat über die gesamte Historie (max. 18 Balken). */
@@ -10017,7 +10063,7 @@ function wdhStat(ws){
 function zuwachsStat(minEinheiten){
   const min = minEinheiten || 4;
   const out = [];
-  const ids = [...new Set(state.workouts.flatMap(w=>w.exercises.map(e=>e.exId)))];
+  const ids = [...new Set(workoutsBisHeute().flatMap(w=>w.exercises.map(e=>e.exId)))];
   ids.forEach(id=>{
     const ex = getEx(id); if(!ex) return;
     const h = exHistory(id);
@@ -10395,7 +10441,7 @@ function relativeKraft(max){
   if(!bw.length) return null;
   const kg = +bw[bw.length-1].kg || 0;
   if(!(kg > 0)) return null;
-  const ids = [...new Set(state.workouts.flatMap(w=>w.exercises.map(e=>e.exId)))];
+  const ids = [...new Set(workoutsBisHeute().flatMap(w=>w.exercises.map(e=>e.exId)))];
   const liste = ids.map(id=>{
     const ex = getEx(id); if(!ex) return null;
     const b = exBests(id);
@@ -10444,7 +10490,7 @@ function brachliegend(){
   const letzteN = cs.slice(-BRACH_ZYKLEN);
   const zuletzt = new Set(letzteN.flatMap(c=>c.ws.flatMap(w=>w.exercises.map(e=>e.exId))));
   const zaehl = {};
-  state.workouts.forEach(w=>w.exercises.forEach(e=>{
+  workoutsBisHeute().forEach(w=>w.exercises.forEach(e=>{
     if(!validSets(e).length) return;
     (zaehl[e.exId] = zaehl[e.exId] || {n:0, letztes:null});
     zaehl[e.exId].n++;
@@ -10475,7 +10521,7 @@ function statBrach(){
    Was Hevy und Gymaholic zeigen: welche Übungen tragen das Training. */
 function haeufigkeit(max){
   const acc = {};
-  state.workouts.forEach(w=>w.exercises.forEach(e=>{
+  workoutsBisHeute().forEach(w=>w.exercises.forEach(e=>{
     const n = validSets(e).length; if(!n) return;
     const ex = getEx(e.exId); if(!ex) return;
     const c = acc[e.exId] || (acc[e.exId] = {name:ex.name, einheiten:0, saetze:0, vol:0});
@@ -10589,7 +10635,7 @@ function zyklusVolumenCard(){
    wenn er wissen möchte, wo er steht —, ist die Bestenliste über alles.
    Gerechnet über exBests(), also dieselbe Quelle wie die Übungsstatistik. */
 function bestenliste(max){
-  const ids = [...new Set(state.workouts.flatMap(w=>w.exercises.map(e=>e.exId)))];
+  const ids = [...new Set(workoutsBisHeute().flatMap(w=>w.exercises.map(e=>e.exId)))];
   return ids.map(id=>{
     const ex = getEx(id); if(!ex) return null;
     const b = exBests(id);
@@ -10654,7 +10700,7 @@ function renderWeekStats(){
      Vorher stand hier „Dein erster Zyklus läuft gerade" — auch nach zwanzig
      Einheiten. Die Sätze pro Muskel stimmen trotzdem und werden gezeigt. */
   if(!planPasstZuZyklen()){
-    const alle = state.workouts;
+    const alle = workoutsBisHeute();
     lastStatsWs = alle;
     el.innerHTML = leadCard('Für deinen Plan kann ich keine Zyklen zählen.', 'warn', planHinweis())
       + `<div class="card"><h3 style="margin-bottom:8px">Sätze pro Muskelgruppe <span class="tiny">(über alle ${alle.length} Einheiten)</span></h3>
@@ -11239,14 +11285,22 @@ function renderExStats(){
       <table class="htable"><tr><th>Datum</th><th>Sätze</th><th>Best-Satz</th><th>Volumen</th></tr>
       ${h.slice(-12).reverse().map(x=>{
         /* Bester Satz nach effektiver Last und stärkerer Seite bestimmen —
-           sonst gewinnt bei einseitigen Übungen immer der linke Wert */
-        const eRef = {exId: ex.id, uni: exIsUni(ex.id)};
+           sonst gewinnt bei einseitigen Übungen immer der linke Wert.
+           Historische Flags kommen aus DER EINHEIT, nicht aus der heutigen
+           Übungseinstellung — sonst würde ein späterer Wechsel alte Sätze
+           rückwirkend umdeuten. */
+        const eRef = {exId:ex.id, uni:x.uni, as:x.as, bw:x.bw, bwkg:x.bwkg};
         const scoreOf = s => e1rm(setW(eRef,s,x.date), repsOf(eRef,s,'best'));
         const best = x.sets.reduce((bs,s)=> scoreOf(s)>=scoreOf(bs)? s:bs, x.sets[0]);
         const bw = +best.w||0;
         const bl = +best.r||0, br = (best.rr!==undefined&&best.rr!==''&&best.rr!==null)? (+best.rr||0) : bl;
         const repTxt = (eRef.uni && br!==bl) ? `${bl}/${br}` : bl;
-        return `<tr><td>${fmtDate(x.date)}</td><td>${x.sets.length}</td><td><b>${bw} kg × ${repTxt}</b></td><td>${fmtVol(x.vol)}</td></tr>`;
+        const assistEintrag=entryIsAssist(eRef);
+        const bwEintrag=!assistEintrag && (eRef.bw!==undefined?!!eRef.bw:exIsBW(ex.id));
+        const lastTxt=assistEintrag ? `${fmtW(setW(eRef,best,x.date))} kg effektiv × ${repTxt}`
+          : bwEintrag ? `${bw>0?'+'+fmtW(bw)+' kg':'Körpergewicht'} × ${repTxt}`
+          : `${fmtW(bw)} kg × ${repTxt}`;
+        return `<tr><td>${fmtDate(x.date)}</td><td>${x.sets.length}</td><td><b>${lastTxt}</b></td><td>${fmtVol(x.vol)}</td></tr>`;
       }).join('')}</table></div>`
     + exAchCard(ex);
 }
