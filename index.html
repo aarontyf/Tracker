@@ -10899,7 +10899,7 @@ const BREAK_MIN_PCT = 25;
 const BREAK_MIN_STEPS = 3;        // in Vielfachen des üblichen Gewichtssprungs
 function exBreak(exId){
   const ex = getEx(exId);
-  if(ex && ex.name === 'Rückenstrecker (Hyperextension)') return null;
+  if(ex && (ex.name === 'Rückenstrecker (Hyperextension)' || ex.name === 'Rückenstrecker (mit Gewicht)')) return null;
   const h = exHistory(exId);
   if(h.length < 3) return null;
   const step = +exOpt(exId).step || 2.5;

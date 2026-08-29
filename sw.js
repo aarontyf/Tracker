@@ -2,7 +2,7 @@
    WICHTIG: Bei jedem App-Update die Versionsnummer hochzählen (z.B. v6 → v7).
    Sonst zeigt das Handy weiter die alte Version aus dem Cache.
    Trainingsdaten liegen in localStorage und werden davon NIE angefasst. */
-const VERSION = 'ft-v90';
+const VERSION = 'ft-v91';
 const SHELL = './index.html';
 const SHELL_MARKER = 'Fitness Tracker V89';
 const ASSETS = [SHELL, './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-180.png', './recovery.html'];
