@@ -19,6 +19,7 @@
 # 3) Die Auslieferung — und nur die
 !index.html
 !sw.js
+!recovery.html
 !manifest.webmanifest
 !icon-180.png
 !icon-192.png

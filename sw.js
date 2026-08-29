@@ -2,11 +2,32 @@
    WICHTIG: Bei jedem App-Update die Versionsnummer hochzählen (z.B. v6 → v7).
    Sonst zeigt das Handy weiter die alte Version aus dem Cache.
    Trainingsdaten liegen in localStorage und werden davon NIE angefasst. */
-const VERSION = 'ft-v88';
-const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-180.png'];
+const VERSION = 'ft-v89';
+const SHELL = './index.html';
+const SHELL_MARKER = 'Fitness Tracker V89';
+const ASSETS = [SHELL, './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-180.png', './recovery.html'];
+
+async function validShell(response){
+  if(!response || !response.ok) return false;
+  try{ return (await response.clone().text()).includes(SHELL_MARKER); }
+  catch(_){ return false; }
+}
+
+async function primeCache(){
+  const cache = await caches.open(VERSION);
+  for(const url of ASSETS){
+    const response = await fetch(url, {cache:'reload'});
+    if(!response.ok) throw new Error('asset '+url+' '+response.status);
+    if(url===SHELL && !await validShell(response)) throw new Error('invalid app shell');
+    await cache.put(url, response);
+  }
+}
 
 self.addEventListener('install', e=>{
-  e.waitUntil(caches.open(VERSION).then(c=>c.addAll(ASSETS)).catch(()=>{}));
+  /* Sofort übernehmen: Auch ein beschädigter alter App-Stand kann dann nicht
+     verhindern, dass der reparierte Worker aktiv wird. localStorage bleibt
+     dabei vollständig unangetastet. */
+  e.waitUntil(primeCache().then(()=>self.skipWaiting()));
 });
 
 self.addEventListener('activate', e=>{
@@ -23,14 +44,19 @@ self.addEventListener('fetch', e=>{
   if(req.method!=='GET' || !req.url.startsWith(self.location.origin)) return;
   e.respondWith((async()=>{
     try{
-      const net = await fetch(req);
+      const url = new URL(req.url);
+      const appShell = req.mode==='navigate' && !url.pathname.endsWith('/recovery.html')
+        || url.pathname.endsWith('/index.html');
+      /* Kein HTTP-Zwischencache für die App-Hülle: So kann ein einmal
+         beschädigtes HTML nicht erneut in den Offline-Cache gelangen. */
+      const net = await fetch(req, appShell ? {cache:'no-store'} : undefined);
+      if(appShell && !await validShell(net)) throw new Error('invalid app shell');
       const cache = await caches.open(VERSION);
-      cache.put(req, net.clone());
+      await cache.put(appShell ? SHELL : req, net.clone());
       return net;
     }catch(_){
-      const hit = await caches.match(req);
+      const hit = await caches.match(req) || (req.mode==='navigate' ? await caches.match(SHELL) : null);
       if(hit) return hit;
-      if(req.mode==='navigate'){ const idx = await caches.match('./index.html'); if(idx) return idx; }
       throw _;
     }
   })());

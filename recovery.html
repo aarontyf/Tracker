@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b0f14">
+  <title>FitnessTracker reparieren</title>
+  <style>
+    :root{color-scheme:dark;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100svh;display:grid;place-items:center;background:#0b0f14;color:#f5f7fa;padding:24px}
+    main{width:min(100%,460px);padding:24px;border:1px solid #293343;border-radius:20px;background:#121821;box-shadow:0 20px 70px #0008}
+    h1{font-size:24px;margin:0 0 10px}p{color:#b9c3d0;line-height:1.55;margin:8px 0}
+    .safe{margin:18px 0;padding:13px;border:1px solid #275b49;border-radius:12px;background:#10271f;color:#bcf7dc}
+    button{width:100%;min-height:48px;margin-top:16px;border:0;border-radius:12px;background:#63a8ff;color:#07111e;font:700 16px inherit;cursor:pointer}
+    button[disabled]{opacity:.65;cursor:wait}.small{font-size:13px;color:#7f8b9b}
+  </style>
+</head>
+<body>
+  <main>
+    <h1>App wird repariert</h1>
+    <p id="status">Der beschädigte App-Zwischenspeicher wird entfernt und die aktuelle Version neu geladen.</p>
+    <div class="safe"><b>Deine Trainingsdaten bleiben erhalten.</b><br>Diese Reparatur löscht weder Workouts noch Gewicht, Erfolge, PIN oder Geräte-Sync.</div>
+    <button id="repair" type="button">Reparatur erneut starten</button>
+    <p class="small">Fitness Tracker V89 · Notfall-Reparatur</p>
+  </main>
+  <script>
+    const statusEl=document.getElementById('status');
+    const button=document.getElementById('repair');
+    let running=false;
+    async function repair(){
+      if(running) return; running=true; button.disabled=true;
+      statusEl.textContent='Zwischenspeicher wird bereinigt …';
+      try{
+        if('caches' in window){
+          const keys=await caches.keys();
+          await Promise.all(keys.map(key=>caches.delete(key)));
+        }
+        if('serviceWorker' in navigator){
+          const regs=await navigator.serviceWorker.getRegistrations();
+          await Promise.all(regs.map(reg=>reg.unregister()));
+        }
+        statusEl.textContent='Fertig. Die aktuelle App wird geladen …';
+        const target=new URL('./index.html',location.href);
+        target.searchParams.set('repair',String(Date.now()));
+        setTimeout(()=>location.replace(target.href),250);
+      }catch(_){
+        running=false; button.disabled=false;
+        statusEl.textContent='Die automatische Reparatur wurde nicht vollständig ausgeführt. Tippe bitte noch einmal auf den Knopf.';
+      }
+    }
+    button.addEventListener('click',repair);
+    repair();
+  </script>
+</body>
+</html>
