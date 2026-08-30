@@ -94,12 +94,21 @@ exports.lauf = async ({ page, p }) => {
     const morgen=tagPlus(heuteIso(),1); dsSpringe(morgen);
     const b=document.querySelector('[data-plan-tpl="morgen-vorlage"]');
     const label=b&&b.textContent.trim(); if(b) b.click();
+    const editor={planung:!!(state.active&&state.active.planung),tag:state.active&&isoTag(state.active.date),
+      typ:state.active&&einheitLabel(state.active),uebungen:state.active&&state.active.exercises.length,
+      sichtbar:getComputedStyle(document.querySelector('#train-active')).display!=='none'};
+    const vorSave=planAmTag(morgen);
+    savePlanDraft();
     const plan=planAmTag(morgen);
-    return {label,aktiv:state.active,tag:plan&&morgen,typ:plan&&einheitLabel(plan),
+    return {label,editor,vorSave,aktiv:state.active,tag:plan&&morgen,typ:plan&&einheitLabel(plan),
       uebungen:plan&&plan.exercises.length,wahl:dsWahl,naechster:tagPlus(morgen,1),morgen};
   })()`);
-  p.gleich('Vorlagen-Knopf plant einen künftigen Tag',vorlage.label,'Planen');
-  p.gleich('künftige Vorlage blockiert keinen aktiven Workout-Slot',vorlage.aktiv,null);
+  p.gleich('Vorlagen-Knopf öffnet die Planung eines künftigen Tags',vorlage.label,'Planen');
+  p.gleich('Vorlage öffnet den ausdrücklich markierten Planeditor',vorlage.editor.planung,true);
+  p.gleich('Planeditor bleibt dem ausgewählten Tag zugeordnet',vorlage.editor.tag,vorlage.morgen);
+  p.gleich('Planeditor benutzt sichtbar den aktiven Workout-Bildschirm',vorlage.editor.sichtbar,true);
+  p.gleich('vor Plan speichern wird kein Tagesplan überschrieben',vorlage.vorSave,null);
+  p.gleich('nach Plan speichern ist der aktive Editor wieder frei',vorlage.aktiv,null);
   p.gleich('Vorlage bleibt dem ausgewählten Tag zugeordnet',vorlage.tag,vorlage.morgen);
   p.gleich('Vorlage bewahrt die A/B-Variante',vorlage.typ,'Push A');
   p.gleich('Vorlage übernimmt ihre Übungen in den Tagesplan',vorlage.uebungen,1);

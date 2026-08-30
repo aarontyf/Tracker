@@ -717,19 +717,11 @@ details.erkl.warum>div{font-size:var(--fs-tiny);margin-top:2px}
   border-radius:var(--r-full);padding:2px 9px;letter-spacing:.02em}
 .dsherkunft.ist{color:var(--acc2);border-color:var(--acc-a30);background:var(--acc-a08)}
 .dsherkunft.plan{color:var(--gold);border-color:rgba(82,156,255,.34);background:rgba(82,156,255,.10)}
-/* Planzeile: Übung, Sätze, Gewicht. Zwei Zahlenfelder, mehr braucht ein Plan nicht. */
-.planrow{display:grid;grid-template-columns:1fr 62px 78px 32px;gap:8px;align-items:center;
-  padding:8px 0;border-bottom:1px solid var(--line)}
-.planrow:last-child{border-bottom:none}
-.planrow .nm{min-width:0}
-.planrow .nm b{display:block;font-size:var(--fs-sub);font-weight:650;letter-spacing:-.01em;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.planrow .nm span{display:block;font-size:var(--fs-tiny);color:var(--txt3);line-height:1.3}
-.planrow input{text-align:center;padding:9px 2px;font-weight:700;font-size:var(--fs-input)}
-.planhd{display:grid;grid-template-columns:1fr 62px 78px 32px;gap:8px;
-  font-size:var(--fs-micro);text-transform:uppercase;letter-spacing:.06em;color:var(--txt3);
-  font-weight:650;padding-bottom:4px;border-bottom:1px solid var(--line)}
-.planhd span:nth-child(2),.planhd span:nth-child(3){text-align:center}
+/* Die Tageskarte fasst einen gespeicherten Plan nur noch zusammen. Bearbeitet
+   wird er ab V97 im identischen Satz-fuer-Satz-Editor des Trainings. */
+.plansummary{border-top:1px solid var(--line);margin-top:10px}
+.plansummary .item{padding:10px 0}
+.plansummary .ttl{font-size:var(--fs-sub)}
 /* Der Folgetag ist eine echte Planungsaktion, kein versteckter Klick auf den
    einzelnen Buchstaben in der Tagesleiste. So lassen sich Montag und Dienstag
    nacheinander belegen, ohne dass der erste Plan verlassen oder ersetzt wird. */
@@ -1871,7 +1863,7 @@ details.erkl.warum>summary{min-height:44px}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V96</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V97</p>
 </div></div>
 
 <div class="mback" id="modal-sync"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="sync-title">
@@ -7382,21 +7374,24 @@ function renderHome(){
   /* ── Fortsetzen / Backup ── */
   $('#home-resume').innerHTML = state.active ? `
     <div class="banner"><span class="bi" data-ico="play" style="margin:0"></span>
-      <div class="grow"><b>${esc(einheitLabel(state.active))}-Workout läuft</b><div class="tiny">${(()=>{
+      <div class="grow"><b>${istPlanEditor(state.active)?esc(einheitLabel(state.active))+' wird geplant':esc(einheitLabel(state.active))+'-Workout läuft'}</b><div class="tiny">${(()=>{
         const tag = aktiverTag(state.active);
+        if(istPlanEditor(state.active)) return 'Plan für '
+          + isoZuDatum(tag).toLocaleDateString('de-DE',{weekday:'long',day:'2-digit',month:'2-digit'})
+          + ' · noch nicht gespeichert';
         if(tag > heuteIso()) return 'vorbereitet für '
           + isoZuDatum(tag).toLocaleDateString('de-DE',{weekday:'long',day:'2-digit',month:'2-digit'});
         const ts = satzStempel(state.active);          // V70: dieselbe Uhr wie im Training
         return ts.length ? 'seit ' + fmtDur(Date.now()-ts[0])
                          : 'vorbereitet, noch kein Satz eingetragen';
       })()}</div></div>
-      <button class="btn btn-acc btn-sm" onclick="showScreen('scr-train')">Weiter</button>
+      <button class="btn btn-acc btn-sm" onclick="showScreen('scr-train')">${istPlanEditor(state.active)?'Plan öffnen':'Weiter'}</button>
     </div>` : '';
   syncRenderHome();
 
   renderVorschlag();
   $('#btn-start-home').innerHTML = state.active
-    ? '<span class="bi" data-ico="play"></span><span>Weiter trainieren</span>'
+    ? `<span class="bi" data-ico="play"></span><span>${istPlanEditor(state.active)?'Planung fortsetzen':'Weiter trainieren'}</span>`
     : `<span class="bi" data-ico="play"></span><span>Training starten</span><span style="opacity:.72;font-weight:650;font-size:var(--fs-body)">· ${suggestLabel()}</span>`;
   /* Läuft schon ein Training oder gibt es einen Vorschlag, ist der große
      Knopf überflüssig — zwei Startwege nebeneinander verwirren nur. */
@@ -7641,7 +7636,24 @@ function renderDayBody(){
      Übungen ist eine Absicht, keine Planung — und der Unterschied ist genau
      der, ob noch etwas zu tun ist. */
   const herkunft = gefuellt? 'geplant' : plan? 'Typ gesetzt' : t.art==='pause'? 'Pause laut Rhythmus' : 'Vorausschau';
-  const wochentag = isoZuDatum(t.iso).toLocaleDateString('de-DE',{weekday:'long'});
+  const planUebungen = gefuellt ? plan.exercises.map(e=>{
+    const ex=getEx(e.exId), sets=e.sets||[];
+    const art=exArt(e.exId);
+    const ziele=sets.map(s=>{
+      if(istZeitArt(art)){
+        const teile=[];
+        if((+s.sek||0)>0) teile.push(fmtSek(s.sek));
+        if((+s.dist||0)>0) teile.push(fmtDist(s.dist));
+        return teile.join(' · ');
+      }
+      const teile=[];
+      if(s.w!==''&&s.w!=null) teile.push(fmtW(s.w)+' kg');
+      if((+s.r||0)>0) teile.push((+s.r)+' Wdh');
+      return teile.join(' × ');
+    }).filter(Boolean);
+    return `<div class="item"><div class="grow"><div class="ttl">${esc(e.name||(ex&&ex.name)||'—')}</div>
+      <div class="meta">${sets.length} ${sets.length===1?'Satz':'Sätze'}${ziele.length?' · '+esc(ziele.slice(0,3).join(' · ')):''}</div></div></div>`;
+  }).join('') : '';
   box.innerHTML = kopf(`${t.heute?'Heute':lang}`, herkunft, gefuellt? 'plan':'')
     + `<div class="card">
         <div class="row" style="gap:6px;flex-wrap:wrap;margin-bottom:12px">
@@ -7649,12 +7661,16 @@ function renderDayBody(){
         </div>
         ${typ==='Rest'
           ? `<div class="empty" style="padding:16px">Pausentag. ${istVorschau? 'So sieht es der Rhythmus Push A → Pull A → Rest → Push B → Pull B → Rest vor.':'Von dir so gesetzt.'}</div>`
-          : `<div class="planhd"><span>Übung</span><span>Sätze</span><span>kg</span><span></span></div>
-             <div id="plan-list"></div>
-             <button class="btn btn-ghost btn-block btn-sm" id="plan-add" style="margin-top:10px">＋ Übung</button>`}
+          : gefuellt
+            ? `<div class="plansummary">${planUebungen}</div>
+               <button class="btn btn-ghost btn-block btn-sm" id="plan-edit" style="margin-top:10px">Plan bearbeiten</button>`
+            : `<div class="empty" style="padding:16px">Noch keine Übungen geplant.</div>
+               <button class="btn btn-acc btn-block" id="plan-edit">${esc(label)} planen</button>`}
       </div>`
-    + (typ!=='Rest' && !state.active
-        ? `<button class="btn btn-acc btn-block btn-lg" id="plan-start">${t.zukunft? `${esc(label)} für ${esc(wochentag)} eintragen` : `${esc(label)} starten`}</button>` : '')
+    + (typ!=='Rest' && gefuellt
+        ? `<button class="btn btn-acc btn-block btn-lg" id="plan-start">${t.zukunft? `${esc(label)} vorab eintragen` : `${esc(label)} starten`}</button>` : '')
+    + (typ!=='Rest' && !gefuellt && t.heute
+        ? `<button class="btn btn-ghost btn-block btn-sm" id="plan-direct">Ohne Plan starten</button>` : '')
     + (typ!=='Rest' && !gefuellt
         ? `<button class="btn btn-ghost btn-block btn-sm" id="plan-uebernehmen">Übungen vom letzten ${esc(label)} übernehmen</button>` : '')
     + (plan? `<button class="btn btn-ghost btn-block btn-sm" id="plan-loeschen" style="margin-top:8px">Plan für diesen Tag löschen</button>`:'')
@@ -7666,29 +7682,27 @@ function renderDayBody(){
     setPlan(dsWahl, { type:s.type, variant:s.variant, exercises: s.type==='Rest'? [] : ((plan&&plan.exercises)||[]) });
     haptic(); renderTrain();
   }));
-  if(typ!=='Rest') renderPlanListe(typ);
-  const add = $('#plan-add');
-  if(add) add.addEventListener('click',()=>openPicker(id=>{
-    const ex = getEx(id); if(!ex) return;
-    const cur = (planAmTag(dsWahl)||{}).exercises || [];
-    setPlan(dsWahl, { type:typ, variant:variante, exercises: cur.concat([{ exId:id, name:ex.name, sets:leereSaetze(id) }]) });
-    $('#modal-picker').classList.remove('on');
-    renderTrain();
-  }));
+  const edit = $('#plan-edit');
+  if(edit) edit.addEventListener('click',()=>openPlanEditor(typ,variante,dsWahl,planAmTag(dsWahl)));
   const start = $('#plan-start');
   if(start) start.addEventListener('click',()=>startWorkout(typ, null, planAmTag(dsWahl), dsWahl, variante));
+  const direct = $('#plan-direct');
+  if(direct) direct.addEventListener('click',()=>startWorkout(typ,null,null,dsWahl,variante));
   const uebern = $('#plan-uebernehmen');
   if(uebern) uebern.addEventListener('click',()=>{
     const v = letzteEinheitVom(typ,variante);
     if(!v){ toast(`Noch kein ${label} aufgezeichnet — es gibt nichts zu übernehmen`); return; }
-    setPlan(dsWahl, { type:typ, variant:variante, exercises: v.exercises.map(e=>{
+    const quelle = { type:typ, variant:variante, exercises:v.exercises.map(e=>{
       const ex = getEx(e.exId); if(!ex) return null;
       const prog = progressionFor(e.exId);
       const n = validSets(e).length || exDefSets(e.exId);
       const kg = prog? prog.w : (validSets(e)[0]? setW(e, validSets(e)[0], v.date) : '');
-      return { exId:e.exId, name:ex.name, sets:Array.from({length:n},()=>({ w:(kg==null?'':kg), r:'' })) };
-    }).filter(Boolean) });
-    haptic(); renderTrain(); toast('Übernommen — Gewichte kommen aus deiner Historie');
+      const o={ exId:e.exId, name:ex.name, sets:Array.from({length:n},()=>({ w:(kg==null?'':kg), r:'' })) };
+      if(prog){ o.targets=(prog.perSet||[]).slice(); o.target=prog.r; }
+      return o;
+    }).filter(Boolean) };
+    haptic(); openPlanEditor(typ,variante,dsWahl,quelle);
+    toast('Übernommen — jetzt Satz für Satz planen');
   });
   const del = $('#plan-loeschen');
   if(del) del.addEventListener('click',()=>{
@@ -7701,76 +7715,23 @@ function renderDayBody(){
 }
 const PLAN_TYPEN = ['Push A','Pull A','Rest','Push B','Pull B'];
 
-/* Eine Zeile je Übung: Sätze und Gewicht. Mehr braucht ein Plan nicht —
-   Wiederholungen trägt man beim Training ein, nicht vorher. */
-function renderPlanListe(typ){
-  const host = $('#plan-list'); if(!host) return;
-  const plan = planAmTag(dsWahl);
-  const exs = (plan && plan.exercises) || [];
-  if(!exs.length){
-    host.innerHTML = `<div class="empty" style="padding:16px">Noch nichts geplant.<br>
-      <span class="tiny">Übungen hinzufügen — oder das letzte ${esc(typ)} übernehmen.</span></div>`;
-    return;
-  }
-  host.innerHTML = exs.map((e,i)=>{
-    const ex = getEx(e.exId);
-    const kg = (e.sets && e.sets[0] && e.sets[0].w) || '';
-    return `<div class="planrow">
-      <span class="nm"><b>${esc(e.name || (ex&&ex.name) || '—')}</b><span>${ex? esc(exMuscleLabel(ex)) : 'Übung nicht mehr vorhanden'}</span></span>
-      <input type="number" inputmode="numeric" min="1" max="12" value="${(e.sets||[]).length||1}" data-plansets="${i}" aria-label="Sätze">
-      <input type="text" inputmode="decimal" value="${kg}" placeholder="—" data-planw="${i}" aria-label="Gewicht in kg">
-      <button class="iconbtn" data-planrm="${i}" aria-label="Übung entfernen">${ICO.close}</button>
-    </div>`;
-  }).join('');
-  const schreib = (i, f) => {
-    const p = planAmTag(dsWahl); if(!p) return;
-    const kopie = JSON.parse(JSON.stringify(p.exercises));
-    f(kopie[i]);
-    setPlan(dsWahl, { type:p.type, variant:einheitVariante(p), exercises:kopie });
-  };
-  $$('[data-plansets]').forEach(inp=>inp.addEventListener('change',()=>{
-    const i = +inp.dataset.plansets;
-    const n = Math.max(1, Math.min(12, +inp.value||1));
-    inp.value = n;
-    schreib(i, e=>{
-      const kg = (e.sets[0]||{}).w || '';
-      e.sets = Array.from({length:n}, (_,k)=> e.sets[k] || { w:kg, r:'' });
-    });
-    renderPlanListe(typ);
-  }));
-  $$('[data-planw]').forEach(inp=>inp.addEventListener('change',()=>{
-    const i = +inp.dataset.planw;
-    const roh = String(inp.value).replace(',','.').trim();
-    const kg = roh===''? '' : Math.max(0, +roh||0);
-    inp.value = kg===''? '' : fmtW(kg);
-    schreib(i, e=>{ e.sets = e.sets.map(s=>({ ...s, w:kg })); });
-  }));
-  $$('[data-planrm]').forEach(b=>b.addEventListener('click',()=>{
-    const i = +b.dataset.planrm;
-    const p = planAmTag(dsWahl); if(!p) return;
-    const kopie = p.exercises.slice(); const weg = kopie.splice(i,1)[0];
-    setPlan(dsWahl, { type:p.type, variant:einheitVariante(p), exercises:kopie });
-    renderTrain();
-    withUndo(`„${weg.name}" aus dem Plan entfernt`, ()=>{
-      const p2 = planAmTag(dsWahl) || { type:typ, exercises:[] };
-      const zurueck = p2.exercises.slice(); zurueck.splice(i,0,weg);
-      setPlan(dsWahl, { type:p2.type||typ, variant:einheitVariante(p2), exercises:zurueck }); renderTrain();
-    });
-  }));
-}
-
 function renderTrain(){
-  if(state.active){ $('#train-idle').style.display='none'; $('#train-active').style.display='block'; renderActive(); startTicker(); }
+  if(state.active){
+    $('#train-idle').style.display='none'; $('#train-active').style.display='block'; renderActive();
+    /* Der Planer ist derselbe Editor, aber keine laufende Einheit. Eine
+       sekündliche Uhr wäre nicht nur unnötig, sondern eine erfundene Dauer. */
+    if(istPlanEditor(state.active)){ stopTicker(); tick(); }
+    else startTicker();
+  }
   else{
     $('#train-idle').style.display='block'; $('#train-active').style.display='none'; stopTicker();
     renderDaystrip();
     renderDayBody();
     const tpls = state.templates;
     /* Wer in der Tagesleiste einen künftigen Tag ausgewählt hat, meint auch
-       bei „Meine Workouts" genau diesen Tag. Ab V96 wird eine Vorlage dort
-       als Plan gespeichert statt sofort als einziges aktives Vorab-Workout
-       zu öffnen. Dadurch können mehrere Tage nacheinander belegt werden.
-       Das vollständige Vorab-Logging bleibt im Tagesplan über „eintragen". */
+       bei „Meine Workouts" genau diesen Tag. Ab V97 öffnet „Planen" den
+       vollständigen Workout-Editor. Erst „Plan speichern" schreibt den
+       Tagesplan; anschließend ist direkt der Folgetag bereit. */
     const tplTag = dsWahl && dsWahl >= heuteIso() ? dsWahl : heuteIso();
     const tplTagName = isoZuDatum(tplTag).toLocaleDateString('de-DE',{weekday:'long'});
     const tplIstZukunft = tplTag > heuteIso();
@@ -7789,16 +7750,13 @@ function renderTrain(){
       if(!tpl || !tag || tag<=heuteIso()) return;
       const alt=planAmTag(tag);
       if(alt && (alt.exercises||[]).length){
-        const ok=await ask('Plan ersetzen?', `Der Plan für ${tplTagName} enthält schon ${(alt.exercises||[]).length} Übungen.`, {ok:'Ersetzen',tone:'danger'});
+        const ok=await ask('Plan im Editor ersetzen?', `Der gespeicherte Plan für ${tplTagName} bleibt bis „Plan speichern" erhalten.`, {ok:'Vorlage öffnen',tone:'warn'});
         if(!ok) return;
       }
       const exercises=tpl.exIds.map(id=>{ const ex=getEx(id); return ex?{exId:id,name:ex.name,sets:leereSaetze(id)}:null; }).filter(Boolean);
       if(!exercises.length){ toast('Diese Vorlage enthält keine verfügbare Übung'); return; }
-      setPlan(tag,{type:tpl.type,variant:einheitVariante(tpl),exercises});
-      haptic('success'); toast(`${einheitLabel(tpl)} für ${tplTagName} geplant`);
-      /* Direkt zum Folgetag. Der eben gespeicherte Plan bleibt unter seinem
-         eigenen ISO-Datum bestehen und wird niemals überschrieben. */
-      dsSpringe(tagPlus(tag,1));
+      haptic();
+      openPlanEditor(tpl.type,einheitVariante(tpl),tag,{type:tpl.type,variant:einheitVariante(tpl),exercises});
     }));
     $$('[data-edit-tpl]').forEach(b=>b.addEventListener('click',()=>openRoutineEditor(b.dataset.editTpl)));
     $$('[data-del-tpl]').forEach(b=>b.addEventListener('click',()=>{
@@ -7860,6 +7818,97 @@ $('#rt-save').addEventListener('click',()=>{
   else { rtDraft.id=uid(); state.templates.push({...rtDraft}); }
   saveState(); closeModals(); toast('Workout gespeichert ✓'); renderTrain();
 });
+
+/* ══════════════════════════════════════════════════════════════════════
+   PLANEN IM WORKOUT-EDITOR                                        (V97)
+
+   Planung und Training benutzen ab hier absichtlich dieselbe Oberfläche,
+   dieselben Übungskarten und dieselben Satzfelder. `planung` ist lediglich
+   die Sicherheitsgrenze: Der Entwurf darf weder Timer noch Satzstempel,
+   Workouts, Rekorde oder Statistiken erzeugen. Erst „Plan speichern" kopiert
+   ihn nach state.plan[ISO]. Der vorhandene Tagesplan bleibt bis dahin
+   unangetastet — auch wenn der Browser geschlossen oder abgebrochen wird. */
+function istPlanEditor(a){ return !!(a && a.planung); }
+
+function planUebungenFuerEditor(exercises){
+  return (exercises||[]).map(e=>{
+    const ex=getEx(e.exId); if(!ex) return null;
+    const o={...e,exId:e.exId,name:e.name||ex.name,__live:true};
+    o.sets=(Array.isArray(e.sets)&&e.sets.length?e.sets:leereSaetze(e.exId)).map(s=>{
+      const x={...s};
+      /* Zeitstempel sind Tatsachen eines absolvierten Satzes, niemals ein
+         Planwert. Interne Platzhalter eines bereits gestarteten Workouts
+         gehören ebenfalls nicht zurück in einen Planentwurf. */
+      delete x.ts;
+      Object.keys(x).filter(k=>k.startsWith('plan')).forEach(k=>delete x[k]);
+      return x;
+    });
+    return o;
+  }).filter(Boolean);
+}
+
+function openPlanEditor(type, variant, iso, source){
+  const tag=(iso&&iso>=heuteIso())?iso:heuteIso();
+  const basis=source||{type,variant,exercises:[]};
+  const t=basis.type||type, v=einheitVariante(basis)||saubereVariante(variant);
+  state.active={
+    id:uid(), date:workoutDatumFuerTag(tag), start:Date.now(),
+    type:t, variant:v, planung:true, planIso:tag,
+    exercises:planUebungenFuerEditor(basis.exercises)
+  };
+  restEnd=null;
+  saveState(); renderTrain();
+}
+
+function planSatzFuerSpeicher(s){
+  const o={
+    w:s&&s.w!==undefined?s.w:'',
+    r:s&&s.r!==undefined?s.r:''
+  };
+  ['rr','rir','sek','dist','t'].forEach(k=>{
+    if(s&&s[k]!==undefined&&s[k]!==null&&s[k]!=='') o[k]=s[k];
+  });
+  return o;
+}
+
+function savePlanDraft(){
+  const a=state.active;
+  if(!istPlanEditor(a)) return false;
+  const exercises=(a.exercises||[]).map(e=>{
+    const ex=getEx(e.exId); if(!ex) return null;
+    const o={exId:e.exId,name:e.name||ex.name,
+      sets:(e.sets&&e.sets.length?e.sets:[{w:'',r:''}]).map(planSatzFuerSpeicher)};
+    if(e.note&&String(e.note).trim()) o.note=String(e.note).trim().slice(0,200);
+    if(Array.isArray(e.targets)&&e.targets.length) o.targets=e.targets.slice();
+    if(e.target!==undefined&&e.target!==null&&e.target!=='') o.target=e.target;
+    return o;
+  }).filter(Boolean);
+  if(!exercises.length){ toast('Mind. 1 Übung hinzufügen'); return false; }
+  const tag=a.planIso||aktiverTag(a), label=einheitLabel(a);
+  if(!state.plan) state.plan={};
+  state.plan[tag]={type:a.type,variant:einheitVariante(a),exercises};
+  state.active=null; restEnd=null;
+  saveState(); stopTicker(); haptic('success');
+  const tagName=isoZuDatum(tag).toLocaleDateString('de-DE',{weekday:'long',day:'2-digit',month:'2-digit'});
+  toast(`${label} für ${tagName} gespeichert`);
+  /* Mehrtagesplanung bleibt schnell: Speichern beendet nur den Entwurf und
+     stellt direkt den nächsten Kalendertag bereit. Der soeben gespeicherte
+     Plan bleibt unter seinem eigenen ISO-Schlüssel erhalten. */
+  dsSpringe(tagPlus(tag,1));
+  return true;
+}
+
+function workoutSatzAusPlan(s){
+  const o={w:s&&s.w!==undefined?s.w:'',r:''};
+  if(s&&s.t) o.t=s.t;
+  if(s&&s.r!==undefined&&s.r!==null&&s.r!=='') o.planR=s.r;
+  if(s&&s.rr!==undefined&&s.rr!==null&&s.rr!=='') o.planRR=s.rr;
+  if(s&&s.rir!==undefined&&s.rir!==null&&s.rir!=='') o.planRir=s.rir;
+  if(s&&s.sek!==undefined&&s.sek!==null&&s.sek!=='') o.planSek=s.sek;
+  if(s&&s.dist!==undefined&&s.dist!==null&&s.dist!=='') o.planDist=s.dist;
+  return o;
+}
+
 function startWorkout(type, tplId, plan, zielIso, variant){
   let exs = [], t = type, v=saubereVariante(variant);
   if(tplId){ const tpl = state.templates.find(x=>x.id===tplId); if(!tpl) return;
@@ -7873,8 +7922,12 @@ function startWorkout(type, tplId, plan, zielIso, variant){
     t = plan.type || type; v=einheitVariante(plan)||v;
     exs = plan.exercises.map(e=>{
       const ex = getEx(e.exId); if(!ex) return null;
-      return { exId:e.exId, name:ex.name, __live:true,
-               sets:(e.sets||[]).map(s=>({ w:(s.w===0||s.w)? s.w : '', r:'' })) };
+      const o={ exId:e.exId, name:ex.name, __live:true,
+                sets:(e.sets||[]).map(workoutSatzAusPlan) };
+      if(e.note&&String(e.note).trim()) o.note=String(e.note).trim().slice(0,200);
+      if(Array.isArray(e.targets)&&e.targets.length) o.targets=e.targets.slice();
+      if(e.target!==undefined&&e.target!==null&&e.target!=='') o.target=e.target;
+      return o;
     }).filter(Boolean);
   }
   const tag = zielIso && zielIso >= heuteIso() ? zielIso : heuteIso();
@@ -7930,6 +7983,13 @@ function stopTicker(){ if(tickerI){ clearInterval(tickerI); tickerI=null; } }
 function tick(){
   if(!state.active) return;
   const tEl = $('#tw-timer'), btn = $('#btn-rest');
+  if(istPlanEditor(state.active)){
+    tEl.textContent='Planung';
+    tEl.title='Tagesplan — keine Trainingsdauer';
+    if(restEnd) restEnd=null;
+    btn.classList.remove('hot'); btn.innerHTML=ICO.timer+' Pause';
+    return;
+  }
   /* Beim Vorab-Eintragen läuft kein erfundener Trainings-Timer. Die Werte
      werden zwar vollständig erfasst, eine Dauer entsteht aber erst, wenn
      das Training am Zieltag tatsächlich geloggt wird. */
@@ -7957,6 +8017,10 @@ function tick(){
   }
 }
 $('#btn-rest').addEventListener('click',()=>{
+  if(istPlanEditor(state.active)){
+    toast('Im Planer läuft kein Pausen-Timer');
+    return;
+  }
   if(aktivesTrainingIstZukunft()){
     toast('Vorab-Eintrag — der Pausen-Timer startet erst am Trainingstag');
     return;
@@ -8080,6 +8144,7 @@ function satzFeedbackInhalt(v){
   return `<span class="mark" aria-hidden="true">${mark}</span><span>${esc(v.text)} <span class="basis">· ${esc(v.basis)}</span></span>`;
 }
 function liveSatzVergleich(ei, si){
+  if(istPlanEditor(state.active)) return null;
   const e=state.active&&state.active.exercises[ei]; if(!e) return null;
   const prev=prevSession(e.exId), ps=vorherigerSatzFuer(e,si,prev);
   if(!prev || !ps) return null;
@@ -8221,7 +8286,16 @@ function scheibenZeile(ei){
 
 function renderActive(){
   const a = state.active; if(!a) return;
-  $('#tw-type').textContent = einheitLabel(a)+'-Workout';
+  const planung=istPlanEditor(a);
+  $('#tw-type').textContent = einheitLabel(a)+(planung?' planen':'-Workout');
+  const restBtn=$('#btn-rest'), fertigBtn=$('#btn-finish'), abbrechenBtn=$('#btn-cancel-w');
+  restBtn.disabled=planung;
+  restBtn.setAttribute('aria-disabled',planung?'true':'false');
+  restBtn.title=planung?'Beim Planen läuft kein Pausen-Timer':'Pausen-Timer';
+  fertigBtn.textContent=planung?'Plan speichern':'Fertig';
+  abbrechenBtn.textContent=planung?'Planung schließen':'Training verwerfen';
+  const meter=$('#tw-progress');
+  meter.setAttribute('aria-label',planung?'Arbeitssätze im Plan':'Arbeitssätze abgeschlossen');
   const tag = aktiverTag(a), heute = heuteIso(), morgen = tagPlus(heute,1);
   $('#tw-date').textContent = tag===heute ? 'Heute'
     : tag===morgen ? 'Morgen · '+isoZuDatum(tag).toLocaleDateString('de-DE',{weekday:'short'}).replace('.','')
@@ -8256,7 +8330,7 @@ function renderActive(){
         <button class="iconbtn" data-calc="${ei}" aria-label="Scheiben-Rechner">${ICO.scale}</button>
         <button class="iconbtn" data-exopt="${ei}" aria-label="Übung einstellen">${ICO.gear}</button>
         <button class="iconbtn" data-rmex="${ei}" aria-label="Übung entfernen">${ICO.trash}</button></div>
-      ${prog? `<div class="progbox"><div class="grow"><div class="tiny up" style="color:var(--acc2);letter-spacing:1px">Heute empfohlen</div>
+      ${prog? `<div class="progbox"><div class="grow"><div class="tiny up" style="color:var(--acc2);letter-spacing:1px">${planung?'Empfohlen':'Heute empfohlen'}</div>
           <b style="font-size:var(--fs-body)">${prog.txt}</b>
           <details class="erkl warum"><summary>Warum?</summary><div>${esc(prog.why)}</div></details></div>
           <button class="btn btn-acc btn-sm" data-applyprog="${ei}">Übernehmen</button></div>`:''}
@@ -8322,7 +8396,10 @@ function renderActive(){
           const filled = satzHatInhalt(s);
           const tcls = s.t==='w'?'warm':s.t==='d'?'drop':'';
           const lbl = s.t? SETTYPE[s.t][0] : (si+1);
-          const cmp = ps&&prevRef ? satzVergleich(liveRef,s,a.date,prevRef,ps,prev.date) : null;
+          /* Ein Planwert ist ein Ziel, keine Leistung. Er darf deshalb weder
+             grün/rot bewertet noch als Fortschritt gegenüber dem letzten
+             Training ausgegeben werden. Die Vorwerte bleiben als Hilfe da. */
+          const cmp = !planung&&ps&&prevRef ? satzVergleich(liveRef,s,a.date,prevRef,ps,prev.date) : null;
           const feedback = `<div class="setfeedback${cmp?' '+cmp.status:''}" data-setfeedback="${ei}-${si}">${satzFeedbackInhalt(cmp)}</div>`;
 
           if(istZeitArt(art)){
@@ -8336,9 +8413,9 @@ function renderActive(){
               <button class="idx" data-settype title="Satz-Typ wechseln">${lbl}</button>
               ${vorher}
               <input type="number" inputmode="numeric" step="5" min="0" aria-label="Sekunden"
-                     placeholder="${ps? (+ps.sek||0) : 'Sek'}" value="${s.sek!==''&&s.sek!=null? s.sek:''}" data-f="sek">
+                     placeholder="${s.planSek!==undefined&&s.planSek!==''?s.planSek:(ps? (+ps.sek||0) : 'Sek')}" value="${s.sek!==''&&s.sek!=null? s.sek:''}" data-f="sek">
               ${art==='kardio' ? `<input type="number" inputmode="numeric" step="10" min="0" aria-label="Meter"
-                     placeholder="${ps? (+ps.dist||0) : 'm'}" value="${s.dist!==''&&s.dist!=null? s.dist:''}" data-f="dist">` : ''}
+                     placeholder="${s.planDist!==undefined&&s.planDist!==''?s.planDist:(ps? (+ps.dist||0) : 'm')}" value="${s.dist!==''&&s.dist!=null? s.dist:''}" data-f="dist">` : ''}
               <button class="setdel" data-delset title="Satz löschen">✕</button>
             </div>${feedback}`;
           }
@@ -8347,9 +8424,9 @@ function renderActive(){
             <button class="idx" data-settype title="Satz-Typ wechseln">${lbl}</button>
             ${ps? `<button class="prevpill" data-pf data-w="${+ps.w||0}" data-r="${ps.r||''}" data-rr="${ps.rr!==undefined?ps.rr:''}">${fmtS(ps).replace('×',' kg × ').replace('BW kg','BW')}</button>` : `<span class="prevpill none">—</span>`}
             <input type="number" inputmode="decimal" step="0.5" min="0" placeholder="${ps? +ps.w||0 : (assist?'Hilfe':isBW?'+kg':'kg')}" value="${s.w!==''&&s.w!=null? s.w:''}" data-f="w">
-            <input type="number" inputmode="numeric" step="1" min="0" placeholder="${(e.targets&&e.targets[si])||e.target||(ps? ps.r : (uni?'L':'Wdh'))}" value="${s.r!==''&&s.r!=null? s.r:''}" data-f="r">
-            ${uni? `<input type="number" inputmode="numeric" step="1" min="0" placeholder="${ps&&ps.rr!==undefined&&ps.rr!==''?ps.rr:(ps?ps.r:'R')}" value="${s.rr!==''&&s.rr!=null&&s.rr!==undefined? s.rr:''}" data-f="rr">`:''}
-            ${useRir? `<input class="riri" type="number" inputmode="numeric" step="1" min="0" max="10" placeholder="–" value="${s.rir!==''&&s.rir!=null&&s.rir!==undefined? s.rir:''}" data-f="rir">`:''}
+            <input type="number" inputmode="numeric" step="1" min="0" placeholder="${s.planR!==undefined&&s.planR!==''?s.planR:((e.targets&&e.targets[si])||e.target||(ps? ps.r : (uni?'L':'Wdh')))}" value="${s.r!==''&&s.r!=null? s.r:''}" data-f="r">
+            ${uni? `<input type="number" inputmode="numeric" step="1" min="0" placeholder="${s.planRR!==undefined&&s.planRR!==''?s.planRR:(ps&&ps.rr!==undefined&&ps.rr!==''?ps.rr:(ps?ps.r:'R'))}" value="${s.rr!==''&&s.rr!=null&&s.rr!==undefined? s.rr:''}" data-f="rr">`:''}
+            ${useRir? `<input class="riri" type="number" inputmode="numeric" step="1" min="0" max="10" placeholder="${s.planRir!==undefined&&s.planRir!==''?s.planRir:'–'}" value="${s.rir!==''&&s.rir!=null&&s.rir!==undefined? s.rir:''}" data-f="rir">`:''}
             <button class="setdel" data-delset title="Satz löschen">✕</button>
           </div>${feedback}`;
         }).join('');
@@ -8381,11 +8458,14 @@ function activeProgress(){
     total++;
     if(satzHatInhalt(s)) done++;
   }));
+  if(istPlanEditor(state.active)) done=total;
   return {done,total,pct:total?Math.round(done/total*100):0};
 }
 function refreshSetCount(){
   const p=activeProgress(), count=$('#tw-setcount'), meter=$('#tw-progress');
-  if(count) count.textContent=p.done+'/'+p.total+' Sätze';
+  if(count) count.textContent=istPlanEditor(state.active)
+    ? p.total+' '+(p.total===1?'Satz':'Sätze')+' geplant'
+    : p.done+'/'+p.total+' Sätze';
   if(meter){
     meter.setAttribute('aria-valuemax',String(p.total));
     meter.setAttribute('aria-valuenow',String(p.done));
@@ -8393,7 +8473,7 @@ function refreshSetCount(){
   }
 }
 function startRestFor(ei, set){
-  if(restEnd || aktivesTrainingIstZukunft()) return;
+  if(restEnd || istPlanEditor(state.active) || aktivesTrainingIstZukunft()) return;
   const base = exOpt(state.active.exercises[ei].exId).rest || state.settings.rest || 90;
   restEnd = Date.now() + (set.t==='w' ? Math.round(base/2) : base)*1000; tick();
 }
@@ -8621,6 +8701,15 @@ $('#btn-add-ex').addEventListener('click',()=>openPicker(id=>{
   saveState(); renderActive(); $('#modal-picker').classList.remove('on');
 }));
 $('#btn-cancel-w').addEventListener('click', async ()=>{
+  const planung=istPlanEditor(state.active);
+  if(planung){
+    const ok=await ask('Planung schließen?', 'Ungespeicherte Änderungen gehen verloren. Dein bisheriger Tagesplan bleibt unverändert.', {ok:'Schließen',tone:'warn'});
+    if(!ok) return;
+    const backup=JSON.parse(JSON.stringify(state.active));
+    state.active=null; restEnd=null; saveState(); stopTicker(); renderTrain();
+    withUndo('Planung geschlossen', ()=>{ state.active=backup; saveState(); renderTrain(); });
+    return;
+  }
   const logged = totalActiveSets();
   const ok = await ask('Training verwerfen?',
     logged ? `${logged} geloggte ${logged===1?'Satz geht':'Sätze gehen'} verloren.` : 'Alle Eingaben gehen verloren.',
@@ -8634,6 +8723,7 @@ $('#btn-finish').addEventListener('click',finishWorkout);
 
 async function finishWorkout(){
   const a = state.active;
+  if(istPlanEditor(a)){ savePlanDraft(); return; }
   const zielTag = aktiverTag(a);
   const istNochZukunft = zielTag > heuteIso();
   const cleaned = a.exercises.map(e=>{
@@ -9993,7 +10083,9 @@ function uebungEinplanen(exId){
   if(state.active){
     state.active.exercises.push({exId, name:ex.name, __live:true, sets:leereSaetze(exId)});
     saveState(); renderActive();
-    return {ziel:'training', txt:`„${ex.name}" ist im laufenden Training`};
+    return istPlanEditor(state.active)
+      ? {ziel:'plan', txt:`„${ex.name}" ist im geöffneten Plan`}
+      : {ziel:'training', txt:`„${ex.name}" ist im laufenden Training`};
   }
   const tag = heuteIso();
   const vorhanden = planAmTag(tag);
@@ -10831,6 +10923,9 @@ function sessionLoad(w){
    Uhrzeit nicht, denn gemacht wurde der Satz ja damals. */
 function satzGestempelt(set){
   if(!state.active || !set) return;
+  /* Ein Zielwert im Planer ist nicht absolviert. Ohne diese Grenze würden
+     geplante Wiederholungen einen echten Satz-Zeitstempel bekommen. */
+  if(istPlanEditor(state.active)) return;
   /* Ein am Montag für Dienstag ausgefüllter Satz hat am Montag nicht
      stattgefunden. Gewicht und Wiederholungen werden gespeichert, aber ein
      Zeitstempel — und damit eine scheinbar gemessene Dauer — wäre erfunden. */
