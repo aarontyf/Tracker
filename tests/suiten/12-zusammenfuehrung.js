@@ -96,5 +96,5 @@ exports.lauf = async ({ page, p }) => {
 
   await js(page, `showScreen('scr-settings')`).catch(()=>{});
   const version = await text(page, 'body');
-  p.enthaelt('ausgelieferte Oberfläche trägt Version V92', version, 'Fitness Tracker V92');
+  p.enthaelt('ausgelieferte Oberfläche trägt Version V93', version, 'Fitness Tracker V93');
 };

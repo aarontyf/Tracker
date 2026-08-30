@@ -45,7 +45,7 @@ exports.lauf = async ({ page, p }) => {
   p.gleich('Legacy Push/Pull erzeugt keinen neuen A/B-Zyklus', legacy.closed, 0);
   p.gleich('Plan gilt erst ab explizitem Push A als neues System', legacy.passt, false);
   p.enthaelt('Übersicht erklärt den Beginn des neuen Systems', legacy.overview, 'beginnt mit Push A');
-  p.enthaelt('Zyklus-Reiter verweist Altbestand nach Gesamt', legacy.zyklus, 'Gesamt');
+  p.enthaelt('Zyklus-Reiter wertet den Altbestand wieder historisch aus', legacy.zyklus, 'historischer Push/Pull-Zyklus');
 
   const zyklen = await js(page, `(() => {
     const ex=EXDB.find(e=>!istZeitArt(exArt(e.id)) && !exIsBW(e.id) && !exIsAssist(e.id));
