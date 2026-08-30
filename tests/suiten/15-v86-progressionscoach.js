@@ -113,8 +113,10 @@ exports.lauf = async ({ page, p }) => {
     const now=Date.now();
     state.exOpt={[ex.id]:{lo:6,hi:8,step:2.5,sets:3}};
     state.settings.favEx=[ex.id];
+    const schritte=[{type:'Push',variant:'A'},{type:'Pull',variant:'A'},
+      {type:'Push',variant:'B'},{type:'Pull',variant:'B'}];
     state.workouts=Array.from({length:4},(_,i)=>({id:'v86-ziel-'+i,
-      date:new Date(now-(4-i)*86400000).toISOString(),type:'Push',prs:[],
+      date:new Date(now-(4-i)*86400000).toISOString(),type:schritte[i].type,variant:schritte[i].variant,prs:[],
       exercises:[{exId:ex.id,name:ex.name,uni:false,sets:Array.from({length:3},()=>({w:70,r:8}))}]
         .concat(i===3&&zeit?[{exId:zeit.id,name:zeit.name,sets:[{sek:60}]}]:[])}));
     state.active=null; saveState(); statsPanel='overview'; renderStats();

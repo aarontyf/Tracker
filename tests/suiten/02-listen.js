@@ -81,13 +81,13 @@ exports.lauf = async ({ page, p }) => {
 
   const chips = await js(page, `[...document.querySelectorAll('#hist-filters .chip')].map(c=>c.dataset.hf)`);
   p.mind('Verlauf hat Filter aus den echten Daten', chips.length, 3);
-  p.pruefe('Filter enthalten die Trainingsarten', chips.includes('Push'), chips.join(', '));
+  p.pruefe('Filter enthalten die A/B-Trainingsarten', chips.includes('Push A') && chips.includes('Push B'), chips.join(', '));
 
-  await klick(page, '#hist-filters .chip[data-hf="Push"]');
+  await klick(page, '#hist-filters .chip[data-hf="Push A"]');
   await warte(page, 250);
   const nurPush = await js(page, `document.querySelectorAll('#hist-list [data-wid]').length`);
   p.pruefe('Filter greift', nurPush > 0 && nurPush < 60, `${nurPush} Push-Einheiten`);
-  p.pruefe('gefilterter Chip ist markiert', await js(page, `document.querySelector('#hist-filters .chip[data-hf="Push"]').classList.contains('on')`));
+  p.pruefe('gefilterter Chip ist markiert', await js(page, `document.querySelector('#hist-filters .chip[data-hf="Push A"]').classList.contains('on')`));
 
   /* Filter und Suche greifen über ALLE Einheiten, nicht nur den Stapel. */
   const alleWs = await js(page, `state.workouts.length`);

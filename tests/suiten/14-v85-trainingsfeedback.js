@@ -88,9 +88,10 @@ exports.lauf = async ({ page, p }) => {
     const ex=EXDB.find(e=>e.name==='Bankdrücken (Langhantel)');
     const now=Date.now();
     const mins=[40,50,60], rpes=[6,7,8];
+    const schritte=[{type:'Push',variant:'A'},{type:'Pull',variant:'A'},{type:'Push',variant:'B'}];
     state.workouts=mins.map((min,i)=>{
       const start=now-(3-i)*86400000;
-      return {id:'v85-load-'+i,date:new Date(start).toISOString(),type:i===1?'Pull':'Push',
+      return {id:'v85-load-'+i,date:new Date(start).toISOString(),type:schritte[i].type,variant:schritte[i].variant,
         start,end:start+min*60000,durFix:min*60000,rpe:rpes[i],prs:[],
         note:i===2?'Schulter stabil, Tempo gut.':'',
         exercises:[{exId:ex.id,name:ex.name,sets:[{w:70+i*2.5,r:8}]}]};
