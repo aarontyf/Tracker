@@ -730,6 +730,10 @@ details.erkl.warum>div{font-size:var(--fs-tiny);margin-top:2px}
   font-size:var(--fs-micro);text-transform:uppercase;letter-spacing:.06em;color:var(--txt3);
   font-weight:650;padding-bottom:4px;border-bottom:1px solid var(--line)}
 .planhd span:nth-child(2),.planhd span:nth-child(3){text-align:center}
+/* Der Folgetag ist eine echte Planungsaktion, kein versteckter Klick auf den
+   einzelnen Buchstaben in der Tagesleiste. So lassen sich Montag und Dienstag
+   nacheinander belegen, ohne dass der erste Plan verlassen oder ersetzt wird. */
+.plan-next{margin-top:8px;color:var(--acc2)}
 /* .typegrid und .typebtn gehörten zum Raster „Push / Pull / Legs / Andere",
    das die Wochenleiste in V63 ersetzt hat. Sechs Regeln ohne Treffer —
    entfernt V64. */
@@ -1867,7 +1871,7 @@ details.erkl.warum>summary{min-height:44px}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V95</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V96</p>
 </div></div>
 
 <div class="mback" id="modal-sync"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="sync-title">
@@ -7583,6 +7587,9 @@ function renderDaystrip(){
 function renderDayBody(){
   const t = tagInfo(dsWahl), box = $('#ds-body');
   const lang = isoZuDatum(t.iso).toLocaleDateString('de-DE',{weekday:'long', day:'2-digit', month:'2-digit'});
+  const folgeIso = tagPlus(t.iso, 1), folge = tagInfo(folgeIso);
+  const folgeTag = isoZuDatum(folgeIso).toLocaleDateString('de-DE',{weekday:'long'});
+  const folgeVerb = (folge.ist || folge.plan) ? 'öffnen' : 'planen';
   const kopf = (titel, herkunft, klasse) => `<div class="dstag"><h2>${titel}</h2>
     ${herkunft? `<span class="dsherkunft ${klasse||''}">${herkunft}</span>`:''}</div>`;
 
@@ -7603,9 +7610,11 @@ function renderDayBody(){
             <div class="meta">${validSets(e).length} × ${validSets(e).map(s=>fmtW(setW(e,s,w.date))).join(' · ')} kg</div></div></div>`;
         }).join('')}</div>`
       + (w.vorab? `<button class="btn btn-ghost btn-block btn-sm" id="ds-vorab-edit">Vorab-Eintrag bearbeiten</button>`:'')
-      + (t.heute && !state.active? `<button class="btn btn-ghost btn-block" id="ds-noch">Noch ein Training starten</button>`:'');
+      + (t.heute && !state.active? `<button class="btn btn-ghost btn-block" id="ds-noch">Noch ein Training starten</button>`:'')
+      + (!t.vergangen? `<button class="btn btn-ghost btn-block btn-sm plan-next" id="plan-next">${esc(folgeTag)} ${folgeVerb} →</button>`:'');
     const n = $('#ds-noch'); if(n) n.addEventListener('click',()=>{ const s=suggestWorkout(); startWorkout(s.type,null,null,null,s.variant); });
     const e = $('#ds-vorab-edit'); if(e) e.addEventListener('click',()=>openWEdit(w.id));
+    const next = $('#plan-next'); if(next) next.addEventListener('click',()=>{ haptic(); dsSpringe(folgeIso); });
     return;
   }
 
@@ -7648,7 +7657,8 @@ function renderDayBody(){
         ? `<button class="btn btn-acc btn-block btn-lg" id="plan-start">${t.zukunft? `${esc(label)} für ${esc(wochentag)} eintragen` : `${esc(label)} starten`}</button>` : '')
     + (typ!=='Rest' && !gefuellt
         ? `<button class="btn btn-ghost btn-block btn-sm" id="plan-uebernehmen">Übungen vom letzten ${esc(label)} übernehmen</button>` : '')
-    + (plan? `<button class="btn btn-ghost btn-block btn-sm" id="plan-loeschen" style="margin-top:8px">Plan für diesen Tag löschen</button>`:'');
+    + (plan? `<button class="btn btn-ghost btn-block btn-sm" id="plan-loeschen" style="margin-top:8px">Plan für diesen Tag löschen</button>`:'')
+    + `<button class="btn btn-ghost btn-block btn-sm plan-next" id="plan-next">${esc(folgeTag)} ${folgeVerb} →</button>`;
 
   $$('[data-plantyp]').forEach(b=>b.addEventListener('click',()=>{
     const s = schrittAusLabel(b.dataset.plantyp);
@@ -7686,6 +7696,8 @@ function renderDayBody(){
     delete state.plan[dsWahl]; saveState(); haptic(); renderTrain();
     withUndo('Plan gelöscht', ()=>{ state.plan[dsWahl] = backup; saveState(); renderTrain(); });
   });
+  const next = $('#plan-next');
+  if(next) next.addEventListener('click',()=>{ haptic(); dsSpringe(folgeIso); });
 }
 const PLAN_TYPEN = ['Push A','Pull A','Rest','Push B','Pull B'];
 
@@ -7755,19 +7767,39 @@ function renderTrain(){
     renderDayBody();
     const tpls = state.templates;
     /* Wer in der Tagesleiste einen künftigen Tag ausgewählt hat, meint auch
-       bei „Meine Workouts" genau diesen Tag. Ein Vorlagenstart darf nicht
-       still wieder auf heute zurückspringen. Bei einem vergangenen Tag
-       bleibt „Start" dagegen bewusst ein Start für heute. */
+       bei „Meine Workouts" genau diesen Tag. Ab V96 wird eine Vorlage dort
+       als Plan gespeichert statt sofort als einziges aktives Vorab-Workout
+       zu öffnen. Dadurch können mehrere Tage nacheinander belegt werden.
+       Das vollständige Vorab-Logging bleibt im Tagesplan über „eintragen". */
     const tplTag = dsWahl && dsWahl >= heuteIso() ? dsWahl : heuteIso();
     const tplTagName = isoZuDatum(tplTag).toLocaleDateString('de-DE',{weekday:'long'});
+    const tplIstZukunft = tplTag > heuteIso();
     $('#tpl-section').innerHTML = `<h2>Meine Workouts</h2>` + (tpls.length ? `<div class="card" style="padding:2px 12px">${
       tpls.map(t=>`<div class="item"><div class="grow"><div class="ttl">${esc(t.name)}</div><div class="meta">${t.exIds.length} Übungen · ${esc(einheitLabel(t))}</div></div>
-        <button class="btn btn-acc btn-sm" data-start-tpl="${t.id}">${tplTag>heuteIso()? `Für ${esc(tplTagName)}` : 'Start'}</button>
+        ${tplIstZukunft
+          ? `<button class="btn btn-acc btn-sm" data-plan-tpl="${t.id}" data-plan-tag="${tplTag}" aria-label="${esc(t.name)} für ${esc(tplTagName)} planen">Planen</button>`
+          : `<button class="btn btn-acc btn-sm" data-start-tpl="${t.id}">Start</button>`}
         <button class="iconbtn" data-edit-tpl="${t.id}" aria-label="Workout bearbeiten">${ICO.edit}</button>
         <button class="iconbtn" data-del-tpl="${t.id}" aria-label="Workout löschen">${ICO.trash}</button></div>`).join('')
     }</div>` : `<div class="empty" style="padding:16px"><div class="big">${ICO.inbox}</div>Noch keine Workouts angelegt.<br>Erstell dir z.B. „Push A" mit deinen festen Übungen.</div>`)
     + `<button class="btn btn-ghost btn-block" id="btn-new-rt">＋ Workout erstellen</button>`;
     $$('[data-start-tpl]').forEach(b=>b.addEventListener('click',()=>startWorkout(null,b.dataset.startTpl,null,tplTag)));
+    $$('[data-plan-tpl]').forEach(b=>b.addEventListener('click',async()=>{
+      const tag=b.dataset.planTag, tpl=state.templates.find(x=>x.id===b.dataset.planTpl);
+      if(!tpl || !tag || tag<=heuteIso()) return;
+      const alt=planAmTag(tag);
+      if(alt && (alt.exercises||[]).length){
+        const ok=await ask('Plan ersetzen?', `Der Plan für ${tplTagName} enthält schon ${(alt.exercises||[]).length} Übungen.`, {ok:'Ersetzen',tone:'danger'});
+        if(!ok) return;
+      }
+      const exercises=tpl.exIds.map(id=>{ const ex=getEx(id); return ex?{exId:id,name:ex.name,sets:leereSaetze(id)}:null; }).filter(Boolean);
+      if(!exercises.length){ toast('Diese Vorlage enthält keine verfügbare Übung'); return; }
+      setPlan(tag,{type:tpl.type,variant:einheitVariante(tpl),exercises});
+      haptic('success'); toast(`${einheitLabel(tpl)} für ${tplTagName} geplant`);
+      /* Direkt zum Folgetag. Der eben gespeicherte Plan bleibt unter seinem
+         eigenen ISO-Datum bestehen und wird niemals überschrieben. */
+      dsSpringe(tagPlus(tag,1));
+    }));
     $$('[data-edit-tpl]').forEach(b=>b.addEventListener('click',()=>openRoutineEditor(b.dataset.editTpl)));
     $$('[data-del-tpl]').forEach(b=>b.addEventListener('click',()=>{
       const id = b.dataset.delTpl;
