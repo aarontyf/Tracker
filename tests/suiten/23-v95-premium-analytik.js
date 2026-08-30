@@ -79,5 +79,6 @@ exports.lauf = async ({ page, p }) => {
   }))()`);
   p.pruefe('390-px-Ansicht erzeugt keinen horizontalen Scrollbereich',
     mobil.html<=mobil.viewport && mobil.body<=mobil.viewport);
-  p.gleich('sichtbare Buttons und Aufklapper sind mindestens 44 × 44 px groß', mobil.kleineTouchziele.length, 0);
+  p.pruefe('sichtbare Buttons und Aufklapper sind mindestens 44 × 44 px groß',
+    mobil.kleineTouchziele.length===0,JSON.stringify(mobil.kleineTouchziele));
 };

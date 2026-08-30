@@ -1280,6 +1280,7 @@ h2{letter-spacing:-.03em}.tiny{line-height:1.35}
   padding:15px;margin-bottom:10px;background:
   linear-gradient(145deg,rgba(255,255,255,.045),transparent 42%),var(--s1);box-shadow:var(--e1)}
 .card:hover{border-color:var(--line-2)}
+button{min-width:44px;min-height:44px}
 .btn{border-radius:var(--r-md)}
 .btn-acc{background:var(--grad-a);box-shadow:var(--glow)}
 .btn-ghost{background:rgba(255,255,255,.035);border-color:var(--line)}
@@ -10348,7 +10349,7 @@ function overviewNextGoalsCard(){
     <div style="margin-top:6px">${rows.map(x=>`<button class="ovrow" data-stat-ex="${esc(x.id)}">
       <span><span class="ttl">${x.fav?'★ ':''}${esc(x.name)}</span><span class="meta">${esc(x.p.txt)}${x.stall>=3?` · ${x.stall} Einheiten ohne Bestwert`:''}</span></span>
       <span class="value">${esc(x.badge)}</span><span class="chev">›</span></button>`).join('')}</div>
-    </div>`;
+    <details class="metric-method"><summary>Berechnung</summary><p>Ziele werden nie als geschafft eingetragen.</p></details></div>`;
 }
 function overviewLoadCard(){
   const rated=workoutsBisHeute().map(w=>{ const r=sessionRpe(w); return {w,r,load:r===null?null:sessionLoad(w)}; })
