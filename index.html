@@ -1219,6 +1219,9 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
   font-size:var(--fs-input);font-variant-numeric:tabular-nums}
 .sync-actions{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp2)}
 .sync-actions .btn:only-child{grid-column:1/-1}
+/* Auch während der Desktop-Pop-Animation bleibt die reale Trefferfläche
+   mindestens 44 px hoch: 46 px × Startskalierung .965 = 44,39 px. */
+#modal-sync .btn{min-height:46px}
 .sync-restore{min-height:46px;flex-shrink:0}
 .sync-meta{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp2)}
 .sync-meta>div{padding:12px;background:var(--s2);border:1px solid var(--line);border-radius:var(--r-md)}
