@@ -11,13 +11,13 @@ const path = require('node:path');
   const previous = new Date(now.getTime() - 86400000).toISOString();
   const row = {
     updated_at: now.toISOString(),
-    schema_version: 1,
+    schema_version: 2,
     payload: {
-      schemaVersion: 1,
+      schemaVersion: 2,
       generatedAt: now.toISOString(),
       sharedCategories: ['workoutHistory', 'bodyMetrics'],
       trainingProfile: { weightKg: 80, goal: 'aufbau' },
-      trainingPreferences: { repRange: { min: 6, max: 9 } },
+      trainingPreferences: { cycleSessions: 4, cycleDays: 6, cycleOrder: ['Push A', 'Pull A', 'Push B', 'Pull B'], repRange: { min: 6, max: 9 } },
       state: {
         workouts: [{
           id: 'w1', date: previous, type: 'Ganzkörper', rpe: 8, vorab: true,
@@ -33,8 +33,8 @@ const path = require('node:path');
         bodyweight: [{ d: day, kg: 80 }, { d: '2026-01-01', kg: 82 }],
         measures: [{ d: day, waist: 81.5 }],
         goals: [{ id: 'g1', art: 'gewicht', exId: 'bench', ziel: 110 }],
-        plan: { [day]: { type: 'Push', exIds: ['bench'], exercises: [] } },
-        templates: [{ id: 't1', name: 'Push A', type: 'Push', exIds: ['bench'] }],
+        plan: { [day]: { type: 'Push', variant: 'B', exIds: ['bench'], exercises: [] } },
+        templates: [{ id: 't1', name: 'Push A', type: 'Push', variant: 'A', exIds: ['bench'] }],
         customEx: [{ id: 'custom-1', name: 'Eigene Übung', grp: 'brust' }],
         exOpt: { bench: { rest: 120, sets: 3 } },
         active: null,
@@ -53,6 +53,8 @@ const path = require('node:path');
   assert.equal(overview.cardioSeconds, 600);
   assert.equal(overview.distanceM, 2000);
   assert.equal(overview.averageDurationMinutes, 60);
+  assert.equal('workoutsPerWeek' in overview, false);
+  assert.equal(overview.cycleStatistics.targetUnits, 4);
 
   const workouts = lib.listWorkouts(row, { limit: 10, type: 'Ganzkörper' });
   assert.equal(workouts.count, 1);
@@ -72,6 +74,8 @@ const path = require('node:path');
   const plan = lib.getTrainingPlan(row);
   assert.equal(plan.plannedDays.length, 1);
   assert.deepEqual(plan.plannedDays[0].exerciseIds, ['bench']);
+  assert.equal(plan.plannedDays[0].unit, 'Push B');
+  assert.equal(plan.templates[0].unit, 'Push A');
   assert.equal(plan.customExercises.length, 1);
   assert.equal(plan.exerciseOptions.bench.rest, 120);
   assert.equal(plan.trainingProfile.weightKg, 80);
@@ -81,8 +85,28 @@ const path = require('node:path');
   assert.equal(metrics.bodyweightChangeKg, -2);
   assert.equal(metrics.measurements[0].waistCm, 81.5);
 
+  const cycleDate = (offset) => new Date(now.getTime() + offset * 86400000).toISOString();
+  const cycleRow = {
+    updated_at: now.toISOString(), schema_version: 2,
+    payload: { schemaVersion: 2, state: { workouts: [
+      { id: 'pa1', date: cycleDate(-6), type: 'Push', variant: 'A', exercises: [] },
+      { id: 'la1', date: cycleDate(-5), type: 'Pull', variant: 'A', exercises: [] },
+      { id: 'pb1', date: cycleDate(-3), type: 'Push', variant: 'B', exercises: [] },
+      { id: 'lb1', date: cycleDate(-2), type: 'Pull', variant: 'B', exercises: [] },
+      { id: 'pa2', date: cycleDate(0), type: 'Push', variant: 'A', exercises: [] },
+    ] } },
+  };
+  const cycleOverview = lib.getTrainingOverview(cycleRow, 28);
+  assert.equal(cycleOverview.cycleStatistics.started, 2);
+  assert.equal(cycleOverview.cycleStatistics.complete, 1);
+  assert.equal(cycleOverview.cycleStatistics.averageUnitsPerCycle, 4);
+  assert.deepEqual(cycleOverview.cycleStatistics.current.missingUnits, ['Pull A', 'Push B', 'Pull B']);
+  assert.equal(cycleOverview.byType['Push A'], 2);
+  assert.equal(cycleOverview.byType['Pull B'], 1);
+
   const edge = fs.readFileSync(path.join(__dirname, '../supabase/functions/gymtracker-mcp/index.ts'), 'utf8');
   const sql = fs.readFileSync(path.join(__dirname, '../supabase/migrations/20260825000000_chatgpt_readonly.sql'), 'utf8');
+  const cycleSql = fs.readFileSync(path.join(__dirname, '../supabase/migrations/20260830000000_cycle_statistics_v2.sql'), 'utf8');
   const consent = fs.readFileSync(path.join(__dirname, '../oauth/consent/index.html'), 'utf8');
   const serviceWorker = fs.readFileSync(path.join(__dirname, '../sw.js'), 'utf8');
   assert(!/service[_-]?role|sb_secret_/i.test(edge), 'Edge Function must not contain a privileged key');
@@ -102,6 +126,7 @@ const path = require('node:path');
   assert(/tracker_ai_access_token_hook/.test(sql), 'migration must bind OAuth tokens to this MCP');
   assert(/event\s*->>\s*'client_id'/.test(sql) && /claims\s*->>\s*'client_id'/.test(sql), 'hook must support initial OAuth and refreshed token event shapes');
   assert(/payload \? 'state'/.test(sql) && /\(payload -> 'state'\) \? 'workouts'/.test(sql), 'database must reject snapshots without the required object shape');
+  assert(/schema_version in \(1, 2\)/.test(cycleSql) && /set default 2/.test(cycleSql), 'V2 migration must preserve old snapshots and default new snapshots to the cycle schema');
   assert(/fitness_tracker_mcp/.test(sql) && /functions\/v1\/gymtracker-mcp\/mcp/.test(sql), 'RLS must validate resource-bound OAuth claims');
   assert(/for update[\s\S]*client_id/.test(sql), 'OAuth clients must be denied updates');
   assert(/for delete[\s\S]*client_id/.test(sql), 'OAuth clients must be denied deletes');

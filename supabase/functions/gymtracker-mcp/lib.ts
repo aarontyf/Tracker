@@ -15,6 +15,13 @@ export type WorkoutFilter = {
 }
 
 const DAY = 86_400_000
+const CYCLE_DAYS = 6
+const CYCLE_UNITS = [
+  { type: 'Push', variant: 'A', label: 'Push A' },
+  { type: 'Pull', variant: 'A', label: 'Pull A' },
+  { type: 'Push', variant: 'B', label: 'Push B' },
+  { type: 'Pull', variant: 'B', label: 'Pull B' },
+] as const
 
 function object(value: unknown): JsonObject {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
@@ -61,6 +68,94 @@ function workoutsFrom(row: SnapshotRow): JsonObject[] {
     .map(object)
     .filter((workout) => instant(workout.date) > 0)
     .sort((a, b) => instant(b.date) - instant(a.date))
+}
+
+function workoutVariant(workout: JsonObject): string | null {
+  const direct = text(workout.variant).toUpperCase()
+  if (direct === 'A' || direct === 'B') return direct
+  const match = text(workout.name).match(/\b(?:push|pull)\s*[-–]?\s*([ab])\b/i)
+  return match ? match[1].toUpperCase() : null
+}
+
+function workoutLabel(workout: JsonObject): string {
+  const type = text(workout.type) || 'Andere'
+  const variant = workoutVariant(workout)
+  return (type === 'Push' || type === 'Pull') && variant ? `${type} ${variant}` : type
+}
+
+function cycleSummary(row: SnapshotRow, from: number, to: number): JsonObject {
+  const history = workoutsFrom(row).filter((workout) => instant(workout.date) <= to).reverse()
+  const cycles: Array<{
+    number: number
+    start: number
+    end: number
+    workouts: JsonObject[]
+    units: Record<string, number>
+    days: number
+    complete: boolean
+    running: boolean
+  }> = []
+  let current: typeof cycles[number] | null = null
+  for (const workout of history) {
+    const variant = workoutVariant(workout)
+    const type = text(workout.type)
+    if (type === 'Push' && variant === 'A') {
+      current = {
+        number: cycles.length + 1,
+        start: instant(workout.date),
+        end: instant(workout.date),
+        workouts: [],
+        units: {},
+        days: 1,
+        complete: false,
+        running: false,
+      }
+      cycles.push(current)
+    }
+    if (!current) continue
+    current.end = Math.max(current.end, instant(workout.date))
+    if ((type === 'Push' || type === 'Pull') && variant) {
+      current.workouts.push(workout)
+      const label = `${type} ${variant}`
+      current.units[label] = (current.units[label] || 0) + 1
+    }
+  }
+  cycles.forEach((cycle, index) => {
+    const next = cycles[index + 1]
+    cycle.days = Math.max(1, Math.round(((next ? next.start : to) - cycle.start) / DAY) + (next ? 0 : 1))
+    cycle.complete = CYCLE_UNITS.every((unit) => (cycle.units[unit.label] || 0) > 0)
+    cycle.running = index === cycles.length - 1 && (!cycle.complete || cycle.days < CYCLE_DAYS)
+  })
+  const selected = cycles.filter((cycle) => cycle.start >= from && cycle.start <= to)
+  const closed = selected.filter((cycle) => !cycle.running)
+  const basis = closed.length ? closed : selected
+  const complete = basis.filter((cycle) => cycle.complete).length
+  const unitCompletion = Object.fromEntries(CYCLE_UNITS.map((unit) => [unit.label,
+    basis.filter((cycle) => (cycle.units[unit.label] || 0) > 0).length,
+  ]))
+  const latest = selected[selected.length - 1] || null
+  return {
+    targetDays: CYCLE_DAYS,
+    targetUnits: CYCLE_UNITS.length,
+    order: CYCLE_UNITS.map((unit) => unit.label),
+    started: selected.length,
+    evaluated: basis.length,
+    complete,
+    completionRatePercent: basis.length ? round(complete / basis.length * 100, 1) : null,
+    averageUnitsPerCycle: basis.length
+      ? round(basis.reduce((sum, cycle) => sum + CYCLE_UNITS.filter((unit) => (cycle.units[unit.label] || 0) > 0).length, 0) / basis.length, 2)
+      : null,
+    averageDaysPerCycle: closed.length
+      ? round(closed.reduce((sum, cycle) => sum + cycle.days, 0) / closed.length, 2)
+      : null,
+    unitCompletion,
+    current: latest && latest.running ? {
+      cycle: latest.number,
+      days: latest.days,
+      completedUnits: CYCLE_UNITS.filter((unit) => (latest.units[unit.label] || 0) > 0).map((unit) => unit.label),
+      missingUnits: CYCLE_UNITS.filter((unit) => !(latest.units[unit.label] || 0)).map((unit) => unit.label),
+    } : null,
+  }
 }
 
 function exercisesFrom(workout: JsonObject): JsonObject[] {
@@ -197,6 +292,8 @@ function workoutSummary(row: SnapshotRow, workout: JsonObject, includeSets = tru
     id: text(workout.id),
     date: isoDate(workout.date),
     type: text(workout.type) || 'Andere',
+    variant: workoutVariant(workout),
+    unit: workoutLabel(workout),
     rpe: number(workout.rpe) || null,
     preLogged: Boolean(workout.vorab),
     recordedAt: isoDate(workout.erfasst),
@@ -249,7 +346,7 @@ export function getTrainingOverview(row: SnapshotRow, daysValue = 28): JsonObjec
   const workouts = workoutsFrom(row)
   const anchor = Date.now()
   const from = anchor - days * DAY
-  const selected = workouts.filter((workout) => instant(workout.date) >= from && instant(workout.date) <= anchor + DAY)
+  const selected = workouts.filter((workout) => instant(workout.date) >= from && instant(workout.date) <= anchor)
   const exerciseTotals = new Map<string, {
     name: string
     sessions: number
@@ -279,7 +376,7 @@ export function getTrainingOverview(row: SnapshotRow, daysValue = 28): JsonObjec
       durationMinutes += Number(metrics.durationMinutes)
       durationCount += 1
     }
-    const type = text(workout.type) || 'Andere'
+    const type = workoutLabel(workout)
     typeCounts[type] = (typeCounts[type] || 0) + 1
     for (const exercise of exercisesFrom(workout)) {
       const id = text(exercise.exId) || normalizeQuery(text(exercise.name))
@@ -327,7 +424,7 @@ export function getTrainingOverview(row: SnapshotRow, daysValue = 28): JsonObjec
       to: new Date(anchor).toISOString(),
     },
     workouts: selected.length,
-    workoutsPerWeek: round(selected.length / days * 7, 2),
+    cycleStatistics: cycleSummary(row, from, anchor),
     workingSets: workSets,
     reps: totalReps,
     volumeKg: round(volumeKg, 1),
@@ -372,6 +469,8 @@ export function getExerciseHistory(row: SnapshotRow, exerciseQuery: string, limi
           workoutId: text(workout.id),
           date: isoDate(workout.date),
           workoutType: text(workout.type) || 'Andere',
+          workoutVariant: workoutVariant(workout),
+          workoutUnit: workoutLabel(workout),
           ...exerciseSummary(row, workout, exercise, true),
         })
       }
@@ -477,6 +576,8 @@ export function getTrainingPlan(row: SnapshotRow): JsonObject {
       return {
         date,
         type: text(workout.type) || 'Andere',
+        variant: workoutVariant(workout),
+        unit: workoutLabel(workout),
         exerciseIds: array(workout.exIds).map(text).filter(Boolean),
         exercises: exercisesFrom(workout).map((exercise) => exerciseSummary(row, workout, exercise, true)),
       }
@@ -491,6 +592,8 @@ export function getTrainingPlan(row: SnapshotRow): JsonObject {
         id: text(template.id),
         name: text(template.name),
         type: text(template.type),
+        variant: workoutVariant(template),
+        unit: workoutLabel(template),
         exerciseIds: array(template.exIds).map(text).filter(Boolean),
       }
     }),

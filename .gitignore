@@ -34,6 +34,7 @@
 !.github/workflows/test.yml
 !supabase/config.toml
 !supabase/migrations/20260825000000_chatgpt_readonly.sql
+!supabase/migrations/20260830000000_cycle_statistics_v2.sql
 !supabase/functions/gymtracker-mcp/index.ts
 !supabase/functions/gymtracker-mcp/lib.ts
 !oauth/consent/index.html

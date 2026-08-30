@@ -242,7 +242,7 @@ function createServer(auth: AuthContext): McpServer {
     'get_training_overview',
     {
       title: 'Trainingsübersicht abrufen',
-      description: 'Fasst Trainingshäufigkeit, Sätze, Wiederholungen, Volumen, Kardio und Übungen für einen Zeitraum zusammen.',
+      description: 'Fasst die vier A/B-Einheiten pro Sechs-Tage-Zyklus sowie Sätze, Wiederholungen, Volumen, Kardio und Übungen für einen Zeitraum zusammen.',
       inputSchema: {
         days: z.number().int().min(1).max(3650).optional().describe('Zeitraum in Tagen; Standard: 28'),
       },
@@ -264,7 +264,7 @@ function createServer(auth: AuthContext): McpServer {
         limit: z.number().int().min(1).max(50).optional().describe('Maximal 50; Standard: 10'),
         from_date: z.string().date().optional().describe('Frühestes Datum im Format JJJJ-MM-TT'),
         to_date: z.string().date().optional().describe('Spätestes Datum im Format JJJJ-MM-TT'),
-        type: z.string().trim().max(40).optional().describe('Exakte Trainingsart, z. B. Push oder Pull'),
+        type: z.string().trim().max(40).optional().describe('Exakte Trainingsart, z. B. Push oder Pull; die A/B-Variante steht separat im Ergebnis'),
       },
       outputSchema,
       annotations,

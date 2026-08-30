@@ -45,9 +45,11 @@ exports.lauf = async ({ page, p }) => {
     const ids=[...document.querySelectorAll('[id]')].map(x=>x.id).filter(Boolean);
     return {text,panels,doppelt:ids.filter((id,i)=>ids.indexOf(id)!==i).length};
   })()`);
-  p.enthaelt('Übersicht enthält den neuen Rhythmusblock', rhythmus.text, 'Trainingsrhythmus');
+  p.enthaelt('Übersicht enthält den neuen Rhythmusblock', rhythmus.text, 'Zyklustreue');
   p.enthaelt('Rhythmus zeigt Vollständigkeit', rhythmus.text, 'vollständig');
-  p.enthaelt('Rhythmus zeigt Workouts der letzten 30 Tage', rhythmus.text, 'Workouts/30 Tage');
+  p.enthaelt('Rhythmus zeigt Einheiten statt Monats-Workoutzahl', rhythmus.text, 'Ø Einheiten/Zyklus');
+  p.enthaelt('Übersicht zeigt die vier Einheiten einzeln', rhythmus.text, 'Einheiten pro Zyklus');
+  p.pruefe('alte 30-Tage-Workoutkennzahl ist überschrieben', !rhythmus.text.includes('Workouts/30 Tage'));
   rhythmus.panels.forEach(x=>{
     p.pruefe(`${x.panel} rendert Inhalt`, x.html>100);
     p.pruefe(`${x.panel} enthält keine kaputte Kennzahl`, !x.bad);

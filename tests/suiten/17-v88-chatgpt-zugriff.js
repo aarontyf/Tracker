@@ -15,7 +15,7 @@ exports.lauf = async ({ page, p }) => {
     status:document.querySelector('#ai-settings-state').textContent.trim(),
     endpoint:AI_MCP_URL,
     getrennt:AI_LS!==SYNC_LS && AI_LS!==LS_KEY,
-    version:document.querySelector('#modal-settings').textContent.includes('Fitness Tracker V91')
+    version:document.querySelector('#modal-settings').textContent.includes('Fitness Tracker V92')
   }))()`);
   p.pruefe('Einstellungen haben einen sichtbaren ChatGPT-Öffner', statisch.opener);
   p.pruefe('Freigabe-Modal ist als Dialog beschriftet', statisch.dialog);
@@ -23,34 +23,44 @@ exports.lauf = async ({ page, p }) => {
   p.enthaelt('Leerzustand sagt ausdrücklich „nicht freigegeben"', statisch.status, 'Nicht freigegeben');
   p.pruefe('MCP-Adresse ist ein stabiler HTTPS-Endpunkt', /^https:\/\/[^/]+\/functions\/v1\/gymtracker-mcp\/mcp$/.test(statisch.endpoint));
   p.pruefe('Freigabe-Metadaten sind von Trainings- und Sync-Speicher getrennt', statisch.getrennt);
-  p.pruefe('Oberfläche zeigt V91', statisch.version);
+  p.pruefe('Oberfläche zeigt V92', statisch.version);
 
   const bereinigt = await js(page, `(() => {
     const quelle={
-      workouts:[{id:'w1',date:'2026-08-24T18:00:00Z',type:'Pull',rpe:8,note:'Trainingsnotiz',
+      workouts:[{id:'w1',date:'2026-08-24T18:00:00Z',type:'Pull',variant:'B',rpe:8,note:'Trainingsnotiz',
         exercises:[{exId:'x1',name:'Klimmzug',note:'Übungsnotiz',as:true,bwkg:80,
           sets:[{w:20,r:6,rr:5,rir:1,ts:123,sek:90,dist:400,heimlich:'NEIN'}]}]}],
       active:null,bodyweight:[{d:'2026-08-24',kg:80}],
       measures:[{d:'2026-08-24',waist:82,privat:'NEIN'}],
       goals:[{id:'g1',art:'gewicht',exId:'x1',ziel:40,bis:'2026-12-01'}],
-      plan:{'2026-08-26':{type:'Pull',exercises:[]}},templates:[],customEx:[],exOpt:{x1:{uni:true,rest:120}},
+      plan:{'2026-08-26':{type:'Pull',variant:'B',exercises:[]}},templates:[{id:'t1',name:'Push A',type:'Push',exIds:['x1']}],customEx:[],exOpt:{x1:{uni:true,rest:120}},
       settings:{name:'NAME_NIEMALS_TEILEN',vaultMail:'MAIL_NIEMALS_TEILEN@example.test',pin:'1234',
-        goal:2,rest:90,repLo:6,repHi:9,defSets:2,setGoalLo:10,setGoalHi:20},
+        goal:2,rest:90,repLo:6,repHi:9,defSets:2,setGoalLo:10,setGoalHi:20,cycleGoalLo:9,cycleGoalHi:17},
       profile:{alter:30,sex:'m',groesse:180,gewicht:80,kfa:15,ziel:'aufbau',erfahrung:'fortge',
         ort:'ORT_NIEMALS_TEILEN',alltag:'leicht',tage:4}
     };
     const s=aiBuildSnapshot(quelle), raw=JSON.stringify(s), set=s.state.workouts[0].exercises[0].sets[0];
-    return {workouts:s.state.workouts.length,profile:s.trainingProfile,preferences:s.trainingPreferences,
+    return {schema:s.schemaVersion,workouts:s.state.workouts.length,variant:s.state.workouts[0].variant,
+      planVariant:s.state.plan['2026-08-26'].variant,templateVariant:s.state.templates[0].variant,
+      profile:s.trainingProfile,preferences:s.trainingPreferences,
       noSettings:!('settings' in s.state),noProfile:!('profile' in s.state),
       secrets:['NAME_NIEMALS_TEILEN','MAIL_NIEMALS_TEILEN','ORT_NIEMALS_TEILEN','1234'].every(x=>!raw.includes(x)),
       note:raw.includes('Trainingsnotiz')&&raw.includes('Übungsnotiz'),
       set:{sek:set.sek,dist:set.dist,rr:set.rr,rir:set.rir,extra:'heimlich' in set}};
   })()`);
   p.gleich('Workout-Anzahl bleibt erhalten', bereinigt.workouts, 1);
+  p.gleich('Freigabeschema ist auf A/B-Zyklen angehoben', bereinigt.schema, 2);
+  p.pruefe('A/B-Variante bleibt in Workout und Plan erhalten und wird bei alter Vorlage aus dem Namen migriert',
+    bereinigt.variant==='B' && bereinigt.planVariant==='B' && bereinigt.templateVariant==='A');
   p.pruefe('rohe Einstellungen und rohes Profil werden nie kopiert', bereinigt.noSettings && bereinigt.noProfile);
   p.pruefe('Name, Mail, Ort und PIN fehlen vollständig', bereinigt.secrets);
   p.pruefe('relevantes Profil bleibt unter neutralen Feldnamen erhalten', bereinigt.profile.weightKg===80 && bereinigt.profile.ageYears===30);
   p.pruefe('Trainingsvorgaben bleiben erhalten', bereinigt.preferences.repRange.min===6 && bereinigt.preferences.defaultSets===2);
+  p.pruefe('Freigabe beschreibt vier Einheiten pro Sechs-Tage-Zyklus',
+    bereinigt.preferences.cycleSessions===4 && bereinigt.preferences.cycleDays===6 &&
+    bereinigt.preferences.cycleOrder.join(',')==='Push A,Pull A,Push B,Pull B');
+  p.pruefe('Satzziel wird direkt pro Zyklus freigegeben',
+    bereinigt.preferences.cycleSetTarget.min===9 && bereinigt.preferences.cycleSetTarget.max===17 && !('weeklySetTarget' in bereinigt.preferences));
   p.pruefe('Trainingsnotizen werden bewusst mitgeteilt', bereinigt.note);
   p.pruefe('Kardio, rechtsseitige Wdh und RIR bleiben exakt erhalten', bereinigt.set.sek===90 && bereinigt.set.dist===400 && bereinigt.set.rr===5 && bereinigt.set.rir===1);
   p.gleich('unbekanntes Satzfeld wird verworfen', bereinigt.set.extra, false);
@@ -67,12 +77,13 @@ exports.lauf = async ({ page, p }) => {
     aiMeta={enabled:true,dirty:true,lastUpload:null,workoutCount:0}; _aiReady=true; _aiBusy=false;
     await aiUploadNow(true,true);
     if(_aiTimer){clearTimeout(_aiTimer);_aiTimer=null;}
-    const out={hasRow:!!row,user:row&&row.user_id,count:row&&row.workout_count,clean:row&&!JSON.stringify(row.payload).includes('UPLOAD_SECRET')&&!JSON.stringify(row.payload).includes('UPLOAD_ORT'),
+    const out={hasRow:!!row,user:row&&row.user_id,schema:row&&row.schema_version,count:row&&row.workout_count,clean:row&&!JSON.stringify(row.payload).includes('UPLOAD_SECRET')&&!JSON.stringify(row.payload).includes('UPLOAD_ORT'),
       dirty:aiMeta.dirty,status:aiStatus.text};
     state=altState; aiGetClient=altClient; aiMeta={enabled:false,dirty:false,lastUpload:null,workoutCount:0}; aiUser=null;
     return out;
   })()`);
   p.pruefe('Upload schreibt genau eine nutzergebundene Zeile', upload.hasRow && upload.user==='00000000-0000-4000-8000-000000000001');
+  p.gleich('Upload kennzeichnet das neue A/B-Schema als Version 2', upload.schema, 2);
   p.gleich('Upload zählt die Workouts serverseitig nachvollziehbar mit', upload.count, 1);
   p.pruefe('auch der tatsächlich gesendete Payload ist bereinigt', upload.clean);
   p.gleich('erfolgreicher Upload ist nicht mehr als ausstehend markiert', upload.dirty, false);

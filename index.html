@@ -1648,7 +1648,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
   <div class="card">
     <h3 style="margin-bottom:4px">Trainingsrhythmus</h3>
     <p class="tiny" style="margin-bottom:8px">Ein <b>Zyklus</b> ist ein voller Durchgang durch deinen Plan: <b>Push A → Pull A → Rest → Push B → Pull B → Rest</b>. Alle Ziele in der Statistik rechnen pro Zyklus, nicht pro Kalenderwoche — der Sechs-Tage-Takt wandert bewusst durch die Woche.</p>
-    <div class="row"><input type="number" id="set-goal" min="1" max="14" style="width:90px" aria-label="Einheiten pro Zyklus"><span class="sub">Einheiten pro Zyklus</span></div>
+    <div class="row"><b style="font-size:var(--fs-lg);min-width:90px">4</b><span class="sub">Einheiten pro Zyklus · 6 Tage</span></div>
     <div class="row" style="margin-top:12px;justify-content:space-between">
       <div class="grow"><b style="font-size:var(--fs-body)">Beine im Zyklus</b>
         <div class="tiny"><b>An</b> (Standard bei Ganzkörper-Push/Pull): Beine bekommen denselben Zielkorridor wie alles andere. <b>Aus</b>: Beine laufen nebenher und werden rollierend über 21 Tage gezeigt, ohne Ampel.</div></div>
@@ -1680,10 +1680,10 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
   </div>
   <div class="card">
     <h3 style="margin-bottom:8px">Satzziel pro Muskel</h3>
-    <div class="row"><input type="number" id="set-goallo" min="1" max="40" style="width:70px" aria-label="Satzziel pro Woche, unterer Wert"><span class="sub">bis</span>
-      <input type="number" id="set-goalhi" min="1" max="60" style="width:70px" aria-label="Satzziel pro Woche, oberer Wert"><span class="sub">Sätze pro <b>Woche</b></span></div>
+    <div class="row"><input type="number" id="set-goallo" min="1" max="40" style="width:70px" aria-label="Satzziel pro Zyklus, unterer Wert"><span class="sub">bis</span>
+      <input type="number" id="set-goalhi" min="1" max="60" style="width:70px" aria-label="Satzziel pro Zyklus, oberer Wert"><span class="sub">Sätze pro <b>Zyklus</b></span></div>
     <div class="tiny" id="set-goal-cycle" style="margin-top:6px"></div>
-    <p class="tiny" style="margin-top:8px">Richtwert: <b>10–20 harte Sätze pro Muskel und Woche</b>. Ab etwa <b>11 Sätzen pro Muskel und Einheit</b> ist kein Zuwachs mehr messbar — darüber meldet die Ampel „!".</p>
+    <p class="tiny" style="margin-top:8px">Der Standard <b>9–17 harte Sätze pro Muskel und 6‑Tage‑Zyklus</b> entspricht ungefähr 10–20 pro Woche. Die Effizienzgrenze von etwa <b>11 Sätzen gilt je Muskel und einzelner Einheit</b>, nicht für die Summe des ganzen Zyklus.</p>
     <!-- Die vier Quellen standen bis V55 nirgends in der App, nur die Namen.
          Hier ist ihr Platz: einmal, mit Adresse, nachprüfbar. -->
     <details class="erkl"><summary>Quellen</summary><div>
@@ -1758,7 +1758,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V91 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V92 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="mback" id="modal-sync"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="sync-title">
@@ -3206,6 +3206,8 @@ const ROTATION = [
 ];
 const ROTATION_LABELS = ['Push A','Pull A','Rest','Push B','Pull B','Rest'];
 const WORKOUT_LABELS = ['Push A','Pull A','Push B','Pull B','Legs','Andere'];
+const CYCLE_UNITS = ROTATION.filter(s=>s.type!=='Rest').map(s=>({...s}));
+const CYCLE_UNIT_COUNT = CYCLE_UNITS.length;
 function saubereVariante(v){ v=String(v||'').toUpperCase(); return v==='A'||v==='B'?v:null; }
 function varianteAusName(name, type){
   const n=String(name||'').trim();
@@ -3249,27 +3251,56 @@ function naechstesTraining(x){
   return s;
 }
 
+const SETTINGS_DEFAULT = { goal:4, rest:90, lastBackup:null, backupSnooze:0,
+  repLo:6, repHi:9, defSets:2, setGoalLo:10, setGoalHi:20, cycleGoalLo:9, cycleGoalHi:17 };
+function normalisiereSettings(raw){
+  const quelle=(raw&&typeof raw==='object'&&!Array.isArray(raw))?raw:{};
+  const out=Object.assign({},SETTINGS_DEFAULT,quelle);
+  const ganz=(v,f,min,max)=>{
+    const n=Math.round(Number(v));
+    return Number.isFinite(n)?Math.max(min,Math.min(max,n)):f;
+  };
+  out.rest=ganz(quelle.rest,SETTINGS_DEFAULT.rest,15,600);
+  out.repLo=ganz(quelle.repLo,SETTINGS_DEFAULT.repLo,1,30);
+  out.repHi=Math.max(out.repLo,ganz(quelle.repHi,SETTINGS_DEFAULT.repHi,1,40));
+  out.defSets=ganz(quelle.defSets,SETTINGS_DEFAULT.defSets,1,10);
+  /* V92: Die alte Einstellung war pro Woche. Einmalig in den nahezu gleich
+     langen Sechs-Tage-Zyklus übersetzen, ohne den alten Wert zu löschen. */
+  const altLo=ganz(quelle.setGoalLo,SETTINGS_DEFAULT.setGoalLo,1,40);
+  const altHi=Math.max(altLo,ganz(quelle.setGoalHi,SETTINGS_DEFAULT.setGoalHi,1,60));
+  out.setGoalLo=altLo; out.setGoalHi=altHi;
+  /* Die Zyklusdauer-Konstante steht im Statistikblock weiter unten; beim
+     initialen State-Aufbau ist sie noch nicht initialisiert. Deshalb hier
+     bewusst der unveränderliche Schemawert 6. */
+  const migLo=Math.max(1,Math.round(altLo*6/7));
+  const migHi=Math.max(migLo,Math.round(altHi*6/7));
+  out.cycleGoalLo=ganz(quelle.cycleGoalLo,migLo,1,40);
+  out.cycleGoalHi=Math.max(out.cycleGoalLo,ganz(quelle.cycleGoalHi,migHi,1,60));
+  out.goal=CYCLE_UNIT_COUNT;                    // nicht mehr frei einstellbar
+  return out;
+}
+
 let state = {
-  workouts: [],        // {id,date,start,end,type,rpe?,note?,exercises:[{exId,name,sets:[{w,r}]}],prs:[...]}
+  workouts: [],        // {id,date,start,end,type,variant?,rpe?,note?,exercises:[...],prs:[...]}
   customEx: [],        // gleiche Struktur wie EXDB-Einträge
-  templates: [],       // {id,name,type,exIds:[]}
+  templates: [],       // {id,name,type,variant?,exIds:[]}
   profile: null,       // Coach-Profil, siehe PROFIL_LEER
   missionsXP: {},      // erfüllte Wochen-Missionen {woche|id: xp}
   active: null,        // laufendes Workout
   ach: {},             // freigeschaltete Achievements {id:{d,xp}}
   bodyweight: [],      // [{d:'YYYY-MM-DD', kg}]
   exOpt: {},           // Einstellungen pro Übung {exId:{uni,lo,hi,step,rest,sets}}
-  plan: {},            // geplante Einheiten {'YYYY-MM-DD':{type,exercises:[{exId,name,sets:[{w,r}]}]}}
+  plan: {},            // {'YYYY-MM-DD':{type,variant?,exercises:[{exId,name,sets:[{w,r}]}]}}
   measures: [],        // Körpermaße [{d, key:cm}]
   goals: [],           // Ziele [{id,art,exId,ziel,start,bis,angelegt,erreicht}]
-  settings: { goal: 5, rest: 90, lastBackup: null, backupSnooze: 0, repLo: 6, repHi: 9, defSets: 2, setGoalLo: 10, setGoalHi: 20 }
+  settings: normalisiereSettings({})
 };
 
 function loadState(){
   try{
     const raw = localStorage.getItem(LS_KEY);
     if(raw){ const s = JSON.parse(raw); state = Object.assign(state, s);
-      state.settings = Object.assign({goal:5,rest:90,lastBackup:null,backupSnooze:0,repLo:6,repHi:9,defSets:2,setGoalLo:10,setGoalHi:20}, s.settings||{});
+      state.settings = normalisiereSettings(s.settings);
       if(!state.bodyweight) state.bodyweight=[];
       if(!state.measures) state.measures=[];
       if(!state.exOpt) state.exOpt={};
@@ -3341,7 +3372,7 @@ function repariereState(){
   state.measures   = liste(state.measures).filter(x=>x && typeof x==='object');
   state.exOpt      = objekt(state.exOpt);
   state.ach        = objekt(state.ach);
-  state.settings   = objekt(state.settings);
+  state.settings   = normalisiereSettings(objekt(state.settings));
   if(!state.plan || typeof state.plan!=='object' || Array.isArray(state.plan)){ state.plan = {}; n++; }
 
   if(n){
@@ -3813,7 +3844,7 @@ async function syncApplyRemote(remote,row,remoteHash,reason,expectedGeneration){
   _syncApplying=true;
   try{
     state=Object.assign({workouts:[],customEx:[],templates:[],profile:null,missionsXP:{},active:null,ach:{},bodyweight:[],exOpt:{},plan:{},measures:[],goals:[],settings:{}},remote);
-    state.settings=Object.assign({goal:5,rest:90,lastBackup:null,backupSnooze:0,repLo:6,repHi:9,defSets:2,setGoalLo:10,setGoalHi:20},state.settings||{},lokal);
+    state.settings=normalisiereSettings(Object.assign({},state.settings||{},lokal));
     repariereState(); migrateState(); evalAchievements(); saveState();
   }finally{ _syncApplying=false; }
   const finalHash=await syncStateHash(state);
@@ -4083,13 +4114,14 @@ function aiExercise(entry){
   return out;
 }
 function aiWorkout(entry){
-  const w=aiObject(entry), out=aiPick(w,['id','date','start','end','type','rpe','note','durFix','vorab','erfasst']);
+  const w=aiObject(entry), out=aiPick(w,['id','date','start','end','type','variant','rpe','note','durFix','vorab','erfasst']);
+  if(!out.variant){ const v=einheitVariante(w); if(v) out.variant=v; }
   if(out.note) out.note=aiString(out.note,2000);
   out.exercises=aiList(w.exercises).filter(x=>x&&typeof x==='object').map(aiExercise);
   return out;
 }
 function aiPlanEntry(entry){
-  const p=aiObject(entry), out=aiPick(p,['type']);
+  const p=aiObject(entry), out=aiPick(p,['type','variant']);
   if(Array.isArray(p.exIds)) out.exIds=p.exIds.filter(x=>typeof x==='string').map(x=>x.slice(0,160));
   out.exercises=aiList(p.exercises).filter(x=>x&&typeof x==='object').map(aiExercise);
   return out;
@@ -4112,7 +4144,8 @@ function aiBuildSnapshot(src){
     return out;
   });
   const templates=aiList(s.templates).map(value=>{
-    const t=aiObject(value), out=aiPick(t,['id','name','type']);
+    const t=aiObject(value), out=aiPick(t,['id','name','type','variant']);
+    if(!out.variant){ const v=einheitVariante(t); if(v) out.variant=v; }
     out.exIds=aiList(t.exIds).filter(x=>typeof x==='string').map(x=>x.slice(0,160));
     return out;
   });
@@ -4126,17 +4159,19 @@ function aiBuildSnapshot(src){
   if(Array.isArray(profile.trainingsTage)) trainingProfile.trainingWeekdays=profile.trainingsTage
     .map(Number).filter(x=>Number.isInteger(x)&&x>=0&&x<=6);
   const trainingPreferences={
-    cycleSessions:Math.max(1,+settings.goal||5),
+    cycleSessions:CYCLE_UNIT_COUNT,
+    cycleDays:CYCLE_SOLL_TAGE,
+    cycleOrder:CYCLE_UNITS.map(einheitLabel),
     defaultRestSeconds:Math.max(0,+settings.rest||90),
     repRange:{min:Math.max(1,+settings.repLo||6),max:Math.max(1,+settings.repHi||9)},
     defaultSets:Math.max(1,+settings.defSets||2),
-    weeklySetTarget:{min:Math.max(1,+settings.setGoalLo||10),max:Math.max(1,+settings.setGoalHi||20)},
+    cycleSetTarget:{min:Math.max(1,+settings.cycleGoalLo||9),max:Math.max(1,+settings.cycleGoalHi||17)},
     rirTracking:!!settings.rir,
     legsInCycle:settings.beineImZyklus!==false,
     favoriteExerciseIds:aiList(settings.favEx).filter(x=>typeof x==='string').map(x=>x.slice(0,160)),
   };
   return {
-    schemaVersion:1,
+    schemaVersion:2,
     generatedAt:new Date().toISOString(),
     sharedCategories:['workoutHistory','activeWorkout','bodyMetrics','trainingPlan','goals','exerciseOptions','trainingProfile'],
     state:{
@@ -4302,7 +4337,7 @@ async function aiUploadNow(force,allowCreate){
     aiUser=got.data.user;
     const payload=aiBuildSnapshot(state), raw=JSON.stringify(payload);
     if(raw.length>3800000) throw new Error('payload too large');
-    const row={user_id:aiUser.id,schema_version:1,payload,workout_count:payload.state.workouts.length};
+    const row={user_id:aiUser.id,schema_version:payload.schemaVersion,payload,workout_count:payload.state.workouts.length};
     const result=allowCreate
       ? await client.from(AI_TABLE).upsert(row,{onConflict:'user_id'})
       : await client.from(AI_TABLE).update(row).eq('user_id',aiUser.id).select('user_id').maybeSingle();
@@ -4797,24 +4832,22 @@ function muscleSets(workouts){ return muscleSetsBy(workouts, 'both'); }
    irgendetwas ändert. Jede Ampel, die auf Wochen rechnet, misst dann das
    Datum statt das Training.
 
-   DEFINITION: Push A beginnt einen neuen A/B-Zyklus; Push B gehört in
-   denselben Durchgang. Bei alten Einträgen ohne A/B bleibt die bisherige
-   Regel erhalten: jeder Push beginnt einen Legacy-Zyklus.
+   DEFINITION: Nur Push A beginnt einen neuen A/B-Zyklus; Push B gehört in
+   denselben Durchgang. Alte Einträge ohne A/B bleiben im Gesamtverlauf,
+   werden aber nicht mehr als Zyklen des neuen Systems ausgegeben.
 
    Warum genau diese Regel:
    · Fällt ein Pull aus, bleibt der Zyklus bestehen und wird als unvollständig
      gekennzeichnet — statt eine Grenze zu erfinden.
    · Wird die Pause länger, wird der Zyklus länger. Das ist die Wahrheit.
      Ab CYCLE_MAX_TAGE meldet die Anzeige es als Auffälligkeit.
-   · Ein eingeschobener Bein-Tag fällt in den laufenden Zyklus, ohne ihn zu teilen.
-   · Zwei Push hintereinander erzeugen zwei Zyklen, der erste ohne Pull.
-     Sichtbar statt versteckt.
-   · Einheiten vor der allerersten Push-Einheit bilden einen Vorlauf, der als
-     solcher markiert und aus Durchschnitten herausgehalten wird.  */
+   · Zusätzliche Beine-/Andere-/Legacy-Einheiten bleiben im Verlauf, zählen
+     aber nicht als eine der vier vorgeschriebenen Zyklus-Einheiten.
+   · Einheiten vor dem allerersten expliziten Push A bilden einen Altbestand,
+     der aus allen Zyklusdurchschnitten herausgehalten wird.  */
 const CYCLE_SOLL_TAGE = 6;
 const CYCLE_MIN_TAGE  = 4;
 const CYCLE_MAX_TAGE  = 9;
-const CYCLES_PER_WEEK = 7 / CYCLE_SOLL_TAGE;          // 1,167
 /* Robinson/Pelland, „Is There Too Much of a Good Thing?" (SportRxiv):
    ab ~11 fraktionalen Sätzen pro Muskel und EINHEIT kein messbarer Vorteil mehr. */
 const SESSION_EFF_MAX = 11;
@@ -4837,12 +4870,16 @@ function cycles(){
   let cur = null;
   ws.forEach(w=>{
     const v=einheitVariante(w);
-    const beginnt = w.type==='Push' && v!=='B';       // Push A oder alter Push
-    if(beginnt || !cur){
-      cur = { n:0, von:w.date, bis:w.date, ws:[], vorlauf:(!beginnt && out.length===0) };
+    const istEinheit=(w.type==='Push'||w.type==='Pull') && !!v;
+    const beginnt = w.type==='Push' && v==='A';
+    if(beginnt){
+      cur = { n:0, von:w.date, ws:[], extras:[], vorlauf:false };
+      out.push(cur);
+    }else if(!cur){
+      cur = { n:0, von:w.date, ws:[], extras:[], vorlauf:true };
       out.push(cur);
     }
-    cur.ws.push(w); cur.bis = w.date;
+    if(cur.vorlauf || istEinheit) cur.ws.push(w); else cur.extras.push(w);
   });
   const heuteNr = dayNr(new Date());
   out.forEach((c,i)=>{
@@ -4850,20 +4887,15 @@ function cycles(){
     const start = dayNr(c.von);
     c.tage = nx ? Math.max(1, dayNr(nx.von) - start)
                 : Math.max(1, heuteNr - start + 1);
-    c.push = c.ws.filter(w=>w.type==='Push').length;
-    c.pull = c.ws.filter(w=>w.type==='Pull').length;
-    c.beine = c.ws.filter(w=>w.type==='Legs').length;
-    c.pushA = c.ws.filter(w=>w.type==='Push'&&einheitVariante(w)==='A').length;
-    c.pullA = c.ws.filter(w=>w.type==='Pull'&&einheitVariante(w)==='A').length;
-    c.pushB = c.ws.filter(w=>w.type==='Push'&&einheitVariante(w)==='B').length;
-    c.pullB = c.ws.filter(w=>w.type==='Pull'&&einheitVariante(w)==='B').length;
-    c.ab = c.ws.some(w=>!!einheitVariante(w));
-    c.vollstaendig = c.ab
-      ? c.pushA>0 && c.pullA>0 && c.pushB>0 && c.pullB>0
-      : c.push>0 && c.pull>0;
-    c.fehlt = c.ab ? [
-      c.pushA?'':'Push A', c.pullA?'':'Pull A', c.pushB?'':'Push B', c.pullB?'':'Pull B'
-    ].filter(Boolean) : [c.push?'':'Push',c.pull?'':'Pull'].filter(Boolean);
+    c.einheiten = CYCLE_UNITS.map(s=>{
+      const treffer=c.ws.filter(w=>gleicherSchritt(w,s));
+      return {type:s.type,variant:s.variant,label:einheitLabel(s),workout:treffer[0]||null,anzahl:treffer.length};
+    });
+    c.einheitenErledigt = c.einheiten.filter(x=>!!x.workout).length;
+    c.vollstaendig = !c.vorlauf && c.einheitenErledigt===CYCLE_UNIT_COUNT;
+    c.fehlt = c.vorlauf ? CYCLE_UNITS.map(einheitLabel)
+      : c.einheiten.filter(x=>!x.workout).map(x=>x.label);
+    c.doppelteEinheiten = c.einheiten.reduce((a,x)=>a+Math.max(0,x.anzahl-1),0);
     c.auffaellig = c.tage < CYCLE_MIN_TAGE || c.tage > CYCLE_MAX_TAGE;
   });
   /* Nur echte Zyklen werden nummeriert; der Vorlauf bekommt die 0. */
@@ -4874,7 +4906,7 @@ function cycles(){
      jedes Mal „Rückstand" melden, obwohl der Zyklus noch gar nicht um ist. */
   if(out.length){
     const last = out[out.length-1];
-    last.laufend = !last.vollstaendig || last.tage < CYCLE_SOLL_TAGE;
+    if(!last.vorlauf) last.laufend = !last.vollstaendig || last.tage < CYCLE_SOLL_TAGE;
   }
   _cyCache = out; _cyKey = key;
   return out;
@@ -4890,9 +4922,47 @@ function runningCycle(){ const a = cycles(); const l = a[a.length-1]; return (l 
 function lastCycles(n){ const a = closedCycles(); return n>0? a.slice(-n) : a; }
 function cycleWorkouts(cs){ return cs.reduce((a,c)=>a.concat(c.ws), []); }
 function cycleSplitText(c){
-  return c.ab
-    ? `${c.pushA} Push A · ${c.pullA} Pull A · ${c.pushB} Push B · ${c.pullB} Pull B`
-    : `${c.push} Push · ${c.pull} Pull${c.beine?' · '+c.beine+' Beine':''}`;
+  return `${c.einheitenErledigt||0}/${CYCLE_UNIT_COUNT} Einheiten · `
+    + CYCLE_UNITS.map(s=>`${(c.einheiten||[]).some(x=>gleicherSchritt(x,s)&&x.workout)?'✓':'○'} ${einheitLabel(s)}`).join(' · ');
+}
+/* Der neue Grundbaustein der Statistik: nicht mehr „Push/Pull vorhanden?",
+   sondern jede der vier vorgeschriebenen Einheiten einzeln und prüfbar. */
+function cycleUnitsHtml(c, titel){
+  const einheiten=c ? c.einheiten : CYCLE_UNITS.map(s=>({
+    type:s.type,variant:s.variant,label:einheitLabel(s),workout:null,anzahl:0
+  }));
+  const erledigt=c ? c.einheitenErledigt : 0;
+  const kopf=c ? `Zyklus ${c.n}${c.laufend?' · läuft':' · abgeschlossen'}` : 'Noch nicht gestartet';
+  const rows=einheiten.map(u=>{
+    const w=u.workout;
+    const meta=w
+      ? `${fmtDate(w.date)} · ${wSets(w)} Sätze · ${fmtVol(wVolume(w))}${u.anzahl>1?` · ${u.anzahl}× erfasst`:''}`
+      : 'offen';
+    return `<div class="item"><span class="focusico" aria-hidden="true">${w?'✓':'○'}</span>
+      <div class="grow"><div class="ttl" style="font-size:var(--fs-sub)">${esc(u.label)}</div><div class="meta">${meta}</div></div>
+      <span class="badge type">${w?'erledigt':'offen'}</span></div>`;
+  }).join('');
+  const zusatz=c&&c.doppelteEinheiten
+    ? `<p class="kpihint tiny">${c.doppelteEinheiten} doppelte ${c.doppelteEinheiten===1?'Einheit wurde':'Einheiten wurden'} gespeichert, zählt aber nicht zusätzlich zur ${CYCLE_UNIT_COUNT}/${CYCLE_UNIT_COUNT}-Vollständigkeit.</p>`
+    : c&&c.extras&&c.extras.length
+      ? `<p class="kpihint tiny">${c.extras.length} zusätzliche ${c.extras.length===1?'Einheit bleibt':'Einheiten bleiben'} im Verlauf, zählt aber nicht als A/B-Zykluseinheit.</p>`
+      : '';
+  return `<div class="card"><div class="row" style="align-items:flex-start"><div class="grow">
+      <h3 style="margin-bottom:3px">${esc(titel||'Einheiten pro Zyklus')}</h3><p class="tiny">${kopf} · Soll: ${CYCLE_UNIT_COUNT} Einheiten in ${CYCLE_SOLL_TAGE} Tagen</p></div>
+      <span class="badge type">${erledigt}/${CYCLE_UNIT_COUNT}</span></div>${rows}${zusatz}</div>`;
+}
+function cycleAdherenceCard(cs){
+  if(!cs||!cs.length) return '';
+  const n=cs.length;
+  const rows=CYCLE_UNITS.map(s=>{
+    const ist=cs.filter(c=>(c.einheiten||[]).some(u=>gleicherSchritt(u,s)&&u.workout)).length;
+    const pct=Math.round(ist/n*100);
+    return `<div class="mbar"><span>${einheitLabel(s)}</span><span class="bar"><i style="width:${pct}%"></i></span><span class="val"><b>${ist}/${n}</b></span></div>`;
+  }).join('');
+  const voll=cs.filter(c=>c.vollstaendig).length;
+  return `<div class="card"><h3 style="margin-bottom:3px">Einheiten pro Zyklus</h3>
+    <p class="tiny" style="margin-bottom:8px">In wie vielen der letzten ${n} ${n===1?'Zyklus':'Zyklen'} jede Einheit enthalten war.</p>${rows}
+    <p class="kpihint tiny"><b>${voll}/${n}</b> Zyklen vollständig · doppelte Workouts erhöhen die Quote nicht.</p></div>`;
 }
 /* Zyklusnummer zu einem Datum — für die x-Achse der Diagramme */
 function cycleOfDate(dateStr){
@@ -4903,22 +4973,20 @@ function cycleOfDate(dateStr){
 }
 
 /* Zielkorridor pro Zyklus.
-   Herleitung: Die Literatur nennt 10–20 Sätze pro Muskel und WOCHE
-   (Schoenfeld u. a.; Pelland et al. 2025 bestätigen den abnehmenden
-   Grenzertrag). Bei 2,333 Zyklen pro Woche ergibt das 4,3–8,6 → 4–9
-   Sätze pro Muskel und Zyklus.
+   V92 speichert den Zielwert direkt für den Sechs-Tage-Zyklus. Die alte
+   Wochenumrechnung ist damit vollständig aus der Statistik entfernt.
    mult = feste Eigenschaft der Gruppe aus SETGROUPS (nicht die Zahl der
    trainierten Teilmuskeln — genau das war der V50-Fehler). */
 function groupTargetCycle(mult, zyklen){
   const S = state.settings;
   const m = mult||1, z = zyklen||1;
-  const f = m * z / CYCLES_PER_WEEK;
-  return { lo: Math.round((S.setGoalLo||10)*f), hi: Math.round((S.setGoalHi||20)*f),
-           n: m, effMax: SESSION_EFF_MAX * m * z };
+  const f = m * z;
+  return { lo: Math.round((S.cycleGoalLo||9)*f), hi: Math.round((S.cycleGoalHi||17)*f),
+           n: m, effMax: Infinity };
 }
-/* Vier Zustände statt drei. Der vierte („ineffizient") ist neu und ergibt
-   sich aus der Pro-Einheit-Grenze: weil jeder Muskel nur einmal pro Zyklus
-   drankommt, ist das Zyklusvolumen gleich dem Volumen EINER Einheit. */
+/* Die aggregierte Zyklussumme kann keine Pro-Einheit-Grenze prüfen. Das
+   erledigt groupBars() separat je Workout; hier wird nur der Zykluskorridor
+   bewertet. */
 function setState4(v, t){
   if(v > t.effMax) return 'ineffizient';
   if(v > t.hi)     return 'drueber';
@@ -5435,12 +5503,12 @@ function warmupSets(work, bar){
 function planPasstZuZyklen(){
   const ws = workoutsBisHeute();
   if(!ws.length) return true;                 // noch nichts da — nichts zu behaupten
-  return ws.some(w => w.type === 'Push');
+  return ws.some(w => w.type === 'Push' && einheitVariante(w)==='A');
 }
 function planHinweis(){
   const n = workoutsBisHeute().length;
-  return `${n} ${n===1?'Einheit':'Einheiten'} aufgezeichnet, aber keine als <b>Push</b> angelegt. `
-       + `Die Zyklus-Auswertung richtet sich nach Push A/B und Pull A/B — ohne Push gibt es keinen Zyklus.`;
+  return `${n} ${n===1?'Einheit':'Einheiten'} im Verlauf, aber noch kein explizites <b>Push A</b>. `
+       + `Diese Alt- und Fremdeinheiten bleiben unter „Gesamt“ sichtbar. Die neue Zyklusstatistik beginnt erst mit Push A und zählt dann genau vier Einheiten.`;
 }
 
 function suggestSchritt(){
@@ -6931,10 +6999,10 @@ function renderHome(){
   const wer = (state.settings.name||'').trim();
   $('#home-greet').textContent = greeting() + (wer? ', ' + wer : '');
   $('#home-week-label').innerHTML = (!planPasstZuZyklen()
-      ? `<span style="color:var(--gold)">Kein Push aufgezeichnet — ohne ihn zählt die App keine Zyklen</span>`
+      ? `<span style="color:var(--gold)">Neues System noch nicht gestartet · Push A beginnt Zyklus 1</span>`
       : zyk
-      ? `Zyklus ${zyk.n} · Tag ${zyk.tage} · ${zyk.push? '✓':'○'} Push  ${zyk.pull? '✓':'○'} Pull`
-      : 'Noch kein Training — der erste Push startet Zyklus 1')
+      ? `Zyklus ${zyk.n} · Tag ${zyk.tage} · ${zyk.einheitenErledigt}/${CYCLE_UNIT_COUNT} Einheiten${zyk.vollstaendig?' · ✓ vollständig':' · offen: '+zyk.fehlt.join(', ')}`
+      : 'Noch kein Training — Push A startet Zyklus 1')
     + (dayStreak>1? ` &nbsp;·&nbsp; <span class="streak" style="color:var(--gold)"><span class="fl">${ICO.flame}</span>${dayStreak} in Folge</span>` : '');
 
   /* ── Figur ── */
@@ -7094,14 +7162,13 @@ $('#scr-home').addEventListener('click', e=>{
 });
 $('#btn-start-home').addEventListener('click',()=>showScreen('scr-train'));
 $('#btn-settings').addEventListener('click',()=>{
-  $('#set-goal').value = state.settings.goal;
   $('#set-name').value = state.settings.name || '';
   $('#set-vaultmail').value = state.settings.vaultMail || '';
   hydrateIcons($('#modal-settings'));
   $('#set-rest').value = state.settings.rest||90;
   $('#set-replo').value = state.settings.repLo||6; $('#set-rephi').value = state.settings.repHi||9;
   $('#set-defsets').value = state.settings.defSets||2;
-  $('#set-goallo').value = state.settings.setGoalLo||10; $('#set-goalhi').value = state.settings.setGoalHi||20;
+  $('#set-goallo').value = state.settings.cycleGoalLo||9; $('#set-goalhi').value = state.settings.cycleGoalHi||17;
   $('#set-rir').textContent = state.settings.rir? 'An':'Aus'; $('#set-rir').classList.toggle('on', !!state.settings.rir);
   $('#set-beine').textContent = beineImZyklus()? 'An':'Aus'; $('#set-beine').classList.toggle('on', beineImZyklus());
   const tonAn = state.settings.restSound !== false;
@@ -7142,19 +7209,18 @@ $('#set-restsound').addEventListener('click',()=>{
 ['replo','rephi','defsets','goallo','goalhi'].forEach(k=>$('#set-'+k).addEventListener('change',()=>{
   let lo=Math.max(1,Math.min(30,+$('#set-replo').value||6)), hi=Math.max(1,Math.min(40,+$('#set-rephi').value||9));
   if(hi<lo) hi=lo;
-  let glo=Math.max(1,Math.min(40,+$('#set-goallo').value||10)), ghi=Math.max(1,Math.min(60,+$('#set-goalhi').value||20));
+  let glo=Math.max(1,Math.min(40,+$('#set-goallo').value||9)), ghi=Math.max(1,Math.min(60,+$('#set-goalhi').value||17));
   if(ghi<glo) ghi=glo;
   const ds=Math.max(1,Math.min(10,+$('#set-defsets').value||2));
-  Object.assign(state.settings,{repLo:lo,repHi:hi,defSets:ds,setGoalLo:glo,setGoalHi:ghi});
+  Object.assign(state.settings,{repLo:lo,repHi:hi,defSets:ds,cycleGoalLo:glo,cycleGoalHi:ghi,goal:CYCLE_UNIT_COUNT});
   $('#set-replo').value=lo; $('#set-rephi').value=hi; $('#set-defsets').value=ds; $('#set-goallo').value=glo; $('#set-goalhi').value=ghi;
   saveState(); zeigeZyklusZiel(); renderStats(); if(state.active) renderActive();
 }));
-/* Der abgeleitete Zykluswert muss direkt unter dem Wochenfeld stehen —
-   sonst rätselt man, woher die 4–9 in der Statistik kommen. */
+/* Der Korridor wird seit V92 direkt pro Sechs-Tage-Zyklus gespeichert. */
 function zeigeZyklusZiel(){
   const el = $('#set-goal-cycle'); if(!el) return;
   const t1 = groupTargetCycle(1,1), t2 = groupTargetCycle(2,1);
-  el.innerHTML = `Daraus pro Zyklus (÷ ${CYCLES_PER_WEEK.toFixed(2).replace('.',',')}): <b>${t1.lo}–${t1.hi} Sätze</b> für die meisten Gruppen, <b>${t2.lo}–${t2.hi}</b> für Rücken und Schultern.`;
+  el.innerHTML = `Direktes Zyklusziel: <b>${t1.lo}–${t1.hi} Sätze</b> für die meisten Gruppen, <b>${t2.lo}–${t2.hi}</b> für Rücken und Schultern.`;
 }
 $('#set-beine').addEventListener('click',()=>{
   state.settings.beineImZyklus = !state.settings.beineImZyklus; saveState(); haptic();
@@ -8978,7 +9044,6 @@ function exAchCard(ex){
 }
 
 /* ================= EINSTELLUNGEN / DATEN ================= */
-$('#set-goal').addEventListener('change',()=>{ const v=Math.max(1,Math.min(14,+$('#set-goal').value||2)); state.settings.goal=v; $('#set-goal').value=v; saveState(); renderHome(); });
 $('#set-vaultmail').addEventListener('change',()=>{
   const el = $('#set-vaultmail'), v = el.value.trim();
   if(v && !validMail(v)){ el.classList.add('err'); toast('Das sieht nicht nach einer E-Mail-Adresse aus'); return; }
@@ -9053,7 +9118,7 @@ $('#import-file').addEventListener('change',e=>{
     if(!Array.isArray(s.workouts)) throw 0;
     if(!await ask('Daten ersetzen?', `${s.workouts.length} Workouts aus der Datei ersetzen deinen aktuellen Stand.\nDein jetziger Stand wird vorher als Sicherungspunkt abgelegt.`, {ok:'Importieren', tone:'warn'})) return;
     makeSnapshot('vor Import', true);
-    state = Object.assign({customEx:[],templates:[],active:null,ach:{},settings:{goal:5}}, s);
+    state = Object.assign({customEx:[],templates:[],active:null,ach:{},settings:normalisiereSettings({})}, s);
     /* Eine fremde Datei kann jede Form haben. Bis V63 prüfte der Import nur,
        ob `workouts` ein Array ist — eine einzige kaputte Einheit darin ließ
        migrateState() fliegen und die App war bis zum Neuladen tot. */
@@ -9083,7 +9148,7 @@ function renderSnapshots(){
       const restored = JSON.parse(s.data);
       if(!Array.isArray(restored.workouts)) throw 0;
       state = Object.assign({workouts:[],customEx:[],templates:[],active:null,ach:{},bodyweight:[],exOpt:{},measures:[],settings:{}}, restored);
-      migrateState(); evalAchievements(); saveState();
+      repariereState(); migrateState(); evalAchievements(); saveState();
       closeModals(); renderAll(); toast('Stand wiederhergestellt ✓');
     }catch(_){ toast('Sicherungspunkt beschädigt'); }
   }));
@@ -9129,7 +9194,7 @@ $('#btn-wipe').addEventListener('click', async ()=>{
   if(!await ask('Wirklich alle Daten löschen?', `${n} ${n===1?'Workout':'Workouts'}, alle Erfolge und Einstellungen werden entfernt.${cloud}`, {ok:'Alles löschen', tone:'danger'})) return;
   if(!await ask('Letzte Warnung', 'Danach ist der aktive Stand leer. Ein Sicherungspunkt bleibt als Rückweg erhalten.', {ok:'Ja, endgültig löschen', tone:'danger'})) return;
   makeSnapshot('vor Löschen', true);   // Rückweg offen halten
-  state = {workouts:[],customEx:[],templates:[],active:null,ach:{},settings:{goal:5}};
+  state = {workouts:[],customEx:[],templates:[],active:null,ach:{},settings:normalisiereSettings({})};
   saveState(); closeModals(); renderAll();
   toast('Daten gelöscht — Sicherungspunkt vorhanden', 'Wiederherstellen', ()=>{
     renderSnapshots(); openModal('#modal-settings');
@@ -9330,7 +9395,7 @@ function muscleBars(m, ws){
   const max = entries[0][1];
   return entries.map(([k,v])=>`<div class="mbar"><span>${MUSCLES[k]}</span><span class="bar"><i style="width:${Math.round(v/max*100)}%"></i></span><span class="val">${v%1? v.toFixed(1).replace('.',','):v}</span></div>`).join('');
 }
-/* Gruppen-Balken mit Wochenziel-Ampel; antippen öffnet die Übungs-Aufschlüsselung */
+/* Gruppen-Balken mit Zyklusziel-Ampel; antippen öffnet die Übungs-Aufschlüsselung */
 /* ── ZIELKORRIDOR: gilt PRO MUSKEL, nicht pro Gruppe ────────────────────
    Die Literatur (Schoenfeld et al., Dosis-Wirkungs-Metaanalysen) nennt
    10–20 Sätze pro Woche und MUSKEL. Die Anzeige gruppiert aber: „Rücken"
@@ -9341,8 +9406,8 @@ function muscleBars(m, ws){
    Lösung: Der Korridor skaliert mit der Zahl der in dieser Gruppe
    tatsächlich trainierten Muskeln. */
 /* groupTarget(mult, weeks) — die Wochenvariante — ist mit der Umstellung auf
-   Zyklen ersatzlos entfallen. Der Nachfolger ist groupTargetCycle(mult, zyklen)
-   weiter oben; er leitet den Zykluswert aus demselben Wocheneinstellwert ab. */
+   Zyklen ersatzlos entfallen. Der Nachfolger liest den direkt gespeicherten
+   Zykluskorridor. */
 /* Satz-Balken.
    Skalierung: JEDE ZEILE hat ihre eigene Skala (0 bis 1,6 × Korridor-Obergrenze).
    Vorher lief alles über einen gemeinsamen Maximalwert — bei einer Skala bis 60
@@ -9366,7 +9431,15 @@ function groupBars(m, ws, zyklen){
   const zeile = ([g,v], leer) => {
     const def = defOf(g), frei = !!def[3], bein = isLegGroup(g);
     const t = groupTargetCycle(def[2], z);
-    const A = AMPEL[setState4(v, t)];
+    /* Die 11-Satz-Grenze gilt je Muskel in EINER Einheit. Die Summe aus
+       mehreren Einheiten oder Zyklen darf sie nicht auslösen. */
+    const maxProEinheit = (ws||[]).reduce((mx,w)=>{
+      const mm=muscleSetsBy([w],statsSetMode);
+      const wert=def[1].reduce((a,k)=>a+(mm[k]||0),0);
+      return Math.max(mx,wert);
+    },0);
+    const ineffizient=maxProEinheit>SESSION_EFF_MAX*(def[2]||1);
+    const A = AMPEL[ineffizient?'ineffizient':setState4(v, t)];
     const col = leer? 'var(--txt3)' : bein? 'var(--acc)' : frei? 'var(--txt3)' : A.c;
     const zeichen = (bein || frei)? '' : A.z;
     const skala = Math.max(t.hi*1.6, v*1.05, 1);
@@ -9418,8 +9491,8 @@ function groupBars(m, ws, zyklen){
     : '';
   return rows + beinZeile + `<p class="tiny" style="margin-top:8px;color:var(--txt3)">Ziel <b>${t1.lo}–${t1.hi}</b> Sätze pro Muskel und Zyklus${z>1? ` · hier <b>${tz.lo}–${tz.hi}</b> über ${z} Zyklen`:''}.
     <details class="erkl"><summary>Wie wird gerechnet?</summary><div>
-      <b>${S.setGoalLo||10}–${S.setGoalHi||20} Sätze pro Muskel und Woche</b> ÷ ${CYCLES_PER_WEEK.toFixed(2).replace('.',',')} Zyklen = <b>${t1.lo}–${t1.hi} pro Zyklus</b>. Rücken und Schultern zählen doppelt (mehrere eigenständige Muskeln), die drei Brustanteile sind <b>ein</b> Muskel.<br>
-      Ab <b>${SESSION_EFF_MAX} Sätzen pro Muskel und Einheit</b> ist kein zusätzlicher Zuwachs mehr messbar (Robinson/Pelland) — darüber steht „!".${
+      Der direkt gespeicherte Korridor ist <b>${S.cycleGoalLo||9}–${S.cycleGoalHi||17} Sätze pro Muskel und Zyklus</b>. Rücken und Schultern zählen doppelt (mehrere eigenständige Muskeln), die drei Brustanteile sind <b>ein</b> Muskel.<br>
+      Ab <b>${SESSION_EFF_MAX} Sätzen pro Muskel in einer einzelnen Einheit</b> ist kein zusätzlicher Zuwachs mehr messbar (Robinson/Pelland) — nur dann steht „!". Eine hohe Summe über mehrere Einheiten löst diese Warnung nicht aus.${
       beinRows.length? `<br>Beine laufen außerhalb des Zyklus und werden rollierend über ${LEG_ROLL_DAYS} Tage gezeigt — unregelmäßig trainiert, deshalb ohne Ampel.`:''}<br>
       Die Quellen stehen in den Einstellungen unter „Satzziele".
     </div></details></p>`;
@@ -9685,23 +9758,26 @@ function delta(cur, prev){
   if(!isFinite(p) || p===0) return `<i class="kdelta" style="color:var(--txt3)">±0%</i>`;
   return `<i class="kdelta" style="color:${p>0?'var(--green)':'var(--red)'}">${p>0?'▲':'▼'} ${p>0?'+':''}${p}%</i>`;
 }
-/* `hinweis` gehört zum Kennzahlenblock — etwa „Vergleich zu Zyklus 7".
-   Vorher stand dieser Satz als eigenes <div> DARUNTER und wurde mit
-   margin:-8px wieder herangezogen. Solche Gegenkorrekturen sind der Beweis,
-   dass der Baustein die falsche Grenze hatte: Der Satz erklärt die Pfeile in
-   den Kacheln, also gehört er in denselben Block. Vier Stellen weniger, an
-   denen das Raster durchbrochen wird. */
-function kpiRow(ws, prevWs, hinweis){
-  const vol=ws.reduce((a,w)=>a+wVolume(w),0), sets=ws.reduce((a,w)=>a+wSets(w),0);
-  const prc=ws.reduce((a,w)=>a+(w.prs?w.prs.length:0),0);
-  const pv = prevWs? prevWs.reduce((a,w)=>a+wVolume(w),0) : 0;
-  const psets = prevWs? prevWs.reduce((a,w)=>a+wSets(w),0) : 0;
-  return `<div class="kpis"${hinweis? '' : ' style="margin-bottom:12px"'}>
-    <div class="kpi"><b>${ws.length}</b><span>Workouts</span>${prevWs?delta(ws.length,prevWs.length):''}</div>
-    <div class="kpi"><b>${fmtVol(vol)}</b><span>Volumen</span>${delta(vol,pv)}</div>
-    <div class="kpi"><b>${sets}</b><span>Sätze</span>${delta(sets,psets)}</div>
-    <div class="kpi"><b class="pr">${prc}</b><span>PRs</span></div>
-  </div>${hinweis? `<div class="kpihint tiny">${hinweis}</div>` : ''}`;
+function cycleMetrics(cs){
+  const n=Math.max(1,(cs||[]).length), ws=cycleWorkouts(cs||[]);
+  return {
+    einheiten:(cs||[]).reduce((a,c)=>a+(c.einheitenErledigt||0),0)/n,
+    volumen:ws.reduce((a,w)=>a+wVolume(w),0)/n,
+    saetze:ws.reduce((a,w)=>a+wSets(w),0)/n,
+    voll:(cs||[]).filter(c=>c.vollstaendig).length/n*100
+  };
+}
+/* Auf Zyklus-Reitern sind Summen über viele Workouts irreführend. Jede
+   Kennzahl ist deshalb explizit ein Durchschnitt pro Zyklus. */
+function cycleKpiRow(cs, prevCs, hinweis){
+  const m=cycleMetrics(cs), p=prevCs&&prevCs.length?cycleMetrics(prevCs):null;
+  const z=v=>v.toLocaleString('de-DE',{minimumFractionDigits:1,maximumFractionDigits:1});
+  return `<div class="kpis"${hinweis?'':' style="margin-bottom:12px"'}>
+    <div class="kpi"><b>${z(m.einheiten)}</b><span>Ø Einheiten/Zyklus</span>${p?delta(m.einheiten,p.einheiten):''}</div>
+    <div class="kpi"><b>${fmtVol(Math.round(m.volumen))}</b><span>Ø Volumen/Zyklus</span>${p?delta(m.volumen,p.volumen):''}</div>
+    <div class="kpi"><b>${z(m.saetze)}</b><span>Ø Sätze/Zyklus</span>${p?delta(m.saetze,p.saetze):''}</div>
+    <div class="kpi"><b>${Math.round(m.voll)} %</b><span>vollständig</span>${p?delta(m.voll,p.voll):''}</div>
+  </div>${hinweis?`<div class="kpihint tiny">${hinweis}</div>`:''}`;
 }
 function prListHtml(ws){
   const prs = ws.flatMap(w=>(w.prs||[]).map(p=>({...p,date:w.date})));
@@ -9797,16 +9873,14 @@ function overviewFenster(){
   if(cs.length){
     const n=Math.min(5,cs.length), aktuell=cs.slice(-n), vorher=cs.slice(-2*n,-n);
     return {art:'zyklen', cs:aktuell, ws:cycleWorkouts(aktuell),
+      prevCs:vorher.length===n?vorher:null,
       prevWs:vorher.length===n?cycleWorkouts(vorher):null,
       label:n===1?'Letzter abgeschlossener Zyklus':`Letzte ${n} abgeschlossene Zyklen`,
       vergleich:vorher.length===n?(n===1?'gegen den Zyklus davor':`gegen die ${n} Zyklen davor`):''};
   }
-  const hist=workoutsBisHeute();
-  const n=Math.min(6,hist.length), ws=hist.slice(-n), vorher=hist.slice(-2*n,-n);
-  return {art:'einheiten',cs:[],ws,
-    prevWs:vorher.length===n?vorher:null,
-    label:`Letzte ${n} ${n===1?'Einheit':'Einheiten'}`,
-    vergleich:vorher.length===n?(n===1?'gegen die Einheit davor':`gegen die ${n} Einheiten davor`):''};
+  const lauf=runningCycle();
+  if(lauf) return {art:'zyklen',cs:[lauf],ws:lauf.ws,prevCs:null,prevWs:null,label:`Laufender Zyklus ${lauf.n}`,vergleich:''};
+  return {art:'none',cs:[],ws:[],prevCs:null,prevWs:null,label:'Noch kein A/B-Zyklus',vergleich:''};
 }
 function overviewTrendCard(){
   const cs=closedCycles().slice(-8);
@@ -9828,48 +9902,41 @@ function overviewTrendCard(){
       <p class="kpihint tiny">${aussage} Volumen ist Arbeit, nicht automatisch Kraft — die Kraftentwicklung steht separat darunter.</p>
       <button class="btn btn-ghost btn-block btn-sm" data-stat-tab="month">5-Zyklen-Analyse öffnen</button></div>`;
   }
-  const ws=workoutsBisHeute().slice(-8);
-  if(ws.length<2) return '';
-  const pts=ws.map(w=>({y:Math.round(wVolume(w)),l:new Date(w.date).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})}));
-  return `<div class="card"><h3 style="margin-bottom:2px">Leistungstrend</h3>
-    <p class="tiny">Volumen je Einheit · bis zwei Zyklen abgeschlossen sind.</p>
-    ${svgLine(pts,v=>fmtVol(v),{fill:true})}</div>`;
+  return '';
 }
 /* Konsistenz ohne erfundenen Gesamtscore. Entscheidend sind beim
    Push-A/Pull-A/Rest/Push-B/Pull-B/Rest-Rhythmus drei überprüfbare Größen: Wurde der Zyklus
    vollständig, wie lange dauerte er und wie regelmäßig wurde trainiert? */
 function overviewRhythmCard(){
   if(!planPasstZuZyklen()) return '';
-  const hist=workoutsBisHeute(), alle=closedCycles(), cs=alle.slice(-8), lauf=runningCycle();
+  const alle=closedCycles(), cs=alle.slice(-8), lauf=runningCycle();
   if(cs.length<2){
     const sub=lauf
-      ? `Zyklus ${lauf.n} läuft · ${lauf.ws.length} ${lauf.ws.length===1?'Einheit':'Einheiten'}${lauf.fehlt.length?' · offen: '+lauf.fehlt.join(', '):' · alle vier Workouts erledigt'}.`
+      ? `Zyklus ${lauf.n} läuft · ${lauf.einheitenErledigt}/${CYCLE_UNIT_COUNT} Einheiten${lauf.fehlt.length?' · offen: '+lauf.fehlt.join(', '):' · alle vier Einheiten erledigt'}.`
       : 'Der erste Push A startet die Messung.';
-    return `<div class="card"><h3 style="margin-bottom:3px">Trainingsrhythmus</h3>
-      <p class="tiny">${sub}</p><div class="empty" style="padding:14px">Ab zwei abgeschlossenen Zyklen zeigt die App Vollständigkeit, Dauer und Trainingsabstand.</div></div>`;
+    return `<div class="card"><h3 style="margin-bottom:3px">Zyklustreue</h3>
+      <p class="tiny">${sub}</p><div class="empty" style="padding:14px">Ab zwei abgeschlossenen Zyklen zeigt die App Ø Einheiten, Vollständigkeit und Dauer pro Zyklus.</div></div>`;
   }
   const voll=cs.filter(c=>c.vollstaendig).length;
   const quote=Math.round(voll/cs.length*100);
-  const avg=cs.reduce((a,c)=>a+c.tage,0)/cs.length;
-  const seit30=hist.filter(w=>Date.parse(w.date)>=Date.now()-30*864e5).length;
-  const ab=abstandStat(hist.slice(-14));
+  const avgTage=cs.reduce((a,c)=>a+c.tage,0)/cs.length;
+  const avgEinheiten=cs.reduce((a,c)=>a+c.einheitenErledigt,0)/cs.length;
   let lead='Rhythmus wird stabiler', col='var(--txt)';
-  if(quote>=90 && avg<=CYCLE_MAX_TAGE){ lead='Rhythmus stabil'; col='var(--green)'; }
+  if(quote>=90 && avgTage<=CYCLE_MAX_TAGE){ lead='Rhythmus stabil'; col='var(--green)'; }
   else if(quote<75){ lead='Mehrere Zyklen blieben unvollständig'; col='var(--gold)'; }
-  else if(avg>CYCLE_MAX_TAGE){ lead='Die Zyklen dauern aktuell zu lang'; col='var(--gold)'; }
+  else if(avgTage>CYCLE_MAX_TAGE){ lead='Die Zyklen dauern aktuell zu lang'; col='var(--gold)'; }
   const aktuell=lauf
-    ? `Aktuell: Zyklus ${lauf.n}, Tag ${lauf.tage} · ${lauf.ws.length} ${lauf.ws.length===1?'Einheit':'Einheiten'}${lauf.vollstaendig?' · A und B erledigt':' · offen: '+lauf.fehlt.join(', ')}.`
+    ? `Aktuell: Zyklus ${lauf.n}, Tag ${lauf.tage} · ${lauf.einheitenErledigt}/${CYCLE_UNIT_COUNT} Einheiten${lauf.vollstaendig?' · vollständig':' · offen: '+lauf.fehlt.join(', ')}.`
     : 'Aktuell ist kein offener Zyklus vorhanden.';
   return `<div class="card"><div class="row" style="align-items:flex-start"><div class="grow">
-      <h3 style="margin-bottom:3px">Trainingsrhythmus</h3><b style="color:${col}">${lead}</b></div>
+      <h3 style="margin-bottom:3px">Zyklustreue</h3><b style="color:${col}">${lead}</b></div>
       <span class="badge type">${cs.length} Zyklen</span></div>
     <div class="kpis" style="margin:12px 0 0">
       <div class="kpi"><b>${quote} %</b><span>vollständig</span></div>
-      <div class="kpi"><b>${avg.toLocaleString('de-DE',{maximumFractionDigits:1})}</b><span>Ø Tage/Zyklus</span></div>
-      <div class="kpi"><b>${seit30}</b><span>Workouts/30 Tage</span></div>
+      <div class="kpi"><b>${avgEinheiten.toLocaleString('de-DE',{minimumFractionDigits:1,maximumFractionDigits:1})}</b><span>Ø Einheiten/Zyklus</span></div>
+      <div class="kpi"><b>${avgTage.toLocaleString('de-DE',{maximumFractionDigits:1})}</b><span>Ø Tage/Zyklus</span></div>
     </div>
-    <p class="kpihint tiny">${aktuell}${ab? ` Median zwischen den letzten Einheiten: <b>${ab.median} ${ab.median===1?'Tag':'Tage'}</b>.`:''}
-      Nur abgeschlossene, bereits stattgefundene Einheiten fließen in die Kennzahlen ein.</p></div>`;
+    <p class="kpihint tiny">${aktuell} Nur abgeschlossene Zyklen fließen in die Kennzahlen ein.</p></div>`;
 }
 function overviewMuscleCard(){
   const c=runningCycle() || closedCycles().slice(-1)[0] || null;
@@ -9987,6 +10054,16 @@ function renderOverviewStats(){
     el.innerHTML=emptyStats('Noch keine Statistik','Nach deinem ersten Training erscheinen hier Trends, Muskelgruppen und Kraftentwicklung.');
     return;
   }
+  if(!planPasstZuZyklen()){
+    lastStatsWs=hist;
+    const gains=zuwachsStat(4).filter(x=>x.diff>0);
+    el.innerHTML=leadCard('Die neue Zyklusstatistik beginnt mit Push A.', 'warn', planHinweis())
+      + cycleUnitsHtml(null)
+      + `<div class="card"><div class="tiny">Frühere Workouts werden nicht umgedeutet. Sie bleiben vollständig unter <b>Gesamt</b> und in den Übungsverläufen erhalten.</div></div>`
+      + overviewStrengthCard(gains)
+      + overviewBodyweightCard();
+    return;
+  }
   const f=overviewFenster(); lastStatsWs=f.ws;
   const gains=zuwachsStat(4).filter(x=>x.diff>0);
   const prs=f.ws.reduce((a,w)=>a+(w.prs||[]).length,0);
@@ -9999,10 +10076,12 @@ function renderOverviewStats(){
     aussage=`${esc(x.name)}: ${von} → ${bis} · +${fmtW(x.diff)} kg.`;
   }else if(prs) aussage=`${prs} ${prs===1?'neue Bestleistung':'neue Bestleistungen'} im aktuellen Fenster.`;
   const letzter=hist[hist.length-1];
+  const aktuell=runningCycle() || closedCycles().slice(-1)[0] || null;
   el.innerHTML=`<div class="card stats-overview-lead"><div class="up">Aktueller Stand</div>
       <b style="font-size:var(--fs-lg);line-height:1.35;display:block;margin-top:5px">${aussage}</b>
-      <div class="tiny" style="margin-top:7px">${f.label} · ${f.ws.length} ${f.ws.length===1?'Workout':'Workouts'} · zuletzt ${fmtDate(letzter.date)}.</div></div>`
-    + kpiRow(f.ws,f.prevWs,f.vergleich||null)
+      <div class="tiny" style="margin-top:7px">${f.label} · ${f.cs.length} ${f.cs.length===1?'Zyklus':'Zyklen'} · zuletzt ${fmtDate(letzter.date)}.</div></div>`
+    + cycleUnitsHtml(aktuell)
+    + (f.cs.length && !f.cs.some(c=>c.laufend)?cycleKpiRow(f.cs,f.prevCs,f.vergleich||null):'')
     + overviewTrendCard()
     + overviewRhythmCard()
     + overviewMuscleCard()
@@ -10792,24 +10871,24 @@ function renderWeekStats(){
   const el = $('#stats-week');
   const closed = closedCycles();
   const lauf = runningCycle();
-  /* Kein Push in der ganzen Historie: Der Plan passt nicht zur Zyklus-Logik.
-     Vorher stand hier „Dein erster Zyklus läuft gerade" — auch nach zwanzig
-     Einheiten. Die Sätze pro Muskel stimmen trotzdem und werden gezeigt. */
+  /* Legacy-Workouts werden nicht nachträglich in das neue System geraten.
+     Sie bleiben vollständig im Gesamt-Reiter; hier beginnt die Wahrheit
+     erst mit einem expliziten Push A. */
   if(!planPasstZuZyklen()){
     const alle = workoutsBisHeute();
     lastStatsWs = alle;
-    el.innerHTML = leadCard('Für deinen Plan kann ich keine Zyklen zählen.', 'warn', planHinweis())
-      + `<div class="card"><h3 style="margin-bottom:8px">Sätze pro Muskelgruppe <span class="tiny">(über alle ${alle.length} Einheiten)</span></h3>
-         ${groupBars(muscleSetsBy(alle, statsSetMode), alle, 1)}</div>`
-      + `<div class="card"><div class="tiny">Trage deine Einheiten als <b>Push</b> und <b>Pull</b> ein, dann rechnet die Statistik in Zyklen.
-         Der Reiter <b>Gesamt</b> funktioniert unabhängig davon — er kommt ohne Zyklen aus.</div></div>`;
+    el.innerHTML = leadCard('Noch kein Zyklus im neuen Trainingssystem.', 'warn', planHinweis())
+      + cycleUnitsHtml(null)
+      + `<div class="card"><div class="tiny">Die Reihenfolge ist <b>Push A → Pull A → Rest → Push B → Pull B → Rest</b>.
+         Alle ${alle.length} bisherigen ${alle.length===1?'Einheit bleibt':'Einheiten bleiben'} unverändert unter <b>Gesamt</b>.</div></div>`;
     return;
   }
   if(!closed.length){
     lastStatsWs = lauf? lauf.ws : [];
     el.innerHTML = lauf
       ? leadCard('Dein erster Zyklus läuft gerade.', 'neutral',
-          `${lauf.ws.length} ${lauf.ws.length===1?'Einheit':'Einheiten'} bisher${lauf.fehlt.length?' · offen: '+lauf.fehlt.join(', '):' · alle vier Workouts erledigt'}. Nach dem zweiten Rest wird dieser Zyklus ausgewertet.`)
+          `${lauf.einheitenErledigt}/${CYCLE_UNIT_COUNT} Einheiten bisher${lauf.fehlt.length?' · offen: '+lauf.fehlt.join(', '):' · alle vier Einheiten erledigt'}. Nach dem zweiten Rest wird dieser Zyklus ausgewertet.`)
+        + cycleUnitsHtml(lauf)
         + muscleSection(lauf.ws, 1, {zyklen:1, laufend:true})
       : emptyStats('Noch keine Trainings', 'Sobald du deinen ersten Push A abschließt,<br>fängt Zyklus 1 an.');
     return;
@@ -10863,7 +10942,8 @@ function renderWeekStats(){
 
   el.innerHTML = nav.html
     + leadCard(txt, ton, subPlus)
-    + kpiRow(c.ws, vor? vor.ws : undefined, vor? `Vergleich zu Zyklus ${vor.n}` : null)
+    + cycleUnitsHtml(c)
+    + cycleKpiRow([c], vor? [vor] : null, vor? `Vergleich zu Zyklus ${vor.n}` : null)
     + muscleSection(c.ws, 1, {zyklen:1})
     + `<div class="card"><h3>Volumen je Einheit</h3>${svgBars(uLab,uVol,v=>fmtVol(v))}</div>`
     + prListHtml(c.ws);
@@ -10915,8 +10995,9 @@ function renderSpanStats(el, n){
   const zSet = cs.map(c=>c.ws.reduce((a,w)=>a+wSets(w),0));
 
   el.innerHTML = leadCard(txt, ton, sub)
-    + kpiRow(ws, vorher.length? cycleWorkouts(vorher) : undefined,
+    + cycleKpiRow(cs, vorher.length? vorher : null,
              vorher.length? `Vergleich zu den ${vorher.length} Zyklen davor` : null)
+    + cycleAdherenceCard(cs)
     + pushPullCard(ws)
     + muscleSection(ws, z, {zyklen:z})
     + `<div class="card"><h3>Volumen je Zyklus</h3>${svgBars(zLab,zVol,v=>fmtVol(v))}</div>`
@@ -11013,7 +11094,7 @@ function exTrend(exId, from){
      Rechnung NaN. Lieber gar keine Aussage als eine unsinnige. */
   if(!isFinite(slope) || !isFinite(r2)) return {ok:false, n, broken:true};
   const zyklen = pts[n-1].x || 1;                     // Spanne in Zyklen
-  return {ok:true, n, slope, r2, zyklen, weeks:zyklen/CYCLES_PER_WEEK,
+  return {ok:true, n, slope, r2, zyklen,
           from:h[0].bestW, to:h[n-1].bestW, cut:from>0,
           seit: h[0].date,
           solid: r2>=0.5, pct: h[0].bestW>0 ? (h[n-1].bestW-h[0].bestW)/h[0].bestW*100 : 0};
@@ -12500,10 +12581,11 @@ const SPLITS = {
     txt:'Jeder Muskel wird zwei Mal pro Woche trainiert. Robust, wenn mal ein Tag ausfällt.',
     tage:{2:['OK','UK'], 3:['OK A','UK','OK B'], 4:['OK A','UK A','OK B','UK B'],
           5:['OK A','UK A','OK B','UK B','OK C'], 6:['OK A','UK A','OK B','UK B','OK C','UK C']}},
-  ppl:{n:'Push / Pull / Beine', sub:'3–6 Tage · klare Trennung',
-    txt:'Drücken, Ziehen und Beine getrennt. Ab sechs Tagen wird jeder Muskel zwei Mal getroffen.',
-    tage:{2:['Push','Pull'], 3:['Push','Pull','Beine'], 4:['Push','Pull','Beine','Oberkörper'],
-          5:['Push','Pull','Beine','Push B','Pull B'], 6:['Push A','Pull A','Beine A','Push B','Pull B','Beine B']}}
+  ppl:{n:'Push A / Pull A / Push B / Pull B', sub:'4 Einheiten · 6-Tage-Zyklus',
+    txt:'Push A, Pull A, Pause, Push B, Pull B, Pause. Beine sind in den Ganzkörpereinheiten enthalten.',
+    tage:{2:['Push A','Pull A','Push B','Pull B'],3:['Push A','Pull A','Push B','Pull B'],
+          4:['Push A','Pull A','Push B','Pull B'],5:['Push A','Pull A','Push B','Pull B'],
+          6:['Push A','Pull A','Push B','Pull B']}}
 };
 /* Ein Tag besteht aus Plätzen. c = mehrgelenkig zuerst, i = isolierend danach. */
 const TAG_PLAN = {
@@ -12590,7 +12672,8 @@ function buildSplit(p){
       const wahl = best || (exIds.length<3 ? ersatz : null);
       if(wahl){ exIds.push(wahl.id); benutzt.add(wahl.id); }
     }
-    return {name, type:TAG_TYP[tagBasis(name)]||'Andere', exIds};
+    const type=TAG_TYP[tagBasis(name)]||'Andere';
+    return {name, type, variant:varianteAusName(name,type), exIds};
   });
 }
 /* Legt die erzeugten Vorlagen an. Bestehende mit gleichem Namen werden ersetzt,
@@ -12598,7 +12681,7 @@ function buildSplit(p){
 function splitUebernehmen(plaene){
   const namen = new Set(plaene.map(x=>x.name));
   state.templates = (state.templates||[]).filter(t=>!namen.has(t.name));
-  plaene.forEach(x=>state.templates.push({id:uid(), name:x.name, type:x.type, exIds:x.exIds.slice()}));
+  plaene.forEach(x=>state.templates.push({id:uid(), name:x.name, type:x.type, variant:x.variant||null, exIds:x.exIds.slice()}));
   saveState();
 }
 
@@ -12646,7 +12729,7 @@ function obInhalt(){
       <div class="pcards">${obKarten('ort', Object.entries(ORTE))}</div>`;
     case 4: return `<h2>Dein Alltag</h2><p class="obsub">Bewegung außerhalb des Trainings macht einen großen Teil des Verbrauchs aus.</p>
       <div class="pcards">${obKarten('alltag', Object.entries(ALLTAG))}</div>
-      <div class="obdays"><span>Trainingstage pro Woche</span>
+      <div class="obdays"><span>Einheiten pro Woche <i>— nur für die Verbrauchsschätzung</i></span>
         <div class="daypick">${[2,3,4,5,6].map(d=>`<button class="chip ${p.tage===d?'on':''}" data-pick="tage:${d}">${d}</button>`).join('')}</div></div>
       <div class="obdays"><span>Feste Trainingstage <i>— für deine Streak</i></span>
         <div class="daypick weekdaypick">${[['Mo',1],['Di',2],['Mi',3],['Do',4],['Fr',5],['Sa',6],['So',0]].map(([n,d])=>`<button class="chip ${(p.trainingsTage||[]).includes(d)?'on':''}" data-obday="${d}">${n}</button>`).join('')}</div></div>`;
@@ -12671,7 +12754,7 @@ function obInhalt(){
           <p class="tiny">Grundumsatz ${m.bmr} · Gesamtverbrauch ${m.tdee} · Ziel ${m.ziel} kcal${m.gekappt?` <b>(auf die Untergrenze ${m.grenze} angehoben — tiefer wäre nicht sinnvoll)</b>`:''}</p>
         </div>`:''}
         <div class="obsecs"><h5>Was ich für dich anpasse</h5><p>${z.txt}</p>
-          <p>${ERFAHRUNG[p.erfahrung].txt} Wiederholungen ${z.reps[0]}–${z.reps[1]}, Ziel ${z.sets[0]}–${z.sets[1]} Sätze pro Muskelgruppe und Woche.</p></div>
+          <p>${ERFAHRUNG[p.erfahrung].txt} Wiederholungen ${z.reps[0]}–${z.reps[1]}, Ziel ${Math.max(1,Math.round(z.sets[0]*6/7))}–${Math.max(1,Math.round(z.sets[1]*6/7))} Sätze pro Muskelgruppe und 6‑Tage‑Zyklus.</p></div>
         ${plan?`<div class="obsecs"><h5>Vorlagen, die ich anlege</h5>
           ${plan.map(t=>`<div class="plday"><b>${t.name}</b><span>${t.exIds.length} Übungen</span>
             <small>${t.exIds.map(id=>{const e=getEx(id);return e?esc(e.name):'';}).filter(Boolean).join(' · ')}</small></div>`).join('')}
@@ -12742,13 +12825,15 @@ async function obFertig(){
     if(obErstlauf) vorlagen = true;
     else if(!state.templates.length) vorlagen = true;      // nichts zu verlieren
     else vorlagen = await ask('Vorlagen neu erzeugen?',
-      `Du hast ${state.templates.length} eigene ${state.templates.length===1?'Vorlage':'Vorlagen'}. Sollen sie durch den vorgeschlagenen ${p.split}-Split ersetzt werden?`,
+      `Du hast ${state.templates.length} eigene ${state.templates.length===1?'Vorlage':'Vorlagen'}. Sollen sie durch das vorgeschlagene System „${(SPLITS[p.split]||{}).n||p.split}“ ersetzt werden?`,
       {ok:'Ersetzen', tone:'warn'});
   }
   state.profile = p;
   state.settings.repLo = z.reps[0]; state.settings.repHi = z.reps[1];
   state.settings.setGoalLo = z.sets[0]; state.settings.setGoalHi = z.sets[1];
-  state.settings.goal = p.tage;
+  state.settings.cycleGoalLo = Math.max(1,Math.round(z.sets[0]*CYCLE_SOLL_TAGE/7));
+  state.settings.cycleGoalHi = Math.max(state.settings.cycleGoalLo,Math.round(z.sets[1]*CYCLE_SOLL_TAGE/7));
+  state.settings.goal = CYCLE_UNIT_COUNT;
   if(vorlagen) splitUebernehmen(obPlan);
   saveState();
   document.getElementById('modal-onboard').classList.remove('on');

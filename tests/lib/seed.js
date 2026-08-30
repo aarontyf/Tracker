@@ -9,7 +9,7 @@
    ══════════════════════════════════════════════════════════════════════ */
 
 /* Datenform, gegen die hier gebaut wird (aus finishWorkout() der App):
-     workout  {id, date, start, end, type, exercises:[…], prs:[…]}
+     workout  {id, date, start, end, type, variant, exercises:[…], prs:[…]}
      exercise {exId, name, sets:[…]}
      satz     {w, r, rr?, t?, rir?, ts?}   t: 'w'=Aufwärmen, 'd'=Dropset   */
 
@@ -48,7 +48,10 @@ function seedCode(o = {}) {
   /* Übungen mit Gewicht, aus verschiedenen Gruppen — Körpergewichts- und
      Assistenzübungen rechnen anders und würden die Erwartungswerte verwischen. */
   const pool = EXDB.filter(e => !/Körpergewicht|Assist/i.test(e.eq || '')).slice(0, 80);
-  const typen = ['Push', 'Pull', 'Beine'];
+  const einheiten = [
+    {type:'Push',variant:'A'}, {type:'Pull',variant:'A'},
+    {type:'Push',variant:'B'}, {type:'Pull',variant:'B'}
+  ];
   const jetzt = Date.now();
   const ws = [];
 
@@ -79,12 +82,17 @@ function seedCode(o = {}) {
       uebungen.push({ exId: ex.id, name: ex.name, sets });
     }
 
+    /* i läuft von neu nach alt. Die umgekehrte Position sorgt dafür, dass
+       die anschließend chronologische Liste bei Push A beginnt und echte
+       Vier-Einheiten-Zyklen bildet. */
+    const pos = (cfg.workouts - 1 - i) % einheiten.length;
     ws.push({
       id: 'seed-w' + i,
       date: datum,
       start: start,
       end: start + ganz(45, 80) * 6e4,
-      type: typen[i % typen.length],
+      type: einheiten[pos].type,
+      variant: einheiten[pos].variant,
       exercises: uebungen,
       prs: [],
     });
