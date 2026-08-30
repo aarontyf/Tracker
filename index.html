@@ -1247,6 +1247,117 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
 .ai-sensitive{border-color:color-mix(in srgb,var(--gold) 45%,var(--line));
   background:color-mix(in srgb,var(--gold) 7%,var(--s2))}
 
+/* ═══ V95 · PREMIUM WORKSPACE ════════════════════════════════════════
+   Die Oberfläche wird nicht bunter, sondern präziser: tiefere Flächen,
+   deutlichere Hierarchie und dichte Bento-Gruppen für zusammengehörige
+   Kennzahlen. Keine zusätzliche Bildsprache — die Daten sind die Grafik. */
+:root{
+  --bg:#05070A;--s1:#0D1117;--s2:#141A23;--s3:#1B2430;
+  --line:#202936;--line-2:#2C394A;--line-3:#3B4A5D;
+  --txt:#F7FAFF;--txt2:#B1BDCC;--txt3:#718096;
+  --a1:#071C2E;--a2:#0A3153;--a3:#0A568F;--a4:#087FC7;
+  --a5:#20A4F3;--a6:#6CC5FF;--a7:#B9E3FF;
+  --grad-a:linear-gradient(135deg,#7DD3FC 0%,#38BDF8 42%,#3B82F6 100%);
+  --acc-a08:rgba(32,164,243,.09);--acc-a16:rgba(32,164,243,.16);--acc-a30:rgba(32,164,243,.30);
+  --e1:0 1px 0 rgba(255,255,255,.025),0 8px 26px rgba(0,0,0,.18);
+  --e2:0 1px 0 rgba(255,255,255,.04),0 18px 46px rgba(0,0,0,.28);
+  --glow:0 0 0 1px rgba(108,197,255,.28),0 12px 34px -12px rgba(32,164,243,.72);
+  --r-sm:10px;--r-md:14px;--r-lg:18px;--r-xl:24px;
+  --hit-min:44px;--hit-comfort:44px;
+}
+body{background:var(--bg);letter-spacing:-.012em}
+body::before{background:
+  radial-gradient(900px 460px at 50% -10%,rgba(32,164,243,.17),transparent 64%),
+  radial-gradient(620px 420px at 108% 12%,rgba(59,130,246,.08),transparent 62%),
+  linear-gradient(rgba(255,255,255,.012) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(255,255,255,.012) 1px,transparent 1px);
+  background-size:auto,auto,32px 32px,32px 32px}
+.app{max-width:680px;padding-top:calc(var(--sp4) + env(safe-area-inset-top));padding-inline:var(--sp4)}
+.hd{align-items:center;margin-bottom:var(--sp5)}
+h1{font-size:clamp(1.55rem,5vw,2rem);letter-spacing:-.045em}
+h2{letter-spacing:-.03em}.tiny{line-height:1.35}
+.card{border-color:color-mix(in srgb,var(--line) 86%,transparent);border-radius:var(--r-lg);
+  padding:15px;margin-bottom:10px;background:
+  linear-gradient(145deg,rgba(255,255,255,.045),transparent 42%),var(--s1);box-shadow:var(--e1)}
+.card:hover{border-color:var(--line-2)}
+button{min-width:44px;min-height:44px}
+.btn{border-radius:var(--r-md)}
+.btn-acc{background:var(--grad-a);box-shadow:var(--glow)}
+.btn-ghost{background:rgba(255,255,255,.035);border-color:var(--line)}
+.iconbtn{background:rgba(255,255,255,.035);border-color:var(--line)}
+.hero{background:
+  radial-gradient(100% 80% at 50% 20%,rgba(32,164,243,.14),transparent 68%),
+  linear-gradient(160deg,rgba(255,255,255,.04),transparent 50%),var(--s1);
+  border-color:var(--line-2);box-shadow:var(--e2);padding:14px}
+.stats-tabs{top:calc(env(safe-area-inset-top) + 5px);padding:3px;margin-bottom:12px;
+  background:rgba(8,12,17,.84);border-color:rgba(113,128,150,.22);border-radius:var(--r-md);
+  backdrop-filter:blur(22px) saturate(140%);-webkit-backdrop-filter:blur(22px) saturate(140%)}
+.stats-tabs .chip{min-height:44px;padding:8px 14px}
+.stats-tabs .chip.on{background:var(--grad-a);box-shadow:0 7px 20px -12px var(--a5)}
+.stats-overview-lead{padding:18px;border-color:rgba(108,197,255,.35);background:
+  radial-gradient(110% 150% at 100% 0,rgba(32,164,243,.22),transparent 56%),
+  linear-gradient(145deg,rgba(255,255,255,.055),transparent 45%),var(--s1)}
+.premium-status{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:start}
+.premium-status .status-value{font-size:clamp(1.2rem,5vw,1.75rem);font-weight:820;letter-spacing:-.045em;line-height:1.12}
+.premium-status .status-side{text-align:right;min-width:72px}
+.premium-status .status-side b{display:block;font-size:var(--fs-h2);font-variant-numeric:tabular-nums}
+.premium-status .status-side span{display:block;color:var(--txt3);font-size:var(--fs-micro);text-transform:uppercase;letter-spacing:.08em}
+.cycle-track{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:15px}
+.cycle-track i{height:6px;border-radius:var(--r-full);background:var(--s3);overflow:hidden}
+.cycle-track i.done{background:linear-gradient(90deg,var(--a4),var(--a7));box-shadow:0 0 12px rgba(32,164,243,.24)}
+.stats-bento{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:10px}
+.stats-bento>.card{margin-bottom:0}
+.analytics-stack{display:grid;gap:10px;margin:10px 0}
+.insight-panel{overflow:hidden;border-color:var(--line-2)}
+.insight-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
+.insight-head h3{font-size:var(--fs-lg);font-weight:780;letter-spacing:-.025em}
+.insight-head p{color:var(--txt3);font-size:var(--fs-tiny);margin-top:2px}
+.insight-count{flex:none;color:var(--a7);background:var(--acc-a16);border:1px solid var(--acc-a30);
+  border-radius:var(--r-full);padding:4px 8px;font-size:var(--fs-micro);font-weight:800;letter-spacing:.05em}
+.insight-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.insight-metric{min-width:0;padding:11px;border:1px solid var(--line);border-radius:var(--r-md);
+  background:linear-gradient(145deg,rgba(255,255,255,.035),transparent 50%),rgba(255,255,255,.018)}
+.insight-metric[data-tone="good"]{border-color:rgba(108,197,255,.28);background:linear-gradient(145deg,rgba(32,164,243,.12),rgba(32,164,243,.025))}
+.insight-metric[data-tone="warn"]{border-color:rgba(242,72,63,.30)}
+.insight-metric .metric-label{display:block;color:var(--txt3);font-size:var(--fs-micro);font-weight:720;text-transform:uppercase;letter-spacing:.07em;line-height:1.25}
+.insight-metric .metric-value{display:block;margin-top:5px;color:var(--txt);font-size:var(--fs-lg);font-weight:820;letter-spacing:-.035em;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.insight-metric .metric-meta{display:block;margin-top:3px;color:var(--txt2);font-size:var(--fs-tiny);line-height:1.3;overflow-wrap:anywhere}
+.insight-metric.is-empty .metric-value{color:var(--txt3)}
+.metric-method{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}
+.metric-method summary{min-height:44px;display:flex;align-items:center;color:var(--txt3);font-size:var(--fs-tiny);cursor:pointer}
+.metric-method p{margin-top:5px;color:var(--txt3);font-size:var(--fs-tiny);line-height:1.4}
+.compact-details{margin:10px 0;border:1px solid var(--line);border-radius:var(--r-lg);background:rgba(255,255,255,.018);overflow:hidden}
+.compact-details>summary{min-height:48px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;font-weight:720;font-size:var(--fs-sub)}
+.compact-details>summary::after{content:'+';color:var(--a6);font-size:var(--fs-lg);font-weight:500}
+.compact-details[open]>summary::after{content:'−'}
+.compact-details>.details-body{padding:0 10px 10px}
+.compact-details>.details-body>.card:last-child{margin-bottom:0}
+summary{min-height:44px}
+details.erkl.warum>summary{min-height:44px}
+.rord{width:44px}
+.kpihint{border-radius:var(--r-sm);line-height:1.35}
+.empty{padding:14px!important;min-height:0}
+.nav{background:rgba(8,12,17,.90);border-top-color:rgba(113,128,150,.2);backdrop-filter:blur(22px) saturate(140%);-webkit-backdrop-filter:blur(22px) saturate(140%)}
+.nav::after{background:#080C11}
+.nav button.on::before{background:linear-gradient(90deg,var(--a4),var(--a7));box-shadow:0 0 14px var(--a5)}
+@media(max-width:480px){
+  .app{padding-inline:12px}.card{padding:13px}.hd{margin-bottom:14px}
+  .premium-status{grid-template-columns:minmax(0,1fr) 68px}.insight-grid{gap:6px}
+  .insight-metric{padding:10px 9px}.ovgap{grid-template-columns:minmax(74px,1fr) 1.4fr auto}
+}
+@media(min-width:680px){.stats-bento{grid-template-columns:repeat(2,minmax(0,1fr))}.insight-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(min-width:920px){
+  .app{max-width:1180px;padding-inline:26px}.screen>.hd{margin-bottom:24px}
+  .statspanel{column-count:initial}.statspanel>.card{break-inside:auto}
+  .stats-bento{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .analytics-stack{grid-template-columns:repeat(3,minmax(0,1fr));align-items:start}
+  .analytics-stack .insight-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #scr-home{max-width:940px;margin:0 auto}
+  .nav{left:50%;right:auto;bottom:14px;width:min(720px,calc(100% - 28px));transform:translateX(-50%);
+    border:1px solid rgba(113,128,150,.24);border-radius:20px;overflow:hidden;box-shadow:0 18px 52px rgba(0,0,0,.55)}
+  .nav::after{display:none}.nav .inner{max-width:none}
+}
+
 </style>
 </head>
 <body>
@@ -1254,7 +1365,6 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
 <!-- ================= PIN-SPERRE ================= -->
 <div id="lock">
   <div class="logo">Fitness<span class="acc">Tracker</span></div>
-  <div class="tiny" style="letter-spacing:.4px">created by Aaron Jeetun</div>
   <div id="lock-title" style="margin-top:24px;font-weight:750;font-size:var(--fs-body)">PIN eingeben</div>
   <div class="sub" id="lock-sub" style="font-size:var(--fs-sub);margin-top:3px"></div>
   <div class="pinrow" id="lock-dots"></div>
@@ -1266,8 +1376,8 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
 <div id="install-hint">
   <span class="bi" data-ico="down" style="margin:0"></span>
   <div class="grow">
-    <b style="color:var(--gold);font-size:var(--fs-sub)">Zum Homescreen hinzufügen!</b>
-    <div class="tiny" style="margin-top:3px">Auf dem iPhone löscht Safari die Daten nach 7 Tagen Nichtnutzung — <b>außer</b> die App liegt auf dem Homescreen. Unten auf <b>Teilen</b> ⬆️ → <b>„Zum Home-Bildschirm"</b>.</div>
+    <b style="color:var(--gold);font-size:var(--fs-sub)">App installieren</b>
+    <div class="tiny" style="margin-top:3px">Teilen → Zum Home-Bildschirm. So bleibt der Tracker schnell erreichbar.</div>
   </div>
   <button class="iconbtn" id="hint-close" aria-label="Hinweis ausblenden" data-ico-close></button>
 </div>
@@ -1730,7 +1840,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     <label class="tiny up" for="set-vaultmail">Empfänger</label>
     <input type="email" id="set-vaultmail" inputmode="email" autocomplete="email" spellcheck="false"
            placeholder="deine@mail.de" style="margin:4px 0 4px">
-    <p class="tiny" style="margin-bottom:8px">Optional für das lesbare Trainingsprotokoll. Das vollständige Backup ist die JSON-Datei oben.</p>
+    <p class="tiny" style="margin-bottom:8px">Optional für das Trainingsprotokoll.</p>
     <button class="btn btn-ghost btn-block btn-sm" id="btn-maillog" style="margin-bottom:12px"><span class="bi" data-ico="mail"></span>Trainingsprotokoll mailen</button>
     <div class="row">
       <button class="btn btn-ghost btn-sm grow" id="btn-export"><span class="bi" data-ico="down"></span>Datei</button>
@@ -1738,30 +1848,26 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
       <button class="btn btn-ghost btn-sm grow" id="btn-import"><span class="bi" data-ico="upload"></span>Import</button>
       <input type="file" id="import-file" accept=".json" style="display:none" aria-label="Sicherungsdatei auswählen" tabindex="-1">
     </div>
-    <p class="tiny" style="margin-top:8px">CSV lässt sich in Excel öffnen — eine Zeile pro Satz.</p>
   </div>
   <div class="card">
     <h3 style="margin-bottom:4px"><span class="bi" data-ico="shield"></span>Deine Daten</h3>
-    <p class="tiny" style="line-height:1.6">Ohne eine Cloud-Funktion bleiben alle Trainingsdaten <b>nur auf diesem Gerät</b>. Der Geräte-Sync speichert ausschließlich ein <b>Ende-zu-Ende-verschlüsseltes</b> Datenpaket; dabei erhält Supabase weder deinen Kopplungsschlüssel noch lesbare Trainingsdaten. Der optionale ChatGPT-Zugriff ist getrennt davon: Nach deiner Einwilligung wird eine <b>bereinigte, lesbare Kopie</b> gespeichert, damit ChatGPT sie auswerten kann.<br><br>
-    Die App nutzt kein Tracking, keine Werbung und keine Analyse-Dienste. Standort, Kamera und Kontakte werden nicht angefordert. Eine Datei-Sicherung verlässt dein Gerät nur, wenn du sie selbst teilst.<br><br>
-    <b>Ausgeschlossen von der ChatGPT-Kopie:</b> Name, E-Mail, Standort, PIN und Geräte-Sync-Schlüssel. Trainings- und Übungsnotizen werden als Trainingsdaten mitgeteilt. Du kannst die Kopie jederzeit wieder löschen.<br><br>
-    <b>Wichtig:</b> Bewahre den Kopplungsschlüssel sicher auf. Ohne ihn kann auch der Entwickler den Geräte-Sync nicht entschlüsseln.</p>
+    <p class="tiny" style="line-height:1.55">Lokal ohne Tracking. Der Geräte-Sync ist Ende-zu-Ende-verschlüsselt. Der getrennte ChatGPT-Zugriff teilt nur nach Einwilligung eine bereinigte Trainingskopie; Name, E-Mail, PIN und Sync-Schlüssel bleiben ausgeschlossen.</p>
   </div>
   <div class="card">
     <h3 style="margin-bottom:4px">Sicherungspunkte auf dem Gerät</h3>
-    <p class="tiny" style="margin-bottom:8px">Die App legt automatisch Stände an — nach jedem Training, höchstens einer pro Tag. Hilft bei Bedienfehlern, <b>nicht</b> wenn Safari die Website-Daten löscht.</p>
+    <p class="tiny" style="margin-bottom:8px">Automatisch nach Trainings, höchstens einmal täglich.</p>
     <div id="snap-list"></div>
   </div>
   <div class="card">
     <h3 style="margin-bottom:4px">App-Version</h3>
-    <p class="tiny" style="margin-bottom:8px">Zeigt die App eine alte Version, hier erzwingen. <b>Deine Trainingsdaten bleiben dabei immer erhalten.</b></p>
+    <p class="tiny" style="margin-bottom:8px">Update prüfen oder Cache neu laden. Trainingsdaten bleiben erhalten.</p>
     <div class="row">
       <button class="btn btn-ghost btn-sm grow" id="btn-checkupd">Nach Update suchen</button>
       <button class="btn btn-ghost btn-sm grow" id="btn-hardreload">Cache leeren &amp; neu laden</button>
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V94 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V95</p>
 </div></div>
 
 <div class="mback" id="modal-sync"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="sync-title">
@@ -5047,6 +5153,128 @@ function cycleAdherenceCard(cs){
   return `<div class="card"><h3 style="margin-bottom:3px">Einheiten pro Zyklus</h3>
     <p class="tiny" style="margin-bottom:8px">In wie vielen der letzten ${n} ${n===1?'Zyklus':'Zyklen'} jede Einheit enthalten war.</p>${rows}
     <p class="kpihint tiny"><b>${voll}/${n}</b> Zyklen vollständig · doppelte Workouts erhöhen die Quote nicht.</p></div>`;
+}
+/* V95 · vierzehn neue Kennzahlen, die vorhandene Auswertungen nicht
+   umbenennen. Jede Rechnung bleibt innerhalb einer Übung, Einheit oder eines
+   Zyklus; dadurch werden weder verschiedene Übungen noch offene Zyklen
+   miteinander vermischt. */
+function medianZahl(arr){
+  if(!arr.length) return null;
+  const a=arr.slice().sort((x,y)=>x-y), h=Math.floor(a.length/2);
+  return a.length%2?a[h]:(a[h-1]+a[h])/2;
+}
+function deltaPct(von,bis){ return von>0?(bis-von)/von*100:null; }
+function signedPct(v){ return v===null||!isFinite(v)?'—':`${v>0?'+':''}${Math.round(v)} %`; }
+function premiumAnalytics(cs){
+  const z=(Array.isArray(cs)?cs:statsClosedCycles()).filter(c=>c&&!c.laufend);
+  const ws=cycleWorkouts(z), n=z.length;
+  const unit=CYCLE_UNITS.map(s=>{
+    const treffer=[];
+    z.forEach(c=>{
+      const u=(c.einheiten||[]).find(x=>gleicherSchritt(x,s));
+      if(u&&u.workout) treffer.push(u.workout);
+    });
+    return {type:s.type,variant:s.variant,label:einheitLabel(s),workouts:treffer,
+      vorhanden:treffer.length,fehlt:Math.max(0,n-treffer.length),
+      vol:treffer.reduce((a,w)=>a+wVolume(w),0),sets:treffer.reduce((a,w)=>a+wSets(w),0)};
+  });
+  const gruppe=v=>unit.filter(x=>x.variant===v);
+  const sum=(arr,key)=>arr.reduce((a,x)=>a+x[key],0);
+  const a=gruppe('A'),b=gruppe('B'), aVol=sum(a,'vol'),bVol=sum(b,'vol'),aSet=sum(a,'sets'),bSet=sum(b,'sets');
+  const anteil=(x,y)=>x+y>0?Math.round(x/(x+y)*100):null;
+  const typ=t=>({a:unit.find(x=>x.type===t&&x.variant==='A'),b:unit.find(x=>x.type===t&&x.variant==='B')});
+  const push=typ('Push'),pull=typ('Pull');
+  const avg=x=>x&&x.vorhanden?x.vol/x.vorhanden:0;
+  const profile=unit.filter(x=>x.vorhanden).map(x=>({label:x.label,avg:avg(x)})).sort((x,y)=>y.avg-x.avg);
+  const miss=unit.slice().sort((x,y)=>y.fehlt-x.fehlt)[0]||null;
+
+  const gruppen=[],gesehen=new Set();
+  SETGROUPS.forEach(([label,keys,,optional])=>{
+    if(gesehen.has(label)||optional||isLegGroup(label)) return;
+    gesehen.add(label);gruppen.push({label,keys});
+  });
+  const abdeckung=z.map(c=>{
+    const m=muscleSetsBy(c.ws,statsSetMode);
+    return gruppen.filter(g=>g.keys.reduce((s,k)=>s+(m[k]||0),0)>0).length;
+  });
+  const deckung=abdeckung.length?abdeckung.reduce((s,v)=>s+v,0)/abdeckung.length:null;
+
+  const workoutIds=new Set(ws.map(w=>w.id)), exIds=[...new Set(ws.flatMap(w=>(w.exercises||[]).map(e=>e.exId)))];
+  const zeiten=ws.map(w=>Date.parse(w.date)).filter(Number.isFinite);
+  const letzterZeitpunkt=zeiten.length?Math.max(...zeiten)+1:null;
+  const fortschritte=[];
+  exIds.forEach(id=>{
+    const alle=exHistory(id), cut=exCutIndex(id), cutDate=cut>0&&alle[cut]?Date.parse(alle[cut].date):null;
+    let h=alle.filter(x=>workoutIds.has(x.wid));
+    /* Ein Niveauwechsel im danach laufenden Zyklus darf die abgeschlossene
+       Vergleichsreihe nicht rückwirkend leeren. */
+    if(Number.isFinite(cutDate) && (!letzterZeitpunkt || cutDate<letzterZeitpunkt))
+      h=h.filter(x=>Date.parse(x.date)>=cutDate);
+    for(let i=1;i<h.length;i++){
+      const alt=h[i-1],neu=h[i];
+      if(!(alt.bestE>0&&neu.bestE>0)||alt.maxReps>E1RM_RELIABLE_MAX||neu.maxReps>E1RM_RELIABLE_MAX) continue;
+      fortschritte.push((neu.bestE-alt.bestE)/alt.bestE*100);
+    }
+  });
+  const verbessert=fortschritte.filter(v=>v>0.5).length;
+  const plateau=exIds.map(id=>({id,n:plateauCount(id,letzterZeitpunkt)})).filter(x=>x.n>=3).sort((x,y)=>y.n-x.n);
+  const prs=ws.reduce((s,w)=>s+((w.prs||[]).length),0);
+
+  const tage=[...new Set(ws.map(w=>dayNr(w.date)))].sort((x,y)=>x-y),abstaende=[];
+  for(let i=1;i<tage.length;i++){const d=tage[i]-tage[i-1];if(d>0)abstaende.push(d);}
+  const passend=abstaende.filter(d=>d===1||d===2).length;
+
+  const setsJeZyklus=z.map(c=>new Set(c.ws.flatMap(w=>(w.exercises||[])
+    .filter(e=>validSets(e).length).map(e=>e.exId))));
+  const retention=[];
+  for(let i=1;i<setsJeZyklus.length;i++){
+    const alt=setsJeZyklus[i-1],neu=setsJeZyklus[i],union=new Set([...alt,...neu]);
+    if(union.size) retention.push([...alt].filter(id=>neu.has(id)).length/union.size*100);
+  }
+  const vols=z.map(c=>c.ws.reduce((s,w)=>s+wVolume(w),0)), meanVol=vols.length?vols.reduce((s,v)=>s+v,0)/vols.length:0;
+  const volCv=vols.length>=2&&meanVol>0?Math.sqrt(vols.reduce((s,v)=>s+(v-meanVol)**2,0)/vols.length)/meanVol*100:null;
+  const best=profile[0]||null,low=profile[profile.length-1]||null, spread=best&&low&&low.avg>0?deltaPct(low.avg,best.avg):null;
+  const pA=avg(push.a),pB=avg(push.b),lA=avg(pull.a),lB=avg(pull.b);
+  const metrics=[
+    {id:'missed_unit',group:'rotation',title:'Meist ausgelassen',value:n?(miss&&miss.fehlt?miss.label:'keine'):'—',meta:n?(miss&&miss.fehlt?`${miss.fehlt} von ${n} Zyklen`:'alle vier verlässlich'):'ab einem Zyklus',tone:miss&&miss.fehlt?'warn':'good',ready:!!n},
+    {id:'ab_volume',group:'rotation',title:'A/B · Volumen',value:aVol+bVol?`${anteil(aVol,bVol)} / ${anteil(bVol,aVol)} %`:'—',meta:'A / B',ready:aVol+bVol>0},
+    {id:'ab_sets',group:'rotation',title:'A/B · Sätze',value:aSet+bSet?`${anteil(aSet,bSet)} / ${anteil(bSet,aSet)} %`:'—',meta:`${aSet} / ${bSet} Sätze`,ready:aSet+bSet>0},
+    {id:'push_delta',group:'rotation',title:'Push B vs. A',value:signedPct(pA&&pB?deltaPct(pA,pB):null),meta:'Ø Volumen je Einheit',tone:pB>pA?'good':'',ready:pA>0&&pB>0},
+    {id:'pull_delta',group:'rotation',title:'Pull B vs. A',value:signedPct(lA&&lB?deltaPct(lA,lB):null),meta:'Ø Volumen je Einheit',tone:lB>lA?'good':'',ready:lA>0&&lB>0},
+    {id:'unit_spread',group:'rotation',title:'Einheiten-Spanne',value:best?best.label:'—',meta:best&&low?`${signedPct(spread)} zu ${low.label}`:'vier Einheiten nötig',ready:spread!==null},
+    {id:'improvement_rate',group:'progress',title:'Steigerungsquote',value:fortschritte.length?`${Math.round(verbessert/fortschritte.length*100)} %`:'—',meta:fortschritte.length?`${verbessert}/${fortschritte.length} vergleichbare Folgesessions`:'mehr Wiederholungen nötig',tone:verbessert?'good':'',ready:!!fortschritte.length},
+    {id:'median_progress',group:'progress',title:'Median-Fortschritt',value:signedPct(medianZahl(fortschritte)),meta:'e1RM je vergleichbarer Folgesession',ready:!!fortschritte.length},
+    {id:'plateau_load',group:'progress',title:'Plateaus im Zeitraum',value:exIds.length?String(plateau.length):'—',meta:plateau.length?`längstes: ${plateau[0].n} Einheiten`:'kein Plateau ab 3 Einheiten',tone:plateau.length?'warn':'good',ready:!!exIds.length},
+    {id:'pr_density',group:'progress',title:'PR-Dichte',value:ws.length?`${(prs/ws.length*10).toLocaleString('de-DE',{maximumFractionDigits:1})}`:'—',meta:ws.length?`${prs} PRs · je 10 Workouts`:'noch keine Workouts',tone:prs?'good':'',ready:!!ws.length},
+    {id:'rhythm_fit',group:'structure',title:'Abstände im Plan',value:abstaende.length?`${Math.round(passend/abstaende.length*100)} %`:'—',meta:abstaende.length?`${passend}/${abstaende.length} Abstände bei 1–2 Tagen`:'mindestens zwei Trainingstage',tone:passend===abstaende.length&&passend?'good':'',ready:!!abstaende.length},
+    {id:'exercise_retention',group:'structure',title:'Übungsstabilität',value:retention.length?`${Math.round(retention.reduce((s,v)=>s+v,0)/retention.length)} %`:'—',meta:'Überschneidung zum vorherigen Zyklus',ready:!!retention.length},
+    {id:'muscle_coverage',group:'structure',title:'Muskelabdeckung',value:deckung!==null?`${deckung.toLocaleString('de-DE',{maximumFractionDigits:1})}/${gruppen.length}`:'—',meta:'Ø trainierte Pflichtgruppen je Zyklus',tone:deckung===gruppen.length?'good':'',ready:deckung!==null},
+    {id:'volume_volatility',group:'structure',title:'Volumen-Schwankung',value:volCv!==null?`${Math.round(volCv)} %`:'—',meta:'Streuung um den Zyklusdurchschnitt',tone:volCv!==null&&volCv<=15?'good':'',ready:volCv!==null}
+  ];
+  return {cycles:z,workouts:ws,metrics};
+}
+function premiumMetricHtml(m){
+  return `<div class="insight-metric${m.ready?'':' is-empty'}" data-stat-id="${m.id}" data-tone="${m.tone||''}">
+    <span class="metric-label">${esc(m.title)}</span><b class="metric-value">${esc(m.value)}</b><span class="metric-meta">${esc(m.meta)}</span></div>`;
+}
+function premiumAnalyticsDeck(cs,preview){
+  const a=premiumAnalytics(cs), gruppen={
+    rotation:{title:'Rotation',sub:'A/B-Verteilung und Einheitenprofil'},
+    progress:{title:'Fortschritt',sub:'Nur vergleichbare Übungen und Folgesessions'},
+    structure:{title:'Struktur',sub:'Rhythmus, Abdeckung und Stabilität'}
+  };
+  if(preview){
+    const ids=['missed_unit','ab_volume','improvement_rate','rhythm_fit'];
+    const ms=ids.map(id=>a.metrics.find(m=>m.id===id)).filter(Boolean);
+    return `<div class="card insight-panel"><div class="insight-head"><div><h3>Neue Analysen</h3><p>${a.cycles.length} abgeschlossene ${a.cycles.length===1?'Zyklus':'Zyklen'}</p></div><span class="insight-count">4 LIVE</span></div>
+      <div class="insight-grid">${ms.map(premiumMetricHtml).join('')}</div>
+      <button class="btn btn-ghost btn-block btn-sm" style="margin-top:10px" data-stat-tab="month">Alle 14 Kennzahlen</button></div>`;
+  }
+  return `<div class="analytics-stack">${Object.entries(gruppen).map(([key,g])=>{
+    const ms=a.metrics.filter(m=>m.group===key);
+    return `<div class="card insight-panel" data-insight-group="${key}"><div class="insight-head"><div><h3>${g.title}</h3><p>${g.sub}</p></div><span class="insight-count">${ms.length}</span></div>
+      <div class="insight-grid">${ms.map(premiumMetricHtml).join('')}</div></div>`;
+  }).join('')}</div><details class="metric-method"><summary>Berechnung der neuen Kennzahlen</summary><p>Offene Zyklen sind ausgeschlossen. A/B-Werte summieren nur die zugeordnete Einheit. Fortschritt vergleicht e1RM ausschließlich innerhalb derselben Übung, nach dem letzten erkannten Niveauwechsel und bis maximal ${E1RM_RELIABLE_MAX} Wiederholungen. Übungsstabilität ist die Schnittmenge zweier aufeinanderfolgender Zyklen; Volumen-Schwankung ist die relative Standardabweichung.</p></details>`;
 }
 /* Zyklusnummer zu einem Datum — für die x-Achse der Diagramme */
 function cycleOfDate(dateStr){
@@ -10004,7 +10232,7 @@ function overviewTrendCard(){
     return `<div class="card"><h3 style="margin-bottom:2px">Leistungstrend</h3>
       <p class="tiny">Volumen der letzten ${cs.length} abgeschlossenen Zyklen · laufende Zyklen sind ausgeschlossen.</p>
       ${svgLine(pts,v=>fmtVol(v),{fill:true,avg:cs.length>=4})}
-      <p class="kpihint tiny">${aussage} Volumen ist Arbeit, nicht automatisch Kraft — die Kraftentwicklung steht separat darunter.</p>
+      <p class="kpihint tiny">${aussage}</p>
       <button class="btn btn-ghost btn-block btn-sm" data-stat-tab="month">5-Zyklen-Analyse öffnen</button></div>`;
   }
   const ws=workoutsBisHeute().slice(-8);
@@ -10087,7 +10315,7 @@ function overviewStrengthCard(gains){
     <div class="empty" style="padding:14px">Ab vier vergleichbaren Einheiten zeigt die Übersicht deine stärksten Zuwächse.</div>
     <button class="btn btn-ghost btn-block btn-sm" data-stat-tab="ex">Übung analysieren</button></div>`;
   return `<div class="card"><h3 style="margin-bottom:3px">Kraftentwicklung</h3>
-    <p class="tiny">Favoriten und zuletzt trainierte Übungen zuerst · Niveauwechsel werden abgeschnitten.</p>
+    <p class="tiny">Favoriten und letzte Übungen zuerst.</p>
     <div style="margin-top:6px">${l.map(x=>{
       const bw=exIsBW(x.id)&&!exIsAssist(x.id);
       const von=bw?(x.von>0?'+'+fmtW(x.von)+' kg':'Körpergewicht'):fmtW(x.von)+' kg';
@@ -10121,7 +10349,7 @@ function overviewNextGoalsCard(){
     <div style="margin-top:6px">${rows.map(x=>`<button class="ovrow" data-stat-ex="${esc(x.id)}">
       <span><span class="ttl">${x.fav?'★ ':''}${esc(x.name)}</span><span class="meta">${esc(x.p.txt)}${x.stall>=3?` · ${x.stall} Einheiten ohne Bestwert`:''}</span></span>
       <span class="value">${esc(x.badge)}</span><span class="chev">›</span></button>`).join('')}</div>
-    <p class="kpihint tiny">Aus echten vollständigen Einheiten berechnet. Ziele sind Platzhalter fürs nächste Training und werden nie als geschafft eingetragen.</p></div>`;
+    <details class="metric-method"><summary>Berechnung</summary><p>Ziele werden nie als geschafft eingetragen.</p></details></div>`;
 }
 function overviewLoadCard(){
   const rated=workoutsBisHeute().map(w=>{ const r=sessionRpe(w); return {w,r,load:r===null?null:sessionLoad(w)}; })
@@ -10129,11 +10357,11 @@ function overviewLoadCard(){
   if(rated.length<3){
     const fehlt=3-rated.length, last=rated[rated.length-1];
     return `<div class="card"><h3 style="margin-bottom:3px">Belastung (Session-RPE)</h3>
-      <p class="tiny">Bewerte nach dem Training die Anstrengung von 1 bis 10. Nach drei bewerteten Einheiten entsteht dein persönlicher Belastungstrend.</p>
+      <p class="tiny">Nach drei Bewertungen erscheint dein Belastungstrend.</p>
       ${last?`<div class="row" style="margin-top:12px"><div class="grow"><b>Letzte Bewertung: ${last.r}/10 · ${rpeLabel(last.r)}</b>
         <div class="meta">${last.load} Punkte · ${fmtDate(last.w.date)}</div></div><span class="badge type">${rated.length}/3</span></div>`:
-        '<div class="empty" style="padding:14px">Noch keine Einheit bewertet — die nächste Zusammenfassung fragt dich danach.</div>'}
-      <p class="kpihint tiny">Noch ${fehlt} ${fehlt===1?'bewertete Einheit':'bewertete Einheiten'} bis zum Diagramm. Session-Load = Dauer in Minuten × RPE.</p></div>`;
+        '<div class="empty" style="padding:14px">Noch keine Einheit bewertet.</div>'}
+      <p class="kpihint tiny">Noch ${fehlt} ${fehlt===1?'Bewertung':'Bewertungen'} bis zum Trend.</p></div>`;
   }
   const arr=rated.slice(-8), pts=arr.map(x=>({y:x.load,l:new Date(x.w.date).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})}));
   const avgRpe=arr.reduce((a,x)=>a+x.r,0)/arr.length;
@@ -10148,12 +10376,12 @@ function overviewLoadCard(){
       <h3 style="margin-bottom:3px">Belastungstrend</h3><p class="tiny">Letzte ${arr.length} bewertete Einheiten · Dauer × Session-RPE.</p></div>
       <div style="text-align:right"><b style="font-size:var(--fs-lg)">${arr[arr.length-1].load}</b><div class="tiny">Punkte</div></div></div>
     ${svgLine(pts,v=>Math.round(v)+' Pkt.',{fill:true,avg:true})}
-    <p class="kpihint tiny">${vergleich} Der Wert ist für deinen eigenen Verlauf, keine medizinische Messung und keine Kalorienschätzung.</p></div>`;
+    <p class="kpihint tiny">${vergleich}</p></div>`;
 }
 function overviewBodyweightCard(){
   const arr=bwSorted(), last=arr[arr.length-1] || null;
   if(!last) return `<div class="card"><h3>Körpergewicht</h3>
-    <div class="empty" style="padding:14px">Noch kein Verlauf. Für korrektes Klimmzug- und Dip-Volumen genügt ein erster Eintrag.</div>
+    <div class="empty" style="padding:14px">Noch kein Eintrag.</div>
     <button class="btn btn-acc btn-block btn-sm" data-stat-bw>Körpergewicht eintragen</button></div>`;
   const tr=bwTrend(), alter=bwAlter(last);
   const pts=arr.slice(-12).map(x=>({y:x.kg,l:new Date(x.d).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})}));
@@ -10185,28 +10413,37 @@ function renderOverviewStats(){
   }else if(prs) aussage=`${prs} ${prs===1?'neue Bestleistung':'neue Bestleistungen'} im aktuellen Fenster.`;
   const letzter=hist[hist.length-1];
   const aktuell=statsRunningCycle() || statsClosedCycles().slice(-1)[0] || null;
+  const erledigt=aktuell ? (aktuell.einheitenErledigt||0) : 0;
+  const naechster=suggestSchritt(), naechsterLabel=einheitLabel(naechster)||'Push A';
+  const zyklusStatus=aktuell
+    ? `Zyklus ${aktuell.n}${aktuell.laufend?' läuft':' abgeschlossen'}`
+    : 'Noch kein Zyklus';
   const fensterMeta=f.art==='zyklen'
     ? `${f.cs.length} ${f.cs.length===1?'Zyklus':'Zyklen'}`
     : `${f.ws.length} ${f.ws.length===1?'Workout':'Workouts'}`;
   const hatAlt=legacyCycles().some(c=>!c.vorlauf);
   const altHinweis=hatAlt
-    ? `<div class="card"><div class="row" style="align-items:flex-start"><span class="focusico" aria-hidden="true">↺</span>
-        <div class="grow"><b>Alte Zyklen auf 6 Tage umgerechnet</b><div class="meta">Je zwei frühere Push/Pull-Durchgänge bilden rückwirkend Push A, Pull A, Push B und Pull B. Die gespeicherten Workouts selbst bleiben unverändert.</div></div></div></div>`
+    ? `<details class="compact-details"><summary>Alte Zyklen auf 6 Tage umgerechnet</summary><div class="details-body">
+        <p class="tiny">Je zwei frühere Push/Pull-Durchgänge bilden rückwirkend Push A, Pull A, Push B und Pull B. Die gespeicherten Workouts bleiben unverändert.</p>
+      </div></details>`
     : '';
-  el.innerHTML=`<div class="card stats-overview-lead"><div class="up">Aktueller Stand</div>
-      <b style="font-size:var(--fs-lg);line-height:1.35;display:block;margin-top:5px">${aussage}</b>
-      <div class="tiny" style="margin-top:7px">${f.label} · ${fensterMeta} · zuletzt ${fmtDate(letzter.date)}.</div></div>`
+  el.innerHTML=`<div class="card stats-overview-lead"><div class="premium-status">
+      <div><div class="up">${zyklusStatus}</div><b class="status-value">${aussage}</b>
+        <div class="tiny" style="margin-top:7px">Als Nächstes: <b>${esc(naechsterLabel)}</b> · zuletzt ${fmtDate(letzter.date)}</div></div>
+      <div class="status-side"><b>${erledigt}/${CYCLE_UNIT_COUNT}</b><span>Einheiten</span></div>
+    </div><div class="cycle-track" aria-label="${erledigt} von ${CYCLE_UNIT_COUNT} Einheiten abgeschlossen">${CYCLE_UNITS.map((_,i)=>`<i class="${i<erledigt?'done':''}"></i>`).join('')}</div></div>`
     + historyKpiRow(f.ws,f.prevWs,f.vergleich||null)
     + altHinweis
-    + cycleUnitsHtml(aktuell)
-    + (f.cs.length && !f.cs.some(c=>c.laufend)?cycleKpiRow(f.cs,f.prevCs,f.vergleich||null):'')
-    + overviewTrendCard()
-    + overviewRhythmCard()
-    + overviewMuscleCard()
-    + overviewStrengthCard(gains)
-    + overviewNextGoalsCard()
-    + overviewLoadCard()
-    + overviewBodyweightCard();
+    + `<div class="stats-bento">${overviewTrendCard()}${overviewMuscleCard()}</div>`
+    + `<div class="stats-bento">${overviewStrengthCard(gains)}${overviewNextGoalsCard()}</div>`
+    + premiumAnalyticsDeck(statsClosedCycles().slice(-5),true)
+    + `<details class="compact-details"><summary>Zyklus &amp; Rhythmus</summary><div class="details-body">
+        ${overviewRhythmCard()}${cycleUnitsHtml(aktuell)}
+        ${f.cs.length && !f.cs.some(c=>c.laufend)?cycleKpiRow(f.cs,f.prevCs,f.vergleich||null):''}
+      </div></details>`
+    + `<details class="compact-details"><summary>Belastung &amp; Körpergewicht</summary><div class="details-body">
+        ${overviewLoadCard()}${overviewBodyweightCard()}
+      </div></details>`;
 }
 /* Drei Antworten statt vierzehn gleich lauter Karten. Die Detailstatistiken
    bleiben vollständig erhalten; diese Karte zieht nur ihre wichtigsten
@@ -11211,34 +11448,23 @@ function renderSpanStats(el, n){
   el.innerHTML = leadCard(txt, ton, sub)
     + cycleKpiRow(cs, vorher.length? vorher : null,
              vorher.length? `Vergleich zu den ${vorher.length} Zyklen davor` : null)
-    + cycleAdherenceCard(cs)
-    + pushPullCard(ws)
-    + muscleSection(ws, z, {zyklen:z})
-    + `<div class="card"><h3>Volumen je Zyklus</h3>${svgBars(zLab,zVol,v=>fmtVol(v))}</div>`
-    + `<div class="card"><h3>Sätze je Zyklus</h3>${svgBars(zLab,zSet,v=>v)}</div>`
-    /* Volumen je Satz: steigt, wenn schwerer gearbeitet wird — auch ohne
-       dass die Satzzahl wächst. Die Kennzahl trennt „mehr gemacht" von
-       „stärker geworden", was die reine Volumensumme nicht kann. */
-    + `<div class="card"><h3>Volumen je Satz</h3>${svgBars(zLab, cs.map(c=>Math.round(volProSatz(c.ws))), v=>fmtVol(v))}
-        <p class="tiny" style="margin-top:8px">Steigt diese Zahl bei gleicher Satzzahl, wirst du stärker —
-        steigt nur das Gesamtvolumen, hast du bloß mehr gemacht.</p></div>`
-    + statGruppenTrend()
-    + statDauer(ws)
-    + statWdh(ws)
-    + statAbstand(ws)
-    /* Der Kalender allein erzeugt 371 <rect> und war damit der teuerste
-       Einzelposten dieses Reiters — er kostete rund 30 der 116 ms, bei jedem
-       Öffnen, auch wenn niemand hinsah. Er wird jetzt erst gebaut, wenn er
-       aufgeklappt wird. Er bleibt erreichbar, nur nicht mehr vorab bezahlt. */
-    + (n>=20? `<div class="card"><h3 style="margin-bottom:8px">Trainings-Kalender ${new Date().getFullYear()}</h3>
-        <details class="erkl" data-heatmap="${new Date().getFullYear()}"><summary>Kalender anzeigen</summary><div></div></details></div>` : '')
-    + prListHtml(ws);
+    + premiumAnalyticsDeck(cs,false)
+    + `<div class="stats-bento">${cycleAdherenceCard(cs)}${muscleSection(ws, z, {zyklen:z})}</div>`
+    + `<details class="compact-details"><summary>Weitere Zyklusdetails</summary><div class="details-body">
+        ${pushPullCard(ws)}
+        <div class="card"><h3>Volumen je Zyklus</h3>${svgBars(zLab,zVol,v=>fmtVol(v))}</div>
+        <div class="card"><h3>Sätze je Zyklus</h3>${svgBars(zLab,zSet,v=>v)}</div>
+        <div class="card"><h3>Volumen je Satz</h3>${svgBars(zLab, cs.map(c=>Math.round(volProSatz(c.ws))), v=>fmtVol(v))}</div>
+        ${statGruppenTrend(cs)}
+        ${statDauer(ws)}${statWdh(ws)}${statAbstand(ws)}
+        ${n>=20? `<div class="card"><h3 style="margin-bottom:8px">Trainings-Kalender ${new Date().getFullYear()}</h3>
+          <details class="erkl" data-heatmap="${new Date().getFullYear()}"><summary>Kalender anzeigen</summary><div></div></details></div>` : ''}
+        ${prListHtml(ws)}
+      </div></details>`;
 }
 
-/* Push/Pull-Balance — die Auswertung, die es bei festen Wochentagen nicht
-   geben konnte. Dauerhaftes Übergewicht auf der Druckseite gilt als häufige
-   Begleiterscheinung von Schulterbeschwerden. Der Schwellenwert ist eine
-   FAUSTREGEL und wird auch so benannt — keine erfundene Studienzahl. */
+/* Push/Pull-Balance als beschreibender Trainingsvergleich. Der Schwellenwert
+   dient nur als auffällige Abweichung, nicht als medizinische Aussage. */
 function pushPullCard(ws){
   const b = pushPullBalance(ws, statsSetMode);
   if(!b.ok) return '';
@@ -11257,11 +11483,7 @@ function pushPullCard(ws){
       <span class="tiny"><b>${b.pull%1? b.pull.toFixed(1).replace('.',','):b.pull}</b> Zug</span>
     </div>
     <p class="tiny" style="margin-top:8px">Verhältnis <b style="color:${col}">${b.ratio.toFixed(2).replace('.',',')} : 1</b> zugunsten ${b.seite==='Druck'?'der Druck-':'der Zug-'}Seite${b.auffaellig? ' — <b>auffällig</b>' : ' — ausgeglichen'}.
-    ${b.auffaellig? `<details class="erkl"><summary>Was heißt das?</summary><div>${
-      b.seite==='Druck'
-        ? `Mehr als das ${PP_FAUSTREGEL}-fache auf der Druckseite. Anhaltendes Übergewicht beim Drücken wird häufig mit Schulterbeschwerden in Verbindung gebracht — ein Satz Rudern oder Face Pulls mehr pro Zyklus reicht meist.<br><b>Der Schwellenwert ist eine Faustregel, keine Studienzahl.</b>`
-        : `Deutliches Übergewicht auf der Zugseite. Unkritisch für die Schulter, aber die Brust bleibt zurück.<br><b>Der Schwellenwert ist eine Faustregel, keine Studienzahl.</b>`
-    }</div></details>` : ''}</p></div>`;
+    ${b.auffaellig? `<details class="erkl"><summary>Einordnung</summary><div>Die Abweichung überschreitet die interne ${PP_FAUSTREGEL}:1-Faustregel. Prüfe, ob diese Verteilung deinem Plan entspricht.</div></details>` : ''}</p></div>`;
 }
 
 /* ══════════ ÜBUNGS-ANALYTIK ══════════════════════════════════════════
