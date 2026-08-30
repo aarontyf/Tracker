@@ -1,6 +1,5 @@
-/* V92: Die Statistik zählt ausschließlich Push A, Pull A, Push B und Pull B
-   pro Sechs-Tage-Zyklus. Legacy-Daten bleiben erhalten, werden aber nicht
-   nachträglich als neue Zyklen ausgegeben. */
+/* V92/V94: Die Live-Rotation zählt explizite A/B-Daten. Die Statistik darf
+   ältere Daten zusätzlich rückwirkend in denselben 6-Tage-Rhythmus setzen. */
 
 const { js } = require('../lib/browser');
 
@@ -39,13 +38,16 @@ exports.lauf = async ({ page, p }) => {
     const overview=document.querySelector('#stats-overview').textContent;
     statsPanel='week'; renderStats();
     const zyklus=document.querySelector('#stats-week').textContent;
-    return {hist:workoutsBisHeute().length,closed:closedCycles().length,passt:planPasstZuZyklen(),overview,zyklus};
+    const statsLauf=statsRunningCycle();
+    return {hist:workoutsBisHeute().length,closed:closedCycles().length,passt:planPasstZuZyklen(),
+      statsStand:statsLauf&&statsLauf.einheitenErledigt,overview,zyklus};
   })()`);
   p.gleich('Legacy-Workouts bleiben vollständig gespeichert', legacy.hist, 2);
   p.gleich('Legacy Push/Pull erzeugt keinen neuen A/B-Zyklus', legacy.closed, 0);
   p.gleich('Plan gilt erst ab explizitem Push A als neues System', legacy.passt, false);
-  p.enthaelt('Übersicht erklärt den Beginn des neuen Systems', legacy.overview, 'beginnt mit Push A');
-  p.enthaelt('Zyklus-Reiter wertet den Altbestand wieder historisch aus', legacy.zyklus, 'historischer Push/Pull-Zyklus');
+  p.gleich('Statistik ordnet den ersten alten Durchgang rückwirkend A zu',legacy.statsStand,2);
+  p.enthaelt('Übersicht erklärt die rückwirkende Umrechnung', legacy.overview, 'Alte Zyklen auf 6 Tage umgerechnet');
+  p.enthaelt('Zyklus-Reiter zeigt den umgerechneten Einheitenstand', legacy.zyklus, '2/4');
 
   const zyklen = await js(page, `(() => {
     const ex=EXDB.find(e=>!istZeitArt(exArt(e.id)) && !exIsBW(e.id) && !exIsAssist(e.id));

@@ -1761,7 +1761,7 @@ path[data-m].hl{stroke:var(--fig-3)!important;stroke-width:1.6!important}
     </div>
   </div>
   <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V93 · created by Aaron Jeetun</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V94 · created by Aaron Jeetun</p>
 </div></div>
 
 <div class="mback" id="modal-sync"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="sync-title">
@@ -4914,11 +4914,10 @@ function cycles(){
   _cyCache = out; _cyKey = key;
   return out;
 }
-/* V93: Die Umstellung auf A/B darf die vorhandenen Push/Pull-Auswertungen
-   nicht verschwinden lassen. Diese Funktion liest ausschließlich den
-   historischen Bestand VOR der ersten expliziten A/B-Einheit. Sie verändert
-   keinen Datensatz und vermischt die alten 2er-Zyklen nicht mit den neuen
-   4er-Zyklen. */
+/* V94: Auch der historische Bestand wird in der STATISTIK nach dem heutigen
+   6-Tage-System ausgewertet. Je zwei alte Push/Pull-Durchgänge ergeben dort
+   Push A, Pull A, Push B und Pull B. Die gespeicherten Workouts bleiben dabei
+   vollständig unverändert; nur die abgeleitete Zyklusansicht wird vereinheitlicht. */
 function legacyCycles(){
   const alle=workoutsBisHeute().slice().sort((a,b)=>Date.parse(a.date)-Date.parse(b.date));
   const wechsel=alle.findIndex(w=>!!einheitVariante(w));
@@ -4926,25 +4925,52 @@ function legacyCycles(){
   const grenze=wechsel>=0?alle[wechsel].date:null;
   const key=ws.length+'|'+((ws[0]||{}).id||'')+'|'+((ws[ws.length-1]||{}).id||'')+'|'+(grenze||heuteIso());
   if(_legacyCyCache && _legacyCyKey===key) return _legacyCyCache;
-  const out=[]; let cur=null;
+  const durchgaenge=[]; let cur=null, vorlauf=[];
   ws.forEach(w=>{
     const beginnt=w.type==='Push' && !einheitVariante(w);
-    if(beginnt || !cur){
-      cur={n:0,von:w.date,ws:[],vorlauf:(!beginnt&&out.length===0),legacy:true};
-      out.push(cur);
+    if(beginnt){
+      cur={von:w.date,ws:[]};
+      durchgaenge.push(cur);
     }
-    cur.ws.push(w);
+    if(cur) cur.ws.push(w); else vorlauf.push(w);
   });
-  const endeNr=grenze?dayNr(grenze):dayNr(new Date());
+  const out=[];
+  if(vorlauf.length) out.push({n:0,von:vorlauf[0].date,ws:vorlauf,extras:vorlauf.slice(),vorlauf:true,legacy:true});
+  for(let i=0;i<durchgaenge.length;i+=2){
+    const a=durchgaenge[i], b=durchgaenge[i+1]||null;
+    const aws=a.ws, bws=b?b.ws:[];
+    const pushA=aws.find(w=>w.type==='Push')||null;
+    const pullA=aws.find(w=>w.type==='Pull')||null;
+    const pushB=bws.find(w=>w.type==='Push')||null;
+    const pullB=bws.find(w=>w.type==='Pull')||null;
+    const einheiten=[
+      {type:'Push',variant:'A',label:'Push A',workout:pushA,anzahl:aws.filter(w=>w.type==='Push').length},
+      {type:'Pull',variant:'A',label:'Pull A',workout:pullA,anzahl:aws.filter(w=>w.type==='Pull').length},
+      {type:'Push',variant:'B',label:'Push B',workout:pushB,anzahl:bws.filter(w=>w.type==='Push').length},
+      {type:'Pull',variant:'B',label:'Pull B',workout:pullB,anzahl:bws.filter(w=>w.type==='Pull').length}
+    ];
+    const benutzt=new Set(einheiten.filter(x=>x.workout).map(x=>x.workout));
+    const c={n:0,von:a.von,ws:aws.concat(bws),vorlauf:false,legacy:true,abgeleitet:true,einheiten};
+    c.extras=c.ws.filter(w=>!benutzt.has(w));
+    c.einheitenErledigt=einheiten.filter(x=>!!x.workout).length;
+    c.vollstaendig=c.einheitenErledigt===CYCLE_UNIT_COUNT;
+    c.fehlt=einheiten.filter(x=>!x.workout).map(x=>x.label);
+    c.doppelteEinheiten=einheiten.reduce((sum,x)=>sum+Math.max(0,x.anzahl-1),0);
+    out.push(c);
+  }
   out.forEach((c,i)=>{
-    const nx=out[i+1], start=dayNr(c.von);
-    c.tage=nx?Math.max(1,dayNr(nx.von)-start):Math.max(1,endeNr-start+(grenze?0:1));
-    c.push=c.ws.filter(w=>w.type==='Push').length;
-    c.pull=c.ws.filter(w=>w.type==='Pull').length;
-    c.beine=c.ws.filter(w=>w.type==='Legs').length;
-    c.vollstaendig=!c.vorlauf&&c.push>0&&c.pull>0;
-    c.fehlt=c.vorlauf?['Push','Pull']:[c.push?'':'Push',c.pull?'':'Pull'].filter(Boolean);
-    c.auffaellig=c.tage<CYCLE_MIN_TAGE||c.tage>CYCLE_MAX_TAGE;
+    if(c.vorlauf){
+      const nx=out[i+1];
+      c.tage=nx?Math.max(1,dayNr(nx.von)-dayNr(c.von)):1;
+      c.einheiten=CYCLE_UNITS.map(s=>({type:s.type,variant:s.variant,label:einheitLabel(s),workout:null,anzahl:0}));
+      c.einheitenErledigt=0; c.vollstaendig=false; c.fehlt=CYCLE_UNITS.map(einheitLabel);
+      c.doppelteEinheiten=0; c.auffaellig=false;
+      return;
+    }
+    /* Historische Pausen wurden früher nicht einzeln gespeichert. Deshalb
+       besitzt jeder rückwirkend gebildete Zyklus die definierte Solldauer. */
+    c.tage=CYCLE_SOLL_TAGE;
+    c.auffaellig=false;
   });
   let nr=0; out.forEach(c=>{c.n=c.vorlauf?0:++nr;});
   if(out.length && !grenze){
@@ -4957,11 +4983,21 @@ function legacyCycles(){
 function legacyClosedCycles(){ return legacyCycles().filter(c=>!c.vorlauf&&!c.laufend); }
 function legacyRunningCycle(){ const a=legacyCycles(),l=a[a.length-1]; return l&&l.laufend?l:null; }
 function legacyCycleSplitText(c){
-  return `${c.push||0} Push · ${c.pull||0} Pull${c.beine?' · '+c.beine+' Beine':''}`;
+  return cycleSplitText(c);
 }
 /* Abgeschlossene, wertbare Zyklen — ohne Vorlauf und ohne den laufenden */
 function closedCycles(){ return cycles().filter(c=>!c.vorlauf && !c.laufend); }
 function runningCycle(){ const a = cycles(); const l = a[a.length-1]; return (l && l.laufend)? l : null; }
+/* Einheitliche Statistikquelle: rückwirkend gebildete und explizit
+   gespeicherte A/B-Zyklen laufen in einer chronologischen Nummerierung. */
+function statsCycles(){
+  const alt=legacyCycles().filter(c=>!c.vorlauf);
+  const neu=cycles().filter(c=>!c.vorlauf);
+  return alt.concat(neu).sort((a,b)=>Date.parse(a.von)-Date.parse(b.von))
+    .map((c,i)=>Object.assign({},c,{n:i+1}));
+}
+function statsClosedCycles(){ return statsCycles().filter(c=>!c.laufend); }
+function statsRunningCycle(){ const a=statsCycles(),l=a[a.length-1]; return l&&l.laufend?l:null; }
 /* Die letzten n abgeschlossenen Zyklen, chronologisch */
 /* lastCycles(n) steht seit V49 in der Projektanweisung als Zyklus-Funktion,
    wird aber von keiner Stelle aufgerufen — renderSpanStats schneidet selbst
@@ -9932,7 +9968,7 @@ function renderStats(){
    offene Muskelgruppen, Kraftzuwächse, subjektive Belastung und Körpergewicht.
    Keine undurchsichtige Gesamtpunktzahl und kein erfundener Readiness Score. */
 function overviewFenster(){
-  const cs=closedCycles();
+  const cs=statsClosedCycles();
   if(cs.length){
     const n=Math.min(5,cs.length), aktuell=cs.slice(-n), vorher=cs.slice(-2*n,-n);
     return {art:'zyklen', cs:aktuell, ws:cycleWorkouts(aktuell),
@@ -9941,7 +9977,7 @@ function overviewFenster(){
       label:n===1?'Letzter abgeschlossener Zyklus':`Letzte ${n} abgeschlossene Zyklen`,
       vergleich:vorher.length===n?(n===1?'gegen den Zyklus davor':`gegen die ${n} Zyklen davor`):''};
   }
-  const lauf=runningCycle();
+  const lauf=statsRunningCycle();
   if(lauf) return {art:'zyklen',cs:[lauf],ws:lauf.ws,prevCs:null,prevWs:null,label:`Laufender Zyklus ${lauf.n}`,vergleich:''};
   /* Historische Workouts bleiben ein vollwertiges Statistikfenster, auch
      wenn sie noch kein A/B-Feld besitzen. */
@@ -9952,7 +9988,7 @@ function overviewFenster(){
     vergleich:vorher.length===n?(n===1?'gegen die Einheit davor':`gegen die ${n} Einheiten davor`):''};
 }
 function overviewTrendCard(){
-  const cs=closedCycles().slice(-8);
+  const cs=statsClosedCycles().slice(-8);
   if(cs.length>=2){
     const vals=cs.map(c=>c.ws.reduce((a,w)=>a+wVolume(w),0));
     const pts=cs.map((c,i)=>({y:Math.round(vals[i]),l:'Z'+c.n}));
@@ -9982,24 +10018,7 @@ function overviewTrendCard(){
    Push-A/Pull-A/Rest/Push-B/Pull-B/Rest-Rhythmus drei überprüfbare Größen: Wurde der Zyklus
    vollständig, wie lange dauerte er und wie regelmäßig wurde trainiert? */
 function overviewRhythmCard(){
-  if(!planPasstZuZyklen()){
-    const hist=workoutsBisHeute(), cs=legacyClosedCycles().slice(-8);
-    const seit30=hist.filter(w=>Date.parse(w.date)>=Date.now()-30*864e5).length;
-    const ab=abstandStat(hist.slice(-14));
-    const voll=cs.filter(c=>c.vollstaendig).length;
-    const quote=cs.length?Math.round(voll/cs.length*100):0;
-    const avg=cs.length?cs.reduce((a,c)=>a+c.tage,0)/cs.length:0;
-    return `<div class="card"><div class="row" style="align-items:flex-start"><div class="grow">
-      <h3 style="margin-bottom:3px">Trainingsrhythmus</h3><b>Historischer Push/Pull-Verlauf</b></div>
-      <span class="badge type">${cs.length} Zyklen</span></div>
-      <div class="kpis" style="margin:12px 0 0">
-        <div class="kpi"><b>${quote} %</b><span>vollständig</span></div>
-        <div class="kpi"><b>${avg?avg.toLocaleString('de-DE',{maximumFractionDigits:1}):'—'}</b><span>Ø Tage/Zyklus</span></div>
-        <div class="kpi"><b>${seit30}</b><span>Workouts/30 Tage</span></div>
-      </div>
-      <p class="kpihint tiny">Deine alten Push/Pull-Zyklen bleiben ausgewertet.${ab?` Median zwischen den letzten Einheiten: <b>${ab.median} ${ab.median===1?'Tag':'Tage'}</b>.`:''} Push A startet unabhängig davon den neuen 4er-Zyklus.</p></div>`;
-  }
-  const alle=closedCycles(), cs=alle.slice(-8), lauf=runningCycle();
+  const alle=statsClosedCycles(), cs=alle.slice(-8), lauf=statsRunningCycle();
   if(cs.length<2){
     const sub=lauf
       ? `Zyklus ${lauf.n} läuft · ${lauf.einheitenErledigt}/${CYCLE_UNIT_COUNT} Einheiten${lauf.fehlt.length?' · offen: '+lauf.fehlt.join(', '):' · alle vier Einheiten erledigt'}.`
@@ -10029,16 +10048,19 @@ function overviewRhythmCard(){
     <p class="kpihint tiny">${aktuell} Nur abgeschlossene Zyklen fließen in die Kennzahlen ein.</p></div>`;
 }
 function overviewMuscleCard(){
-  const c=runningCycle() || closedCycles().slice(-1)[0] || null;
+  const c=statsRunningCycle() || statsClosedCycles().slice(-1)[0] || null;
   if(!c){
-    const alt=legacyRunningCycle() || legacyClosedCycles().slice(-1)[0] || null;
-    if(alt) return `<div class="card"><h3 style="margin-bottom:3px">Muskelgruppen · historischer Zyklus ${alt.n}</h3>
-      <p class="tiny" style="margin-bottom:8px">Die alte Push/Pull-Auswertung bleibt sichtbar; der neue A/B-Zyklus startet separat.</p>
-      ${groupBars(muscleSetsBy(alt.ws,statsSetMode),alt.ws,1)}</div>`;
     return `<div class="card"><h3>Muskelgruppen im Zyklus</h3>
       <div class="empty" style="padding:14px">Nach dem ersten A/B-Zyklus steht hier sofort, welche Gruppe noch fehlt.</div></div>`;
   }
-  const offen=offeneGruppen().slice(0,4);
+  const gs=figureGroupState(muscleSets(c.ws),1), offen=[], gesehen=new Set();
+  SETGROUPS.forEach(([label,keys,,optional])=>{
+    if(gesehen.has(label)||optional||isLegGroup(label)) return;
+    gesehen.add(label);
+    const g=gs[keys[0]];
+    if(g&&(g.cls==='g0'||g.cls==='g1')) offen.push({gruppe:label,ist:g.sum,lo:g.lo,fehlt:Math.round((g.lo-g.sum)*10)/10});
+  });
+  offen.sort((a,b)=>b.fehlt-a.fehlt).splice(4);
   const titel=`Zyklus ${c.n}${c.laufend?' · läuft':' · zuletzt abgeschlossen'}`;
   if(!offen.length) return `<div class="card"><h3 style="margin-bottom:3px">Muskelgruppen</h3>
     <p class="tiny">${titel}</p><div class="row" style="gap:10px;margin-top:12px"><span class="focusico">✓</span>
@@ -10049,7 +10071,7 @@ function overviewMuscleCard(){
     <div style="margin-top:8px">${offen.map(x=>`<div class="ovgap"><b style="font-size:var(--fs-sub)">${esc(x.gruppe)}</b>
       <span class="bar"><i style="width:${Math.max(0,Math.min(100,x.ist/Math.max(1,x.lo)*100))}%"></i></span>
       <span class="value">${fmtW(x.ist)}/${x.lo} · ${fmtW(x.fehlt)} fehlen</span></div>`).join('')}</div>
-    <div class="ovactions"><button class="btn btn-acc btn-sm" data-stat-gap>Übungen vorschlagen</button>
+    <div class="ovactions">${c.abgeleitet?'':`<button class="btn btn-acc btn-sm" data-stat-gap>Übungen vorschlagen</button>`}
       <button class="btn btn-ghost btn-sm" data-stat-tab="week">Zyklus ansehen</button></div></div>`;
 }
 function overviewStrengthCard(gains){
@@ -10162,13 +10184,14 @@ function renderOverviewStats(){
     aussage=`${esc(x.name)}: ${von} → ${bis} · +${fmtW(x.diff)} kg.`;
   }else if(prs) aussage=`${prs} ${prs===1?'neue Bestleistung':'neue Bestleistungen'} im aktuellen Fenster.`;
   const letzter=hist[hist.length-1];
-  const aktuell=runningCycle() || closedCycles().slice(-1)[0] || null;
+  const aktuell=statsRunningCycle() || statsClosedCycles().slice(-1)[0] || null;
   const fensterMeta=f.art==='zyklen'
     ? `${f.cs.length} ${f.cs.length===1?'Zyklus':'Zyklen'}`
     : `${f.ws.length} ${f.ws.length===1?'Workout':'Workouts'}`;
-  const altHinweis=!planPasstZuZyklen()
+  const hatAlt=legacyCycles().some(c=>!c.vorlauf);
+  const altHinweis=hatAlt
     ? `<div class="card"><div class="row" style="align-items:flex-start"><span class="focusico" aria-hidden="true">↺</span>
-        <div class="grow"><b>Alle bisherigen Statistiken sind aktiv</b><div class="meta">Deine alten Push/Pull-Workouts werden vollständig ausgewertet. Der neue 4er-Zyklus beginnt mit Push A; nichts aus der Historie wird gelöscht oder umgedeutet.</div></div></div></div>`
+        <div class="grow"><b>Alte Zyklen auf 6 Tage umgerechnet</b><div class="meta">Je zwei frühere Push/Pull-Durchgänge bilden rückwirkend Push A, Pull A, Push B und Pull B. Die gespeicherten Workouts selbst bleiben unverändert.</div></div></div></div>`
     : '';
   el.innerHTML=`<div class="card stats-overview-lead"><div class="up">Aktueller Stand</div>
       <b style="font-size:var(--fs-lg);line-height:1.35;display:block;margin-top:5px">${aussage}</b>
@@ -10220,13 +10243,13 @@ function renderAllStats(){
   const weeks = Math.max(1, (Date.now() - first.getTime())/(7*864e5));
   const vol = ws.reduce((a,w)=>a+wVolume(w),0), sets = ws.reduce((a,w)=>a+wSets(w),0);
   const prc = ws.reduce((a,w)=>a+(w.prs?w.prs.length:0),0);
-  const zAll = closedCycles(), zAlt=legacyClosedCycles();
+  const zAll = statsClosedCycles();
   const tage = Math.max(1, Math.round((Date.now()-first.getTime())/864e5));
   const header = `<div class="cnav" style="justify-content:center"><b>Seit Beginn · ${fmtDate(first)} – heute</b></div>`;
   /* Kernfrage dieses Reiters: wie weit bin ich gekommen? — nicht „bin ich im Ziel?" */
   const lead = leadCard(
     `${ws.length} ${ws.length===1?'Training':'Trainings'} · ${fmtVol(vol)} bewegt · ${sets} Sätze.`, 'neutral',
-    `${tage} Tage seit dem ersten Eintrag${zAlt.length?` · ${zAlt.length} historische Push/Pull-${zAlt.length===1?'Zyklus':'Zyklen'}`:''}${zAll.length? ` · ${zAll.length} A/B-${zAll.length===1?'Zyklus':'Zyklen'}`:''} · ${prc} ${prc===1?'Rekord':'Rekorde'}.`);
+    `${tage} Tage seit dem ersten Eintrag${zAll.length? ` · ${zAll.length} ausgewertete 6-Tage-${zAll.length===1?'Zyklus':'Zyklen'}`:''} · ${prc} ${prc===1?'Rekord':'Rekorde'}.`);
   const kpis = `<div class="kpis" style="margin-bottom:0">
       <div class="kpi"><b>${ws.length}</b><span>Workouts</span></div>
       <div class="kpi"><b>${fmtVol(vol)}</b><span>Volumen</span></div>
@@ -10242,7 +10265,6 @@ function renderAllStats(){
     + `<div class="card"><h3>Verteilung über alle Muskelgruppen <span class="tiny">(ohne Zielampel — über die gesamte Historie sagt ein Korridor nichts)</span></h3>${muscleBars(muscleSetsBy(ws, statsSetMode), ws)}</div>`
     /* Die Zyklus-Reihe steht VOR den Monaten: Sie ist der Maßstab der App,
        die Monatsbalken sind die beschreibende Zugabe. */
-    + legacyZyklusVolumenCard()
     + zyklusVolumenCard()
     + statRelativeKraft()
     + statZuwachs()
@@ -10637,7 +10659,7 @@ function statDauer(ws){
    verwirren. Verglichen wird die erste mit der zweiten Hälfte der
    abgeschlossenen Zyklen. */
 function gruppeUeberZyklen(minZyklen, quelle){
-  const cs = Array.isArray(quelle)?quelle:closedCycles();
+  const cs = Array.isArray(quelle)?quelle:statsClosedCycles();
   if(cs.length < (minZyklen || 4)) return null;
   const h = Math.floor(cs.length/2);
   const summe = (teil, keys) => teil.reduce((a,c)=>{
@@ -10863,8 +10885,7 @@ function legacyZyklusVolumenCard(){
 }
 
 function zyklusVolumenReihe(){
-  return cycles()
-    .filter(c => !c.vorlauf)
+  return statsCycles()
     .map(c => ({
       n: c.n,
       vol: c.ws.reduce((a,w)=>a + wVolume(w), 0),
@@ -11036,17 +11057,8 @@ function renderLegacyWeekStats(el){
 }
 function renderWeekStats(){
   const el = $('#stats-week');
-  const closed = closedCycles();
-  const lauf = runningCycle();
-  /* Legacy-Workouts werden nicht nachträglich in das neue System geraten.
-     Sie bleiben vollständig im Gesamt-Reiter; hier beginnt die Wahrheit
-     erst mit einem expliziten Push A. */
-  if(!planPasstZuZyklen()){
-    if(legacyCycles().length){ renderLegacyWeekStats(el); return; }
-    const alle=workoutsBisHeute(); lastStatsWs=alle;
-    el.innerHTML=leadCard('Noch kein Zyklus im neuen Trainingssystem.','warn',planHinweis())+cycleUnitsHtml(null);
-    return;
-  }
+  const closed = statsClosedCycles();
+  const lauf = statsRunningCycle();
   if(!closed.length){
     lastStatsWs = lauf? lauf.ws : [];
     el.innerHTML = lauf
@@ -11094,8 +11106,9 @@ function renderWeekStats(){
 
   /* Volumen je Einheit statt je Kalendertag — leere Wochentage sagen bei
      einem wandernden 6-Tage-Rhythmus gar nichts aus. */
-  const uLab = c.ws.map(w=>einheitLabel(w).replace('Push','Pu').replace('Pull','Pl')+' '+new Date(w.date).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'}));
-  const uVol = c.ws.map(w=>wVolume(w));
+  const dargestellteEinheiten=(c.einheiten||[]).filter(x=>x.workout);
+  const uLab = dargestellteEinheiten.map(x=>x.label.replace('Push','Pu').replace('Pull','Pl')+' '+new Date(x.workout.date).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'}));
+  const uVol = dargestellteEinheiten.map(x=>wVolume(x.workout));
 
   /* Der Hinweis auf den laufenden Zyklus stand bis V61 als eigenes <div>
      darunter und wurde mit margin:-4px wieder an die Karte herangezogen.
@@ -11157,9 +11170,8 @@ function renderLegacySpanStats(el,n){
 }
 
 function renderSpanStats(el, n){
-  const closed = closedCycles();
+  const closed = statsClosedCycles();
   if(closed.length < 2){
-    if(legacyClosedCycles().length>=2){ renderLegacySpanStats(el,n); return; }
     lastStatsWs=[];
     el.innerHTML=emptyStats(`Noch zu wenig für ${n} Zyklen`,
       `Abgeschlossen: ${closed.length}. Ab zwei Zyklen kann ich vergleichen,<br>ab vier einen Trend rechnen.`);
@@ -12626,7 +12638,7 @@ function naechsterTitel(lvl){
    waren (Push A, Pull A, Push B und Pull B) und nicht überlang. Der laufende
    Zyklus bricht die Serie nicht — er ist ja noch nicht vorbei. */
 function zyklusStreak(){
-  const cs = closedCycles();
+  const cs = statsClosedCycles();
   if(!cs.length) return 0;
   let n = 0;
   for(let i=cs.length-1; i>=0; i--){
