@@ -88,14 +88,20 @@ exports.lauf = async ({ page, p }) => {
   p.gleich('Vorab-Workout markiert Muskeln nicht als gerade trainiert',fertig.figurFrisch,null);
 
   const vorlage = await js(page, `(() => {
-    closeModals(); state.active=null;
+    closeModals(); state.active=null; state.plan={};
     const ex=EXDB.find(e=>e.art==='kraft');
-    state.templates=[{id:'morgen-vorlage',name:'Morgen',type:'Push',exIds:[ex.id]}];
+    state.templates=[{id:'morgen-vorlage',name:'Morgen',type:'Push',variant:'A',exIds:[ex.id]}];
     const morgen=tagPlus(heuteIso(),1); dsSpringe(morgen);
-    const b=document.querySelector('[data-start-tpl="morgen-vorlage"]');
+    const b=document.querySelector('[data-plan-tpl="morgen-vorlage"]');
     const label=b&&b.textContent.trim(); if(b) b.click();
-    return {label,tag:state.active&&isoTag(state.active.date),morgen};
+    const plan=planAmTag(morgen);
+    return {label,aktiv:state.active,tag:plan&&morgen,typ:plan&&einheitLabel(plan),
+      uebungen:plan&&plan.exercises.length,wahl:dsWahl,naechster:tagPlus(morgen,1),morgen};
   })()`);
-  p.enthaelt('Vorlagen-Knopf nennt den gewählten künftigen Tag',vorlage.label,'Für');
-  p.gleich('auch ein Vorlagenstart bleibt dem ausgewählten Tag zugeordnet',vorlage.tag,vorlage.morgen);
+  p.gleich('Vorlagen-Knopf plant einen künftigen Tag',vorlage.label,'Planen');
+  p.gleich('künftige Vorlage blockiert keinen aktiven Workout-Slot',vorlage.aktiv,null);
+  p.gleich('Vorlage bleibt dem ausgewählten Tag zugeordnet',vorlage.tag,vorlage.morgen);
+  p.gleich('Vorlage bewahrt die A/B-Variante',vorlage.typ,'Push A');
+  p.gleich('Vorlage übernimmt ihre Übungen in den Tagesplan',vorlage.uebungen,1);
+  p.gleich('nach dem Planen ist direkt der Folgetag gewählt',vorlage.wahl,vorlage.naechster);
 };
