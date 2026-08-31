@@ -87,7 +87,7 @@ exports.lauf = async ({ page, p }) => {
   const txt = await text(page, '#home-balance');
   p.enthaelt('Meldung nennt die schwache Seite', txt, 'Rücken');
   p.enthaelt('Meldung nennt den Zeitraum', txt, '4 Wochen');
-  p.enthaelt('Meldung sagt, was zu tun ist', txt, 'mehr');
+  p.enthaelt('Meldung sagt, was pro Woche zu tun ist', txt, '/ Woche');
   p.pruefe('Meldung führt zum Radar', await dawar(page, '#bal-mehr'));
 
   /* Die genannte Satzzahl muss das Verhältnis tatsächlich reparieren —
@@ -118,7 +118,7 @@ exports.lauf = async ({ page, p }) => {
   const viele = await befunde(page);
   p.mind('mehrere Ungleichgewichte werden erkannt', viele.length, 2);
   p.gleich('angezeigt wird nur eine Überschrift', await js(page, `document.querySelectorAll('#home-balance h3').length`), 1);
-  p.enthaelt('auf weitere wird hingewiesen', await text(page, '#home-balance'), 'weiteres');
+  p.enthaelt('auf weitere wird kompakt hingewiesen', await text(page, '#home-balance'), 'Statistik · +');
   p.pruefe('sortiert nach Schwere', viele[0].verhaeltnis >= viele[viele.length-1].verhaeltnis,
            viele.map(x => `${x.schwach} ${x.verhaeltnis.toFixed(1)}`).join(', '));
 

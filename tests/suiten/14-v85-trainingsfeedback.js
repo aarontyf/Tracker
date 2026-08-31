@@ -120,7 +120,7 @@ exports.lauf = async ({ page, p }) => {
   })()`);
 
   p.enthaelt('Statistik integriert den neuen Belastungstrend', statistik.trend.text, 'Belastungstrend');
-  p.enthaelt('Statistik erklärt die Session-Load-Formel', statistik.trend.text, 'Dauer × Session-RPE');
+  p.enthaelt('Statistik benennt die Belastungsrechnung kompakt', statistik.trend.text, 'Dauer × RPE');
   p.pruefe('Belastungstrend wird als Diagramm gezeichnet', statistik.trend.svg);
   p.enthaelt('Verlauf zeigt die Session-RPE', statistik.hist, 'RPE 8');
   p.enthaelt('Verlauf zeigt die Session-Notiz', statistik.hist, 'Schulter stabil');

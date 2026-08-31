@@ -1370,6 +1370,7 @@ details.erkl.warum>summary{min-height:44px}
 .clean-facts{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
 .clean-facts span{padding:4px 7px;border:1px solid var(--line);border-radius:var(--r-full);color:var(--txt3);font-size:var(--fs-tiny)}
 .clean-status{color:var(--txt2);font-size:var(--fs-tiny);line-height:1.3}
+#scr-stats{max-width:100%;overflow-x:clip}
 @media(max-width:480px){
   .app{padding-inline:10px}.card{padding:11px}.hd{margin-bottom:12px}
   .premium-status{grid-template-columns:minmax(0,1fr) 68px}.insight-grid{gap:6px}
@@ -1790,7 +1791,7 @@ details.erkl.warum>summary{min-height:44px}
     <div class="details-body">
       <div class="card">
         <h3 style="margin-bottom:6px">Rhythmus</h3>
-        <div class="row"><b style="font-size:var(--fs-lg);min-width:28px">4</b><span class="sub">Einheiten pro Zyklus · 6 Tage</span></div>
+        <div class="row"><b style="font-size:var(--fs-lg);min-width:28px">4</b> <span class="sub">Einheiten pro Zyklus · 6 Tage</span></div>
         <div class="clean-status" style="margin-top:5px">Push A · Pull A · Rest · Push B · Pull B · Rest</div>
         <div class="row" style="margin-top:12px;justify-content:space-between">
           <div class="grow"><b style="font-size:var(--fs-body)">Beine im Zyklus</b></div>
@@ -6975,7 +6976,7 @@ function renderBalance(){
       <span class="bi" data-ico="alert" style="color:var(--sig);flex:none;margin:0"></span>
       <div class="grow">
         <h3 style="margin-bottom:2px">${esc(b.schwach)} kommt zu kurz</h3>
-        <div class="clean-status">${esc(b.stark)} ${fmtW(b.starkN)} · ${esc(b.schwach)} ${fmtW(b.schwachN)} Sätze</div>
+        <div class="clean-status">4 Wochen · ${esc(b.stark)} ${fmtW(b.starkN)} · ${esc(b.schwach)} ${fmtW(b.schwachN)} Sätze</div>
         <b style="display:block;color:var(--a7);margin-top:5px">+${b.proWoche} ${b.proWoche===1?'Satz':'Sätze'} / Woche</b>
         <button class="btn btn-sm" id="bal-mehr" style="margin-top:8px">Statistik${weitere?` · +${weitere}`:''}</button>
       </div>
@@ -8206,7 +8207,7 @@ function workoutProgressHtml(w){
     <div class="progresssummary">${teile.join('')}</div>
     <div>${rows.slice(0,8).map(x=>`<button class="progressrow ${x.status}" data-sum-ex="${esc(x.id)}">
       <span class="mark" aria-hidden="true">${marks[x.status]}</span><span><span class="ttl">${esc(x.name)}</span>
-      <span class="meta">${esc(x.text)}</span>${x.next?`<span class="meta next">${esc(x.next.txt)}</span>`:''}</span><span class="chev">›</span></button>`).join('')}</div>
+      <span class="meta">${esc(x.text)}</span>${x.next?`<span class="meta next">Ziel · ${esc(x.next.txt)}</span>`:''}</span><span class="chev">›</span></button>`).join('')}</div>
     ${rows.length>8?`<p class="tiny">+${rows.length-8}</p>`:''}</div>`;
 }
 
