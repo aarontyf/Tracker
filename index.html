@@ -1899,7 +1899,7 @@ details.erkl.warum>summary{min-height:44px}
       <div class="danger-zone"><button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button></div>
     </div>
   </details>
-  <p class="tiny" style="text-align:center;margin-top:10px">Fitness Tracker V98</p>
+  <p class="tiny" style="text-align:center;margin-top:10px">Fitness Tracker V99</p>
 </div></div>
 
 <div class="mback" id="modal-sync"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="sync-title">
@@ -2358,6 +2358,11 @@ const HOWTO = {
    'Kontrolliert beugen, oben kurz halten.',
    'Langsam ablassen, unten nicht komplett entspannen.'],
   e:['Unten komplett abgelegt, dadurch reißt die Spannung ab.','Oberarme heben vom Pult ab.','Zu schnell abgelassen — der gedehnte Bereich ist hier der wertvollste.']},
+ 'x-preacher-curl-am-kabel':{s:['Kabel tief einstellen und das Pult in Zugrichtung ausrichten.',
+   'Achseln am Pult, Oberarme vollständig auflegen und Handgelenke neutral halten.',
+   'Aus fast gestreckten Armen kontrolliert beugen, oben kurz halten.',
+   'Langsam ablassen, ohne das Gewicht unten abzusetzen.'],
+  e:['Oberarme lösen sich vom Pult.','Das Gewicht wird unten abgelegt und die Spannung geht verloren.','Schultern oder Oberkörper helfen beim Hochziehen.']},
  'x-stirndrücken-sz-stange':{s:['Oberarme leicht schräg nach hinten geneigt statt senkrecht.',
    'Nur die Unterarme bewegen sich, Ellbogen bleiben eng.',
    'Zur Stirn oder knapp dahinter senken.',
@@ -3323,6 +3328,9 @@ const EXDB_RAW = [
 ['Schwimmen','Ganzkörper','Sonstiges',['lats','front_delt'],['abs','quads'],'swimming schwimmen bahnen',0,'kardio'],
 ['Seilspringen','Ganzkörper','Sonstiges',['calves'],['front_delt','abs'],'jump rope seilspringen springseil',0,'kardio'],
 ['Schlittenschieben','Ganzkörper','Sonstiges',['quads','glutes'],['calves','abs'],'sled push prowler schlitten schieben',0,'kardio'],
+/* V99: Neue Übungen immer am Ende ergänzen. So behalten sehr alte eNN-IDs
+   ihre ursprüngliche Position und sämtliche historischen Einträge ihre Übung. */
+['Preacher Curl am Kabel','Arme','Kabel',['biceps'],[],'cable preacher curl preacher cable curl scottcurl scott curl kabelzug'],
 ];
 const exSlug = n=>'x-'+n.toLowerCase().replace(/[^a-z0-9äöüß]+/g,'-').replace(/^-+|-+$/g,'');
 /* art: 'kraft' (Gewicht × Wiederholungen), 'zeit' (Sekunden) oder
