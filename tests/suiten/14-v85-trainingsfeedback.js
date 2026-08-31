@@ -40,8 +40,8 @@ exports.lauf = async ({ page, p }) => {
   p.pruefe('frisch trainierte Brust wird nicht als voll erholt bezeichnet', live.recAvg < 80, live.recAvg);
   p.gleich('zusammengelegte Brustregion heißt verständlich Brust', live.recMin, 'Brust');
   p.pruefe('Vorschlagskarte zeigt den Erholungs-Hinweis', live.ready);
-  p.enthaelt('Erholungs-Hinweis nennt seine Datengrundlage', live.readyText, 'Arbeitssätzen');
-  p.enthaelt('Erholungs-Hinweis grenzt sich von HRV ab', live.readyText, 'HRV');
+  p.enthaelt('Erholungs-Hinweis bleibt eindeutig beschriftet', live.readyText, 'Erholung');
+  p.hoechstens('Erholungs-Hinweis bleibt kompakt', live.readyText.trim().length, 45);
   p.gleich('Aufwärmsätze zählen nicht zum geplanten Arbeitsfortschritt', live.total, 3);
   p.gleich('nur der ausgefüllte Arbeitssatz ist erledigt', live.done, 1);
   p.gleich('Kopfzeile zeigt erledigt gegen geplant', live.count, '1/3 Sätze');
@@ -120,7 +120,7 @@ exports.lauf = async ({ page, p }) => {
   })()`);
 
   p.enthaelt('Statistik integriert den neuen Belastungstrend', statistik.trend.text, 'Belastungstrend');
-  p.enthaelt('Statistik erklärt die Session-Load-Formel', statistik.trend.text, 'Dauer × Session-RPE');
+  p.enthaelt('Statistik benennt die Belastungsrechnung kompakt', statistik.trend.text, 'Dauer × RPE');
   p.pruefe('Belastungstrend wird als Diagramm gezeichnet', statistik.trend.svg);
   p.enthaelt('Verlauf zeigt die Session-RPE', statistik.hist, 'RPE 8');
   p.enthaelt('Verlauf zeigt die Session-Notiz', statistik.hist, 'Schulter stabil');

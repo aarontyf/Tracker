@@ -101,7 +101,7 @@ exports.lauf = async ({ page, p }) => {
     p.gleich('Bericht benennt einen niedrigeren Bestsatz neutral',summary.counts.down,1);
     p.gleich('neue Übung bekommt einen Ausgangswert statt erfundenem Vergleich',summary.counts.new,1);
     p.gleich('jede Übung führt aus dem Bericht in ihre Analyse',summary.rows,4);
-    p.enthaelt('Bericht nennt bereits das nächste konkrete Ziel',summary.next,'Nächstes Ziel');
+    p.enthaelt('Bericht nennt bereits das nächste konkrete Ziel',summary.next,'Ziel ·');
     p.mind('Berichtszeilen haben ein handytaugliches Touchziel',summary.hit,44);
     p.gleich('Direktsprung öffnet den Übungsreiter',summary.panel,'ex');
   }
@@ -131,7 +131,7 @@ exports.lauf = async ({ page, p }) => {
   p.enthaelt('Statistik bündelt die nächsten Progressionsziele',stats.text,'Nächste Ziele');
   p.enthaelt('fertige Doppelprogression wird als Lastsprung erkannt',stats.text,'Gewicht rauf');
   p.enthaelt('Plateau-Hinweis bleibt neben dem Lastsprung sichtbar',stats.text,'3 Einheiten ohne Bestwert');
-  p.enthaelt('Karte erklärt, dass nichts als geschafft erfunden wird',stats.text,'nie als geschafft');
+  p.hoechstens('Zielkarte bleibt ohne langen Erklärtext kompakt',stats.text.trim().length,300);
   p.pruefe('Ziel führt direkt zur passenden Übungsanalyse',stats.row);
   p.mind('Zielzeile hat ein handytaugliches Touchziel',stats.hit,44);
   if(stats.zeit) p.pruefe('Zeitübungen tauchen nicht mit falschem kg-Ziel auf',!stats.text.includes(stats.zeit));

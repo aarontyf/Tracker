@@ -73,7 +73,7 @@ exports.lauf = async ({ page, p }) => {
   p.pruefe('weitere Statistiken bleiben erreichbar', geschlossen.da);
   p.gleich('zweite Statistik-Ebene startet geschlossen', geschlossen.offen, false);
   p.gleich('unsichtbare Statistik-Karten werden nicht vorab gebaut', geschlossen.fertig, false);
-  p.pruefe('der Platzhalter nennt den enthaltenen Monatsverlauf', geschlossen.monat);
+  p.pruefe('der kompakte Platzhalter lädt noch keine Monatsdaten', !geschlossen.monat);
   p.gleich('vor dem Öffnen stehen dort null unsichtbare Karten', geschlossen.karten, 0);
 
   const offen = await js(page, `(() => {
@@ -96,5 +96,5 @@ exports.lauf = async ({ page, p }) => {
 
   await js(page, `showScreen('scr-settings')`).catch(()=>{});
   const version = await text(page, 'body');
-  p.enthaelt('ausgelieferte Oberfläche trägt Version V97', version, 'Fitness Tracker V97');
+  p.enthaelt('ausgelieferte Oberfläche trägt Version V98', version, 'Fitness Tracker V98');
 };
