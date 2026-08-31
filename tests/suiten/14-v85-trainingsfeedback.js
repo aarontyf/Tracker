@@ -40,8 +40,8 @@ exports.lauf = async ({ page, p }) => {
   p.pruefe('frisch trainierte Brust wird nicht als voll erholt bezeichnet', live.recAvg < 80, live.recAvg);
   p.gleich('zusammengelegte Brustregion heißt verständlich Brust', live.recMin, 'Brust');
   p.pruefe('Vorschlagskarte zeigt den Erholungs-Hinweis', live.ready);
-  p.enthaelt('Erholungs-Hinweis nennt seine Datengrundlage', live.readyText, 'Arbeitssätzen');
-  p.enthaelt('Erholungs-Hinweis grenzt sich von HRV ab', live.readyText, 'HRV');
+  p.enthaelt('Erholungs-Hinweis bleibt eindeutig beschriftet', live.readyText, 'Erholung');
+  p.hoechstens('Erholungs-Hinweis bleibt kompakt', live.readyText.trim().length, 45);
   p.gleich('Aufwärmsätze zählen nicht zum geplanten Arbeitsfortschritt', live.total, 3);
   p.gleich('nur der ausgefüllte Arbeitssatz ist erledigt', live.done, 1);
   p.gleich('Kopfzeile zeigt erledigt gegen geplant', live.count, '1/3 Sätze');

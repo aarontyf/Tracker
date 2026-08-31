@@ -1336,14 +1336,48 @@ details.erkl.warum>summary{min-height:44px}
 .nav{background:rgba(8,12,17,.90);border-top-color:rgba(113,128,150,.2);backdrop-filter:blur(22px) saturate(140%);-webkit-backdrop-filter:blur(22px) saturate(140%)}
 .nav::after{background:#080C11}
 .nav button.on::before{background:linear-gradient(90deg,var(--a4),var(--a7));box-shadow:0 0 14px var(--a5)}
+
+/* ═══ V98 · CLEAN UI ═════════════════════════════════════════════════
+   Eine Ebene weniger: Werte und Aktionen bleiben sichtbar, Erklärungen und
+   seltene Optionen liegen kompakt dahinter. Die Schrift bleibt groß genug;
+   verdichtet werden Abstände, Karten und Wiederholungen. */
+.card{padding:12px;margin-bottom:8px}
+.hd{margin-bottom:14px}
+.screen>.hd{margin-bottom:14px}
+.hero{padding:12px;margin-bottom:8px}
+.stats-bento,.analytics-stack{gap:8px;margin-bottom:8px}
+.insight-head{margin-bottom:8px}
+.insight-metric{padding:9px}
+.kpihint{margin:6px 0 8px;padding:0;border:0;background:none}
+.empty{line-height:1.35}
+#body-sub{margin-bottom:8px;line-height:1.3}
+.readycue{padding:9px 10px;margin:8px 0 2px}
+.compact-details{margin:8px 0}
+.compact-details>summary{min-height:46px;padding:0 12px}
+.compact-details>.details-body{padding:0 8px 8px}
+.settings-group{margin:8px 0;border-color:var(--line-2)}
+.settings-group>summary{font-size:var(--fs-body);font-weight:760}
+.settings-group>.details-body{padding:0 12px 8px}
+.settings-group>.details-body>.card{
+  margin:0;padding:12px 0;border:0;border-top:1px solid var(--line);
+  border-radius:0;background:none;box-shadow:none
+}
+.settings-group>.details-body>.card:first-child{border-top:0}
+.settings-group>.details-body>.card:hover{border-color:var(--line)}
+#modal-settings .sync-head{align-items:center}
+#modal-settings .sync-state{margin-top:2px}
+#modal-settings .danger-zone{padding-top:10px;margin-top:4px;border-top:1px solid var(--line)}
+.clean-facts{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
+.clean-facts span{padding:4px 7px;border:1px solid var(--line);border-radius:var(--r-full);color:var(--txt3);font-size:var(--fs-tiny)}
+.clean-status{color:var(--txt2);font-size:var(--fs-tiny);line-height:1.3}
 @media(max-width:480px){
-  .app{padding-inline:12px}.card{padding:13px}.hd{margin-bottom:14px}
+  .app{padding-inline:10px}.card{padding:11px}.hd{margin-bottom:12px}
   .premium-status{grid-template-columns:minmax(0,1fr) 68px}.insight-grid{gap:6px}
-  .insight-metric{padding:10px 9px}.ovgap{grid-template-columns:minmax(74px,1fr) 1.4fr auto}
+  .insight-metric{padding:9px 8px}.ovgap{grid-template-columns:minmax(74px,1fr) 1.4fr auto}
 }
 @media(min-width:680px){.stats-bento{grid-template-columns:repeat(2,minmax(0,1fr))}.insight-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(min-width:920px){
-  .app{max-width:1180px;padding-inline:26px}.screen>.hd{margin-bottom:24px}
+  .app{max-width:1180px;padding-inline:26px}.screen>.hd{margin-bottom:18px}
   .statspanel{column-count:initial}.statspanel>.card{break-inside:auto}
   .stats-bento{grid-template-columns:repeat(2,minmax(0,1fr))}
   .analytics-stack{grid-template-columns:repeat(3,minmax(0,1fr));align-items:start}
@@ -1373,7 +1407,7 @@ details.erkl.warum>summary{min-height:44px}
   <span class="bi" data-ico="down" style="margin:0"></span>
   <div class="grow">
     <b style="color:var(--gold);font-size:var(--fs-sub)">App installieren</b>
-    <div class="tiny" style="margin-top:3px">Teilen → Zum Home-Bildschirm. So bleibt der Tracker schnell erreichbar.</div>
+    <div class="tiny" style="margin-top:3px">Teilen → Zum Home-Bildschirm</div>
   </div>
   <button class="iconbtn" id="hint-close" aria-label="Hinweis ausblenden" data-ico-close></button>
 </div>
@@ -1595,7 +1629,7 @@ details.erkl.warum>summary{min-height:44px}
     <button class="btn btn-ghost btn-sm grow" id="bk-file">Als Datei laden</button>
     <button class="btn btn-ghost btn-sm grow" id="bk-later">In 2 Tagen erinnern</button>
   </div>
-  <p class="tiny" style="text-align:center;margin-top:12px">Die App legt zusätzlich automatisch Sicherungspunkte auf dem Gerät an — die helfen aber nicht, wenn Safari die Website-Daten löscht.</p>
+  <p class="tiny" style="text-align:center;margin-top:12px">Zusätzlich lokal gesichert.</p>
 </div></div>
 
 <div class="mback" id="modal-calc"><div class="modal" role="dialog" aria-modal="true">
@@ -1614,7 +1648,6 @@ details.erkl.warum>summary{min-height:44px}
   </div>
   <div class="card">
     <h3 style="margin-bottom:8px">Aufwärmsätze</h3>
-    <p class="tiny" style="margin-bottom:8px">Vorschlag auf Basis deines Arbeitsgewichts (40 % / 60 % / 80 %).</p>
     <div id="wu-out"></div>
   </div>
 </div></div>
@@ -1624,13 +1657,13 @@ details.erkl.warum>summary{min-height:44px}
   <div class="mhd"><h2 id="xo-title">Übung einstellen</h2><button class="iconbtn" data-close aria-label="Schließen" data-ico-close></button></div>
   <div class="card">
     <div class="row" style="justify-content:space-between">
-      <div class="grow"><b style="font-size:var(--fs-body)">Einseitig (pro Seite)</b>
-        <div class="tiny">Beim Training bekommst du dann pro Satz zwei Wdh-Felder (L/R). Volumen zählt beide Seiten, Sätze pro Muskel bleiben gleich. Lässt du R leer, zählt links doppelt.</div></div>
+      <div class="grow"><b style="font-size:var(--fs-body)">Einseitig</b>
+        <div class="tiny">Wiederholungen links / rechts</div></div>
       <button class="chip" id="xo-uni">Aus</button>
     </div>
     <div id="xo-unisince-wrap" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--bd)">
       <b style="font-size:var(--fs-sub)">Einseitig seit</b>
-      <div class="tiny" style="margin:2px 0 8px">Ab diesem Datum zählt die App die Übung als einarmig. Nur nötig für Trainings von früher — bei allem, was du ab jetzt loggst, merkt sie es sich automatisch.</div>
+      <div class="tiny" style="margin:2px 0 8px">Nur für ältere Trainings.</div>
       <div class="row" style="gap:8px"><input type="date" id="xo-unisince" style="flex:1" aria-label="Einseitig seit diesem Datum">
         <button class="btn btn-ghost btn-sm" id="xo-unisince-clr">Löschen</button></div>
     </div>
@@ -1645,12 +1678,10 @@ details.erkl.warum>summary{min-height:44px}
     <h3 style="margin-bottom:8px">Wiederholungs-Ziel</h3>
     <div class="row"><input type="number" id="xo-lo" min="1" max="60" style="width:76px" aria-label="Wiederholungen, unterer Wert"><span class="sub">bis</span>
       <input type="number" id="xo-hi" min="1" max="60" style="width:76px" aria-label="Wiederholungen, oberer Wert"><span class="sub">Wdh</span></div>
-    <p class="tiny" style="margin-top:8px">Sind alle Sätze am oberen Wert, schlägt die App mehr Gewicht vor.</p>
   </div>
   <div class="card">
     <h3 style="margin-bottom:8px">Gewichtssprung</h3>
     <div class="row"><input type="number" id="xo-step" min="0.25" max="20" step="0.25" style="width:90px" aria-label="Gewichtssprung in Kilogramm"><span class="sub">kg pro Steigerung</span></div>
-    <p class="tiny" style="margin-top:8px">Kurzhanteln meist 2 kg (nächstes Paar), Langhantel 2,5 kg, schwere Übungen 5 kg.</p>
   </div>
   <div class="card">
     <h3 style="margin-bottom:8px">Pause für diese Übung</h3>
@@ -1699,7 +1730,7 @@ details.erkl.warum>summary{min-height:44px}
       <input type="text" inputmode="decimal" id="bw-input" placeholder="z.B. 72,5" style="flex:1">
       <button class="btn btn-acc" id="bw-save">Speichern</button>
     </div>
-    <p class="tiny" style="margin-top:8px">Tipp: immer abends zur gleichen Zeit wiegen — sonst vergleichst du Äpfel mit Birnen. Neuer Eintrag am selben Tag überschreibt den alten.</p>
+    <p class="tiny" style="margin-top:8px">Möglichst immer zur gleichen Zeit.</p>
   </div>
   <div id="bw-chartcard"></div>
   <div class="card" id="bw-list" style="padding:2px 12px"></div>
@@ -1707,7 +1738,7 @@ details.erkl.warum>summary{min-height:44px}
   <div class="card">
     <div id="ms-inputs"></div>
     <button class="btn btn-acc btn-block btn-sm" id="ms-save" style="margin-top:8px">Maße speichern</button>
-    <p class="tiny" style="margin-top:8px">Leere Felder werden ignoriert. Arm/Oberschenkel im angespannten Zustand messen — Hauptsache immer gleich.</p>
+    <p class="tiny" style="margin-top:8px">Leere Felder werden ignoriert.</p>
   </div>
   <div id="ms-out"></div>
 </div></div>
@@ -1752,118 +1783,122 @@ details.erkl.warum>summary{min-height:44px}
   <div class="card">
     <h3 style="margin-bottom:4px">Dein Name</h3>
     <input type="text" id="set-name" maxlength="24" autocomplete="given-name" spellcheck="false"
-           placeholder="wird nur zur Begrüßung benutzt">
+           placeholder="Optional">
   </div>
-  <div class="card">
-    <h3 style="margin-bottom:4px">Trainingsrhythmus</h3>
-    <p class="tiny" style="margin-bottom:8px">Ein <b>Zyklus</b> ist ein voller Durchgang durch deinen Plan: <b>Push A → Pull A → Rest → Push B → Pull B → Rest</b>. Alle Ziele in der Statistik rechnen pro Zyklus, nicht pro Kalenderwoche — der Sechs-Tage-Takt wandert bewusst durch die Woche.</p>
-    <div class="row"><b style="font-size:var(--fs-lg);min-width:90px">4</b> <span class="sub">Einheiten pro Zyklus · 6 Tage</span></div>
-    <div class="row" style="margin-top:12px;justify-content:space-between">
-      <div class="grow"><b style="font-size:var(--fs-body)">Beine im Zyklus</b>
-        <div class="tiny"><b>An</b> (Standard bei Ganzkörper-Push/Pull): Beine bekommen denselben Zielkorridor wie alles andere. <b>Aus</b>: Beine laufen nebenher und werden rollierend über 21 Tage gezeigt, ohne Ampel.</div></div>
-      <button class="chip" id="set-beine">Aus</button>
-    </div>
-  </div>
-  <div class="card">
-    <h3 style="margin-bottom:4px">Pausen-Timer</h3>
-    <div class="row"><input type="number" id="set-rest" min="15" max="600" step="15" style="width:90px" aria-label="Pause in Sekunden"><span class="sub">Sekunden (pro Übung überschreibbar)</span></div>
-    <div class="row" style="justify-content:space-between;margin-top:10px">
-      <div class="grow"><b style="font-size:var(--fs-body)">Ton am Ende</b>
-        <div class="tiny">Zwei kurze Töne, zusätzlich zur Vibration.</div></div>
-      <button class="chip" id="set-restsound">An</button>
-    </div>
-  </div>
-  <div class="card">
-    <h3 style="margin-bottom:8px">Trainingsstil</h3>
-    <div class="row" style="margin-bottom:8px"><input type="number" id="set-replo" min="1" max="30" style="width:70px" aria-label="Wiederholungen, unterer Wert"><span class="sub">bis</span>
-      <input type="number" id="set-rephi" min="1" max="40" style="width:70px" aria-label="Wiederholungen, oberer Wert"><span class="sub">Wdh (Standard)</span></div>
-    <div class="row"><input type="number" id="set-defsets" min="1" max="10" style="width:70px" aria-label="Sätze pro Übung, Vorgabe"><span class="sub">Sätze pro Übung (Vorgabe)</span></div>
-    <p class="tiny" style="margin-top:8px">Gilt für neue Übungen. Bauch/Waden und Isolation liegen automatisch etwas höher, schwere Grundübungen etwas tiefer.</p>
-  </div>
-  <div class="card">
-    <div class="row" style="justify-content:space-between">
-      <div class="grow"><b style="font-size:var(--fs-body)">RIR erfassen</b>
-        <div class="tiny">„Reps in Reserve" — wie viele Wdh wären noch gegangen? Steuert den Progressionsvorschlag genauer (0–1 = am Limit).</div></div>
-      <button class="chip" id="set-rir">Aus</button>
-    </div>
-  </div>
-  <div class="card">
-    <h3 style="margin-bottom:8px">Satzziel pro Muskel</h3>
-    <div class="row"><input type="number" id="set-goallo" min="1" max="40" style="width:70px" aria-label="Satzziel pro Zyklus, unterer Wert"><span class="sub">bis</span>
-      <input type="number" id="set-goalhi" min="1" max="60" style="width:70px" aria-label="Satzziel pro Zyklus, oberer Wert"><span class="sub">Sätze pro <b>Zyklus</b></span></div>
-    <div class="tiny" id="set-goal-cycle" style="margin-top:6px"></div>
-    <p class="tiny" style="margin-top:8px">Der Standard <b>9–17 harte Sätze pro Muskel und 6‑Tage‑Zyklus</b> entspricht ungefähr 10–20 pro Woche. Die Effizienzgrenze von etwa <b>11 Sätzen gilt je Muskel und einzelner Einheit</b>, nicht für die Summe des ganzen Zyklus.</p>
-    <!-- Die vier Quellen standen bis V55 nirgends in der App, nur die Namen.
-         Hier ist ihr Platz: einmal, mit Adresse, nachprüfbar. -->
-    <details class="erkl"><summary>Quellen</summary><div>
-      <a href="https://pubmed.ncbi.nlm.nih.gov/41343037/" target="_blank" rel="noopener">Pelland et al. 2025, <i>Sports Medicine</i></a> — Dosis-Wirkung, abnehmender Grenzertrag<br>
-      <a href="https://sportrxiv.org/index.php/server/preprint/view/537" target="_blank" rel="noopener">Robinson &amp; Pelland, <i>Is There Too Much of a Good Thing?</i></a> — die 11-Sätze-Schwelle pro Einheit<br>
-      <a href="https://pubmed.ncbi.nlm.nih.gov/27433992/" target="_blank" rel="noopener">Schoenfeld, Ogborn &amp; Krieger 2017</a> — Satzzahl und Muskelwachstum<br>
-      <a href="https://pubmed.ncbi.nlm.nih.gov/30558493/" target="_blank" rel="noopener">Schoenfeld, Grgic &amp; Krieger 2019</a> — Trainingsfrequenz
-    </div></details>
-  </div>
-  <div class="card">
-    <div class="sync-head">
-      <span class="bi" data-ico="cloud" aria-hidden="true"></span>
-      <div class="grow">
-        <h3 style="margin-bottom:2px">Geräte-Sync</h3>
-        <div class="sync-state" id="sync-settings-state" data-art="off">
-          <span class="sync-mark" aria-hidden="true">–</span><span>Nicht eingerichtet</span>
+  <details class="compact-details settings-group">
+    <summary><span>Training</span><span class="tiny">4 Einheiten · 6 Tage</span></summary>
+    <div class="details-body">
+      <div class="card">
+        <h3 style="margin-bottom:6px">Rhythmus</h3>
+        <div class="row"><b style="font-size:var(--fs-lg);min-width:28px">4</b><span class="sub">Einheiten pro Zyklus · 6 Tage</span></div>
+        <div class="clean-status" style="margin-top:5px">Push A · Pull A · Rest · Push B · Pull B · Rest</div>
+        <div class="row" style="margin-top:12px;justify-content:space-between">
+          <div class="grow"><b style="font-size:var(--fs-body)">Beine im Zyklus</b></div>
+          <button class="chip" id="set-beine">Aus</button>
         </div>
-        <p class="tiny" id="sync-settings-detail" style="margin-top:5px">iPhone, iPad und PC können denselben verschlüsselten Stand nutzen.</p>
       </div>
-      <button class="btn btn-ghost btn-sm" id="sync-open">Öffnen</button>
-    </div>
-  </div>
-  <div class="card">
-    <div class="sync-head">
-      <span class="bi" data-ico="bolt" aria-hidden="true"></span>
-      <div class="grow">
-        <h3 style="margin-bottom:2px">ChatGPT-Zugriff</h3>
-        <div class="sync-state" id="ai-settings-state" data-art="off">
-          <span class="sync-mark" aria-hidden="true">–</span><span>Nicht freigegeben</span>
+      <div class="card">
+        <h3 style="margin-bottom:6px">Pausen-Timer</h3>
+        <div class="row"><input type="number" id="set-rest" min="15" max="600" step="15" style="width:90px" aria-label="Pause in Sekunden"><span class="sub">Sekunden</span></div>
+        <div class="row" style="justify-content:space-between;margin-top:10px">
+          <b style="font-size:var(--fs-body)">Ton am Ende</b>
+          <button class="chip" id="set-restsound">An</button>
         </div>
-        <p class="tiny" id="ai-settings-detail" style="margin-top:5px">Optionaler Nur-Lese-Zugriff auf eine bereinigte Kopie.</p>
       </div>
-      <button class="btn btn-ghost btn-sm" id="ai-open">Öffnen</button>
+      <div class="card">
+        <h3 style="margin-bottom:8px">Vorgaben</h3>
+        <div class="row" style="margin-bottom:8px"><input type="number" id="set-replo" min="1" max="30" style="width:70px" aria-label="Wiederholungen, unterer Wert"><span class="sub">bis</span>
+          <input type="number" id="set-rephi" min="1" max="40" style="width:70px" aria-label="Wiederholungen, oberer Wert"><span class="sub">Wdh</span></div>
+        <div class="row"><input type="number" id="set-defsets" min="1" max="10" style="width:70px" aria-label="Sätze pro Übung, Vorgabe"><span class="sub">Sätze pro Übung</span></div>
+      </div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between">
+          <div class="grow"><b style="font-size:var(--fs-body)">RIR erfassen</b><div class="tiny">Wiederholungen im Tank</div></div>
+          <button class="chip" id="set-rir">Aus</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="margin-bottom:8px">Satzziel pro Muskel</h3>
+        <div class="row"><input type="number" id="set-goallo" min="1" max="40" style="width:70px" aria-label="Satzziel pro Zyklus, unterer Wert"><span class="sub">bis</span>
+          <input type="number" id="set-goalhi" min="1" max="60" style="width:70px" aria-label="Satzziel pro Zyklus, oberer Wert"><span class="sub">Sätze / Zyklus</span></div>
+        <div class="tiny" id="set-goal-cycle" style="margin-top:6px"></div>
+        <details class="erkl"><summary>Quellen</summary><div>
+          <a href="https://pubmed.ncbi.nlm.nih.gov/41343037/" target="_blank" rel="noopener">Pelland et al. 2025</a><br>
+          <a href="https://sportrxiv.org/index.php/server/preprint/view/537" target="_blank" rel="noopener">Robinson &amp; Pelland</a><br>
+          <a href="https://pubmed.ncbi.nlm.nih.gov/27433992/" target="_blank" rel="noopener">Schoenfeld et al. 2017</a><br>
+          <a href="https://pubmed.ncbi.nlm.nih.gov/30558493/" target="_blank" rel="noopener">Schoenfeld et al. 2019</a>
+        </div></details>
+      </div>
     </div>
-  </div>
-  <div class="card">
-    <h3 style="margin-bottom:4px">Backup</h3>
-    <p class="sub" style="margin-bottom:4px">Eine zusätzliche Datei-Sicherung bleibt auch mit Geräte-Sync sinnvoll.</p>
-    <p class="tiny" id="set-lastbackup" style="margin-bottom:8px"></p>
-    <button class="btn btn-acc btn-block" id="btn-vault" style="margin-bottom:8px"><span class="bi" data-ico="upload"></span>Vollbackup teilen</button>
-    <label class="tiny up" for="set-vaultmail">Empfänger</label>
-    <input type="email" id="set-vaultmail" inputmode="email" autocomplete="email" spellcheck="false"
-           placeholder="deine@mail.de" style="margin:4px 0 4px">
-    <p class="tiny" style="margin-bottom:8px">Optional für das Trainingsprotokoll.</p>
-    <button class="btn btn-ghost btn-block btn-sm" id="btn-maillog" style="margin-bottom:12px"><span class="bi" data-ico="mail"></span>Trainingsprotokoll mailen</button>
-    <div class="row">
-      <button class="btn btn-ghost btn-sm grow" id="btn-export"><span class="bi" data-ico="down"></span>Datei</button>
-      <button class="btn btn-ghost btn-sm grow" id="btn-csv"><span class="bi" data-ico="chart"></span>CSV</button>
-      <button class="btn btn-ghost btn-sm grow" id="btn-import"><span class="bi" data-ico="upload"></span>Import</button>
-      <input type="file" id="import-file" accept=".json" style="display:none" aria-label="Sicherungsdatei auswählen" tabindex="-1">
+  </details>
+  <details class="compact-details settings-group">
+    <summary><span>Verbindungen</span><span class="tiny">Sync · ChatGPT</span></summary>
+    <div class="details-body">
+      <div class="card">
+        <div class="sync-head">
+          <span class="bi" data-ico="cloud" aria-hidden="true"></span>
+          <div class="grow">
+            <h3 style="margin-bottom:2px">Geräte-Sync</h3>
+            <div class="sync-state" id="sync-settings-state" data-art="off">
+              <span class="sync-mark" aria-hidden="true">–</span><span>Nicht eingerichtet</span>
+            </div>
+            <p class="tiny" id="sync-settings-detail" style="margin-top:3px">Verschlüsselt</p>
+          </div>
+          <button class="btn btn-ghost btn-sm" id="sync-open">Öffnen</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="sync-head">
+          <span class="bi" data-ico="bolt" aria-hidden="true"></span>
+          <div class="grow">
+            <h3 style="margin-bottom:2px">ChatGPT-Zugriff</h3>
+            <div class="sync-state" id="ai-settings-state" data-art="off">
+              <span class="sync-mark" aria-hidden="true">–</span><span>Nicht freigegeben</span>
+            </div>
+            <p class="tiny" id="ai-settings-detail" style="margin-top:3px">Nur lesen</p>
+          </div>
+          <button class="btn btn-ghost btn-sm" id="ai-open">Öffnen</button>
+        </div>
+      </div>
     </div>
-  </div>
-  <div class="card">
-    <h3 style="margin-bottom:4px"><span class="bi" data-ico="shield"></span>Deine Daten</h3>
-    <p class="tiny" style="line-height:1.55">Lokal ohne Tracking. Der Geräte-Sync ist Ende-zu-Ende-verschlüsselt. Der getrennte ChatGPT-Zugriff teilt nur nach Einwilligung eine bereinigte Trainingskopie; Name, E-Mail, PIN und Sync-Schlüssel bleiben ausgeschlossen.</p>
-  </div>
-  <div class="card">
-    <h3 style="margin-bottom:4px">Sicherungspunkte auf dem Gerät</h3>
-    <p class="tiny" style="margin-bottom:8px">Automatisch nach Trainings, höchstens einmal täglich.</p>
-    <div id="snap-list"></div>
-  </div>
-  <div class="card">
-    <h3 style="margin-bottom:4px">App-Version</h3>
-    <p class="tiny" style="margin-bottom:8px">Update prüfen oder Cache neu laden. Trainingsdaten bleiben erhalten.</p>
-    <div class="row">
-      <button class="btn btn-ghost btn-sm grow" id="btn-checkupd">Nach Update suchen</button>
-      <button class="btn btn-ghost btn-sm grow" id="btn-hardreload">Cache leeren &amp; neu laden</button>
+  </details>
+  <details class="compact-details settings-group">
+    <summary><span>Backup &amp; Daten</span><span class="tiny">Export · Import</span></summary>
+    <div class="details-body">
+      <div class="card">
+        <h3 style="margin-bottom:4px">Backup</h3>
+        <p class="tiny" id="set-lastbackup" style="margin-bottom:8px"></p>
+        <button class="btn btn-acc btn-block" id="btn-vault" style="margin-bottom:8px"><span class="bi" data-ico="upload"></span>Vollbackup teilen</button>
+        <label class="tiny up" for="set-vaultmail">E-Mail</label>
+        <input type="email" id="set-vaultmail" inputmode="email" autocomplete="email" spellcheck="false"
+               placeholder="deine@mail.de" style="margin:4px 0 8px">
+        <button class="btn btn-ghost btn-block btn-sm" id="btn-maillog" style="margin-bottom:10px"><span class="bi" data-ico="mail"></span>Trainingsprotokoll</button>
+        <div class="row">
+          <button class="btn btn-ghost btn-sm grow" id="btn-export"><span class="bi" data-ico="down"></span>Datei</button>
+          <button class="btn btn-ghost btn-sm grow" id="btn-csv"><span class="bi" data-ico="chart"></span>CSV</button>
+          <button class="btn btn-ghost btn-sm grow" id="btn-import"><span class="bi" data-ico="upload"></span>Import</button>
+          <input type="file" id="import-file" accept=".json" style="display:none" aria-label="Sicherungsdatei auswählen" tabindex="-1">
+        </div>
+      </div>
+      <div class="card">
+        <h3><span class="bi" data-ico="shield"></span>Datenschutz</h3>
+        <div class="clean-facts"><span>Lokal</span><span>Kein Tracking</span><span>Sync verschlüsselt</span></div>
+      </div>
+      <div class="card">
+        <h3 style="margin-bottom:6px">Sicherungspunkte</h3>
+        <div id="snap-list"></div>
+      </div>
+      <div class="card">
+        <h3 style="margin-bottom:8px">App-Version</h3>
+        <div class="row">
+          <button class="btn btn-ghost btn-sm grow" id="btn-checkupd">Update prüfen</button>
+          <button class="btn btn-ghost btn-sm grow" id="btn-hardreload">Neu laden</button>
+        </div>
+      </div>
+      <div class="danger-zone"><button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button></div>
     </div>
-  </div>
-  <button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button>
-  <p class="tiny" style="text-align:center;margin-top:12px">Fitness Tracker V97</p>
+  </details>
+  <p class="tiny" style="text-align:center;margin-top:10px">Fitness Tracker V98</p>
 </div></div>
 
 <div class="mback" id="modal-sync"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="sync-title">
@@ -3792,20 +3827,20 @@ function syncRenderSettings(){
   st.dataset.art=syncStatus.art;
   st.innerHTML=`<span class="sync-mark" aria-hidden="true">${syncMark(syncStatus.art)}</span><span>${esc(syncStatus.text)}</span>`;
   de.textContent=syncStatus.detail || (syncConnected()
-    ? `${state.workouts.length} ${state.workouts.length===1?'Workout':'Workouts'} · letzter Abgleich ${syncDateText(syncMeta.lastSync)}`
-    : 'iPhone, iPad und PC können denselben verschlüsselten Stand nutzen.');
+    ? `${state.workouts.length} ${state.workouts.length===1?'Workout':'Workouts'} · ${syncDateText(syncMeta.lastSync)}`
+    : 'Verschlüsselt · nicht verbunden');
 }
 function syncRenderBody(){
   const box=$('#sync-body'); if(!box) return;
   if(!syncConnected()){
     box.innerHTML=`
-      <div class="sync-note"><b>Deine vorhandenen Daten bleiben auf diesem Gerät.</b><br>„Neuen Sync starten" lädt den aktuellen Stand verschlüsselt hoch. Auf iPad oder PC gibst du danach denselben Kopplungsschlüssel ein.</div>
+      <div class="sync-note"><b>Lokaler Stand bleibt erhalten.</b></div>
       <button class="btn btn-acc btn-block" id="sync-create">Neuen Sync starten</button>
-      <div class="tiny up">Vorhandenes Gerät verbinden</div>
+      <div class="tiny up">Gerät verbinden</div>
       <label class="tiny" for="sync-join-input">Kopplungsschlüssel</label>
       <input class="sync-code" id="sync-join-input" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Schlüssel vom iPhone einfügen">
       <button class="btn btn-ghost btn-block" id="sync-join">Diesen Stand laden</button>
-      <p class="tiny">Kein Konto nötig. Der 256-Bit-Schlüssel ist zugleich der einzige Zugang zu den verschlüsselten Daten. Gib ihn nur auf deinen Geräten ein.</p>`;
+      <p class="tiny">Schlüssel nur auf eigenen Geräten verwenden.</p>`;
     return;
   }
   const konflikt=_syncConflict;
@@ -3820,11 +3855,10 @@ function syncRenderBody(){
     <div class="sync-meta"><div><b>${state.workouts.length}</b><span>Workouts auf diesem Gerät</span></div><div><b>${syncMeta.revision||0}</b><span>Cloud-Version</span></div></div>
     <label class="tiny" for="sync-code-view">Kopplungsschlüssel</label>
     <input class="sync-code" id="sync-code-view" type="text" readonly value="${esc(syncFormatCode(syncMeta.code))}" aria-describedby="sync-code-help">
-    <p class="tiny" id="sync-code-help">Auf jedem weiteren Gerät einmal einfügen. Verlierst du alle Geräte und diesen Schlüssel, kann niemand die Cloud-Daten entschlüsseln.</p>
+    <p class="tiny" id="sync-code-help">Für neue Geräte · sicher aufbewahren.</p>
     <div class="sync-actions"><button class="btn btn-ghost" id="sync-copy">Schlüssel kopieren</button><button class="btn btn-ghost" id="sync-share">Schlüssel teilen</button></div>
     <button class="btn btn-acc btn-block" id="sync-now" ${_syncBusy?'disabled':''}>${_syncBusy?'Synchronisiert …':'Jetzt synchronisieren'}</button>
     <button class="btn btn-ghost btn-block" id="sync-disconnect">Nur dieses Gerät trennen</button>
-    <p class="tiny">Offline kannst du normal weitertrainieren. Sobald wieder Internet da ist, wird automatisch abgeglichen.</p>
     <div class="tiny up">Wiederherstellung</div>${syncHistoryHtml()}`;
 }
 function syncFriendlyError(e){
@@ -4146,7 +4180,7 @@ function syncInit(){
   else if(syncConnected()){
     syncSetStatus(syncMeta.dirty?'wait':'busy',syncMeta.dirty?'Änderung wartet':'Prüft Cloud …','Der lokale Stand ist bereits verfügbar.');
     syncSchedule(350);
-  }else syncSetStatus('off','Nicht eingerichtet','iPhone, iPad und PC können denselben verschlüsselten Stand nutzen.');
+  }else syncSetStatus('off','Nicht eingerichtet','Verschlüsselt · nicht verbunden');
 }
 document.getElementById('sync-open').addEventListener('click',syncOpen);
 document.addEventListener('click',e=>{
@@ -4319,7 +4353,7 @@ function aiRenderSettings(){
   st.innerHTML=`<span class="sync-mark" aria-hidden="true">${syncMark(aiStatus.art)}</span><span>${esc(aiStatus.text)}</span>`;
   de.textContent=aiStatus.detail || (aiMeta&&aiMeta.enabled
     ? `${aiMeta.workoutCount||0} ${aiMeta.workoutCount===1?'Workout':'Workouts'} · zuletzt ${syncDateText(aiMeta.lastUpload)}`
-    : 'Optionaler Nur-Lese-Zugriff auf eine bereinigte Kopie.');
+    : 'Bereinigte Kopie · nur lesen');
 }
 function aiGrantClientId(grant){
   const g=aiObject(grant), c=aiObject(g.client);
@@ -4333,14 +4367,14 @@ function aiGrantsHtml(){
   if(!aiGrants.length) return '';
   return `<div class="tiny up">Autorisierte OAuth-Anwendungen</div><div class="card" style="padding:2px 12px;margin:0">${aiGrants.map(g=>{
     const id=aiGrantClientId(g); if(!id) return '';
-    return `<div class="item"><div class="grow"><div class="ttl" style="font-size:var(--fs-sub)">${esc(aiGrantName(g))}</div><div class="meta">Kann widerrufen werden · Token werden ungültig</div></div><button class="btn btn-ghost btn-sm" data-ai-revoke="${esc(id)}">Widerrufen</button></div>`;
+    return `<div class="item"><div class="grow"><div class="ttl" style="font-size:var(--fs-sub)">${esc(aiGrantName(g))}</div></div><button class="btn btn-ghost btn-sm" data-ai-revoke="${esc(id)}">Widerrufen</button></div>`;
   }).join('')}</div>`;
 }
 function aiRenderBody(){
   const box=$('#ai-body'); if(!box || !aiMeta) return;
   if(_aiBusy && !aiUser){ box.innerHTML='<div class="sync-note"><b>Verbindung wird geprüft …</b></div>'; return; }
   if(!aiUser){
-    box.innerHTML=`<div class="sync-note ai-sensitive"><b>Getrennt vom Geräte-Sync.</b><br>Für ChatGPT wird nach deiner Zustimmung eine bereinigte, lesbare Kopie angelegt. Dein verschlüsselter Geräte-Sync und sein Schlüssel bleiben unverändert.</div>
+    box.innerHTML=`<div class="sync-note ai-sensitive"><b>Getrennt vom Geräte-Sync · nur lesen</b></div>
       <form class="ai-auth" id="ai-auth-form">
         <label class="tiny up" for="ai-email">E-Mail-Adresse</label>
         <input id="ai-email" type="email" inputmode="email" autocomplete="email" required placeholder="deine@mail.de">
@@ -4350,15 +4384,14 @@ function aiRenderBody(){
         <button class="btn btn-ghost btn-block" id="ai-auth-signup" type="button" style="margin-top:8px">Konto anlegen</button>
         <button class="btn btn-ghost btn-block" id="ai-auth-magic" type="button" style="margin-top:8px">Anmeldelink per E-Mail</button>
       </form>
-      <p class="tiny">Das Konto ordnet die Freigabe dir zu. Die E-Mail-Adresse gehört zur Anmeldung und wird nicht Teil der Trainingskopie.</p>
       ${(aiStatus.art==='error'||aiStatus.art==='wait')?`<div class="sync-note"><b>${esc(aiStatus.text)}</b><br>${esc(aiStatus.detail)}</div>`:''}`;
     return;
   }
-  const daten=`<div class="ai-list"><div>Workouts mit Übungen, Sätzen, RIR, Zeiten und Notizen</div><div>Körpergewicht und Körpermaße</div><div>Trainingsplan, Vorlagen, Ziele und Übungseinstellungen</div><div>Trainingsprofil ohne Name und Standort</div></div>`;
+  const daten=`<div class="ai-list"><div>Workouts &amp; Sätze</div><div>Körperdaten</div><div>Plan &amp; Ziele</div><div>Trainingsprofil</div></div>`;
   if(!aiMeta.enabled){
-    box.innerHTML=`<div class="sync-note"><b>Angemeldet als ${esc(aiUser.email||'dein Konto')}</b><br>Noch wurden keine lesbaren Trainingsdaten hochgeladen.</div>
-      <h3>Diese Trainingsdaten werden geteilt</h3>${daten}
-      <div class="sync-note ai-sensitive"><b>Nicht enthalten:</b><br>Name, E-Mail-Adresse, Standort, PIN, Backup-Empfänger und Geräte-Sync-Schlüssel. Freitext in Workout- und Übungsnotizen ist enthalten.</div>
+    box.innerHTML=`<div class="sync-note"><b>${esc(aiUser.email||'Angemeldet')}</b> · noch nicht freigegeben</div>
+      <h3>Freigabe</h3>${daten}
+      <div class="sync-note ai-sensitive"><b>Ausgeschlossen:</b> Name, E-Mail, Standort, PIN und Sync-Schlüssel.</div>
       <button class="btn btn-acc btn-block" id="ai-enable">Trainingsdaten freigeben</button>
       ${aiGrantsHtml()}
       <button class="btn btn-ghost btn-block" id="ai-logout">Von diesem Konto abmelden</button>`;
@@ -4367,12 +4400,11 @@ function aiRenderBody(){
   box.innerHTML=`<div class="sync-state" data-art="${aiStatus.art}"><span class="sync-mark" aria-hidden="true">${syncMark(aiStatus.art)}</span><span>${esc(aiStatus.text)}</span></div>
     ${aiStatus.detail?`<p class="tiny">${esc(aiStatus.detail)}</p>`:''}
     <div class="sync-meta"><div><b>${aiMeta.workoutCount||0}</b><span>freigegebene Workouts</span></div><div><b>${aiMeta.lastUpload?'✓':'–'}</b><span>${aiMeta.lastUpload?syncDateText(aiMeta.lastUpload):'noch kein Upload'}</span></div></div>
-    <p class="tiny">Nach jeder Änderung wird die Kopie automatisch aktualisiert. ChatGPT kann sie ausschließlich lesen.</p>
+    <p class="tiny">Automatisch aktualisiert · nur lesen</p>
     <div class="tiny up">MCP-Adresse für ChatGPT</div><div class="ai-endpoint">${AI_MCP_URL}</div>
     <div class="sync-actions"><button class="btn btn-ghost" id="ai-copy-url">Adresse kopieren</button><button class="btn btn-acc" id="ai-upload-now" ${_aiBusy?'disabled':''}>${_aiBusy?'Aktualisiert …':'Jetzt aktualisieren'}</button></div>
     <button class="btn btn-danger btn-block" id="ai-disable">Freigabe beenden &amp; Cloud-Kopie löschen</button>
-    ${aiGrantsHtml()}
-    <p class="tiny">Beim Widerrufen werden die Token dieser Anwendung ungültig. Entferne den Connector zusätzlich in ChatGPT, wenn du ihn dort nicht mehr verwenden willst.</p>`;
+    ${aiGrantsHtml()}`;
 }
 async function aiRefreshGrants(client){
   try{
@@ -4506,7 +4538,7 @@ async function aiDisable(){
 async function aiLogout(){
   if(aiMeta.enabled) return;
   try{ const client=await aiGetClient(); await client.auth.signOut({scope:'local'}); }catch(_){}
-  aiUser=null; aiGrants=[]; aiSetStatus('off','Nicht freigegeben','Optionaler Nur-Lese-Zugriff auf eine bereinigte Kopie.');
+  aiUser=null; aiGrants=[]; aiSetStatus('off','Nicht freigegeben','Bereinigte Kopie · nur lesen');
 }
 async function aiRevoke(clientId){
   if(_aiBusy||!clientId) return;
@@ -4535,7 +4567,7 @@ function aiInit(){
     aiSetStatus(aiMeta.dirty?'wait':'ok',aiMeta.dirty?'Aktualisierung wartet':'Freigabe aktiv',
       aiMeta.lastUpload?`${aiMeta.workoutCount} ${aiMeta.workoutCount===1?'Workout':'Workouts'} · zuletzt ${syncDateText(aiMeta.lastUpload)}`:'Erster Upload wird vorbereitet.');
     aiSchedule(700);
-  }else aiSetStatus('off','Nicht freigegeben','Optionaler Nur-Lese-Zugriff auf eine bereinigte Kopie.');
+  }else aiSetStatus('off','Nicht freigegeben','Bereinigte Kopie · nur lesen');
 }
 document.getElementById('ai-open').addEventListener('click',aiOpen);
 document.addEventListener('submit',e=>{ if(e.target&&e.target.id==='ai-auth-form'){ e.preventDefault(); aiAuth(false); } });
@@ -5129,12 +5161,12 @@ function cycleUnitsHtml(c, titel){
       <span class="badge type">${w?'erledigt':'offen'}</span></div>`;
   }).join('');
   const zusatz=c&&c.doppelteEinheiten
-    ? `<p class="kpihint tiny">${c.doppelteEinheiten} doppelte ${c.doppelteEinheiten===1?'Einheit wurde':'Einheiten wurden'} gespeichert, zählt aber nicht zusätzlich zur ${CYCLE_UNIT_COUNT}/${CYCLE_UNIT_COUNT}-Vollständigkeit.</p>`
+    ? `<p class="kpihint tiny">${c.doppelteEinheiten}× doppelt · nicht mitgezählt</p>`
     : c&&c.extras&&c.extras.length
-      ? `<p class="kpihint tiny">${c.extras.length} zusätzliche ${c.extras.length===1?'Einheit bleibt':'Einheiten bleiben'} im Verlauf, zählt aber nicht als A/B-Zykluseinheit.</p>`
+      ? `<p class="kpihint tiny">${c.extras.length}× zusätzlich · nur im Verlauf</p>`
       : '';
   return `<div class="card"><div class="row" style="align-items:flex-start"><div class="grow">
-      <h3 style="margin-bottom:3px">${esc(titel||'Einheiten pro Zyklus')}</h3><p class="tiny">${kopf} · Soll: ${CYCLE_UNIT_COUNT} Einheiten in ${CYCLE_SOLL_TAGE} Tagen</p></div>
+      <h3 style="margin-bottom:3px">${esc(titel||'Einheiten pro Zyklus')}</h3><p class="tiny">${kopf} · ${CYCLE_SOLL_TAGE} Tage</p></div>
       <span class="badge type">${erledigt}/${CYCLE_UNIT_COUNT}</span></div>${rows}${zusatz}</div>`;
 }
 function cycleAdherenceCard(cs){
@@ -5146,9 +5178,7 @@ function cycleAdherenceCard(cs){
     return `<div class="mbar"><span>${einheitLabel(s)}</span><span class="bar"><i style="width:${pct}%"></i></span><span class="val"><b>${ist}/${n}</b></span></div>`;
   }).join('');
   const voll=cs.filter(c=>c.vollstaendig).length;
-  return `<div class="card"><h3 style="margin-bottom:3px">Einheiten pro Zyklus</h3>
-    <p class="tiny" style="margin-bottom:8px">In wie vielen der letzten ${n} ${n===1?'Zyklus':'Zyklen'} jede Einheit enthalten war.</p>${rows}
-    <p class="kpihint tiny"><b>${voll}/${n}</b> Zyklen vollständig · doppelte Workouts erhöhen die Quote nicht.</p></div>`;
+  return `<div class="card"><div class="row" style="justify-content:space-between;margin-bottom:6px"><h3>Einheiten pro Zyklus</h3><span class="badge type">${voll}/${n} vollständig</span></div>${rows}</div>`;
 }
 /* V95 · vierzehn neue Kennzahlen, die vorhandene Auswertungen nicht
    umbenennen. Jede Rechnung bleibt innerhalb einer Übung, Einheit oder eines
@@ -5255,22 +5285,22 @@ function premiumMetricHtml(m){
 }
 function premiumAnalyticsDeck(cs,preview){
   const a=premiumAnalytics(cs), gruppen={
-    rotation:{title:'Rotation',sub:'A/B-Verteilung und Einheitenprofil'},
-    progress:{title:'Fortschritt',sub:'Nur vergleichbare Übungen und Folgesessions'},
-    structure:{title:'Struktur',sub:'Rhythmus, Abdeckung und Stabilität'}
+    rotation:{title:'Rotation'},
+    progress:{title:'Fortschritt'},
+    structure:{title:'Struktur'}
   };
   if(preview){
     const ids=['missed_unit','ab_volume','improvement_rate','rhythm_fit'];
     const ms=ids.map(id=>a.metrics.find(m=>m.id===id)).filter(Boolean);
-    return `<div class="card insight-panel"><div class="insight-head"><div><h3>Neue Analysen</h3><p>${a.cycles.length} abgeschlossene ${a.cycles.length===1?'Zyklus':'Zyklen'}</p></div><span class="insight-count">4 LIVE</span></div>
+    return `<div class="card insight-panel"><div class="insight-head"><div><h3>Analysen</h3><p>${a.cycles.length} abgeschlossene ${a.cycles.length===1?'Zyklus':'Zyklen'}</p></div><span class="insight-count">4</span></div>
       <div class="insight-grid">${ms.map(premiumMetricHtml).join('')}</div>
-      <button class="btn btn-ghost btn-block btn-sm" style="margin-top:10px" data-stat-tab="month">Alle 14 Kennzahlen</button></div>`;
+      <button class="btn btn-ghost btn-block btn-sm" style="margin-top:8px" data-stat-tab="month">Alle 14</button></div>`;
   }
   return `<div class="analytics-stack">${Object.entries(gruppen).map(([key,g])=>{
     const ms=a.metrics.filter(m=>m.group===key);
-    return `<div class="card insight-panel" data-insight-group="${key}"><div class="insight-head"><div><h3>${g.title}</h3><p>${g.sub}</p></div><span class="insight-count">${ms.length}</span></div>
+    return `<div class="card insight-panel" data-insight-group="${key}"><div class="insight-head"><div><h3>${g.title}</h3></div><span class="insight-count">${ms.length}</span></div>
       <div class="insight-grid">${ms.map(premiumMetricHtml).join('')}</div></div>`;
-  }).join('')}</div><details class="metric-method"><summary>Berechnung der neuen Kennzahlen</summary><p>Offene Zyklen sind ausgeschlossen. A/B-Werte summieren nur die zugeordnete Einheit. Fortschritt vergleicht e1RM ausschließlich innerhalb derselben Übung, nach dem letzten erkannten Niveauwechsel und bis maximal ${E1RM_RELIABLE_MAX} Wiederholungen. Übungsstabilität ist die Schnittmenge zweier aufeinanderfolgender Zyklen; Volumen-Schwankung ist die relative Standardabweichung.</p></details>`;
+  }).join('')}</div>`;
 }
 /* Zyklusnummer zu einem Datum — für die x-Achse der Diagramme */
 function cycleOfDate(dateStr){
@@ -6124,29 +6154,27 @@ function renderVorschlag(){
   /* Ohne Vorlage kein Vorschlag — dann bleibt der normale Startknopf. */
   if(!v.uebungen.length){ box.innerHTML = ''; return; }
 
-  const mitGewicht = v.uebungen.filter(u=>u.sets[0] && u.sets[0].w !== '').length;
   const kompakt=v.uebungen.slice(0,3), weitere=v.uebungen.length-kompakt.length;
   const erholung=vorschlagErholung(v.uebungen);
   const erholungHtml=erholung ? `<div class="readycue">
       <div class="head"><b style="font-size:var(--fs-sub)">Erholung · ${esc(erholung.status)}</b>
         <span class="tiny" style="font-variant-numeric:tabular-nums">Ø ${erholung.avg} %</span></div>
       <div class="bar" aria-hidden="true"><i style="width:${erholung.avg}%"></i></div>
-      <div class="tiny" style="margin-top:6px">Hauptmuskeln aus bisherigen Arbeitssätzen und Zeit geschätzt${erholung.min.value<80?` · am niedrigsten ${esc(erholung.min.name)} ${erholung.min.value} %`:''}. Kein Schlaf-/HRV-Wert.</div>
     </div>` : '';
   const luecke = v.luecken.length
     ? `<div class="tiny" style="margin-top:4px;color:var(--gold)">${v.luecken.slice(0,2)
-        .map(l=>`${l.gruppe} ${l.ist} von ${l.lo}`).join(' · ')} Sätzen im Zyklus</div>`
+        .map(l=>`${l.gruppe} ${l.ist}/${l.lo}`).join(' · ')} Sätze</div>`
     : '';
   const chronisch=(v.chronisch||[]).length
-    ? `<div class="tiny" style="margin-top:4px;color:var(--a6)">+ Ausgleich: ${(v.chronisch||[]).map(x=>x.luecke.gruppe).join(' · ')}</div>`
+    ? `<div class="tiny" style="margin-top:4px;color:var(--a6)">+ ${(v.chronisch||[]).map(x=>x.luecke.gruppe).join(' · ')}</div>`
     : '';
 
   box.innerHTML = `<div class="card" style="margin-bottom:12px;border-color:var(--acc-a30);background:linear-gradient(160deg,var(--acc-a08),transparent 60%),var(--s1)">
-    <div class="label" style="color:var(--acc)">Heute${v.quelle==='plan'? ' · von dir geplant':''}</div>
+    <div class="label" style="color:var(--acc)">Heute${v.quelle==='plan'? ' · geplant':''}</div>
     <b style="font-size:var(--fs-h2);display:block;margin:2px 0 0">${esc(v.label||v.typ)} · ${v.uebungen.length} ${v.uebungen.length===1?'Übung':'Übungen'}</b>
     ${chronisch||luecke}
     ${erholungHtml}
-    <div style="margin:10px 0 4px">${kompakt.map(u=>{
+    <div style="margin:8px 0 2px">${kompakt.map(u=>{
       /* Die Zahl bedeutet je Übungsart etwas anderes — ohne den Zusatz liest
          man „60 kg" bei Klimmzügen als Last statt als Zusatzgewicht und bei
          der unterstützten Maschine genau verkehrt herum. */
@@ -6169,21 +6197,11 @@ function renderVorschlag(){
         <span class="tiny" style="color:var(--txt3);flex:none">${u.sets.length}×</span>
         <span style="font-size:var(--fs-sub);font-weight:700;flex:none;color:${art.c};font-variant-numeric:tabular-nums">${kg}</span>
       </div>`;
-    }).join('')}${weitere>0?`<div class="tiny" style="padding-top:6px">+ ${weitere} weitere ${weitere===1?'Übung':'Übungen'} im Training</div>`:''}</div>
-    <div class="row" style="gap:8px;margin-top:10px">
-      <button class="btn btn-acc grow" id="btn-vorschlag-start">Training starten</button>
-      <button class="btn btn-ghost btn-sm" id="btn-vorschlag-anders">Anders</button>
+    }).join('')}${weitere>0?`<div class="tiny" style="padding-top:5px">+ ${weitere} ${weitere===1?'Übung':'Übungen'}</div>`:''}</div>
+    <div class="row" style="gap:8px;margin-top:8px">
+      <button class="btn btn-acc grow" id="btn-vorschlag-start">Start</button>
+      <button class="btn btn-ghost btn-sm" id="btn-vorschlag-anders">Ändern</button>
     </div>
-    <details class="erkl"><summary>Woher kommen die Zahlen?</summary><div>
-      ${v.quelle === 'plan'
-        ? `Das ist <b>dein Plan für heute</b> — im Reiter Training auf diesem Tag eingetragen. Die App hat nichts dazugerechnet.`
-        : `Die Übungen sind die deiner letzten <b>${esc(v.label||v.typ)}</b>-Einheit${v.vorlage? ' vom ' + fmtDate(v.vorlage.date) : ''}.`}
-      ${v.quelle !== 'plan' && mitGewicht ? `Bei ${mitGewicht} von ${v.uebungen.length} steht ein Gewicht — es kommt aus deiner Historie, ein <b>↑</b> heißt Steigerung.` : ''}
-      ${(v.chronisch||[]).length ? `<br><b>+ Lücke</b> ergänzt höchstens zwei Gruppen, die in mindestens zwei Dritteln der letzten Zyklen unter dem Korridor lagen. Die Übung ist nur ein änderbarer Vorschlag; ohne eigene Historie bleibt das Gewicht leer.` : ''}
-      ${mitGewicht < v.uebungen.length ? `Wo <b>—</b> steht, fehlt die Historie; dort bleibt das Feld leer statt geraten.` : ''}
-      <br>Die <b>Wiederholungen bleiben immer leer</b> — sie sind das Ergebnis des Satzes, nicht seine Vorgabe.
-      Jede Zeile lässt sich im Training ändern, jede Übung tauschen.
-    </div></details>
   </div>`;
   $('#btn-vorschlag-start').addEventListener('click', ()=>starteVorschlag(v.typ,v.variant));
   $('#btn-vorschlag-anders').addEventListener('click', ()=>showScreen('scr-train'));
@@ -6197,7 +6215,7 @@ function starteVorschlag(typ, variant){
     exercises: v.uebungen.map(u=>({ exId:u.exId, name:u.name, __live:true,
                                     sets:u.sets.map(s=>({w:s.w, r:s.r})) })) };
   saveState(); haptic('success'); renderTrain(); showScreen('scr-train');
-  toast(v.uebungen.length + ' Übungen übernommen — Gewichte kannst du ändern');
+  toast(v.uebungen.length + ' Übungen übernommen');
 }
 
 /* ================= ACHIEVEMENT-ENGINE (auto-generiert pro Übung) ================= */
@@ -6957,15 +6975,9 @@ function renderBalance(){
       <span class="bi" data-ico="alert" style="color:var(--sig);flex:none;margin:0"></span>
       <div class="grow">
         <h3 style="margin-bottom:2px">${esc(b.schwach)} kommt zu kurz</h3>
-        <p class="tiny" style="margin-bottom:6px">
-          In den letzten 4 Wochen: <b style="color:var(--txt2)">${esc(b.stark)} ${fmtW(b.starkN)} Sätze</b>,
-          <b style="color:var(--sig)">${esc(b.schwach)} ${fmtW(b.schwachN)}</b>.
-        </p>
-        <p class="tiny" style="margin-bottom:6px">${esc(b.rat)}</p>
-        <p class="tiny"><b style="color:var(--txt2)">${b.proWoche} ${b.proWoche===1?'Satz':'Sätze'} ${esc(b.schwach)} mehr pro Woche</b>
-          bringen das Verhältnis wieder in den Rahmen.</p>
-        ${weitere ? `<p class="tiny" style="color:var(--txt3);margin-top:6px">${weitere} weiteres Ungleichgewicht${weitere>1?'e':''} — im Radar zu sehen.</p>` : ''}
-        <button class="btn btn-sm" id="bal-mehr" style="margin-top:10px">Radar ansehen</button>
+        <div class="clean-status">${esc(b.stark)} ${fmtW(b.starkN)} · ${esc(b.schwach)} ${fmtW(b.schwachN)} Sätze</div>
+        <b style="display:block;color:var(--a7);margin-top:5px">+${b.proWoche} ${b.proWoche===1?'Satz':'Sätze'} / Woche</b>
+        <button class="btn btn-sm" id="bal-mehr" style="margin-top:8px">Statistik${weitere?` · +${weitere}`:''}</button>
       </div>
     </div>
   </div>`;
@@ -7101,10 +7113,9 @@ function renderZiele(){
     /* Leerzustand mit Einladung — ein leerer Kasten erklärt sich nicht. */
     box.innerHTML = `<div class="card">
       <div class="row" style="justify-content:space-between;align-items:flex-start">
-        <div class="grow"><h3 style="margin-bottom:2px">Ziele</h3>
-          <p class="tiny">Rekorde zeigen, was war. Ein Ziel zeigt, wo du hinwillst —<br>„100 kg Bankdrücken bis Dezember".</p></div>
+        <div class="grow"><h3 style="margin-bottom:2px">Ziele</h3><div class="tiny">Noch kein Ziel</div></div>
       </div>
-      <button class="btn btn-block" id="goal-new" style="margin-top:10px">${ICO.plus} Erstes Ziel setzen</button>
+      <button class="btn btn-block" id="goal-new" style="margin-top:8px">${ICO.plus} Ziel setzen</button>
     </div>`;
     return;
   }
@@ -7432,9 +7443,9 @@ function paintBody(){
       ? `Bereit: <b>${fresh.join(' · ')}</b>`
       : 'Alles noch in Erholung — heute leichter oder Pausentag.';
     $('#body-legend').innerHTML = figLegend(true);
-    $('#body-reclist').innerHTML = `<div style="margin-top:12px">` + g.map(([n,v],i)=>`
+    $('#body-reclist').innerHTML = `<div style="margin-top:10px">` + g.map(([n,v],i)=>`
       <div class="mbar"><span>${n}</span><span class="bar"><i style="width:${v}%;animation-delay:${i*45}ms;background:${v>=85?'var(--fig-g0)':v>=60?'var(--fig-g1)':v>=35?'var(--fig-g2)':'var(--fig-g3)'}"></i></span><span class="val">${v} %</span></div>`).join('') + `</div>
-      <p class="tiny" style="margin-top:8px">Ermüdung klingt über 2–5 Tage ab — je mehr Sätze, desto länger.</p>`;
+      `;
   } else {
     /* Ohne eine einzige Einheit im Zyklus hat die Figur nichts zu sagen —
        dann bleibt sie grau statt den ganzen Körper als Mangel zu melden. */
@@ -7531,7 +7542,7 @@ $('#set-restsound').addEventListener('click',()=>{
 function zeigeZyklusZiel(){
   const el = $('#set-goal-cycle'); if(!el) return;
   const t1 = groupTargetCycle(1,1), t2 = groupTargetCycle(2,1);
-  el.innerHTML = `Direktes Zyklusziel: <b>${t1.lo}–${t1.hi} Sätze</b> für die meisten Gruppen, <b>${t2.lo}–${t2.hi}</b> für Rücken und Schultern.`;
+  el.innerHTML = `<b>${t1.lo}–${t1.hi}</b> Sätze · Rücken/Schultern <b>${t2.lo}–${t2.hi}</b>`;
 }
 $('#set-beine').addEventListener('click',()=>{
   state.settings.beineImZyklus = !state.settings.beineImZyklus; saveState(); haptic();
@@ -7616,10 +7627,7 @@ function renderDayBody(){
   /* 2. Vergangener Tag ohne Training — offen benennen, nicht beschönigen. */
   if(t.vergangen){
     box.innerHTML = kopf(lang, t.typ==='Rest'? 'Pausentag':'kein Training', '')
-      + `<div class="empty" style="padding:20px">${t.typ && t.typ!=='Rest'
-          ? `Für diesen Tag wäre <b>${esc(t.label||t.typ)}</b> dran gewesen — aufgezeichnet ist nichts.`
-          : 'Kein Training aufgezeichnet.'}<br>
-         <span class="tiny">Nachtragen geht über den Verlauf.</span></div>`;
+      + `<div class="empty">${t.typ && t.typ!=='Rest'?`<b>${esc(t.label||t.typ)}</b> nicht aufgezeichnet`:'Kein Training'}</div>`;
     return;
   }
 
@@ -7660,7 +7668,7 @@ function renderDayBody(){
           ${PLAN_TYPEN.map(x=>`<button class="chip ${x===label?'on':''}" data-plantyp="${x}">${x}</button>`).join('')}
         </div>
         ${typ==='Rest'
-          ? `<div class="empty" style="padding:16px">Pausentag. ${istVorschau? 'So sieht es der Rhythmus Push A → Pull A → Rest → Push B → Pull B → Rest vor.':'Von dir so gesetzt.'}</div>`
+          ? `<div class="empty">Pausentag${istVorschau?' · Rhythmus':' · geplant'}</div>`
           : gefuellt
             ? `<div class="plansummary">${planUebungen}</div>
                <button class="btn btn-ghost btn-block btn-sm" id="plan-edit" style="margin-top:10px">Plan bearbeiten</button>`
@@ -7742,7 +7750,7 @@ function renderTrain(){
           : `<button class="btn btn-acc btn-sm" data-start-tpl="${t.id}">Start</button>`}
         <button class="iconbtn" data-edit-tpl="${t.id}" aria-label="Workout bearbeiten">${ICO.edit}</button>
         <button class="iconbtn" data-del-tpl="${t.id}" aria-label="Workout löschen">${ICO.trash}</button></div>`).join('')
-    }</div>` : `<div class="empty" style="padding:16px"><div class="big">${ICO.inbox}</div>Noch keine Workouts angelegt.<br>Erstell dir z.B. „Push A" mit deinen festen Übungen.</div>`)
+    }</div>` : `<div class="empty"><div class="big">${ICO.inbox}</div>Noch keine Workouts</div>`)
     + `<button class="btn btn-ghost btn-block" id="btn-new-rt">＋ Workout erstellen</button>`;
     $$('[data-start-tpl]').forEach(b=>b.addEventListener('click',()=>startWorkout(null,b.dataset.startTpl,null,tplTag)));
     $$('[data-plan-tpl]').forEach(b=>b.addEventListener('click',async()=>{
@@ -8195,13 +8203,11 @@ function workoutProgressHtml(w){
   if(n('new')) teile.push(`<span>${n('new')} neu</span>`);
   const marks={up:'↑',same:'=',down:'↘',new:'•'};
   return `<div class="card progressreport"><h3 style="margin-bottom:3px">Fortschrittsbericht</h3>
-    <p class="tiny">Bester Arbeitssatz je Übung gegen die letzte Einheit derselben Übung.</p>
     <div class="progresssummary">${teile.join('')}</div>
     <div>${rows.slice(0,8).map(x=>`<button class="progressrow ${x.status}" data-sum-ex="${esc(x.id)}">
       <span class="mark" aria-hidden="true">${marks[x.status]}</span><span><span class="ttl">${esc(x.name)}</span>
-      <span class="meta">${esc(x.text)} · ${esc(x.basis)}</span>${x.next?`<span class="meta next">Nächstes Ziel: ${esc(x.next.txt)}</span>`:''}</span><span class="chev">›</span></button>`).join('')}</div>
-    ${rows.length>8?`<p class="tiny">+${rows.length-8} weitere Übungen im Verlauf.</p>`:''}
-    <p class="kpihint tiny">Bei geänderter Last wird die tatsächlich bewegte Last per e1RM geschätzt; über 12 Wiederholungen ist die Schätzung ungenauer. Antippen öffnet die Übungsanalyse.</p></div>`;
+      <span class="meta">${esc(x.text)}</span>${x.next?`<span class="meta next">${esc(x.next.txt)}</span>`:''}</span><span class="chev">›</span></button>`).join('')}</div>
+    ${rows.length>8?`<p class="tiny">+${rows.length-8}</p>`:''}</div>`;
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -8331,8 +8337,7 @@ function renderActive(){
         <button class="iconbtn" data-exopt="${ei}" aria-label="Übung einstellen">${ICO.gear}</button>
         <button class="iconbtn" data-rmex="${ei}" aria-label="Übung entfernen">${ICO.trash}</button></div>
       ${prog? `<div class="progbox"><div class="grow"><div class="tiny up" style="color:var(--acc2);letter-spacing:1px">${planung?'Empfohlen':'Heute empfohlen'}</div>
-          <b style="font-size:var(--fs-body)">${prog.txt}</b>
-          <details class="erkl warum"><summary>Warum?</summary><div>${esc(prog.why)}</div></details></div>
+          <b style="font-size:var(--fs-body)">${prog.txt}</b></div>
           <button class="btn btn-acc btn-sm" data-applyprog="${ei}">Übernehmen</button></div>`:''}
       ${/* ── C9: die letzten drei Einheiten ──────────────────────────────
            „Letztes Mal: 67×8 · 67×8 · 67×8 · 67×8" wiederholte, was ohnehin
@@ -8354,13 +8359,13 @@ function renderActive(){
               .flatMap(w => w.exercises.filter(x => x.exId === e.exId))
               .map(x => Math.max(0, ...validSets(x).map(s => +s.sek||0)))
               .filter(v => v > 0).slice(-3);
-            if(!hz.length) return `<div class="prevline">Erstes Mal — Zeit ehrlich stoppen, das ist der Ausgangswert</div>`;
+            if(!hz.length) return `<div class="prevline">Erste Einheit</div>`;
             const rauf = hz.length>1 && hz[hz.length-1] > hz[0];
             return `<div class="prevline">Längste Zeit <b>${hz.map(fmtSek).join(' → ')}</b>${
               rauf? ' <span style="color:var(--green)">↑</span>':''}</div>`;
           }
           const h3 = exHistory(e.exId, new Date(a.date).getTime()).slice(-3);
-          if(!h3.length) return `<div class="prevline">Erstes Mal — Gewicht suchen, mit dem ${o.lo}–${o.hi} Wdh sauber gehen</div>`;
+          if(!h3.length) return `<div class="prevline">Erste Einheit · Ziel ${o.lo}–${o.hi} Wdh</div>`;
           /* Bei einer Körpergewichtsübung OHNE Zusatzgewicht ist das Gewicht
              immer 0 — „0 → 0 → 0" sagt nichts. Dort ist die Wiederholungszahl
              die Leistung, und die zeigt die Zeile dann auch. */
@@ -8879,7 +8884,6 @@ function sessionCheckinHtml(w){
   return `<div class="card sessioncheck">
     <div class="row" style="align-items:flex-start;gap:var(--sp3)"><div class="grow">
       <h3>Wie anstrengend war die Einheit?</h3>
-      <p class="tiny" style="margin-top:3px">Session-RPE bewertet das gesamte Training — unabhängig vom RIR einzelner Sätze.</p>
     </div><b id="sum-rpe-value" style="color:var(--a7);white-space:nowrap">${r?`${r}/10 · ${rpeLabel(r)}`:'Noch offen'}</b></div>
     <div class="rpegrid" role="group" aria-label="Session-RPE von 1 bis 10">${Array.from({length:10},(_,i)=>i+1).map(i=>
       `<button class="rpebtn ${r===i?'on':''}" data-sum-rpe="${i}" aria-pressed="${r===i?'true':'false'}" aria-label="RPE ${i} von 10">${i}</button>`).join('')}</div>
@@ -9132,7 +9136,7 @@ function renderPickList(){
   const rest = list.filter(ex=>!quickIds.has(ex.id));
   $('#pick-list').innerHTML = head || rest.length
     ? head + rest.map(ex=>pickRow(ex)).join('')
-    : `<div class="empty"><div class="big">${ICO.search}</div><b>Keine Übung gefunden</b>Versuch es mit einem anderen Begriff —<br>Englisch funktioniert auch.</div>`;
+    : `<div class="empty"><div class="big">${ICO.search}</div><b>Keine Übung</b></div>`;
   /* Ein Listener am Container statt zweier je Zeile. Die Reihenfolge der
      Prüfung ersetzt das frühere stopPropagation: Trifft der Klick den Stern,
      wird nur umgeschaltet und der Picker bleibt offen. */
@@ -9906,7 +9910,6 @@ function groupBars(m, ws, zyklen){
         const v = keys.reduce((a,k)=>a+(legRoll.m[k]||0),0);
         return `${g} <b style="color:${v>0?'var(--acc)':'var(--txt3)'}">${v>0? (v%1? v.toFixed(1).replace('.',','):v) : '0'}</b>`; })
     : [];
-  const S = state.settings;
   const t1 = groupTargetCycle(1,1), tz = groupTargetCycle(1,z);
   /* ── TEXTDIÄT (V55) ────────────────────────────────────────────────────
      Vorher standen hier bis zu 681 Zeichen unter den Balken: Ampel-Legende,
@@ -9923,13 +9926,7 @@ function groupBars(m, ws, zyklen){
   const beinZeile = beinRows.length
     ? `<div class="tiny" style="margin-top:8px"><b style="color:var(--acc)">Beine · ${LEG_ROLL_DAYS} Tage:</b> ${beinRows.join(' · ')}</div>`
     : '';
-  return rows + beinZeile + `<p class="tiny" style="margin-top:8px;color:var(--txt3)">Ziel <b>${t1.lo}–${t1.hi}</b> Sätze pro Muskel und Zyklus${z>1? ` · hier <b>${tz.lo}–${tz.hi}</b> über ${z} Zyklen`:''}.
-    <details class="erkl"><summary>Wie wird gerechnet?</summary><div>
-      Der direkt gespeicherte Korridor ist <b>${S.cycleGoalLo||9}–${S.cycleGoalHi||17} Sätze pro Muskel und Zyklus</b>. Rücken und Schultern zählen doppelt (mehrere eigenständige Muskeln), die drei Brustanteile sind <b>ein</b> Muskel.<br>
-      Ab <b>${SESSION_EFF_MAX} Sätzen pro Muskel in einer einzelnen Einheit</b> ist kein zusätzlicher Zuwachs mehr messbar (Robinson/Pelland) — nur dann steht „!". Eine hohe Summe über mehrere Einheiten löst diese Warnung nicht aus.${
-      beinRows.length? `<br>Beine laufen außerhalb des Zyklus und werden rollierend über ${LEG_ROLL_DAYS} Tage gezeigt — unregelmäßig trainiert, deshalb ohne Ampel.`:''}<br>
-      Die Quellen stehen in den Einstellungen unter „Satzziele".
-    </div></details></p>`;
+  return rows + beinZeile + `<p class="tiny" style="margin-top:8px;color:var(--txt3)">Ziel ${t1.lo}–${t1.hi} / Zyklus${z>1? ` · ${tz.lo}–${tz.hi} gesamt`:''}</p>`;
 }
 /* Welche Übungen haben eine Muskelgruppe im Zeitraum trainiert? */
 function groupDetail(groupName, ws){
@@ -9974,13 +9971,7 @@ function muscleSection(ws, weeks, opt){
      es eine Frage, die die Balkenliste nicht beantwortet — nämlich die nach der
      FORM: sitzt alles gleichmäßig im Band oder hängt eine Seite durch. */
   const zielRadar = RADAR_AXES.map(([,,mult])=>groupTargetCycle(mult||1, z));
-  const radarKarte = `<div class="card"><h3>Muskel-Balance</h3>${svgRadar(radar, zielRadar, ws)}
-    <p class="tiny" style="margin-top:8px;color:var(--txt3)">Fläche <b>zwischen den gestrichelten Ringen</b> = Volumen passt${z>1? ` · ${z} Zyklen`:''}.
-    <details class="erkl"><summary>Wie lese ich das?</summary><div>
-      Jede Achse ist auf ihren eigenen Zielkorridor normiert — eine Achse mit vier Muskeln braucht mehr Sätze für dieselbe Position.
-      Innerhalb des Bandes stimmt das Volumen, innen ist es zu wenig, außen darüber.
-      Gerechnet über ${z} ${z===1?'Zyklus':'Zyklen'}.
-    </div></details></p></div>`;
+  const radarKarte = `<div class="card"><div class="row" style="justify-content:space-between"><h3>Muskel-Balance</h3><span class="tiny">${z} ${z===1?'Zyklus':'Zyklen'}</span></div>${svgRadar(radar, zielRadar, ws)}</div>`;
   return toggle + radarKarte
     + `<div class="card"><h3 style="margin-bottom:8px">Sätze pro Muskelgruppe${opt.laufend? ' <span class="tiny">(laufender Zyklus, noch nicht fertig)</span>':''}</h3>${groupBars(mg, ws, z)}
     ${Object.keys(mg).length? `<details style="margin-top:8px"><summary class="tiny" style="cursor:pointer">Details pro Einzelmuskel anzeigen</summary><div style="margin-top:8px">${muscleBars(mg, ws)}</div></details>`:''}</div>`;
@@ -10345,7 +10336,7 @@ function overviewTrendCard(){
     const vals=cs.map(c=>c.ws.reduce((a,w)=>a+wVolume(w),0));
     const pts=cs.map((c,i)=>({y:Math.round(vals[i]),l:'Z'+c.n}));
     const fehlen=4-cs.length;
-    let aussage=`Noch ${fehlen===1?'ein weiterer abgeschlossener Zyklus':fehlen+' weitere abgeschlossene Zyklen'}, dann wird der Vergleich stabiler.`;
+    let aussage=`${cs.length}/4 Zyklen bis zum stabilen Vergleich`;
     if(cs.length>=4){
       const h=Math.floor(cs.length/2);
       const alt=vals.slice(0,h).reduce((a,v)=>a+v,0)/h;
@@ -10353,18 +10344,15 @@ function overviewTrendCard(){
       const d=alt>0?Math.round((neu-alt)/alt*100):0;
       aussage=`Ø der letzten ${h}: <b>${fmtVol(Math.round(neu))}</b> je Zyklus · ${d===0?'unverändert':`<b style="color:${d>0?'var(--a7)':'var(--txt2)'}">${d>0?'+':''}${d} %</b> gegenüber den ersten ${h}`}.`;
     }
-    return `<div class="card"><h3 style="margin-bottom:2px">Leistungstrend</h3>
-      <p class="tiny">Volumen der letzten ${cs.length} abgeschlossenen Zyklen · laufende Zyklen sind ausgeschlossen.</p>
+    return `<div class="card"><div class="row" style="justify-content:space-between"><h3>Leistungstrend</h3><span class="badge type">${cs.length} Zyklen</span></div>
       ${svgLine(pts,v=>fmtVol(v),{fill:true,avg:cs.length>=4})}
       <p class="kpihint tiny">${aussage}</p>
-      <button class="btn btn-ghost btn-block btn-sm" data-stat-tab="month">5-Zyklen-Analyse öffnen</button></div>`;
+      <button class="btn btn-ghost btn-block btn-sm" data-stat-tab="month">Details</button></div>`;
   }
   const ws=workoutsBisHeute().slice(-8);
   if(ws.length<2) return '';
   const pts=ws.map(w=>({y:Math.round(wVolume(w)),l:new Date(w.date).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})}));
-  return `<div class="card"><h3 style="margin-bottom:2px">Leistungstrend</h3>
-    <p class="tiny">Volumen je Einheit · historische und neue Einheiten bleiben gemeinsam sichtbar.</p>
-    ${svgLine(pts,v=>fmtVol(v),{fill:true})}</div>`;
+  return `<div class="card"><h3>Leistungstrend</h3>${svgLine(pts,v=>fmtVol(v),{fill:true})}</div>`;
 }
 /* Konsistenz ohne erfundenen Gesamtscore. Entscheidend sind beim
    Push-A/Pull-A/Rest/Push-B/Pull-B/Rest-Rhythmus drei überprüfbare Größen: Wurde der Zyklus
@@ -10375,8 +10363,7 @@ function overviewRhythmCard(){
     const sub=lauf
       ? `Zyklus ${lauf.n} läuft · ${lauf.einheitenErledigt}/${CYCLE_UNIT_COUNT} Einheiten${lauf.fehlt.length?' · offen: '+lauf.fehlt.join(', '):' · alle vier Einheiten erledigt'}.`
       : 'Der erste Push A startet die Messung.';
-    return `<div class="card"><h3 style="margin-bottom:3px">Zyklustreue</h3>
-      <p class="tiny">${sub}</p><div class="empty" style="padding:14px">Ab zwei abgeschlossenen Zyklen zeigt die App Ø Einheiten, Vollständigkeit und Dauer pro Zyklus.</div></div>`;
+    return `<div class="card"><h3 style="margin-bottom:3px">Zyklustreue</h3><p class="tiny">${sub}</p><div class="empty">2 Zyklen nötig</div></div>`;
   }
   const voll=cs.filter(c=>c.vollstaendig).length;
   const quote=Math.round(voll/cs.length*100);
@@ -10397,13 +10384,12 @@ function overviewRhythmCard(){
       <div class="kpi"><b>${avgEinheiten.toLocaleString('de-DE',{minimumFractionDigits:1,maximumFractionDigits:1})}</b><span>Ø Einheiten/Zyklus</span></div>
       <div class="kpi"><b>${avgTage.toLocaleString('de-DE',{maximumFractionDigits:1})}</b><span>Ø Tage/Zyklus</span></div>
     </div>
-    <p class="kpihint tiny">${aktuell} Nur abgeschlossene Zyklen fließen in die Kennzahlen ein.</p></div>`;
+    <p class="kpihint tiny">${aktuell}</p></div>`;
 }
 function overviewMuscleCard(){
   const c=statsRunningCycle() || statsClosedCycles().slice(-1)[0] || null;
   if(!c){
-    return `<div class="card"><h3>Muskelgruppen im Zyklus</h3>
-      <div class="empty" style="padding:14px">Nach dem ersten A/B-Zyklus steht hier sofort, welche Gruppe noch fehlt.</div></div>`;
+    return `<div class="card"><h3>Muskelgruppen</h3><div class="empty">Noch keine Zyklusdaten</div></div>`;
   }
   const gs=figureGroupState(muscleSets(c.ws),1), offen=[], gesehen=new Set();
   SETGROUPS.forEach(([label,keys,,optional])=>{
@@ -10416,15 +10402,15 @@ function overviewMuscleCard(){
   const titel=`Zyklus ${c.n}${c.laufend?' · läuft':' · zuletzt abgeschlossen'}`;
   if(!offen.length) return `<div class="card"><h3 style="margin-bottom:3px">Muskelgruppen</h3>
     <p class="tiny">${titel}</p><div class="row" style="gap:10px;margin-top:12px"><span class="focusico">✓</span>
-      <div class="grow"><b>Alle verpflichtenden Gruppen im Korridor</b><div class="meta">Keine erkennbare Satzlücke.</div></div></div>
-    <button class="btn btn-ghost btn-block btn-sm" style="margin-top:12px" data-stat-tab="week">Zyklus vollständig ansehen</button></div>`;
+      <div class="grow"><b>Alle Gruppen im Ziel</b></div></div>
+    <button class="btn btn-ghost btn-block btn-sm" style="margin-top:10px" data-stat-tab="week">Zyklus</button></div>`;
   return `<div class="card"><h3 style="margin-bottom:3px">Muskelgruppen</h3>
-    <p class="tiny">${titel} · die größten offenen Lücken zuerst.</p>
+    <p class="tiny">${titel}</p>
     <div style="margin-top:8px">${offen.map(x=>`<div class="ovgap"><b style="font-size:var(--fs-sub)">${esc(x.gruppe)}</b>
       <span class="bar"><i style="width:${Math.max(0,Math.min(100,x.ist/Math.max(1,x.lo)*100))}%"></i></span>
       <span class="value">${fmtW(x.ist)}/${x.lo} · ${fmtW(x.fehlt)} fehlen</span></div>`).join('')}</div>
-    <div class="ovactions">${c.abgeleitet?'':`<button class="btn btn-acc btn-sm" data-stat-gap>Übungen vorschlagen</button>`}
-      <button class="btn btn-ghost btn-sm" data-stat-tab="week">Zyklus ansehen</button></div></div>`;
+    <div class="ovactions">${c.abgeleitet?'':`<button class="btn btn-acc btn-sm" data-stat-gap>Übungen</button>`}
+      <button class="btn btn-ghost btn-sm" data-stat-tab="week">Zyklus</button></div></div>`;
 }
 function overviewStrengthCard(gains){
   const alle=(gains || zuwachsStat(4).filter(x=>x.diff>0)).slice();
@@ -10436,10 +10422,9 @@ function overviewStrengthCard(gains){
     ((b.pct==null?-Infinity:b.pct)-(a.pct==null?-Infinity:a.pct)) || b.diff-a.diff);
   const l=alle.slice(0,4);
   if(!l.length) return `<div class="card"><h3>Kraftentwicklung</h3>
-    <div class="empty" style="padding:14px">Ab vier vergleichbaren Einheiten zeigt die Übersicht deine stärksten Zuwächse.</div>
-    <button class="btn btn-ghost btn-block btn-sm" data-stat-tab="ex">Übung analysieren</button></div>`;
+    <div class="empty">4 vergleichbare Einheiten nötig</div>
+    <button class="btn btn-ghost btn-block btn-sm" data-stat-tab="ex">Übung wählen</button></div>`;
   return `<div class="card"><h3 style="margin-bottom:3px">Kraftentwicklung</h3>
-    <p class="tiny">Favoriten und letzte Übungen zuerst.</p>
     <div style="margin-top:6px">${l.map(x=>{
       const bw=exIsBW(x.id)&&!exIsAssist(x.id);
       const von=bw?(x.von>0?'+'+fmtW(x.von)+' kg':'Körpergewicht'):fmtW(x.von)+' kg';
@@ -10448,7 +10433,7 @@ function overviewStrengthCard(gains){
       return `<button class="ovrow" data-stat-ex="${esc(x.id)}"><span><span class="ttl">${esc(x.name)}</span>
         <span class="meta">${von} → ${bis} · ${x.n} Einheiten</span></span><span class="value">${wert}</span><span class="chev">›</span></button>`;
     }).join('')}</div>
-    <button class="btn btn-ghost btn-block btn-sm" style="margin-top:8px" data-stat-tab="ex">Andere Übung suchen</button></div>`;
+    <button class="btn btn-ghost btn-block btn-sm" style="margin-top:8px" data-stat-tab="ex">Alle Übungen</button></div>`;
 }
 function overviewNextGoalsCard(){
   const fav=(state.settings.favEx||[]), zuletzt=recentExIds(18);
@@ -10463,7 +10448,7 @@ function overviewNextGoalsCard(){
   }).filter(Boolean).sort((a,b)=>(b.sprung-a.sprung) || ((b.stall>=3)-(a.stall>=3)) ||
     (b.fav-a.fav) || a.pos-b.pos).slice(0,5);
   if(!rows.length) return `<div class="card"><h3>Nächste Ziele</h3>
-    <div class="empty" style="padding:14px">Nach der ersten vergleichbaren Kraftübung stehen hier konkrete Last- und Wiederholungsziele.</div></div>`;
+    <div class="empty">Noch kein Vergleichswert</div></div>`;
   const spruenge=rows.filter(x=>x.sprung).length, plateaus=rows.filter(x=>x.stall>=3).length;
   const lead=spruenge?`${spruenge} ${spruenge===1?'Lastsprung':'Lastsprünge'} bereit`
     :'Die nächste Wiederholung ist festgelegt';
@@ -10473,7 +10458,7 @@ function overviewNextGoalsCard(){
     <div style="margin-top:6px">${rows.map(x=>`<button class="ovrow" data-stat-ex="${esc(x.id)}">
       <span><span class="ttl">${x.fav?'★ ':''}${esc(x.name)}</span><span class="meta">${esc(x.p.txt)}${x.stall>=3?` · ${x.stall} Einheiten ohne Bestwert`:''}</span></span>
       <span class="value">${esc(x.badge)}</span><span class="chev">›</span></button>`).join('')}</div>
-    <details class="metric-method"><summary>Berechnung</summary><p>Ziele werden nie als geschafft eingetragen.</p></details></div>`;
+    </div>`;
 }
 function overviewLoadCard(){
   const rated=workoutsBisHeute().map(w=>{ const r=sessionRpe(w); return {w,r,load:r===null?null:sessionLoad(w)}; })
@@ -10481,11 +10466,10 @@ function overviewLoadCard(){
   if(rated.length<3){
     const fehlt=3-rated.length, last=rated[rated.length-1];
     return `<div class="card"><h3 style="margin-bottom:3px">Belastung (Session-RPE)</h3>
-      <p class="tiny">Nach drei Bewertungen erscheint dein Belastungstrend.</p>
       ${last?`<div class="row" style="margin-top:12px"><div class="grow"><b>Letzte Bewertung: ${last.r}/10 · ${rpeLabel(last.r)}</b>
         <div class="meta">${last.load} Punkte · ${fmtDate(last.w.date)}</div></div><span class="badge type">${rated.length}/3</span></div>`:
-        '<div class="empty" style="padding:14px">Noch keine Einheit bewertet.</div>'}
-      <p class="kpihint tiny">Noch ${fehlt} ${fehlt===1?'Bewertung':'Bewertungen'} bis zum Trend.</p></div>`;
+        '<div class="empty">Noch keine Bewertung</div>'}
+      <p class="kpihint tiny">${fehlt} ${fehlt===1?'Bewertung':'Bewertungen'} bis zum Trend</p></div>`;
   }
   const arr=rated.slice(-8), pts=arr.map(x=>({y:x.load,l:new Date(x.w.date).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})}));
   const avgRpe=arr.reduce((a,x)=>a+x.r,0)/arr.length;
@@ -10497,7 +10481,7 @@ function overviewLoadCard(){
     vergleich=`Ø der letzten 3: <b>${Math.round(neu)} Punkte</b> · ${d===0?'unverändert':`<b style="color:${d>0?'var(--a7)':'var(--txt2)'}">${d>0?'+':''}${d} %</b>`} gegenüber den drei davor.`;
   }
   return `<div class="card"><div class="row" style="align-items:flex-start"><div class="grow">
-      <h3 style="margin-bottom:3px">Belastungstrend</h3><p class="tiny">Letzte ${arr.length} bewertete Einheiten · Dauer × Session-RPE.</p></div>
+      <h3 style="margin-bottom:3px">Belastungstrend</h3><p class="tiny">${arr.length} Einheiten · Dauer × RPE</p></div>
       <div style="text-align:right"><b style="font-size:var(--fs-lg)">${arr[arr.length-1].load}</b><div class="tiny">Punkte</div></div></div>
     ${svgLine(pts,v=>Math.round(v)+' Pkt.',{fill:true,avg:true})}
     <p class="kpihint tiny">${vergleich}</p></div>`;
@@ -10521,13 +10505,13 @@ function renderOverviewStats(){
   const hist=workoutsBisHeute();
   if(!hist.length){
     lastStatsWs=[];
-    el.innerHTML=emptyStats('Noch keine Statistik','Nach deinem ersten Training erscheinen hier Trends, Muskelgruppen und Kraftentwicklung.');
+    el.innerHTML=emptyStats('Noch keine Statistik','Erstes Training starten');
     return;
   }
   const f=overviewFenster(); lastStatsWs=f.ws;
   const gains=zuwachsStat(4).filter(x=>x.diff>0);
   const prs=f.ws.reduce((a,w)=>a+(w.prs||[]).length,0);
-  let aussage='Dein aktueller Trainingsstand auf einen Blick.';
+  let aussage='Aktueller Stand';
   if(gains.length){
     const x=gains[0];
     const bw=exIsBW(x.id)&&!exIsAssist(x.id);
@@ -10548,7 +10532,7 @@ function renderOverviewStats(){
   const hatAlt=legacyCycles().some(c=>!c.vorlauf);
   const altHinweis=hatAlt
     ? `<details class="compact-details"><summary>Alte Zyklen auf 6 Tage umgerechnet</summary><div class="details-body">
-        <p class="tiny">Je zwei frühere Push/Pull-Durchgänge bilden rückwirkend Push A, Pull A, Push B und Pull B. Die gespeicherten Workouts bleiben unverändert.</p>
+        <p class="tiny">Nur die Gruppierung ist neu · Workouts unverändert.</p>
       </div></details>`
     : '';
   el.innerHTML=`<div class="card stats-overview-lead"><div class="premium-status">
@@ -10599,31 +10583,30 @@ function renderAllStats(){
   const el = $('#stats-all');
   const ws = workoutsBisHeute().slice().sort((a,b)=>Date.parse(a.date) - Date.parse(b.date));
   lastStatsWs = ws;
-  if(!ws.length){ el.innerHTML = `<div class="empty"><div class="big">${ICO.chart}</div><b>Noch keine Trainings</b>Sobald du das erste Training abschließt,<br>siehst du hier deine gesamte Entwicklung.</div>`; return; }
+  if(!ws.length){ el.innerHTML = `<div class="empty"><div class="big">${ICO.chart}</div><b>Noch keine Trainings</b>Nach dem ersten Training erscheint der Verlauf.</div>`; return; }
   const first = new Date(ws[0].date);
   const weeks = Math.max(1, (Date.now() - first.getTime())/(7*864e5));
   const vol = ws.reduce((a,w)=>a+wVolume(w),0), sets = ws.reduce((a,w)=>a+wSets(w),0);
   const prc = ws.reduce((a,w)=>a+(w.prs?w.prs.length:0),0);
   const zAll = statsClosedCycles();
   const tage = Math.max(1, Math.round((Date.now()-first.getTime())/864e5));
-  const header = `<div class="cnav" style="justify-content:center"><b>Seit Beginn · ${fmtDate(first)} – heute</b></div>`;
+  const header = `<div class="cnav" style="justify-content:center"><b>Gesamt · seit ${fmtDate(first)}</b></div>`;
   /* Kernfrage dieses Reiters: wie weit bin ich gekommen? — nicht „bin ich im Ziel?" */
   const lead = leadCard(
-    `${ws.length} ${ws.length===1?'Training':'Trainings'} · ${fmtVol(vol)} bewegt · ${sets} Sätze.`, 'neutral',
-    `${tage} Tage seit dem ersten Eintrag${zAll.length? ` · ${zAll.length} ausgewertete 6-Tage-${zAll.length===1?'Zyklus':'Zyklen'}`:''} · ${prc} ${prc===1?'Rekord':'Rekorde'}.`);
+    `${ws.length} ${ws.length===1?'Training':'Trainings'} · ${fmtVol(vol)} · ${sets} Sätze`, 'neutral',
+    `${tage} Tage${zAll.length? ` · ${zAll.length} 6-Tage-${zAll.length===1?'Zyklus':'Zyklen'}`:''} · ${prc} ${prc===1?'PR':'PRs'}`);
   const kpis = `<div class="kpis" style="margin-bottom:0">
       <div class="kpi"><b>${ws.length}</b><span>Workouts</span></div>
       <div class="kpi"><b>${fmtVol(vol)}</b><span>Volumen</span></div>
       <div class="kpi"><b>${sets}</b><span>Sätze</span></div>
       <div class="kpi"><b class="pr">${prc}</b><span>PRs</span></div>
     </div>
-    <div class="kpihint tiny">Im Schnitt <b>${fmtVol(volProSatz(ws))} pro Satz</b> und
-      <b>${(sets/ws.length).toFixed(1).replace('.',',')} Sätze</b> je Einheit.</div>`;
+    <div class="clean-facts"><span>${fmtVol(volProSatz(ws))} / Satz</span><span>${(sets/ws.length).toFixed(1).replace('.',',')} Sätze / Einheit</span></div>`;
   /* Hier bewusst KEINE Zielampel: über die gesamte Historie ist ein
      Wochen- oder Zykluskorridor bedeutungslos. Nur die Verteilung zählt. */
   el.innerHTML = header + lead + statFokus() + kpis
     + bwFehltHinweis(ws)
-    + `<div class="card"><h3>Verteilung über alle Muskelgruppen <span class="tiny">(ohne Zielampel — über die gesamte Historie sagt ein Korridor nichts)</span></h3>${muscleBars(muscleSetsBy(ws, statsSetMode), ws)}</div>`
+    + `<div class="card"><h3>Muskelgruppen</h3>${muscleBars(muscleSetsBy(ws, statsSetMode), ws)}</div>`
     /* Die Zyklus-Reihe steht VOR den Monaten: Sie ist der Maßstab der App,
        die Monatsbalken sind die beschreibende Zugabe. */
     + zyklusVolumenCard()
@@ -10633,7 +10616,7 @@ function renderAllStats(){
        Öffnen gebaut. Vorher wurden neun unsichtbare Karten samt Diagrammen
        bei jedem Reiterwechsel berechnet und in den DOM geschrieben. */
     + `<details class="statsmore" data-statsmore><summary>Weitere Auswertungen</summary>
-        <div class="statsmore-body"><p class="tiny">Volumen pro Monat und weitere Details werden beim Öffnen geladen.</p></div>
+        <div class="statsmore-body"><p class="tiny">Beim Öffnen geladen.</p></div>
       </details>`;
 }
 
@@ -10748,17 +10731,10 @@ function volProSatz(ws){
 function statWochentag(ws){
   const st = wochentagStat(ws);
   if(!st) return `<div class="card"><h3>Wochentage</h3>
-    <div class="empty" style="padding:16px">Ab vier Einheiten steht hier, an welchen Tagen du trainierst.</div></div>`;
+    <div class="empty">4 Einheiten nötig</div></div>`;
   return `<div class="card"><h3 style="margin-bottom:8px">Wochentage</h3>
     ${svgBars(st.namen, st.zaehl, v=>v)}
-    <p class="tiny" style="margin-top:8px">Am häufigsten <b>${st.stark.join(' · ')}</b>${
-      st.nie.length? ` · nie an <b>${st.nie.join(' · ')}</b>` : ''}.
-      <details class="erkl"><summary>Was sagt mir das?</summary><div>
-        Reine Beobachtung, keine Bewertung: Dein Plan läuft auf Push A → Pull A → Rest → Push B → Pull B → Rest,
-        also im 6-Tage-Takt — der wandert bewusst durch die Woche und trifft nie
-        dieselben Wochentage. Eine Häufung ist deshalb weder gut noch schlecht,
-        sie zeigt nur, wo dein Alltag den Takt verschiebt.
-      </div></details></p></div>`;
+    <p class="tiny" style="margin-top:8px"><b>${st.stark.join(' · ')}</b>${st.nie.length?` · nie: ${st.nie.join(' · ')}`:''}</p></div>`;
 }
 function statAbstand(ws){
   const st = abstandStat(ws);
@@ -10772,10 +10748,7 @@ function statAbstand(ws){
       <div class="kpi"><b>${st.median}</b><span>Median</span></div>
       <div class="kpi"><b>${st.laengste}</b><span>längste Pause</span></div>
     </div>
-    <p class="kpihint tiny">Bei vier Workouts in sechs Tagen liegen rechnerisch <b>${soll.toFixed(1).replace('.',',')} Tage</b>
-      zwischen zwei Einheiten. ${st.schnitt > soll*1.5
-        ? 'Deine Abstände sind deutlich größer — die Zyklen dauern damit länger als sechs Tage.'
-        : 'Das passt zu deinem Rhythmus.'}</p></div>`;
+    <p class="kpihint tiny">Ziel ≈ ${soll.toFixed(1).replace('.',',')} Tage · ${st.schnitt > soll*1.5?'länger als geplant':'im Rhythmus'}</p></div>`;
 }
 function statWdh(ws){
   const st = wdhStat(ws);
@@ -10788,19 +10761,12 @@ function statWdh(ws){
       <div class="mbar"><span>${b[2]} <span class="tiny grpsub">${b[3]}</span></span>
         <span class="bar"><i style="width:${st.anteil[i]}%"></i></span>
         <span class="val"><b>${st.anteil[i]} %</b></span></div>`).join('')}</div>
-    <p class="tiny" style="margin-top:8px">${st.n} Arbeitssätze ausgewertet${
-      zielIdx>=0? ` · dein Ziel liegt bei <b>${lo}–${hi}</b> Wdh, davon sind <b>${st.anteil[zielIdx]} %</b> getroffen` : ''}.
-      <details class="erkl"><summary>Wie wird gezählt?</summary><div>
-        Ein Satz zählt einmal, egal wie viele Wiederholungen. Aufwärmsätze sind
-        raus, Dropsets zählen mit. Bei einseitigen Übungen zählt die
-        <b>stärkere</b> Seite — sonst rutschte die ganze Verteilung nach unten,
-        nur weil eine Seite schwächer ist.
-      </div></details></p></div>`;
+    <p class="tiny" style="margin-top:8px">${st.n} Sätze${zielIdx>=0?` · Ziel ${lo}–${hi}: <b>${st.anteil[zielIdx]} %</b>`:''}</p></div>`;
 }
 function statZuwachs(){
   const l = zuwachsStat(4);
   if(!l.length) return `<div class="card"><h3>Stärkste Zuwächse</h3>
-    <div class="empty" style="padding:16px">Ab vier Einheiten in derselben Übung steht hier, wo du am meisten zugelegt hast.</div></div>`;
+    <div class="empty">4 Einheiten je Übung nötig</div></div>`;
   const zeile = x => `<div class="item"><div class="grow">
       <div class="ttl" style="font-size:var(--fs-sub)">${esc(x.name)}</div>
       <div class="meta">${fmtW(x.von)} → <b>${fmtW(x.bis)} kg</b> über ${x.n} Einheiten${
@@ -10811,11 +10777,8 @@ function statZuwachs(){
   const runter = l.filter(x=>x.diff<0).slice(-3).reverse();
   return `<div class="card"><h3 style="margin-bottom:4px">Stärkste Zuwächse</h3>
     ${rauf.length? rauf.map(zeile).join('') : '<div class="empty" style="padding:16px">Noch keine Übung mit Zuwachs.</div>'}
-    ${runter.length? `<details style="margin-top:8px"><summary class="tiny" style="cursor:pointer">${runter.length} ${runter.length===1?'Übung geht':'Übungen gehen'} zurück</summary>
-      <div style="margin-top:6px">${runter.map(zeile).join('')}</div></details>`:''}
-    <p class="tiny" style="margin-top:8px">Verglichen wird das beste Gewicht der ersten mit dem der letzten Einheit.
-      Wo die App einen <b>Niveauwechsel</b> erkannt hat (Wechsel auf einarmig, anderes Gerät),
-      rechnet sie erst ab dort — sonst misst sie den Wechsel statt den Fortschritt.</p></div>`;
+    ${runter.length? `<details style="margin-top:8px"><summary class="tiny" style="cursor:pointer">${runter.length} rückläufig</summary>
+      <div style="margin-top:6px">${runter.map(zeile).join('')}</div></details>`:''}</div>`;
 }
 /* ══════════════════════════════════════════════════════════════════════
    SECHS AUSWERTUNGEN AUS DATEN, DIE SCHON DALAGEN                 (V69)
@@ -10986,8 +10949,8 @@ function statDauer(ws){
   const d = dauerStat(ws);
   const info=dauerAuswahl(ws).info;
   if(!d) return `<div class="card"><h3>Trainingsdauer</h3>
-    <div class="empty" style="padding:16px">Ab drei Einheiten mit Satz-Zeitstempeln oder korrigierter Dauer steht hier, wie lange du wirklich trainierst.</div>
-    ${info.altKnopf?`<p class="kpihint tiny"><b>${info.altKnopf} alte ${info.altKnopf===1?'Einheit':'Einheiten'}</b> ${info.altKnopf===1?'hat':'haben'} nur „Start bis Fertig". ${info.altKnopf===1?'Sie wird':'Sie werden'} bewusst nicht in Ø oder Dichte eingerechnet — im Verlauf kannst du die Dauer korrigieren.</p>`:''}</div>`;
+    <div class="empty">3 gemessene Einheiten nötig</div>
+    ${info.altKnopf?`<p class="kpihint tiny">${info.altKnopf} alte ${info.altKnopf===1?'Einheit':'Einheiten'} ohne genaue Dauer</p>`:''}</div>`;
   return `<div class="card"><h3 style="margin-bottom:8px">Trainingsdauer</h3>
     ${svgLine(d.punkte.slice(-30), v=>v+' min', {fill:true, avg:true})}
     <div class="kpis" style="margin:10px 0 0">
@@ -10996,25 +10959,7 @@ function statDauer(ws){
       <div class="kpi"><b>${fmtDur(d.laengste)}</b><span>längste</span></div>
       <div class="kpi"><b>${Math.round(d.gesamtStunden)}</b><span>Stunden gesamt</span></div>
     </div>
-    <p class="kpihint tiny">Du bewegst <b>${fmtVol(Math.round(d.proMinute))} pro Minute</b>
-      und brauchst <b>${d.minJeSatz.toFixed(1).replace('.',',')} Minuten je Satz</b> — Satz plus Pause.
-      ${d.unplausibel? `${d.unplausibel} ${d.unplausibel===1?'Einheit liegt':'Einheiten liegen'} unter 5 Minuten oder über 5 Stunden und ${d.unplausibel===1?'ist':'sind'} nicht eingerechnet.` : ''}
-      ${d.ohne? `${d.ohne} ${d.ohne===1?'Einheit hat':'Einheiten haben'} gar keine Zeitmessung.` : ''}
-      ${d.vorlaufN? `<br>In ${d.vorlaufN} ${d.vorlaufN===1?'Einheit':'Einheiten'} hast du im Schnitt
-        <b>${fmtDur(d.vorlaufSchnitt)}</b> vor dem ersten Satz gestartet — diese Zeit ist nicht mitgerechnet.` : ''}
-      ${d.altKnopf? `<br><b>${d.altKnopf} alte ${d.altKnopf===1?'Einheit':'Einheiten'}</b> ${d.altKnopf===1?'hat':'haben'} nur „Start bis Fertig" — dort kann die Vorbereitung mit drinstecken. ${d.altKnopf===1?'Sie ist':'Sie sind'} deshalb aus Ø und Dichte ausgeschlossen. Im Verlauf lässt sich jede Dauer richtigstellen.` : ''}
-      <details class="erkl"><summary>Was sagt die Dichte?</summary><div>
-        Volumen pro Minute misst, wie viel Arbeit in der Zeit steckt. Steigt sie
-        bei gleichem Volumen, machst du dasselbe schneller — kürzere Pausen oder
-        weniger Leerlauf. Sinkt sie bei steigendem Volumen, ist das normal: mehr
-        Gewicht braucht mehr Pause. Aussagekräftig ist sie nur im Vergleich mit
-        dir selbst, nicht mit anderen.
-        Gemessen wird vom ersten bis zum letzten Satz, nicht ab dem Startknopf —
-        die Zeit davor ist Vorbereitung, kein Training. Der erste Satz selbst und
-        das Aufwärmen davor liegen deshalb außerhalb der Spanne.
-        Dauern unter 5 Minuten oder über 5 Stunden fallen raus — dort lief die
-        Uhr nicht mit dem Training.
-      </div></details></p></div>`;
+    <p class="kpihint tiny"><b>${fmtVol(Math.round(d.proMinute))}/min</b> · <b>${d.minJeSatz.toFixed(1).replace('.',',')} min/Satz</b>${d.ausgelassen?` · ${d.ausgelassen} ohne Wert`:''}</p></div>`;
 }
 
 /* ── 2. Entwicklung je Muskelgruppe über die Zyklen ─────────────────────
@@ -11044,7 +10989,7 @@ function gruppeUeberZyklen(minZyklen, quelle){
 function statGruppenTrend(quelle){
   const g = gruppeUeberZyklen(4,quelle);
   if(!g) return `<div class="card"><h3>Entwicklung je Muskelgruppe</h3>
-    <div class="empty" style="padding:16px">Ab vier abgeschlossenen Zyklen vergleiche ich hier die erste mit der zweiten Hälfte.</div></div>`;
+    <div class="empty">4 Zyklen nötig</div></div>`;
   const zeile = x => {
     const wert = x.neuDazu ? 'neu dazu' : x.pct===null ? '—' : (x.pct>0?'+':'')+x.pct+' %';
     const zeichen = x.neuDazu ? '＋' : x.pct===null ? '' : x.pct>3 ? '↑' : x.pct<-3 ? '↓' : '→';
@@ -11053,11 +10998,7 @@ function statGruppenTrend(quelle){
       <span class="bar"><i style="width:${Math.min(100, Math.round(x.neu/Math.max(1,x.alt,x.neu)*100))}%"></i></span>
       <span class="val" style="color:${farbe}"><b>${wert}</b> ${zeichen}</span></div>`;
   };
-  return `<div class="card"><h3 style="margin-bottom:2px">Entwicklung je Muskelgruppe</h3>
-    <p class="tiny" style="margin-bottom:8px">Sätze je Zyklus: die letzten ${g.haelfte} gegen die ersten ${g.haelfte} von ${g.zyklen} Zyklen.</p>
-    ${g.liste.map(zeile).join('')}
-    <p class="kpihint tiny">Gerechnet in Sätzen — dieselbe Währung wie der Zielkorridor.
-      Ein Pfeil erscheint erst ab 3 % Unterschied; darunter ist es Rauschen.</p></div>`;
+  return `<div class="card"><div class="row" style="justify-content:space-between;margin-bottom:8px"><h3>Entwicklung je Muskelgruppe</h3><span class="tiny">${g.haelfte} vs ${g.haelfte}</span></div>${g.liste.map(zeile).join('')}</div>`;
 }
 
 /* ── 2b. Der Befund aus b1, endlich behoben ────────────────────────────
@@ -11081,10 +11022,7 @@ function bwFehltHinweis(ws){
   if(!betroffen) return '';
   return `<div class="card" style="border-color:rgba(242,72,63,.34);background:rgba(242,72,63,.07)">
     <h3 style="margin-bottom:4px">! Kein Körpergewicht hinterlegt</h3>
-    <p class="tiny">${betroffen} ${betroffen===1?'Übungseintrag':'Übungseinträge'} mit
-      ${saetze} ${saetze===1?'Satz':'Sätzen'} sind Körpergewichts- oder unterstützte Übungen.
-      Ohne dein Gewicht kann die App deren Last nicht kennen — sie zählen mit
-      <b>0 kg Volumen</b>. Die Satzzahl stimmt trotzdem.</p>
+    <p class="tiny">${betroffen} ${betroffen===1?'Übung':'Übungen'} · Volumen fehlt</p>
     <button class="btn btn-acc btn-block btn-sm" id="stat-bw" style="margin-top:8px">Körpergewicht eintragen</button>
   </div>`;
 }
@@ -11117,23 +11055,14 @@ function relativeKraft(max){
 function statRelativeKraft(){
   const r = relativeKraft(8);
   if(!r) return `<div class="card"><h3>Relative Kraft</h3>
-    <div class="empty" style="padding:16px">Dafür brauche ich dein Körpergewicht — trag es auf der Startseite ein.</div></div>`;
+    <div class="empty">Körpergewicht fehlt</div></div>`;
   if(!r.liste.length) return '';
-  return `<div class="card"><h3 style="margin-bottom:2px">Relative Kraft${r.veraltet?' <span class="badge" style="color:var(--a6)">Gewicht '+r.tage+' Tage alt</span>':''}</h3>
-    <p class="tiny" style="margin-bottom:8px">Geschätzter 1RM geteilt durch dein Körpergewicht (${fmtW(r.kg)} kg, Stand ${fmtDate(r.datum)}).</p>
-    ${r.veraltet?`<div class="sync-note" style="margin-bottom:8px"><b>Nur grobe Momentaufnahme.</b> Dein Bezugsgewicht ist ${r.tage} Tage alt; schon 2 kg Unterschied verändern den Faktor um rund ${Math.round(2/r.kg*100)} %.<button class="btn btn-ghost btn-sm btn-block" id="stat-bw-refresh" style="margin-top:8px">Gewicht jetzt aktualisieren</button></div>`:''}
+  return `<div class="card"><h3 style="margin-bottom:8px">Relative Kraft${r.veraltet?' <span class="badge" style="color:var(--a6)">'+r.tage+' Tage alt</span>':''}</h3>
+    ${r.veraltet?`<button class="btn btn-ghost btn-sm btn-block" id="stat-bw-refresh" style="margin-bottom:8px">Gewicht aktualisieren</button>`:''}
     <table class="htable"><tr><th>Übung</th><th>1RM</th><th>× Körpergewicht</th></tr>
     ${r.liste.map(x=>`<tr><td>${esc(x.name)}${x.bw?' <span class="tiny grpsub">mit Körpergewicht</span>':''}</td><td>${Math.round(x.maxE)} kg</td>
       <td><b>${x.faktor.toFixed(2).replace('.',',')} ×</b></td></tr>`).join('')}
-    </table>
-    <p class="kpihint tiny">${r.veraltet?'Nach einem neuen Gewichtseintrag wird jeder Faktor sofort neu berechnet.':'Diese Zahl bleibt vergleichbar, wenn sich dein Körpergewicht ändert — absolute Kilos allein sagen darüber nichts.'}
-      <details class="erkl"><summary>Wie wird gerechnet?</summary><div>
-        Der geschätzte 1RM kommt aus deinem besten Satz (Epley), das Körpergewicht
-        aus deinem letzten Eintrag. Gerechnet wird mit der Last, die dein Körper
-        wirklich bewegt: bei Klimmzügen und Dips dein Körpergewicht plus Zusatz,
-        bei unterstützten Übungen dein Körpergewicht minus Hilfe, sonst die
-        eingetragenen Kilos.
-      </div></details></p></div>`;
+    </table></div>`;
 }
 
 /* ── 4. Vernachlässigte Übungen ────────────────────────────────────────
@@ -11163,15 +11092,12 @@ function statBrach(){
   const l = brachliegend();
   if(l === null) return '';
   if(!l.length) return `<div class="card"><h3>Nicht mehr im Plan</h3>
-    <div class="empty" style="padding:16px">Keine Übung liegt brach — alles, was du mehrfach gemacht hast, war in den letzten ${BRACH_ZYKLEN} Zyklen dabei.</div></div>`;
+    <div class="empty">Keine ausgelassene Übung</div></div>`;
   return `<div class="card"><h3 style="margin-bottom:2px">Nicht mehr im Plan</h3>
-    <p class="tiny" style="margin-bottom:8px">Mindestens zweimal gemacht, aber in den letzten ${BRACH_ZYKLEN} Zyklen nicht mehr.</p>
     ${l.slice(0,8).map(x=>`<div class="item">
       <div class="grow"><div class="ttl" style="font-size:var(--fs-sub)">${esc(x.name)}</div>
         <div class="meta">${x.mal}× trainiert · zuletzt vor ${x.tage} ${x.tage===1?'Tag':'Tagen'}</div></div>
-      <button class="btn btn-acc btn-sm" data-addgap="${esc(x.id)}">＋</button></div>`).join('')}
-    <p class="kpihint tiny">Kein Vorwurf — manche Übung fällt zu Recht raus. Der Knopf legt sie
-      zurück ins Training, falls sie nur untergegangen ist.</p></div>`;
+      <button class="btn btn-acc btn-sm" data-addgap="${esc(x.id)}">＋</button></div>`).join('')}</div>`;
 }
 
 /* ── 5. Häufigkeits-Rangliste ──────────────────────────────────────────
@@ -11192,12 +11118,9 @@ function statHaeufigkeit(){
   if(l.length < 3) return '';
   const maxN = l[0].einheiten;
   return `<div class="card"><h3 style="margin-bottom:2px">Am häufigsten trainiert</h3>
-    <p class="tiny" style="margin-bottom:8px">Über alle Einheiten. Diese Übungen tragen dein Training.</p>
     ${l.map(x=>`<div class="mbar"><span>${esc(x.name)}</span>
       <span class="bar"><i style="width:${Math.round(x.einheiten/maxN*100)}%"></i></span>
-      <span class="val"><b>${x.einheiten}×</b></span></div>`).join('')}
-    <p class="kpihint tiny">${l[0].name} steht mit ${l[0].einheiten} Einheiten und ${fmtW(l[0].saetze)} Sätzen oben —
-      ${fmtVol(Math.round(l[0].vol))} bewegt.</p></div>`;
+      <span class="val"><b>${x.einheiten}×</b></span></div>`).join('')}</div>`;
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -11238,14 +11161,13 @@ function legacyZyklusVolumenCard(){
       :`Über die historische Reihe stabil (${d>=0?'+':''}${d} %).`;
   }
   const pts=reihe.map(x=>({y:Math.round(x.vol),l:'Alt Z'+x.n}));
-  return `<div class="card"><h3 style="margin-bottom:2px">Historisches Volumen je Push/Pull-Zyklus</h3>
-    <p class="tiny" style="margin-bottom:8px">Deine alten Zyklen vor der A/B-Umstellung · unverändert ausgewertet.</p>
+  return `<div class="card"><div class="row" style="justify-content:space-between"><h3>Historisches Volumen</h3><span class="tiny">${reihe.length} Zyklen</span></div>
     ${svgLine(pts,v=>fmtVol(v),{fill:true,avg:true,marks:lauf?[{i:reihe.length-1,label:'läuft'}]:[]})}
     <div class="kpis" style="margin:10px 0 0">
       <div class="kpi"><b>${fmtVol(Math.round(schnitt))}</b><span>Ø je Zyklus</span></div>
       <div class="kpi"><b>${fmtVol(Math.round(beste.vol))}</b><span>bester (Alt Z${beste.n})</span></div>
       <div class="kpi"><b>${fmtVol(Math.round(gesamt))}</b><span>gesamt</span></div>
-    </div><p class="kpihint tiny">${trendTxt}${lauf?` Der letzte historische Zyklus ist noch offen und zählt nicht in den Trend.`:''}</p></div>`;
+    </div><p class="kpihint tiny">${trendTxt}</p></div>`;
 }
 
 function zyklusVolumenReihe(){
@@ -11290,33 +11212,14 @@ function zyklusVolumenCard(){
   } else {
     trendTxt = `Ab vier abgeschlossenen Zyklen rechne ich hier einen Trend — aktuell ${fertig.length}.`;
   }
-  return `<div class="card"><h3 style="margin-bottom:2px">Volumen je Zyklus</h3>
-    <p class="tiny" style="margin-bottom:8px">Zyklus 1 bis heute · ${reihe.length} ${reihe.length===1?'Zyklus':'Zyklen'}${
-      lauf? ' · der letzte läuft noch' : ''}</p>
+  return `<div class="card"><div class="row" style="justify-content:space-between"><h3>Volumen je Zyklus</h3><span class="tiny">${reihe.length}${lauf?' · läuft':''}</span></div>
     ${svgLine(pts, v=>fmtVol(v), {fill:true, avg:true, marks})}
     <div class="kpis" style="margin:10px 0 0">
       <div class="kpi"><b>${fmtVol(Math.round(schnitt))}</b><span>Ø je Zyklus</span></div>
       <div class="kpi"><b>${fmtVol(Math.round(beste.vol))}</b><span>bester (Z${beste.n})</span></div>
       <div class="kpi"><b>${fmtVol(Math.round(gesamt))}</b><span>gesamt</span></div>
     </div>
-    <p class="kpihint tiny">${trendTxt}
-      ${lauf? ` Der laufende Zyklus ${lauf.n} ist mit ${lauf.einheiten} ${lauf.einheiten===1?'Einheit':'Einheiten'} noch offen und zählt weder in den Schnitt noch in den Trend.` : ''}
-      ${(()=>{
-        /* Ein Zyklus, der neun statt drei Tage dauerte, ist kein Zyklus wie die
-           anderen — sein Volumen verteilt sich auf die dreifache Zeit. Die App
-           kennzeichnet solche Abweichungen überall sonst; hier auch, statt sie
-           in einer glatten Linie verschwinden zu lassen. */
-        const auf = reihe.filter(x=>x.auffaellig && !x.laufend);
-        if(!auf.length) return '';
-        return ` <b>${auf.length} ${auf.length===1?'Zyklus war':'Zyklen waren'} auffällig lang oder kurz</b>
-          (${auf.map(x=>'Z'+x.n+' · '+x.tage+' Tage').join(', ')}) — dort verteilt sich dasselbe Volumen auf mehr oder weniger Zeit.`;
-      })()}
-      <details class="erkl"><summary>Warum Zyklen und nicht Monate?</summary><div>
-        In einen Kalendermonat fallen mal neun, mal elf Einheiten — das sind über
-        20 % Unterschied, ohne dass sich am Training etwas geändert hat. Ein
-        Zyklus ist bei dir immer Push A → Pull A → Rest → Push B → Pull B → Rest und damit vergleichbar.
-        Gestrichelt: der gleitende Schnitt über vier Zyklen.
-      </div></details></p></div>`;
+    <p class="kpihint tiny">${trendTxt}${lauf?` · Z${lauf.n} offen`:''}</p></div>`;
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -11348,17 +11251,12 @@ function bestenliste(max){
 function bestenlisteCard(){
   const l = bestenliste(12);
   if(!l.length) return '';
-  return `<div class="card"><h3 style="margin-bottom:4px">Deine Bestleistungen</h3>
-    <p class="tiny" style="margin-bottom:8px">Höchste bewegte Last je Übung, sortiert nach geschätztem 1RM.
-      Über die gesamte Historie.</p>
+  return `<div class="card"><h3 style="margin-bottom:8px">Deine Bestleistungen</h3>
     <table class="htable"><tr><th>Übung</th><th>kg</th><th>Wdh</th><th>e1RM</th></tr>
     ${l.map(x=>`<tr><td>${esc(x.name)}${x.mitBw? ` <span class="tiny grpsub">Körpergewicht${x.zusatz>0? ' + '+fmtW(x.zusatz)+' kg':''}</span>`:''}</td>
       <td><b>${fmtW(x.maxW)}</b></td>
       <td>${x.maxReps||'—'}</td><td>${x.maxE>0? Math.round(x.maxE) : '—'}</td></tr>`).join('')}
-    </table>
-    <p class="kpihint tiny">Bei Klimmzügen und Dips steht die Last, die dein Körper bewegt —
-      dein Gewicht plus das, was du angehängt hast. Für <b>Rekorde</b> zählt weiter nur der Zusatz:
-      sonst wäre jedes Kilo Körpergewicht ein neuer Bestwert, ohne dass du einen Satz mehr geschafft hast.</p></div>`;
+    </table></div>`;
 }
 function navRow(label, cb){ return {html:`<div class="cnav"><button class="iconbtn" data-nav="-1">‹</button><b>${label}</b><button class="iconbtn" data-nav="1">${''}›</button></div>`, wire(el){ el.querySelectorAll('[data-nav]').forEach(b=>b.addEventListener('click',()=>cb(+b.dataset.nav))); }}; }
 
@@ -11595,8 +11493,7 @@ function renderSpanStats(el, n){
 function pushPullCard(ws){
   const b = pushPullBalance(ws, statsSetMode);
   if(!b.ok) return '';
-  if(b.extrem) return `<div class="card"><h3>Push/Pull-Balance</h3>
-    <p class="tiny">In diesem Zeitraum gibt es nur ${b.seite==='Druck'?'Druck':'Zug'}-Sätze. Ein Verhältnis lässt sich damit nicht bilden.</p></div>`;
+  if(b.extrem) return `<div class="card"><h3>Push/Pull-Balance</h3><div class="empty">Nur ${b.seite==='Druck'?'Druck':'Zug'}</div></div>`;
   const pct = Math.round(b.push/(b.push+b.pull)*100);
   const col = b.auffaellig? 'var(--gold)' : 'var(--green)';
   return `<div class="card"><h3 style="margin-bottom:8px">Push/Pull-Balance</h3>
@@ -11609,8 +11506,7 @@ function pushPullCard(ws){
       <span class="tiny" style="color:var(--txt3)">Strich = 1:1</span>
       <span class="tiny"><b>${b.pull%1? b.pull.toFixed(1).replace('.',','):b.pull}</b> Zug</span>
     </div>
-    <p class="tiny" style="margin-top:8px">Verhältnis <b style="color:${col}">${b.ratio.toFixed(2).replace('.',',')} : 1</b> zugunsten ${b.seite==='Druck'?'der Druck-':'der Zug-'}Seite${b.auffaellig? ' — <b>auffällig</b>' : ' — ausgeglichen'}.
-    ${b.auffaellig? `<details class="erkl"><summary>Einordnung</summary><div>Die Abweichung überschreitet die interne ${PP_FAUSTREGEL}:1-Faustregel. Prüfe, ob diese Verteilung deinem Plan entspricht.</div></details>` : ''}</p></div>`;
+    <p class="tiny" style="margin-top:8px"><b style="color:${col}">${b.ratio.toFixed(2).replace('.',',')} : 1</b> · ${b.seite}${b.auffaellig?' · auffällig':''}</p></div>`;
 }
 
 /* ══════════ ÜBUNGS-ANALYTIK ══════════════════════════════════════════
@@ -11926,13 +11822,12 @@ function renderExStats(){
 
     ${prog? `<div class="card" style="border-color:var(--acc-a30);background:linear-gradient(160deg,var(--acc-a08),transparent 60%),var(--s1)">
       <div class="label" style="color:var(--acc)">Nächstes Mal</div>
-      <b style="font-size:var(--fs-lg);display:block;margin:4px 0 4px">${esc(prog.txt)}</b>
-      <div class="tiny">${esc(prog.why)}</div></div>`:''}
+      <b style="font-size:var(--fs-lg);display:block;margin-top:4px">${esc(prog.txt)}</b></div>`:''}
 
     <div class="card" style="padding:12px 16px">
       <div class="row" style="gap:8px"><span class="rdot" style="background:${statusCol}"></span>
         <b style="font-size:var(--fs-sub);color:${statusCol}">${status}</b></div>
-      <div class="tiny" style="margin-top:4px">${bests.sessions} ${bests.sessions===1?'Einheit':'Einheiten'} über ${zykSpanne} ${zykSpanne===1?'Zyklus':'Zyklen'} · zuletzt vor ${daysAgo===0?'heute':daysAgo+(daysAgo===1?' Tag':' Tagen')} · trainiert ${esc(wirkung)}</div>
+      <div class="tiny" style="margin-top:4px">${bests.sessions} ${bests.sessions===1?'Einheit':'Einheiten'} · ${zykSpanne} ${zykSpanne===1?'Zyklus':'Zyklen'} · ${daysAgo===0?'heute':daysAgo+' T.'}</div>
     </div>
 
     ${swLast? `<div class="card" style="border-color:rgba(82,156,255,.34);background:rgba(82,156,255,.07)">
@@ -11942,18 +11837,11 @@ function renderExStats(){
         swi.switches.length===1
           ? `Ab <b>${fmtDate(swLast.date)}</b> trainierst du <b>${swLast.to}</b>.`
           : `${swi.switches.length} Wechsel: ${swi.switches.map(s=>`${fmtDate(s.date)} → ${s.to}`).join(' · ')}.`
-      }<details class="erkl"><summary>Was bedeutet das?</summary><div>
-        Im Diagramm ${swi.switches.length===1?'ist die Stelle':'sind die Stellen'} als gestrichelte Linie markiert. Davor und danach sind unterschiedliche Belastungen — der Sprung ist kein Leistungsabfall.<br>
-        Für saubere Kurven eine eigene Übung anlegen.
-      </div></details></div></div></div></div>`
+      }</div></div></div></div>`
     : fehlt? `<div class="card" style="border-color:rgba(82,156,255,.34);background:rgba(82,156,255,.07)">
       <div class="row" style="gap:8px;align-items:flex-start"><span class="bi" data-ico="alert" style="color:var(--gold);margin:0"></span>
       <div><b style="font-size:var(--fs-sub);color:var(--gold)">Seit wann trainierst du einarmig?</b>
-      <div class="tiny" style="margin-top:2px">Für ${swi.unknown+swi.umkehr} von ${h.length} ${h.length===1?'Einheit':'Einheiten'} fehlt die Angabe.${
-        brk? ` Am <b>${fmtDate(brk.date)}</b> ${brk.richtung==='runter'?'fällt':'steigt'} das Gewicht von <b>${fmtW(brk.from)}</b> auf <b>${fmtW(brk.to)} kg</b>.` : ''}
-        <details class="erkl"><summary>Warum fragt die App?</summary><div>
-          Die Übung steht auf <b>einseitig</b>, aber für ältere Einheiten wurde die Ausführung früher nicht mitgespeichert. Ohne das Datum kann die App die Kurve nicht teilen und würde den Wechsel als Leistungsabfall lesen.
-        </div></details></div>
+      <div class="tiny" style="margin-top:2px">${swi.unknown+swi.umkehr}/${h.length} ältere Einheiten ohne Angabe${brk?` · möglicher Wechsel ${fmtDate(brk.date)}`:''}</div>
       <div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap">${
         brk? `<button class="btn btn-sm" onclick="applyUniSince('${ex.id}','${brk.date}')">Ab ${fmtDate(brk.date)}</button>`:''}
         <button class="btn btn-ghost btn-sm" onclick="openExOpt('${ex.id}')">Anderes Datum</button></div>
@@ -11961,13 +11849,9 @@ function renderExStats(){
     : brk? `<div class="card" style="border-color:rgba(82,156,255,.34);background:rgba(82,156,255,.07)">
       <div class="row" style="gap:8px;align-items:flex-start"><span class="bi" data-ico="alert" style="color:var(--gold);margin:0"></span>
       <div><b style="font-size:var(--fs-sub);color:var(--gold)">Sprung am ${fmtDate(brk.date)}</b>
-      <div class="tiny" style="margin-top:2px">Das Gewicht ${brk.richtung==='runter'?'fällt':'steigt'} von <b>${fmtW(brk.from)} kg</b> auf <b>${fmtW(brk.to)} kg</b> und bleibt dort. <b>Der Trend rechnet ab hier.</b>
-      <details class="erkl"><summary>Warum?</summary><div>
-        Das ist kein normaler schlechter Tag, sondern ein anderer Maßstab — typisch für ein anderes Gerät, eine andere Griffart oder einen Wechsel der Ausführung.
-        Quer über den Sprung gerechnet käme nur der Sprung heraus, nicht der Fortschritt.
-      </div></details></div></div></div></div>`
+      <div class="tiny" style="margin-top:2px">${fmtW(brk.from)} → ${fmtW(brk.to)} kg · Trend ab hier</div></div></div></div>`
     : (uni && swi.unknown===0 && !swi.switches.length && uniSinceOf(ex.id) && uniSinceOf(ex.id) <= h[0].date)
-      ? `<div class="card"><div class="tiny">Einarmig seit <b>${fmtDate(uniSinceOf(ex.id))}</b> — das liegt vor deinem ersten gespeicherten Training in dieser Übung. Alle Einheiten zählen als einarmig, deshalb gibt es keine Linie im Diagramm.</div></div>`:''}
+      ? `<div class="card"><div class="tiny">Einarmig seit ${fmtDate(uniSinceOf(ex.id))}</div></div>`:''}
 
     <div class="kpis"${unsafeE1? '' : ' style="margin-bottom:12px"'}>
       <div class="kpi"><b>${assist? bests.maxW+' kg' : isBW? (bests.maxW>0? '+'+bests.maxW+' kg' : bests.maxReps+' Wdh') : bests.maxW+' kg'}</b><span>${assist?'Best effektiv':isBW? (bests.maxW>0?'Best Zusatz':'Best Wdh') :'Best Gewicht'}</span></div>
@@ -11975,48 +11859,38 @@ function renderExStats(){
       <div class="kpi"><b>${fmtVol(bests.maxVol)}</b><span>Best Volumen</span></div>
       <div class="kpi"><b>${bests.sessions}</b><span>Einheiten</span></div>
     </div>
-    ${(isBW && !assist && bests.maxLast > 0) ? `<div class="kpihint tiny">
-      Bewegt hast du dabei <b>${fmtW(bests.maxLast)} kg</b> — dein Körpergewicht${bests.maxW>0? ` plus ${fmtW(bests.maxW)} kg Zusatz`:''}
-      —, geschätzter 1RM <b>${Math.round(bests.maxELast)} kg</b>. Die Kacheln darüber zeigen bewusst nur das, was du
-      selbst angehängt hast: daran misst sich der Fortschritt.</div>` : ''}
-    ${unsafeE1? `<div class="kpihint tiny">* Der beste Satz hatte ${bests.maxReps} Wdh. Über ${E1RM_RELIABLE_MAX} Wdh streuen alle 1RM-Formeln stark — die Zahl ist eine grobe Näherung.</div>`:''}
+    ${(isBW && !assist && bests.maxLast > 0) ? `<div class="kpihint tiny">Bewegt: <b>${fmtW(bests.maxLast)} kg</b> · e1RM ${Math.round(bests.maxELast)} kg</div>` : ''}
+    ${unsafeE1? `<div class="kpihint tiny">* e1RM grob · ${bests.maxReps} Wdh</div>`:''}
     ${maxes}
 
     <div class="card">
-      <h3>${assist? 'Effektive Last pro Einheit' : isBW&&bests.maxW>0? 'Zusatzgewicht pro Einheit' : 'Arbeitsgewicht pro Einheit'}
-        <span class="tiny">(schwerster Satz${trend.ok?' · gestrichelt = Ø-Trend':''}${marks.length?' · senkrecht = Ausführung gewechselt':''})</span></h3>
+      <h3>${assist? 'Effektive Last' : isBW&&bests.maxW>0? 'Zusatzgewicht' : 'Arbeitsgewicht'}</h3>
       ${svgLine(zPts.slice(-30), v=>Math.round(v)+' kg', {avg:trend.ok, fill:true, marks})}
       <p class="tiny" style="margin-top:8px">${
         trend.ok
-          ? `${trend.cut? `<b>Ab ${fmtDate(trend.seit)}</b> (${swLast?'Ausführungswechsel':'Sprung'}): ` : ''}${trend.from} → ${trend.to} kg${trend.cut?'':` über ${zykSpanne} ${zykSpanne===1?'Zyklus':'Zyklen'}`}${trend.pct?` · <b style="color:${trend.pct>=0?'var(--green)':'var(--red)'}">${trend.pct>=0?'+':''}${trend.pct.toFixed(0)} %</b>`:''}${trend.solid? ` · Trend belastbar (R²&nbsp;${trend.r2.toFixed(2).replace('.',',')})` : ` · <span style="color:var(--txt3)">stark schwankend, Trendlinie mit Vorsicht (R²&nbsp;${trend.r2.toFixed(2).replace('.',',')})</span>`}${trend.cut? `<br>Die Einheiten davor sind ein anderer Maßstab und fließen nicht in die Steigung ein.`:''}`
+          ? `${trend.from} → ${trend.to} kg${trend.pct?` · <b style="color:${trend.pct>=0?'var(--green)':'var(--red)'}">${trend.pct>=0?'+':''}${trend.pct.toFixed(0)} %</b>`:''} · R² ${trend.r2.toFixed(2).replace('.',',')}`
           : trend.cut
-            ? `Seit dem ${swLast?'Wechsel':'Sprung'} am ${fmtDate(h[cut].date)} sind es erst ${trend.n} ${trend.n===1?'Einheit':'Einheiten'} — ab ${TREND_MIN_SESSIONS} rechne ich eine Steigung aus. Über den Sprung hinweg zu rechnen würde nur den Sprung messen.`
-            : `Ab ${TREND_MIN_SESSIONS} Einheiten rechne ich hier eine belastbare Steigung aus — aktuell ${trend.n}.`
-      }${assist? '<br><b>Weniger Hilfe = mehr eigene Last.</b> Die Kurve zeigt bereits die effektive Last.' : ''}</p>
+            ? `${trend.n}/${TREND_MIN_SESSIONS} Einheiten seit Wechsel`
+            : `${trend.n}/${TREND_MIN_SESSIONS} Einheiten`
+      }</p>
     </div>
 
     ${bal.ok? `<div class="card">
-      <h3>Links/Rechts-Balance <span class="tiny">(nur bei einseitigen Übungen messbar)</span></h3>
+      <h3>Links/Rechts</h3>
       ${svgLine(bal.rows.slice(-30).map(x=>({y:Math.round(x.diff*10)/10, l:new Date(x.date).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})})), v=>(v>0?'+':'')+v+'%')}
-      <p class="tiny" style="margin-top:8px">Letzte Einheit: links <b>${bal.last.l}</b> · rechts <b>${bal.last.r}</b> Wdh.
-      Im Schnitt ist <b>${bal.strong}</b> um <b style="color:${bal.auffaellig?'var(--gold)':'var(--green)'}">${bal.mag.toFixed(0)} %</b> stärker.
-      ${bal.auffaellig
-        ? `Über 10 % gilt als auffällig. Wer die schwache Seite zuerst trainiert und die starke nur so viele Wiederholungen machen lässt, gleicht das über Wochen aus.`
-        : `Unter 10 % ist normale Seitendifferenz — kein Handlungsbedarf.`}</p>
+      <p class="tiny" style="margin-top:8px">L ${bal.last.l} · R ${bal.last.r} · <b style="color:${bal.auffaellig?'var(--gold)':'var(--green)'}">${bal.mag.toFixed(0)} % ${bal.strong}</b></p>
     </div>`
-    : uni? `<div class="card"><h3>Links/Rechts-Balance</h3>
-      <p class="tiny">Noch keine Aussage möglich — dafür brauche ich ${bal.need||BALANCE_MIN_SESSIONS} ${(bal.need||BALANCE_MIN_SESSIONS)===1?'weitere Einheit':'weitere Einheiten'}, in ${(bal.need||BALANCE_MIN_SESSIONS)===1?'der':'denen'} du <b>beide Seiten getrennt</b> einträgst.</p></div>` : ''}
+    : uni? `<div class="card"><h3>Links/Rechts</h3><div class="empty">${bal.need||BALANCE_MIN_SESSIONS} Einheiten fehlen</div></div>` : ''}
 
     <div class="card"><h3>Volumen pro Einheit ${isBW&&!assist?'<span class="tiny">(inkl. Körpergewicht)</span>':''}</h3>
       ${svgLine(vPts.slice(-30),v=>fmtVol(v),{fill:true, marks})}
-      <p class="tiny" style="margin-top:8px">Volumen = Gewicht × Wiederholungen, Aufwärmsätze ausgenommen${uni?', beide Seiten gezählt':''}. Steigt es ohne mehr Gewicht, machst du mehr Arbeit bei gleicher Intensität.</p>
     </div>
 
     ${rr.ok? `<div class="card"><h3>Wiederholungen im Zielbereich <span class="tiny">(${rr.lo}–${rr.hi} Wdh)</span></h3>
       <div class="mbar"><span>zu wenig</span><span class="bar"><i style="width:${Math.round(rr.unter/rr.total*100)}%;background:var(--red)"></i></span><span class="v">${rr.unter}</span></div>
       <div class="mbar"><span>im Ziel</span><span class="bar"><i style="width:${Math.round(rr.drin/rr.total*100)}%;background:var(--green)"></i></span><span class="v">${rr.drin}</span></div>
       <div class="mbar"><span>zu viele</span><span class="bar"><i style="width:${Math.round(rr.drueber/rr.total*100)}%;background:var(--gold)"></i></span><span class="v">${rr.drueber}</span></div>
-      <p class="tiny" style="margin-top:8px"><b>${rr.pctDrin} %</b> deiner ${rr.total} Arbeitssätze lagen im Zielbereich.
+      <p class="tiny" style="margin-top:8px"><b>${rr.pctDrin} %</b> von ${rr.total} Sätzen ·
       ${rr.drueber > rr.total*0.4 ? 'Auffällig viele darüber — das Gewicht ist zu leicht, geh hoch.'
         : rr.unter > rr.total*0.4 ? 'Auffällig viele darunter — das Gewicht ist zu schwer für diesen Bereich.'
         : 'Passt.'}</p>
@@ -12142,7 +12016,7 @@ function renderHist(){
   const stapel = histLimit;
   const gekuerzt = shown.slice(0, stapel);
   $('#hist-list').innerHTML = !ws.length
-    ? `<div class="empty"><div class="big">${ICO.muscle}</div><b>Noch kein Training geloggt</b>Sobald du dein erstes Workout abschließt,<br>findest du hier deine komplette Historie.<div style="height:16px"></div><button class="btn btn-acc btn-sm" onclick="showScreen('scr-train')">Erstes Training starten</button></div>`
+    ? `<div class="empty"><div class="big">${ICO.muscle}</div><b>Noch kein Training</b><div style="height:12px"></div><button class="btn btn-acc btn-sm" onclick="showScreen('scr-train')">Training starten</button></div>`
     : (shown.length ? gekuerzt.map(w=>`
     <div class="card tap" data-wid="${w.id}" style="padding:12px 16px">
       <div class="row" style="justify-content:space-between">
@@ -13257,7 +13131,7 @@ const OB_STEPS = ['Grunddaten','Ziel','Erfahrung','Ort','Alltag','System','Ferti
 function obKarten(feld, eintraege, cb){
   return eintraege.map(([k,o])=>`<button class="pcard ${obDraft[feld]===k?'on':''}" data-pick="${feld}:${k}">
     ${o.ico?`<span class="pico">${o.ico}</span>`:''}
-    <span class="ptxt"><b>${o.n}</b><small>${o.sub||o.txt||''}</small></span>
+    <span class="ptxt"><b>${o.n}</b>${o.sub?`<small>${o.sub}</small>`:''}</span>
     <span class="pmark">✓</span></button>`).join('');
 }
 function obValid(){
@@ -13274,7 +13148,7 @@ function obInhalt(){
   const p = obDraft;
   switch(obStep){
     case 0: return `<h2>Erzähl mir von dir</h2>
-      <p class="obsub">Daraus berechne ich deinen Bedarf. Alles bleibt auf deinem Gerät.</p>
+      <p class="obsub">Bleibt auf diesem Gerät.</p>
       <div class="obgrid">
         <label>Alter<input type="number" inputmode="numeric" id="ob-alter" value="${p.alter??''}" min="10" max="99" placeholder="18"><span>Jahre</span></label>
         <label>Größe<input type="number" inputmode="numeric" id="ob-groesse" value="${p.groesse??''}" min="120" max="230" placeholder="180"><span>cm</span></label>
@@ -13283,23 +13157,23 @@ function obInhalt(){
       </div>
       <div class="obsex">${[['m','Männlich'],['w','Weiblich'],['d','Divers']].map(([k,n])=>
         `<button class="chip ${p.sex===k?'on':''}" data-pick="sex:${k}">${n}</button>`).join('')}</div>
-      <button class="linkbtn" id="ob-kfa-est">Körperfett unbekannt? Schätzen lassen</button>`;
-    case 1: return `<h2>Was ist dein Ziel?</h2><p class="obsub">Danach richte ich Kalorien, Wiederholungen und Volumen aus.</p>
+      <button class="linkbtn" id="ob-kfa-est">Körperfett schätzen</button>`;
+    case 1: return `<h2>Was ist dein Ziel?</h2>
       <div class="pcards">${obKarten('ziel', Object.entries(ZIELE))}</div>`;
-    case 2: return `<h2>Wie lange trainierst du schon?</h2><p class="obsub">Bestimmt Übungsauswahl und Umfang.</p>
+    case 2: return `<h2>Trainingserfahrung</h2>
       <div class="pcards">${obKarten('erfahrung', Object.entries(ERFAHRUNG))}</div>`;
-    case 3: return `<h2>Wo trainierst du?</h2><p class="obsub">Ich schlage nur Übungen vor, die du dort machen kannst.</p>
+    case 3: return `<h2>Trainingsort</h2>
       <div class="pcards">${obKarten('ort', Object.entries(ORTE))}</div>`;
-    case 4: return `<h2>Dein Alltag</h2><p class="obsub">Bewegung außerhalb des Trainings macht einen großen Teil des Verbrauchs aus.</p>
+    case 4: return `<h2>Alltag</h2>
       <div class="pcards">${obKarten('alltag', Object.entries(ALLTAG))}</div>
-      <div class="obdays"><span>Einheiten pro Woche <i>— nur für die Verbrauchsschätzung</i></span>
+      <div class="obdays"><span>Einheiten / Woche</span>
         <div class="daypick">${[2,3,4,5,6].map(d=>`<button class="chip ${p.tage===d?'on':''}" data-pick="tage:${d}">${d}</button>`).join('')}</div></div>
-      <div class="obdays"><span>Feste Trainingstage <i>— für deine Streak</i></span>
+      <div class="obdays"><span>Trainingstage</span>
         <div class="daypick weekdaypick">${[['Mo',1],['Di',2],['Mi',3],['Do',4],['Fr',5],['Sa',6],['So',0]].map(([n,d])=>`<button class="chip ${(p.trainingsTage||[]).includes(d)?'on':''}" data-obday="${d}">${n}</button>`).join('')}</div></div>`;
     case 5: {
       const eig = {n:'Eigene Vorlagen', sub:'Ich stelle mir die Trainingstage selbst zusammen',
                    txt:'Es wird nichts erzeugt. Du legst deine Vorlagen wie bisher selbst an.'};
-      return `<h2>Trainingssystem</h2><p class="obsub">Ich erzeuge daraus fertige Vorlagen, die du im Gym antippst.</p>
+      return `<h2>Trainingssystem</h2>
         <div class="pcards">${obKarten('split', [...Object.entries(SPLITS), ['eigen', eig]])}</div>`;
     }
     default: {
@@ -13314,21 +13188,13 @@ function obInhalt(){
             <div><b>${m.prot}</b><span>Protein</span><i>g</i></div>
             <div><b>${m.kh}</b><span>Kohlenhydrate</span><i>g</i></div>
             <div><b>${m.fett}</b><span>Fett</span><i>g</i></div></div>
-          <p class="tiny">Grundumsatz ${m.bmr} · Gesamtverbrauch ${m.tdee} · Ziel ${m.ziel} kcal${m.gekappt?` <b>(auf die Untergrenze ${m.grenze} angehoben — tiefer wäre nicht sinnvoll)</b>`:''}</p>
+          <p class="tiny">Verbrauch ${m.tdee} · Ziel ${m.ziel} kcal</p>
         </div>`:''}
-        <div class="obsecs"><h5>Was ich für dich anpasse</h5><p>${z.txt}</p>
-          <p>${ERFAHRUNG[p.erfahrung].txt} Wiederholungen ${z.reps[0]}–${z.reps[1]}, Ziel ${Math.max(1,Math.round(z.sets[0]*6/7))}–${Math.max(1,Math.round(z.sets[1]*6/7))} Sätze pro Muskelgruppe und 6‑Tage‑Zyklus.</p></div>
+        <div class="clean-facts"><span>${z.reps[0]}–${z.reps[1]} Wdh</span><span>${Math.max(1,Math.round(z.sets[0]*6/7))}–${Math.max(1,Math.round(z.sets[1]*6/7))} Sätze / Zyklus</span></div>
         ${plan?`<div class="obsecs"><h5>Vorlagen, die ich anlege</h5>
           ${plan.map(t=>`<div class="plday"><b>${t.name}</b><span>${t.exIds.length} Übungen</span>
             <small>${t.exIds.map(id=>{const e=getEx(id);return e?esc(e.name):'';}).filter(Boolean).join(' · ')}</small></div>`).join('')}
-          <p class="tiny">Deine bestehenden Vorlagen bleiben erhalten.</p></div>`:''}
-        <details class="mnote"><summary>Wie die Werte zustande kommen</summary>
-          <p><b>Grundumsatz:</b> Mifflin-St Jeor — 10·kg + 6,25·cm − 5·Alter ${p.sex==='w'?'− 161':'+ 5'}.</p>
-          <p><b>Gesamtverbrauch:</b> Grundumsatz mal Alltagsfaktor (${(ALLTAG[p.alltag].f).toFixed(2).replace('.',',')}) plus rund 5 kcal je kg und Trainingseinheit, auf die Woche verteilt.</p>
-          <p><b>Ziel:</b> ${ZIELE[p.ziel].kcal[0]>0?'+':''}${ZIELE[p.ziel].kcal.join(' bis ')} kcal auf den Verbrauch. Die Empfehlung fällt nie unter deinen Grundumsatz.</p>
-          <p><b>Makros:</b> Protein ${ZIELE[p.ziel].prot.join('–')} g je kg, Fett 0,9 g je kg, Kohlenhydrate füllen den Rest.</p>
-          <p class="tiny">Schätzwerte auf Basis anerkannter Formeln. Sie ersetzen keine ärztliche oder ernährungsmedizinische Beratung.</p>
-        </details>`;
+          </div>`:''}`;
     }
   }
 }
@@ -13446,8 +13312,7 @@ function renderCoach(){
   const p = profil();
   if(!p.done){
     box.innerHTML = `<div class="card coachstart">
-      <div><b>Dein Coach ist noch nicht eingerichtet</b>
-      <p class="tiny">Ein paar Angaben, dann berechne ich Kalorien, Makros und lege dir Trainingsvorlagen an.</p></div>
+      <div><b>Coach einrichten</b></div>
       <button class="btn" id="coach-go">Einrichten</button></div>`;
     return;
   }
@@ -13463,7 +13328,7 @@ function renderCoach(){
       <div><i style="--w:${Math.round(m.kh*4/m.ziel*100)}%"></i><b>${m.kh} g</b><span>Kohlenhydrate</span></div>
       <div><i style="--w:${Math.round(m.fett*9/m.ziel*100)}%"></i><b>${m.fett} g</b><span>Fett</span></div>
     </div>
-    <p class="tiny">Verbrauch ${m.tdee} kcal · ${z.kcal[0]>0?'Überschuss':'Defizit'} ${Math.abs(Math.round((z.kcal[0]+z.kcal[1])/2))} kcal · Protein ${m.protSpanne.join('–')} g
+    <p class="tiny">Verbrauch ${m.tdee} · ${z.kcal[0]>0?'Plus':'Minus'} ${Math.abs(Math.round((z.kcal[0]+z.kcal[1])/2))} kcal
     ${abw?`<br><b>Dein letztes Wiegen: ${fmtKg(abw)} — Profil steht auf ${fmtKg(p.gewicht)}.</b> <button class="linkbtn" id="coach-sync">Übernehmen</button>`:''}</p>
   </div>`;
 }
@@ -13551,12 +13416,12 @@ function atlasUrteil(key){
   if(!g) return '';
   const fehlt = Math.round((g.lo - g.sum) * 10) / 10;
   const txt = g.optional
-      ? `<b>${g.label}</b> hat keinen Korridor — direkt trainieren ist Kür.`
-    : g.cls==='g0' ? `<b>${g.label}</b> war in diesem Zyklus nicht dran. Korridor ${g.lo}–${g.hi} Sätze.`
-    : g.cls==='g1' ? `<b>${g.label}</b>: ${fmtW(g.sum)} von ${g.lo}–${g.hi} Sätzen — es fehlen ${fmtW(fehlt)}.`
-    : g.cls==='g3' ? `<b>${g.label}</b>: ${fmtW(g.sum)} Sätze, über dem Korridor ${g.lo}–${g.hi}. Noch effizient.`
-    : g.cls==='g4' ? `<b>${g.label}</b>: ${fmtW(g.sum)} Sätze — über der Effizienzgrenze von ${g.effMax}.`
-    :                `<b>${g.label}</b>: ${fmtW(g.sum)} von ${g.lo}–${g.hi} Sätzen — im Korridor.`;
+      ? `<b>${g.label}</b> · freiwillig`
+    : g.cls==='g0' ? `<b>${g.label}</b> · 0/${g.lo}–${g.hi}`
+    : g.cls==='g1' ? `<b>${g.label}</b> · ${fmtW(g.sum)}/${g.lo}–${g.hi} · ${fmtW(fehlt)} fehlen`
+    : g.cls==='g3' ? `<b>${g.label}</b> · ${fmtW(g.sum)}/${g.lo}–${g.hi} · über Ziel`
+    : g.cls==='g4' ? `<b>${g.label}</b> · ${fmtW(g.sum)} · zu viel`
+    :                `<b>${g.label}</b> · ${fmtW(g.sum)}/${g.lo}–${g.hi} · im Ziel`;
   return `<p class="aturteil" data-art="${g.cls||''}">${txt}</p>`;
 }
 function renderAtlas(){
@@ -13566,7 +13431,7 @@ function renderAtlas(){
   const kats=[1,2,3].map(c=>{
     const teil=list.filter(o=>o.r.cat===c); if(!teil.length) return '';
     return `<div class="atcat"><h4>${c}. ${CAT_NAME[c]} <span>${teil.length}</span></h4>
-      <p class="tiny">${CAT_DESC[c]}</p>${teil.map(o=>exCard(o,key)).join('')}</div>`;
+      ${teil.map(o=>exCard(o,key)).join('')}</div>`;
   }).join('') || '<p class="tiny" style="text-align:center;padding:20px 0">Keine Übung passt zu den Filtern.</p>';
   document.getElementById('muscle-body').innerHTML = `
     <div class="mhead"><div><h3>${MUSCLES[key]}</h3><p class="tiny">${inf.lat||''}</p></div>
@@ -13576,16 +13441,14 @@ function renderAtlas(){
     <div class="mkpi"><div><b>${woche%1? woche.toFixed(1).replace('.',','):woche}</b><span>Sätze im Zyklus</span></div>
       ${erh!=null?`<div><b>${erh} %</b><span>erholt</span></div>`:''}
       <div><b>${list.length}</b><span>Übungen</span></div></div>
-    ${inf.fn?`<div class="msec"><h5>Funktion</h5><p>${inf.fn}</p></div>`:''}
-    ${inf.mv?`<div class="msec"><h5>Bewegungen</h5><ul>${inf.mv.map(x=>`<li>${x}</li>`).join('')}</ul></div>`:''}
-    ${inf.err?`<div class="msec"><h5>Häufige Fehler</h5><ul>${inf.err.map(x=>`<li>${x}</li>`).join('')}</ul></div>`:''}
+    ${(inf.fn||inf.mv||inf.err)?`<details class="compact-details"><summary>Muskelinfo</summary><div class="details-body">
+      ${inf.fn?`<div class="msec"><h5>Funktion</h5><p>${inf.fn}</p></div>`:''}
+      ${inf.mv?`<div class="msec"><h5>Bewegungen</h5><ul>${inf.mv.map(x=>`<li>${x}</li>`).join('')}</ul></div>`:''}
+      ${inf.err?`<div class="msec"><h5>Fehler</h5><ul>${inf.err.map(x=>`<li>${x}</li>`).join('')}</ul></div>`:''}
+    </div></details>`:''}
     <div class="msearch"><input id="atlas-q" type="search" placeholder="Übung suchen …" value="${atlasQ.replace(/"/g,'&quot;')}"></div>
     <div class="mfilters">${FILTERS.map(([id,lbl])=>`<button class="chip ${atlasF.has(id)?'on':''}" data-f="${id}">${lbl}</button>`).join('')}</div>
-    <div class="atlist">${kats}</div>
-    <details class="mnote"><summary>Wie die Bewertungen entstehen</summary>
-      ${RATE_ERKLAERUNG.map(([t,d])=>`<p><b>${t}:</b> ${d}</p>`).join('')}
-      <p class="tiny">Es sind nachvollziehbare Schätzungen aus der Übungsdatenbank, keine Messwerte aus Studien.</p>
-    </details>`;
+    <div class="atlist">${kats}</div>`;
 }
 function openMuscle(key){
   if(!MUSCLES[key]) return;
@@ -13611,7 +13474,7 @@ document.addEventListener('input',e=>{
     const key=atlasKey, list=atlasList(key);
     box.innerHTML=[1,2,3].map(c=>{ const t=list.filter(o=>o.r.cat===c); if(!t.length) return '';
       return `<div class="atcat"><h4>${c}. ${CAT_NAME[c]} <span>${t.length}</span></h4>
-        <p class="tiny">${CAT_DESC[c]}</p>${t.map(o=>exCard(o,key)).join('')}</div>`;
+        ${t.map(o=>exCard(o,key)).join('')}</div>`;
     }).join('') || '<p class="tiny" style="text-align:center;padding:20px 0">Nichts gefunden.</p>';
   }
 });

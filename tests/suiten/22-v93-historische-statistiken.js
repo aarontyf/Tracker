@@ -54,7 +54,7 @@ exports.lauf = async ({ page, p }) => {
       p.enthaelt(`5-Zyklen-Reiter enthält weiterhin ${name}`,alt.fuenf,name));
   p.enthaelt('Gesamt zeigt eine gemeinsame Zyklus-Volumenreihe',alt.gesamt,'Volumen je Zyklus');
   p.pruefe('Gesamt trennt die alten Zyklen nicht mehr ab',!alt.gesamt.includes('Historisches Volumen je Push/Pull-Zyklus'));
-  p.enthaelt('Gesamt behält die Muskelverteilung',alt.gesamt,'Verteilung über alle Muskelgruppen');
+  p.enthaelt('Gesamt behält die Muskelverteilung',alt.gesamt,'Muskelgruppen');
   p.enthaelt('Gesamt behält die relative Kraft',alt.gesamt,'Relative Kraft');
   ['Volumen pro Monat','Deine Bestleistungen','Trainingsdauer','Wochentage'].forEach(name=>
     p.enthaelt(`weitere Gesamtauswertungen enthalten weiterhin ${name}`,alt.mehr,name));
