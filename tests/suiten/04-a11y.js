@@ -128,7 +128,9 @@ exports.lauf = async ({ page, p }) => {
   /* Der Fokus muss dorthin zurück, wo er herkam — sonst landet man nach dem
      Schliessen wieder ganz oben in der Seite. */
   const zurueck = await js(page, `(() => {
-    const anker = document.querySelector('#scr-home button') || document.querySelector('button');
+    /* Stabiler statischer Öffner: dynamische Startkarten dürfen während eines
+       offenen Dialogs neu gerendert und damit als DOM-Knoten ersetzt werden. */
+    const anker = document.querySelector('#btn-settings') || document.querySelector('#scr-home button');
     if (!anker) return 'kein Anker';
     anker.id = anker.id || 'a11y-anker';
     anker.focus();
