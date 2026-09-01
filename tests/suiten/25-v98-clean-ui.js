@@ -20,7 +20,7 @@ exports.lauf = async ({ page, p }) => {
     ];
     const ids=['set-rest','set-rir','sync-open','ai-open','btn-export','btn-import','btn-wipe'];
     return {
-      version:text.includes('Fitness Tracker V99'),
+      version:text.includes('Fitness Tracker V100'),
       gruppen:gruppen.length,
       titel:gruppen.map(x=>(x.querySelector('summary span')||{}).textContent||''),
       geschlossen:gruppen.every(x=>!x.open),
@@ -31,10 +31,10 @@ exports.lauf = async ({ page, p }) => {
     };
   })()`);
 
-  p.gleich('V99 ist in der Oberfläche gekennzeichnet', grundlage.version, true);
-  p.gleich('Einstellungen sind in drei klare Bereiche gegliedert', grundlage.gruppen, 3);
-  p.gleich('Bereiche heißen Training, Verbindungen und Backup & Daten',
-    grundlage.titel.join(' · '), 'Training · Verbindungen · Backup & Daten');
+  p.gleich('V100 ist in der Oberfläche gekennzeichnet', grundlage.version, true);
+  p.gleich('Einstellungen sind in vier klare Bereiche gegliedert', grundlage.gruppen, 4);
+  p.gleich('Bereiche heißen Training, Verbindungen, Backup & Daten und App',
+    grundlage.titel.join(' · '), 'Training · Verbindungen · Backup & Daten · App');
   p.gleich('sekundäre Einstellungen sind beim Öffnen zunächst geschlossen', grundlage.geschlossen, true);
   p.gleich('alle sicherheits- und funktionsrelevanten Bedienelemente bleiben erhalten',
     grundlage.fehlen.length, 0);

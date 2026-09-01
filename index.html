@@ -1367,6 +1367,13 @@ details.erkl.warum>summary{min-height:44px}
 #modal-settings .sync-head{align-items:center}
 #modal-settings .sync-state{margin-top:2px}
 #modal-settings .danger-zone{padding-top:10px;margin-top:4px;border-top:1px solid var(--line)}
+.settings-profile input{margin-top:6px}
+.app-identity{display:flex;align-items:center;gap:11px}
+.app-mark{width:42px;height:42px;flex:0 0 42px;display:grid;place-items:center;border-radius:13px;
+  border:1px solid rgba(90,201,250,.32);background:linear-gradient(145deg,rgba(56,189,248,.16),rgba(99,102,241,.12));
+  color:var(--a6);font-size:var(--fs-sub);font-weight:850;letter-spacing:-.04em;box-shadow:inset 0 1px rgba(255,255,255,.06)}
+.app-credit{margin-top:3px;color:var(--txt2);font-size:var(--fs-tiny);line-height:1.35}
+.app-credit b{color:var(--txt1);font-weight:720}
 .clean-facts{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
 .clean-facts span{padding:4px 7px;border:1px solid var(--line);border-radius:var(--r-full);color:var(--txt3);font-size:var(--fs-tiny)}
 .clean-status{color:var(--txt2);font-size:var(--fs-tiny);line-height:1.3}
@@ -1776,13 +1783,13 @@ details.erkl.warum>summary{min-height:44px}
   </div>
 </div></div>
 
-<div class="mback" id="modal-settings"><div class="modal" role="dialog" aria-modal="true">
+<div class="mback" id="modal-settings"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
   <div class="grab"></div>
-  <div class="mhd"><h2>Einstellungen &amp; Daten</h2><button class="iconbtn" data-close aria-label="Schließen" data-ico-close></button></div>
+  <div class="mhd"><h2 id="settings-title">Einstellungen</h2><button class="iconbtn" data-close aria-label="Schließen" data-ico-close></button></div>
   <!-- Der Name stand bis V59 fest im Code. Für eine App, die weitergegeben
        wird, muss er hierher — und darf leer bleiben dürfen. -->
-  <div class="card">
-    <h3 style="margin-bottom:4px">Dein Name</h3>
+  <div class="card settings-profile">
+    <label class="tiny up" for="set-name">Dein Name</label>
     <input type="text" id="set-name" maxlength="24" autocomplete="given-name" spellcheck="false"
            placeholder="Optional">
   </div>
@@ -1882,24 +1889,38 @@ details.erkl.warum>summary{min-height:44px}
         </div>
       </div>
       <div class="card">
-        <h3><span class="bi" data-ico="shield"></span>Datenschutz</h3>
-        <div class="clean-facts"><span>Lokal</span><span>Kein Tracking</span><span>Sync verschlüsselt</span></div>
-      </div>
-      <div class="card">
         <h3 style="margin-bottom:6px">Sicherungspunkte</h3>
         <div id="snap-list"></div>
       </div>
+      <div class="danger-zone"><button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button></div>
+    </div>
+  </details>
+  <details class="compact-details settings-group" id="settings-app">
+    <summary><span>App</span><span class="tiny">V100</span></summary>
+    <div class="details-body">
       <div class="card">
-        <h3 style="margin-bottom:8px">App-Version</h3>
+        <div class="app-identity">
+          <div class="app-mark" aria-hidden="true">FT</div>
+          <div class="grow">
+            <h3>Fitness Tracker V100</h3>
+            <div class="app-credit">Entwickelt von <b>Aaron Jeetun</b></div>
+            <div class="clean-facts"><span id="app-runtime">Browser</span><span id="app-connectivity">Online</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="margin-bottom:8px">Updates</h3>
         <div class="row">
           <button class="btn btn-ghost btn-sm grow" id="btn-checkupd">Update prüfen</button>
           <button class="btn btn-ghost btn-sm grow" id="btn-hardreload">Neu laden</button>
         </div>
       </div>
-      <div class="danger-zone"><button class="btn btn-danger btn-block btn-sm" id="btn-wipe">Alle Daten löschen</button></div>
+      <div class="card">
+        <h3><span class="bi" data-ico="shield"></span>Datenschutz</h3>
+        <div class="clean-facts"><span>Lokal</span><span>Kein Tracking</span><span>Sync verschlüsselt</span></div>
+      </div>
     </div>
   </details>
-  <p class="tiny" style="text-align:center;margin-top:10px">Fitness Tracker V99</p>
 </div></div>
 
 <div class="mback" id="modal-sync"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="sync-title">
@@ -6578,7 +6599,7 @@ function ask(title, text, opts){
 function _cfClose(val){
   if(!_cfResolve) return;
   const r = _cfResolve; _cfResolve = null;
-  $('#modal-confirm').classList.remove('on');
+  closeModal($('#modal-confirm'));
   r(val);
 }
 $('#cf-ok').addEventListener('click', ()=>_cfClose(true));
@@ -6600,7 +6621,8 @@ function withUndo(label, restoreFn){
    bedient unsichtbar den Screen dahinter. Merkt sich zusätzlich das zuletzt
    fokussierte Element und gibt den Fokus beim Schließen dorthin zurück. */
 const FOCUSABLE = 'button:not([disabled]),[href],input:not([disabled]),select,textarea,[tabindex]:not([tabindex="-1"])';
-let _focusReturn = null;
+const MODAL_RETURN = new WeakMap();
+let _focusReturn = null;   // Fallback für ältere, programmgesteuerte Dialogwege
 function trapFocus(e){
   if(e.key!=='Tab') return;
   const open = [...document.querySelectorAll('.mback.on')].pop();
@@ -6615,17 +6637,54 @@ function trapFocus(e){
 document.addEventListener('keydown', trapFocus);
 
 function openModal(id){
+  const m = $(id);
   _focusReturn = document.activeElement;
-  const m = $(id); m.classList.add('on');
+  MODAL_RETURN.set(m, _focusReturn);
+  m.classList.add('on');
   setTimeout(()=>{
     const f = m.querySelector(FOCUSABLE);
     if(f) f.focus();
   }, 60);
 }
+function closeModal(m, restore){
+  if(!m) return;
+  const ziel = MODAL_RETURN.get(m) || _focusReturn;
+  m.classList.remove('on');
+  MODAL_RETURN.delete(m);
+  const rest = [...document.querySelectorAll('.mback.on')];
+  _focusReturn = rest.length ? (MODAL_RETURN.get(rest[rest.length-1]) || _focusReturn) : null;
+  if(restore===false) return;
+  if(ziel && document.contains(ziel)){
+    try{ ziel.focus(); }catch(_){}
+  }
+}
 function closeModals(){
-  $$('.mback').forEach(m=>m.classList.remove('on'));
-  if(_focusReturn && document.contains(_focusReturn)){ try{ _focusReturn.focus(); }catch(_){} }
-  _focusReturn = null;
+  const offen = [...document.querySelectorAll('.mback.on')];
+  /* Manche Warnungen werden absichtlich ohne openModal eingeblendet und haben
+     daher keinen gespeicherten Öffner. Nimm den ersten wirklich bekannten
+     Rücksprungpunkt statt blind den ersten Dialog im DOM. */
+  /* Vom aktuell bedienten Dialog zur untersten Ebene seiner Öffnerkette
+     laufen. Parallel eingeblendete Warnungen dürfen den Rücksprung nicht
+     kapern, nur weil sie im HTML früher stehen. */
+  let mitZiel = document.activeElement && document.activeElement.closest
+    ? document.activeElement.closest('.mback.on') : null;
+  if(!mitZiel || !MODAL_RETURN.get(mitZiel)) mitZiel = offen.find(m=>MODAL_RETURN.get(m));
+  while(mitZiel){
+    const oeffner = MODAL_RETURN.get(mitZiel);
+    const eltern = oeffner && oeffner.closest ? oeffner.closest('.mback.on') : null;
+    if(!eltern || !MODAL_RETURN.get(eltern)) break;
+    mitZiel = eltern;
+  }
+  const ziel = (mitZiel && MODAL_RETURN.get(mitZiel)) || _focusReturn;
+  offen.slice().reverse().forEach(m=>{ if(m!==mitZiel) closeModal(m, false); });
+  /* Der letzte bekannte Dialog nutzt denselben bewährten Schließweg wie X,
+     Escape und Hintergrund. So greift auch die browserseitige Fokusreihenfolge
+     identisch; ein separates focus() nach dem Massen-Schließen war unzuverlässig. */
+  if(mitZiel) closeModal(mitZiel);
+  else{
+    _focusReturn = null;
+    if(ziel && document.contains(ziel)){ try{ ziel.focus(); }catch(_){} }
+  }
 }
 /* Escape schliesst das oberste offene Modal.
    Bis hierher galt das nur für den Bestätigungsdialog — die übrigen fünfzehn
@@ -6641,18 +6700,16 @@ document.addEventListener('keydown', e=>{
   if(!oben) return;
   const inner = oben.querySelector('.modal');
   if(inner && inner.dataset.locked==='1') return;
-  oben.classList.remove('on');
-  if(_focusReturn && document.contains(_focusReturn)){ try{ _focusReturn.focus(); }catch(_){} }
-  _focusReturn = null;
+  closeModal(oben);
 });
 
 $$('.mback').forEach(m=>m.addEventListener('click',e=>{
   if(e.target!==m) return;
   const inner = m.querySelector('.modal');
   if(inner && inner.dataset.locked==='1') return;   // Sicherungs-Warnung nicht wegtippbar
-  m.classList.remove('on');
+  closeModal(m);
 }));
-document.addEventListener('click',e=>{ const c=e.target.closest('[data-close]'); if(c){ const mb=c.closest('.mback'); if(mb) mb.classList.remove('on'); } });
+document.addEventListener('click',e=>{ const c=e.target.closest('[data-close]'); if(c){ const mb=c.closest('.mback'); if(mb) closeModal(mb); } });
 
 let curScreen = 'scr-home';
 function showScreen(id){
@@ -7513,8 +7570,16 @@ $('#btn-settings').addEventListener('click',()=>{
   renderSnapshots();
   syncRenderSettings();
   aiRenderSettings();
+  renderAppStatus();
   openModal('#modal-settings');
 });
+/* Auf dem Handy bleibt immer nur ein Einstellungsbereich offen. Das spart
+   Scrollwege, ohne Inhalte oder Zustände zu verstecken. */
+const SETTINGS_GROUPS = $$('#modal-settings .settings-group');
+SETTINGS_GROUPS.forEach(gruppe=>gruppe.addEventListener('toggle',()=>{
+  if(!gruppe.open) return;
+  SETTINGS_GROUPS.forEach(andere=>{ if(andere!==gruppe) andere.open=false; });
+}));
 $('#set-rir').addEventListener('click',()=>{
   state.settings.rir = !state.settings.rir; saveState();
   $('#set-rir').textContent = state.settings.rir?'An':'Aus'; $('#set-rir').classList.toggle('on', !!state.settings.rir);
@@ -12583,6 +12648,13 @@ $('#lock-forgot').addEventListener('click', async ()=>{
 /* ================= PWA / UPDATES / INSTALL ================= */
 function isStandalone(){ return mq('(display-mode: standalone)').matches || navigator.standalone===true; }
 function isIOS(){ return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1); }
+function renderAppStatus(){
+  const runtime=$('#app-runtime'), verbindung=$('#app-connectivity');
+  if(runtime) runtime.textContent=isStandalone()? 'Installiert':'Browser';
+  if(verbindung) verbindung.textContent=navigator.onLine? 'Online':'Offline';
+}
+window.addEventListener('online', renderAppStatus);
+window.addEventListener('offline', renderAppStatus);
 let swReg = null;
 function initPWA(){
   if('serviceWorker' in navigator && location.protocol.startsWith('http')){
