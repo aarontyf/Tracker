@@ -6622,6 +6622,7 @@ function withUndo(label, restoreFn){
    fokussierte Element und gibt den Fokus beim Schließen dorthin zurück. */
 const FOCUSABLE = 'button:not([disabled]),[href],input:not([disabled]),select,textarea,[tabindex]:not([tabindex="-1"])';
 const MODAL_RETURN = new WeakMap();
+let _focusReturn = null;   // Fallback für ältere, programmgesteuerte Dialogwege
 function trapFocus(e){
   if(e.key!=='Tab') return;
   const open = [...document.querySelectorAll('.mback.on')].pop();
@@ -6637,7 +6638,8 @@ document.addEventListener('keydown', trapFocus);
 
 function openModal(id){
   const m = $(id);
-  MODAL_RETURN.set(m, document.activeElement);
+  _focusReturn = document.activeElement;
+  MODAL_RETURN.set(m, _focusReturn);
   m.classList.add('on');
   setTimeout(()=>{
     const f = m.querySelector(FOCUSABLE);
@@ -6646,9 +6648,11 @@ function openModal(id){
 }
 function closeModal(m, restore){
   if(!m) return;
-  const ziel = MODAL_RETURN.get(m);
+  const ziel = MODAL_RETURN.get(m) || _focusReturn;
   m.classList.remove('on');
   MODAL_RETURN.delete(m);
+  const rest = [...document.querySelectorAll('.mback.on')];
+  _focusReturn = rest.length ? (MODAL_RETURN.get(rest[rest.length-1]) || _focusReturn) : null;
   if(restore===false) return;
   if(ziel && document.contains(ziel)){
     try{ ziel.focus(); }catch(_){}
@@ -6659,8 +6663,9 @@ function closeModals(){
   /* Manche Warnungen werden absichtlich ohne openModal eingeblendet und haben
      daher keinen gespeicherten Öffner. Nimm den ersten wirklich bekannten
      Rücksprungpunkt statt blind den ersten Dialog im DOM. */
-  const ziel = offen.map(m=>MODAL_RETURN.get(m)).find(Boolean) || null;
+  const ziel = offen.map(m=>MODAL_RETURN.get(m)).find(Boolean) || _focusReturn;
   offen.slice().reverse().forEach(m=>closeModal(m, false));
+  _focusReturn = null;
   if(ziel && document.contains(ziel)){
     try{ ziel.focus(); }catch(_){}
   }
