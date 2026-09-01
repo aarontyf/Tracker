@@ -6656,7 +6656,10 @@ function closeModal(m, restore){
 }
 function closeModals(){
   const offen = [...document.querySelectorAll('.mback.on')];
-  const ziel = offen.length ? MODAL_RETURN.get(offen[0]) : null;
+  /* Manche Warnungen werden absichtlich ohne openModal eingeblendet und haben
+     daher keinen gespeicherten Öffner. Nimm den ersten wirklich bekannten
+     Rücksprungpunkt statt blind den ersten Dialog im DOM. */
+  const ziel = offen.map(m=>MODAL_RETURN.get(m)).find(Boolean) || null;
   offen.slice().reverse().forEach(m=>closeModal(m, false));
   if(ziel && document.contains(ziel)){
     try{ ziel.focus(); }catch(_){}
