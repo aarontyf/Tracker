@@ -159,4 +159,51 @@ exports.lauf = async ({ page, p }) => {
            'Ausgangslage: ' + gefangen);
 
   await js(page, 'closeModals()');
+
+  /* Auch die echten Schließwege müssen den Fokus zurückgeben. Bis V99 galt
+     das nur für closeModals(), nicht für X, Hintergrund oder Escape. */
+  const xAnker = await js(page, `(() => {
+    const anker=document.querySelector('#btn-settings'); anker.focus();
+    openModal('#modal-settings'); return anker.id;
+  })()`);
+  await warte(page, 200);
+  await page.click('#modal-settings [data-close]');
+  await warte(page, 100);
+  p.gleich('Schließen per X gibt den Fokus zurück', await js(page, 'document.activeElement.id'), xAnker);
+
+  const escAnker = await js(page, `(() => {
+    const anker=document.querySelector('#btn-ach'); anker.focus();
+    openModal('#modal-ach'); return anker.id;
+  })()`);
+  await warte(page, 200);
+  await page.keyboard.press('Escape');
+  await warte(page, 100);
+  p.gleich('Schließen per Escape gibt den Fokus zurück', await js(page, 'document.activeElement.id'), escAnker);
+
+  const hintergrundAnker = await js(page, `(() => {
+    const anker=document.querySelector('#btn-settings'); anker.focus();
+    openModal('#modal-settings'); return anker.id;
+  })()`);
+  await warte(page, 200);
+  await page.click('#modal-settings', {position:{x:2,y:2}});
+  await warte(page, 100);
+  p.gleich('Schließen über den Hintergrund gibt den Fokus zurück',
+    await js(page, 'document.activeElement.id'), hintergrundAnker);
+
+  const verschachtelt = await js(page, `(() => {
+    const anker=document.querySelector('#btn-settings'); anker.focus();
+    openModal('#modal-settings');
+    const oeffner=document.querySelector('#sync-open'); oeffner.focus();
+    openModal('#modal-sync');
+    return {anker:anker.id,oeffner:oeffner.id};
+  })()`);
+  await warte(page, 200);
+  await page.click('#modal-sync [data-close]');
+  await warte(page, 100);
+  p.gleich('verschachtelter Dialog kehrt zu seinem Öffner zurück',
+    await js(page, 'document.activeElement.id'), verschachtelt.oeffner);
+  await js(page, 'closeModals()');
+  await warte(page, 100);
+  p.gleich('danach kehrt der Hauptdialog zu seinem Öffner zurück',
+    await js(page, 'document.activeElement.id'), verschachtelt.anker);
 };
