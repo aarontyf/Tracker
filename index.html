@@ -6650,7 +6650,7 @@ function closeModal(m, restore){
   m.classList.remove('on');
   MODAL_RETURN.delete(m);
   if(restore===false) return;
-  if(ziel && document.contains(ziel) && ziel.offsetParent!==null){
+  if(ziel && document.contains(ziel)){
     try{ ziel.focus(); }catch(_){}
   }
 }
@@ -6658,7 +6658,7 @@ function closeModals(){
   const offen = [...document.querySelectorAll('.mback.on')];
   const ziel = offen.length ? MODAL_RETURN.get(offen[0]) : null;
   offen.slice().reverse().forEach(m=>closeModal(m, false));
-  if(ziel && document.contains(ziel) && ziel.offsetParent!==null){
+  if(ziel && document.contains(ziel)){
     try{ ziel.focus(); }catch(_){}
   }
 }

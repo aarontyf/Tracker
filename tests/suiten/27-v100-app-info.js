@@ -44,6 +44,7 @@ exports.lauf = async ({ page, p }) => {
   p.gleich('Einstellungen enthalten keine doppelten IDs', info.doppelteIds.length, 0);
 
   const touch = await js(page, `(() => {
+    document.querySelector('#modal-settings').classList.add('on');
     const gruppe=document.querySelector('#settings-app');
     gruppe.open=true;
     const summary=gruppe.querySelector('summary').getBoundingClientRect();

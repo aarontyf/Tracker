@@ -193,6 +193,7 @@ exports.lauf = async ({ page, p }) => {
   const verschachtelt = await js(page, `(() => {
     const anker=document.querySelector('#btn-settings'); anker.focus();
     openModal('#modal-settings');
+    const gruppe=document.querySelector('#sync-open').closest('.settings-group'); gruppe.open=true;
     const oeffner=document.querySelector('#sync-open'); oeffner.focus();
     openModal('#modal-sync');
     return {anker:anker.id,oeffner:oeffner.id};
