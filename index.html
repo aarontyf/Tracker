@@ -6663,7 +6663,18 @@ function closeModals(){
   /* Manche Warnungen werden absichtlich ohne openModal eingeblendet und haben
      daher keinen gespeicherten Öffner. Nimm den ersten wirklich bekannten
      Rücksprungpunkt statt blind den ersten Dialog im DOM. */
-  const mitZiel = offen.find(m=>MODAL_RETURN.get(m));
+  /* Vom aktuell bedienten Dialog zur untersten Ebene seiner Öffnerkette
+     laufen. Parallel eingeblendete Warnungen dürfen den Rücksprung nicht
+     kapern, nur weil sie im HTML früher stehen. */
+  let mitZiel = document.activeElement && document.activeElement.closest
+    ? document.activeElement.closest('.mback.on') : null;
+  if(!mitZiel || !MODAL_RETURN.get(mitZiel)) mitZiel = offen.find(m=>MODAL_RETURN.get(m));
+  while(mitZiel){
+    const oeffner = MODAL_RETURN.get(mitZiel);
+    const eltern = oeffner && oeffner.closest ? oeffner.closest('.mback.on') : null;
+    if(!eltern || !MODAL_RETURN.get(eltern)) break;
+    mitZiel = eltern;
+  }
   const ziel = (mitZiel && MODAL_RETURN.get(mitZiel)) || _focusReturn;
   offen.slice().reverse().forEach(m=>{ if(m!==mitZiel) closeModal(m, false); });
   /* Der letzte bekannte Dialog nutzt denselben bewährten Schließweg wie X,
