@@ -6663,11 +6663,16 @@ function closeModals(){
   /* Manche Warnungen werden absichtlich ohne openModal eingeblendet und haben
      daher keinen gespeicherten Öffner. Nimm den ersten wirklich bekannten
      Rücksprungpunkt statt blind den ersten Dialog im DOM. */
-  const ziel = offen.map(m=>MODAL_RETURN.get(m)).find(Boolean) || _focusReturn;
-  offen.slice().reverse().forEach(m=>closeModal(m, false));
-  _focusReturn = null;
-  if(ziel && document.contains(ziel)){
-    try{ ziel.focus(); }catch(_){}
+  const mitZiel = offen.find(m=>MODAL_RETURN.get(m));
+  const ziel = (mitZiel && MODAL_RETURN.get(mitZiel)) || _focusReturn;
+  offen.slice().reverse().forEach(m=>{ if(m!==mitZiel) closeModal(m, false); });
+  /* Der letzte bekannte Dialog nutzt denselben bewährten Schließweg wie X,
+     Escape und Hintergrund. So greift auch die browserseitige Fokusreihenfolge
+     identisch; ein separates focus() nach dem Massen-Schließen war unzuverlässig. */
+  if(mitZiel) closeModal(mitZiel);
+  else{
+    _focusReturn = null;
+    if(ziel && document.contains(ziel)){ try{ ziel.focus(); }catch(_){} }
   }
 }
 /* Escape schliesst das oberste offene Modal.
