@@ -19,7 +19,7 @@ exports.lauf = async ({ page, p }) => {
       deutsch:findet('preacher kabel'), exakt:findet('preacher curl am kabel'),
       englisch:findet('cable preacher'), scott:findet('scott curl kabelzug'),
       arme:filterEx('preacher kabel','Arme').some(e=>e.id===id),
-      amEnde:EXDB_ALL[EXDB_ALL.length-1].id===id,
+      direktVorNeu:EXDB_ALL[EXDB_ALL.length-2].id===id && EXDB_ALL[EXDB_ALL.length-1].id==='x-kabelrudern-von-oben-45',
       schritte:how&&how.s.length, fehler:how&&how.e.length
     };
   })()`);
@@ -38,7 +38,7 @@ exports.lauf = async ({ page, p }) => {
   p.pruefe('englische Suche findet die Übung', datenbank.englisch);
   p.pruefe('Scott-Curl-Synonyme finden die Übung', datenbank.scott);
   p.pruefe('Arme-Filter enthält die Übung', datenbank.arme);
-  p.pruefe('Anfügen am Ende schützt alle alten eNN-Positionen', datenbank.amEnde);
+  p.pruefe('neue Übungen werden hinter dem bestehenden Eintrag angefügt', datenbank.direktVorNeu);
   p.mind('Technikansicht enthält vier klare Schritte', datenbank.schritte, 4);
   p.mind('Technikansicht nennt typische Fehler', datenbank.fehler, 3);
 

@@ -2349,6 +2349,11 @@ const HOWTO = {
    'Griff zum Bauch ziehen, Ellbogen am Körper, Schulterblätter zusammen.',
    'Kontrolliert zurück bis zur vollen Streckung.'],
   e:['Oberkörper schwingt vor und zurück.','Nur mit den Armen gezogen.','Vorne nicht ausgestreckt, dadurch fehlt die Dehnung.']},
+ 'x-kabelrudern-von-oben-45':{s:['Kabelzug oberhalb des Kopfes einstellen und den Stand oder Sitz stabilisieren.',
+   'Arme schräg nach oben strecken und die Schulterblätter kontrolliert nach vorne laufen lassen.',
+   'Ellbogen im etwa 45-Grad-Winkel nach hinten-unten führen und zum oberen Bauch ziehen.',
+   'Kurz halten und kontrolliert bis zur vollen Dehnung zurückführen.'],
+  e:['Zu weit zurückgelehnt oder mit dem Oberkörper geschwungen.','Ellbogen gerade nach unten gezogen, dadurch wird es ein Latzug.','Nur mit den Händen gezogen und die Schulterblätter nicht kontrolliert.']},
  'x-kreuzheben-konventionell':{s:['Stange über der Mitte des Fußes, Schienbeine fast an der Stange.',
    'Hüfte nach hinten, Brust raus, Rücken neutral, Lat anspannen.',
    'Beine wegdrücken statt die Stange zu ziehen, Stange bleibt am Körper.',
@@ -3352,6 +3357,7 @@ const EXDB_RAW = [
 /* V99: Neue Übungen immer am Ende ergänzen. So behalten sehr alte eNN-IDs
    ihre ursprüngliche Position und sämtliche historischen Einträge ihre Übung. */
 ['Preacher Curl am Kabel','Arme','Kabel',['biceps'],[],'cable preacher curl preacher cable curl scottcurl scott curl kabelzug'],
+['Kabelrudern von oben (45°)','Rücken','Kabel',['lats','upper_back'],['rear_delt','biceps'],'high row kabel high cable row kabelrudern von oben 45 grad schräges kabelrudern'],
 ];
 const exSlug = n=>'x-'+n.toLowerCase().replace(/[^a-z0-9äöüß]+/g,'-').replace(/^-+|-+$/g,'');
 /* art: 'kraft' (Gewicht × Wiederholungen), 'zeit' (Sekunden) oder
