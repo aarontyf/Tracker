@@ -1,0 +1,44 @@
+name: Add Reverse Fly alias
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  update-exercise:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Add Reverse Fly alias
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          old = "['Umgekehrte Fliegende (Kabel)','Schultern','Kabel',['rear_delt'],['upper_back'],'rear delt crossover reverse cable fly']"
+          new = "['Umgekehrte Fliegende (Kabel)','Schultern','Kabel',['rear_delt'],['upper_back'],'rear delt crossover reverse cable fly reverse flys am kabel reverse cable fly kabel reverse fly']"
+          if old not in s:
+              raise SystemExit('Target exercise entry not found')
+          if 'reverse flys am kabel' in s:
+              raise SystemExit(0)
+          p.write_text(s.replace(old, new, 1), encoding='utf-8')
+          PY
+
+      - name: Commit and remove temporary workflow
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          if git diff --cached --quiet; then
+            git status --short
+            exit 0
+          fi
+          git commit -m 'Add Reverse Flys am Kabel exercise alias'
+          rm .github/workflows/add-reverse-fly.yml
+          git add .github/workflows/add-reverse-fly.yml
+          git commit -m 'Remove temporary exercise update workflow'
+          git push
