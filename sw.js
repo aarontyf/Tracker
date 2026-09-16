@@ -1,7 +1,7 @@
 /* Service Worker — Fitness Tracker
    WICHTIG: Bei jedem App-Update die Versionsnummer hochzählen (z.B. v6 → v7).
    Trainingsdaten liegen in localStorage und werden davon NIE angefasst. */
-const VERSION = 'ft-v107';
+const VERSION = 'ft-v108';
 const SHELL = './index.html';
 const SHELL_MARKER = 'Fitness Tracker V100';
 const ASSETS = [SHELL, './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-180.png', './recovery.html'];
@@ -18,26 +18,31 @@ async function validShell(response){
   catch(_){ return false; }
 }
 
+/* Ensure the two requested pull-up exercises exist in the app database.
+   This is also applied while priming the cache, so a freshly installed PWA
+   cannot cache an older shell without the exercises. */
 async function patchAppShell(response){
   if(!response || !response.ok) return response;
   const text = await response.clone().text();
 
-  // Direkt vor dem Aufbau der sichtbaren Übungsdatenbank einfügen.
-  // Dadurch werden die Übungen auch dann sichtbar, wenn index.html selbst
-  // noch aus einer alten GitHub-Pages-Version geladen wurde.
   const marker = 'const EXDB_ALL = EXDB_RAW.map';
   if(!text.includes(marker)) return response;
-  if(text.includes("['Weighted Pull Ups','Rücken'") && text.includes("['EMOM Pullups','Rücken'")) return response;
 
-  const injection = [
-    '',
-    '/* V107: zusätzliche Pull-up-Übungen */',
-    "EXDB_RAW.push(",
-    "  ['Weighted Pull Ups','Rücken','Körpergewicht',['lats'],['biceps','upper_back'],'weighted pull ups weighted pull-up pullups mit gewicht zusatzgewicht'],",
-    "  ['EMOM Pullups','Rücken','Körpergewicht',['lats'],['biceps','upper_back'],'emom pullups emom pull ups every minute on the minute klimmzüge emom']",
-    ');',
-    ''
-  ].join('\n');
+  const hasWeighted = text.includes("['Weighted Pull Ups','Rücken'");
+  const hasEmom = text.includes("['EMOM Pullups','Rücken'");
+  if(hasWeighted && hasEmom) return response;
+
+  const entries = [];
+  if(!hasWeighted){
+    entries.push("  ['Weighted Pull Ups','Rücken','Körpergewicht',['lats'],['biceps','upper_back'],'weighted pull ups weighted pull-up pullups weighted klimmzüge klimmzüge mit gewicht zusatzgewicht']");
+  }
+  if(!hasEmom){
+    entries.push("  ['EMOM Pullups','Rücken','Körpergewicht',['lats'],['biceps','upper_back'],'emom pullups emom pull ups every minute on the minute klimmzüge emom']");
+  }
+
+  const injection = '\n/* V108: zusätzliche Pull-up-Übungen */\nEXDB_RAW.push(\n'
+    + entries.join(',\n')
+    + '\n);\n';
 
   const patchedText = text.replace(marker, injection + marker);
   return new Response(patchedText, {
@@ -52,8 +57,9 @@ async function primeCache(){
   for(const url of ASSETS){
     const response = await fetch(url, {cache:'reload'});
     if(!response.ok) throw new Error('asset '+url+' '+response.status);
-    if(url===SHELL && !await validShell(response)) throw new Error('invalid app shell');
-    await cache.put(url, response);
+    const finalResponse = url===SHELL ? await patchAppShell(response) : response;
+    if(url===SHELL && !await validShell(finalResponse)) throw new Error('invalid app shell');
+    await cache.put(url, finalResponse);
   }
 }
 
