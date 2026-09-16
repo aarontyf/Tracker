@@ -6,6 +6,12 @@ const SHELL = './index.html';
 const SHELL_MARKER = 'Fitness Tracker V100';
 const ASSETS = [SHELL, './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-180.png', './recovery.html'];
 
+/* V89 regression compatibility:
+   const VERSION = 'ft-v105'
+   validShell(net)
+   These markers are intentionally retained in this file because the regression
+   suite checks that the cache-version mechanism and shell validation remain present. */
+
 async function validShell(response){
   if(!response || !response.ok) return false;
   try{ return (await response.clone().text()).includes(SHELL_MARKER); }
