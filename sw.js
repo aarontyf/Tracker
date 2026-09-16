@@ -1,8 +1,7 @@
 /* Service Worker — Fitness Tracker
    WICHTIG: Bei jedem App-Update die Versionsnummer hochzählen (z.B. v6 → v7).
-   Sonst zeigt das Handy weiter die alte Version aus dem Cache.
    Trainingsdaten liegen in localStorage und werden davon NIE angefasst. */
-const VERSION = 'ft-v105';
+const VERSION = 'ft-v106';
 const SHELL = './index.html';
 const SHELL_MARKER = 'Fitness Tracker V100';
 const ASSETS = [SHELL, './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-180.png', './recovery.html'];
@@ -11,6 +10,19 @@ async function validShell(response){
   if(!response || !response.ok) return false;
   try{ return (await response.clone().text()).includes(SHELL_MARKER); }
   catch(_){ return false; }
+}
+
+/* Neue Übungen werden hier in die bestehende Übungsdatenbank eingeblendet,
+   ohne die grosse index.html direkt umzuschreiben. Die Einträge erscheinen
+   damit wie normale Übungen und können in Trainingsplänen verwendet werden. */
+async function patchAppShell(response){
+  if(!response || !response.ok) return response;
+  const text = await response.clone().text();
+  const marker = "const EXDB_ALL = EXDB_RAW.map";
+  if(!text.includes(marker) || text.includes("['Weighted Pull Ups','Rücken'")) return response;
+  const injection = `\n/* Added exercises: pull-up strength + EMOM */\nEXDB_RAW.push(\n  ['Weighted Pull Ups','Rücken','Körpergewicht',['lats'],['biceps','upper_back'],'weighted pull ups weighted pull-up pull ups mit gewicht zusatzgewicht'],\n  ['EMOM Pullups','Rücken','Körpergewicht',['lats'],['biceps','upper_back'],'emom pullups emom pull ups every minute on the minute klimmzüge emom']\n);\n`;
+  const patched = text.replace(marker, injection + marker);
+  return new Response(patched, {status: response.status, statusText: response.statusText, headers: response.headers});
 }
 
 async function primeCache(){
@@ -54,8 +66,9 @@ self.addEventListener('fetch', e=>{
         || url.pathname.endsWith('/index.html');
       /* Kein HTTP-Zwischencache für die App-Hülle: So kann ein einmal
          beschädigtes HTML nicht erneut in den Offline-Cache gelangen. */
-      const net = await fetch(req, appShell ? {cache:'no-store'} : undefined);
-      if(appShell && !await validShell(net)) throw new Error('invalid app shell');
+      const netRaw = await fetch(req, appShell ? {cache:'no-store'} : undefined);
+      if(appShell && !await validShell(netRaw)) throw new Error('invalid app shell');
+      const net = appShell ? await patchAppShell(netRaw) : netRaw;
       const cache = await caches.open(VERSION);
       await cache.put(appShell ? SHELL : req, net.clone());
       return net;
