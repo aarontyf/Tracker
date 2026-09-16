@@ -37,7 +37,7 @@ async function patchAppShell(response){
     "  ['EMOM Pullups','Rücken','Körpergewicht',['lats'],['biceps','upper_back'],'emom pullups emom pull ups every minute on the minute klimmzüge emom']",
     ');',
     ''
-  ].join('\\n');
+  ].join('\n');
 
   const patchedText = text.replace(marker, injection + marker);
   return new Response(patchedText, {
