@@ -1,7 +1,7 @@
 /* Service Worker — Fitness Tracker
    WICHTIG: Bei jedem App-Update die Versionsnummer hochzählen (z.B. v6 → v7).
    Trainingsdaten liegen in localStorage und werden davon NIE angefasst. */
-const VERSION = 'ft-v108';
+const VERSION = 'ft-v109';
 const SHELL = './index.html';
 const SHELL_MARKER = 'Fitness Tracker V100';
 const ASSETS = [SHELL, './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-180.png', './recovery.html'];
